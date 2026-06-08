@@ -1,0 +1,277 @@
+// Dashboard di Pistoia — data model.
+// SQLite for local development; all content is mockup data seeded by prisma/seed.ts.
+// Enums are modelled as strings because SQLite has no native enum type.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ---------------------------------------------------------------------------
+// Identity & auth
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  name          String
+  role          String   @default("CITIZEN") // CITIZEN | ADMIN
+  avatarColor   String   @default("teal") // teal | viola | amber | red | green
+  bio           String?
+  quartiere     String? // neighbourhood, free text
+  emailVerified Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sessions      Session[]
+  votes         Vote[]
+  likes         PostLike[]
+  follows       AssessoreFollow[]
+  posts         CommunityPost[]
+  comments      PostComment[]
+  notifications Notification[]
+}
+
+// Opaque server-side session. `id` stores the SHA-256 hash (hex) of the cookie
+// token — the raw token never touches the database.
+model Session {
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userAgent String?
+  ip        String?
+
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Bilancio (budget)
+// ---------------------------------------------------------------------------
+
+model BudgetYear {
+  id           String           @id @default(cuid())
+  year         Int              @unique
+  totalSpesa   Int // headline programmed spending (euro)
+  totalEntrate Int
+  avanzo       Int // surplus (euro), can be negative
+  riscossione  Int // % of expected revenue collected
+  impegni      Int // % of budget formally committed
+  pnrr         Int // % of PNRR-funded quota progressed
+  months       BudgetMonth[]
+  categories   BudgetCategory[]
+}
+
+model BudgetMonth {
+  id           String     @id @default(cuid())
+  yearId       String
+  year         BudgetYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
+  month        Int // 1..12
+  entrate      Int
+  spese        Int
+  investimenti Int
+
+  @@unique([yearId, month])
+}
+
+model BudgetCategory {
+  id     String     @id @default(cuid())
+  yearId String
+  year   BudgetYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
+  label  String // Istruzione, Mobilità, Sociale...
+  amount Int
+  color  String     @default("teal")
+  order  Int        @default(0)
+}
+
+// ---------------------------------------------------------------------------
+// Opere (public works)
+// ---------------------------------------------------------------------------
+
+model Opera {
+  id          String        @id @default(cuid())
+  name        String
+  description String
+  category    String // scuola | mobilita | piazza | restauro | verde | sociale
+  progress    Int // 0..100
+  status      String // in_corso | completata | pianificata | sospesa
+  investment  Int // euro
+  location    String?
+  startedAt   DateTime?
+  expectedEnd DateTime?
+  featured    Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updates     OperaUpdate[]
+}
+
+model OperaUpdate {
+  id       String   @id @default(cuid())
+  operaId  String
+  opera    Opera    @relation(fields: [operaId], references: [id], onDelete: Cascade)
+  date     DateTime @default(now())
+  note     String
+  progress Int
+
+  @@index([operaId])
+}
+
+// ---------------------------------------------------------------------------
+// Sondaggi (polls) & assessori
+// ---------------------------------------------------------------------------
+
+model Poll {
+  id          String       @id @default(cuid())
+  question    String
+  description String?
+  year        Int
+  category    String
+  active      Boolean      @default(true)
+  assessoreId String?
+  assessore   Assessore?   @relation(fields: [assessoreId], references: [id], onDelete: SetNull)
+  createdAt   DateTime     @default(now())
+  options     PollOption[]
+  votes       Vote[]
+}
+
+model PollOption {
+  id        String @id @default(cuid())
+  pollId    String
+  poll      Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  label     String
+  color     String @default("teal")
+  baseVotes Int    @default(0) // mock baseline so live percentages look realistic
+  order     Int    @default(0)
+  votes     Vote[]
+
+  @@index([pollId])
+}
+
+model Vote {
+  id        String     @id @default(cuid())
+  pollId    String
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  optionId  String
+  option    PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+
+  @@unique([pollId, userId]) // one vote per user per poll
+  @@index([optionId])
+}
+
+model Assessore {
+  id           String            @id @default(cuid())
+  name         String
+  role         String // "Sindaco", "Assessora all'Ambiente e al Verde"
+  area         String // short delega label
+  initials     String
+  color        String            @default("teal")
+  votesElected Int               @default(0)
+  email        String?
+  order        Int               @default(0)
+  parentId     String?
+  parent       Assessore?        @relation("OrgTree", fields: [parentId], references: [id])
+  children     Assessore[]       @relation("OrgTree")
+  polls        Poll[]
+  follows      AssessoreFollow[]
+}
+
+model AssessoreFollow {
+  id          String    @id @default(cuid())
+  assessoreId String
+  assessore   Assessore @relation(fields: [assessoreId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([assessoreId, userId])
+}
+
+// ---------------------------------------------------------------------------
+// Comunità (community feed) & service reviews
+// ---------------------------------------------------------------------------
+
+model CommunityPost {
+  id             String          @id @default(cuid())
+  authorId       String?
+  author         User?           @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorName     String // display name snapshot (mock authors have no account)
+  authorInitials String
+  authorColor    String          @default("teal")
+  content        String
+  imageSeed      String? // drives the decorative gradient
+  category       String? // verde | mobilita | servizi | cultura
+  baseLikes      Int             @default(0)
+  createdAt      DateTime        @default(now())
+  likes          PostLike[]
+  comments       PostComment[]
+  answer         OfficialAnswer?
+}
+
+model OfficialAnswer {
+  id         String        @id @default(cuid())
+  postId     String        @unique
+  post       CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  body       String
+  verified   Boolean       @default(true)
+  authorRole String        @default("Comune di Pistoia")
+  createdAt  DateTime      @default(now())
+}
+
+model PostComment {
+  id         String        @id @default(cuid())
+  postId     String
+  post       CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId   String?
+  author     User?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorName String
+  body       String
+  createdAt  DateTime      @default(now())
+
+  @@index([postId])
+}
+
+model PostLike {
+  id        String        @id @default(cuid())
+  postId    String
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+
+  @@unique([postId, userId])
+}
+
+model ServiceReview {
+  id      String @id @default(cuid())
+  service String // Anagrafe, Tributi online, SUAP...
+  rating  Float // 4.6
+  count   Int // number of reviews
+  icon    String?
+  order   Int    @default(0)
+}
+
+// ---------------------------------------------------------------------------
+// Notifiche
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // answer | poll | opera | system
+  title     String
+  body      String
+  href      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}

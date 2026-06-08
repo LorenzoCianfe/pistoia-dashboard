@@ -1,0 +1,57 @@
+import type { Metadata, Viewport } from "next";
+import { Plus_Jakarta_Sans } from "next/font/google";
+import "./globals.css";
+import { ThemeProvider } from "@/components/theme/theme-provider";
+
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: {
+    default: "Dashboard di Pistoia",
+    template: "%s · Dashboard di Pistoia",
+  },
+  description:
+    "I dati pubblici del Comune di Pistoia, finalmente leggibili: bilancio, opere, sondaggi e la città che si risponde.",
+  applicationName: "Dashboard di Pistoia",
+  authors: [{ name: "Comune di Pistoia" }],
+  keywords: ["Pistoia", "comune", "bilancio", "opere", "trasparenza", "cittadini"],
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fbfbfd" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e1117" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html
+      lang="it"
+      suppressHydrationWarning
+      className={`${jakarta.variable} h-full antialiased`}
+    >
+      <body className="min-h-full">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}

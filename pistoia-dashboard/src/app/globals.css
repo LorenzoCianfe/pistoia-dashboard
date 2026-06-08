@@ -1,0 +1,239 @@
+@import "tailwindcss";
+
+/* Class-based dark mode (driven by next-themes setting .dark on <html>). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  Pistoia Dashboard — design tokens.
+  Light theme: near-white, soft teal (verde acqua) + viola accents, amber badges,
+  the red of the city's checkered crest. Soft, gentle, rounded.
+*/
+:root {
+  --bg: #fbfbfd;
+  --bg-tint-teal: 20 184 166; /* rgb channels for layered glows */
+  --bg-tint-viola: 138 123 240;
+  --surface: #ffffff;
+  --surface-2: #f4f5f9;
+  --surface-3: #eceef4;
+  --foreground: #181b24;
+  --muted: #5c6373;
+  --muted-2: #6c7384;
+  --border: #e7e9f1;
+  --border-strong: #d7dae6;
+
+  --teal: #10b3a3;
+  --teal-strong: #0c9488;
+  --teal-soft: #d6f4f0;
+  --viola: #8a7bf0;
+  --viola-strong: #6f5fe0;
+  --viola-soft: #e9e5fd;
+  --amber: #f5a623;
+  --amber-soft: #fdeccd;
+  --red: #d63a57; /* the checkered crest red */
+  --red-soft: #fbe0e5;
+  --green: #2bbd77;
+  --green-soft: #d6f4e5;
+
+  --ring: #10b3a3;
+  --shadow-color: 222 30% 38%;
+
+  --radius: 1.5rem; /* cards */
+  --radius-sm: 0.85rem;
+  --radius-lg: 2rem;
+  --radius-pill: 999px;
+}
+
+.dark {
+  --bg: #0e1117;
+  --bg-tint-teal: 20 184 166;
+  --bg-tint-viola: 138 123 240;
+  --surface: #161a23;
+  --surface-2: #1c212c;
+  --surface-3: #232938;
+  --foreground: #e9ebf2;
+  --muted: #a3aabd;
+  --muted-2: #8a92a6;
+  --border: #262c3a;
+  --border-strong: #333a4b;
+
+  --teal: #2fd0bd;
+  --teal-strong: #15b8a6;
+  --teal-soft: #10312f;
+  --viola: #a596f6;
+  --viola-strong: #8a7bf0;
+  --viola-soft: #221f3b;
+  --amber: #fbbf52;
+  --amber-soft: #36290f;
+  --red: #f06a82;
+  --red-soft: #38161d;
+  --green: #45d089;
+  --green-soft: #102a1e;
+
+  --ring: #2fd0bd;
+  --shadow-color: 222 47% 4%;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-teal: var(--teal);
+  --color-teal-strong: var(--teal-strong);
+  --color-teal-soft: var(--teal-soft);
+  --color-viola: var(--viola);
+  --color-viola-strong: var(--viola-strong);
+  --color-viola-soft: var(--viola-soft);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-red: var(--red);
+  --color-red-soft: var(--red-soft);
+  --color-green: var(--green);
+  --color-green-soft: var(--green-soft);
+
+  --radius-sm: var(--radius-sm);
+  --radius-DEFAULT: var(--radius);
+  --radius-lg: var(--radius-lg);
+  --radius-pill: var(--radius-pill);
+
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  --animate-shimmer: shimmer 2.2s linear infinite;
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    /* Soft corner glows of teal and viola, exactly as the concept describes. */
+    background-image:
+      radial-gradient(
+        60rem 40rem at 110% -10%,
+        rgb(var(--bg-tint-teal) / 0.1),
+        transparent 60%
+      ),
+      radial-gradient(
+        55rem 38rem at -10% 110%,
+        rgb(var(--bg-tint-viola) / 0.1),
+        transparent 60%
+      );
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--teal) 28%, transparent);
+  }
+
+  /* Gentle, unobtrusive scrollbars. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+@layer components {
+  /* Frosted, softly shadowed card — the core surface of the whole UI. */
+  .card {
+    background-color: color-mix(in oklab, var(--surface) 92%, transparent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow:
+      0 1px 2px hsl(var(--shadow-color) / 0.04),
+      0 12px 28px -16px hsl(var(--shadow-color) / 0.18);
+    backdrop-filter: blur(10px);
+  }
+
+  .card-hover {
+    transition:
+      transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.25s ease,
+      border-color 0.25s ease;
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-strong);
+    box-shadow:
+      0 1px 2px hsl(var(--shadow-color) / 0.05),
+      0 22px 40px -22px hsl(var(--shadow-color) / 0.28);
+  }
+
+  .gradient-teal-viola {
+    background-image: linear-gradient(
+      100deg,
+      var(--teal) 0%,
+      var(--viola) 100%
+    );
+  }
+
+  .text-gradient {
+    background-image: linear-gradient(100deg, var(--teal-strong), var(--viola-strong));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Skeleton shimmer for loading states. */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--surface-2) 25%,
+      var(--surface-3) 37%,
+      var(--surface-2) 63%
+    );
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+    border-radius: var(--radius-sm);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

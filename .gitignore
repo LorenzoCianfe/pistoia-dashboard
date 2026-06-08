@@ -1,0 +1,9 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+
+# Claude Code local config
+.claude/
+
+# App-level ignores live in pistoia-dashboard/.gitignore
