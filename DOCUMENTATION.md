@@ -14,6 +14,8 @@ completa": profilo, impostazioni, notifiche, organigramma e un'area admin riserv
 
 Vision e concept completi: vedi [`pistoia-dashboard-concept.txt`](./pistoia-dashboard-concept.txt).
 
+**Repository GitHub:** <https://github.com/LorenzoCianfe/pistoia-dashboard> (pubblico).
+
 > **Stato attuale:** prototipo **funzionante e completo** con **dati mockup** (seed nel database).
 > Nessun collegamento a fonti dati esterne/reali. L'autenticazione invece è **reale e sicura**.
 
@@ -42,7 +44,11 @@ L'app vive nella sottocartella [`pistoia-dashboard/`](./pistoia-dashboard/).
 
 ## 3. Come avviare il progetto
 
-Dalla cartella `pistoia-dashboard/`:
+**Windows (rapido):** doppio click su `start.bat` nella cartella del progetto — crea il `.env` (con un
+`SESSION_SECRET` casuale), installa le dipendenze, prepara il DB con i dati di esempio, avvia il
+server su <http://localhost:3000> e apre il browser. Per fermare: `stop.bat`.
+
+**Manuale**, dalla cartella `pistoia-dashboard/`:
 
 ```bash
 # 1. Installa le dipendenze (genera anche il client Prisma via postinstall)
@@ -203,7 +209,21 @@ scivolamento verso l'alto, come nelle app native. Rispetta `prefers-reduced-moti
 
 ---
 
-## 9. Decisioni e changelog
+## 9. Deploy / hosting
+
+L'app **non** può stare su GitHub Pages (che serve solo siti statici): qui serve un server in
+esecuzione (Server Actions, sessioni, database). Opzioni gratuite valide:
+
+| Opzione | Note |
+|---|---|
+| **Vercel** (Hobby, gratis) | Casa naturale di Next.js. È serverless ⇒ va sostituito SQLite con un **Postgres gestito** (es. **Neon**, gratis): cambiare il `provider` Prisma in `postgresql`, usare l'adapter `@prisma/adapter-pg`, lanciare migrazioni + seed sul DB remoto. Sempre attivo, veloce. **Consigliato.** |
+| **Render / Railway / Fly.io** | Eseguono un container Node persistente ⇒ si può **mantenere SQLite** (i dati si resettano a ogni redeploy, va bene per un mock). Tier free con sospensione su inattività. |
+
+> Promemoria sicurezza per il deploy: impostare `SESSION_SECRET` (l'app in produzione rifiuta di
+> avviarsi senza), servire in HTTPS (il cookie diventa `Secure`), e leggere l'IP del client da un
+> reverse proxy fidato per il rate-limiting.
+
+## 10. Decisioni e changelog
 
 - **2026-06-08** — Progetto completato end-to-end (mockup). Stack: Next.js 16, React 19, Prisma 7 +
   SQLite (adapter better-sqlite3), Argon2id, Zod 4, Motion, next-themes. Auth reale e sicura; tutte

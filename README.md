@@ -10,6 +10,22 @@ moderna, chiara e veloce — pensata per i cittadini, non per i ragionieri.
 
 ---
 
+## 📸 Anteprima
+
+| Accesso | Bilancio |
+|---|---|
+| ![Login](screenshots/01-login.png) | ![Bilancio](screenshots/02-bilancio.png) |
+
+| Sondaggi | Comunità |
+|---|---|
+| ![Sondaggi](screenshots/03-sondaggi.png) | ![Comunità](screenshots/04-comunita.png) |
+
+**Tema scuro** — i colori di Pistoia restano, l'interfaccia cambia pelle.
+
+![Opere — tema scuro](screenshots/05-opere-dark.png)
+
+---
+
 ## ✨ Funzionalità
 
 - **Bilancio** — i 142 mln della città in un colpo d'occhio: anelli di riscossione/impegni/PNRR,
