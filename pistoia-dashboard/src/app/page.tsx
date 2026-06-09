@@ -41,7 +41,7 @@ const sections = [
 ];
 
 export default async function LandingPage() {
-  if (await getCurrentUser()) redirect("/bilancio");
+  if (await getCurrentUser()) redirect("/la-mia-citta");
 
   return (
     <div className="flex min-h-dvh flex-col">

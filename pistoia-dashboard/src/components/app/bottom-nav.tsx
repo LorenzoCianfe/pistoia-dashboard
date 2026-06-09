@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User } from "lucide-react";
 import { NAV_ITEMS, type NavItem } from "./nav-items";
 import { cn } from "@/lib/utils";
 
-const tabs: NavItem[] = [
-  ...NAV_ITEMS.filter((i) => i.core),
-  { href: "/profilo", label: "Profilo", icon: User, core: false },
-];
+// Mobile bottom tabs = the "core" sections. Profile/settings live in the
+// top-bar avatar menu, so they're intentionally not duplicated here.
+const tabs: NavItem[] = NAV_ITEMS.filter((i) => i.core);
 
 export function BottomNav() {
   const pathname = usePathname();

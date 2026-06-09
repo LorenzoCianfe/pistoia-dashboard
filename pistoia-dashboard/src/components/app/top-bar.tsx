@@ -16,7 +16,7 @@ export function TopBar({
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-surface/80 backdrop-blur-lg">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-        <Link href="/bilancio" className="flex items-center gap-2.5">
+        <Link href="/la-mia-citta" className="flex items-center gap-2.5">
           <Crest className="h-8 w-auto" />
           <span className="hidden font-bold tracking-tight sm:inline">
             Comune di Pistoia

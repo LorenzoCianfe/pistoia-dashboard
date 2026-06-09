@@ -11,7 +11,7 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string | string[] }>;
 }) {
   // Real (DB-backed) check: send already-authenticated users to the dashboard.
-  if (await getCurrentUser()) redirect("/bilancio");
+  if (await getCurrentUser()) redirect("/la-mia-citta");
 
   const sp = await searchParams;
   const next = typeof sp.next === "string" ? sp.next : undefined;

@@ -16,6 +16,14 @@ export async function voteAction(pollId: string, optionId: string) {
     return { ok: false as const, error: "Sondaggio non disponibile." };
   }
 
+  // Official consultations are reserved to verified citizens (§5 access table).
+  if (option.poll.requiresVerified && !user.verifiedType) {
+    return {
+      ok: false as const,
+      error: "Questa consultazione è riservata ai profili verificati.",
+    };
+  }
+
   await prisma.vote.upsert({
     where: { pollId_userId: { pollId, userId: user.id } },
     create: { pollId, optionId, userId: user.id },

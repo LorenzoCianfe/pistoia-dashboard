@@ -12,6 +12,9 @@ import { createSession, destroyCurrentSession } from "@/lib/auth/session";
 import { signupSchema, loginSchema } from "@/lib/auth/validation";
 import { rateLimit, rateLimitReset, sweepRateLimits } from "@/lib/auth/rate-limit";
 import { accentFromString } from "@/lib/colors";
+import { abbreviateName } from "@/lib/community";
+
+const ACCOUNT_TYPES = ["CITIZEN", "ASSOCIATION", "BUSINESS"];
 
 export type AuthState =
   | {
@@ -42,7 +45,7 @@ function safeNext(value: FormDataEntryValue | null): string {
   if (v.startsWith("/") && !v.startsWith("//") && !v.startsWith("/\\")) {
     return v;
   }
-  return "/bilancio";
+  return "/la-mia-citta";
 }
 
 export async function signupAction(
@@ -85,6 +88,9 @@ export async function signupAction(
     };
   }
 
+  const rawAccountType = String(formData.get("accountType") ?? "CITIZEN");
+  const accountType = ACCOUNT_TYPES.includes(rawAccountType) ? rawAccountType : "CITIZEN";
+
   const passwordHash = await hashPassword(password);
   const user = await prisma.user.create({
     data: {
@@ -92,6 +98,8 @@ export async function signupAction(
       email,
       passwordHash,
       role: "CITIZEN",
+      accountType,
+      publicName: abbreviateName(name),
       avatarColor: accentFromString(name),
     },
   });

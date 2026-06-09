@@ -1,23 +1,31 @@
 # Dashboard di Pistoia — Documentazione
 
 > Documento vivo. Viene aggiornato a ogni cambiamento rilevante del progetto.
-> Ultimo aggiornamento: 2026-06-08
+> Ultimo aggiornamento: 2026-06-09
 
 ---
 
 ## 1. Cos'è
 
 La **Dashboard di Pistoia** è una piattaforma civica che trasforma i dati pubblici del Comune di
-Pistoia in qualcosa che un cittadino possa davvero leggere, capire e usare. Quattro sezioni
-principali — **Bilancio, Opere, Sondaggi, Comunità** — più una serie di funzioni da "piattaforma
-completa": profilo, impostazioni, notifiche, organigramma e un'area admin riservata al Comune.
+Pistoia in qualcosa che un cittadino possa davvero leggere, capire e usare. Sezioni principali —
+**Bilancio, Opere, Sondaggi, Comunità, Segnalazioni, Proposte** — più una **home personalizzata "La
+mia città"**, profilo (con **verifica simulata** e badge), impostazioni, notifiche, organigramma e
+un'**area Comune** per verifiche, moderazione e gestione.
 
-Vision e concept completi: vedi [`pistoia-dashboard-concept.txt`](./pistoia-dashboard-concept.txt).
+Dalla **fase 2** (community civica) la piattaforma non è più solo informativa: è un punto di contatto
+**Comune ↔ cittadino** basato su fiducia (profili verificati che sbloccano funzioni), tracciabilità
+(segnalazioni e proposte con stato pubblico), territorialità (quartieri/frazioni) e moderazione.
+Vision community: [`pistoia-community-proposal.md`](./pistoia-community-proposal.md).
+
+Vision e concept originali: vedi [`pistoia-dashboard-concept.txt`](./pistoia-dashboard-concept.txt).
 
 **Repository GitHub:** <https://github.com/LorenzoCianfe/pistoia-dashboard> (pubblico).
 
 > **Stato attuale:** prototipo **funzionante e completo** con **dati mockup** (seed nel database).
-> Nessun collegamento a fonti dati esterne/reali. L'autenticazione invece è **reale e sicura**.
+> Nessun collegamento a fonti dati esterne/reali. L'autenticazione e tutta la logica community
+> (verifiche, segnalazioni, proposte, moderazione) sono **reali**; la sola "simulazione" è che la
+> **verifica d'identità** è concessa dall'admin invece che via SPID/CIE (vedi roadmap §11, fase 4).
 
 ---
 
@@ -86,10 +94,15 @@ Poi apri http://localhost:3000.
 Template: [`pistoia-dashboard/.env.example`](./pistoia-dashboard/.env.example).
 
 ### Account dimostrativi (creati dal seed)
-| Ruolo | Email | Password |
+| Ruolo / profilo | Email | Password |
 |---|---|---|
-| Cittadino | `cittadino@pistoia.it` | `Pistoia2026` |
+| Cittadina (residente verificata) | `cittadino@pistoia.it` | `Pistoia2026` |
 | Comune (admin) | `comune@pistoia.it` | `Comune2026!` |
+| Cittadino verificato (identità) | `lorenzo@pistoia.it` | `Pistoia2026` |
+| Cittadino **non** verificato | `marco@pistoia.it` | `Pistoia2026` |
+| Moderatore civico | `moderatore@pistoia.it` | `Pistoia2026` |
+| Associazione verificata | `associazione@pistoia.it` | `Pistoia2026` |
+| Attività locale verificata | `attivita@pistoia.it` | `Pistoia2026` |
 
 ---
 
@@ -162,6 +175,25 @@ pistoia-dashboard/
   la verifica reale (DB) avviene nella DAL, vicino ai dati.
 - "Cambia password" e "Esci da tutti i dispositivi" invalidano tutte le sessioni esistenti.
 
+### Ruoli, verifica e livelli di accesso (fase community)
+- **Ruoli** (`User.role`): `CITIZEN`, `MODERATOR`, `MUNICIPAL_STAFF`, `ADMIN`. Helper DAL:
+  `requireUser`, `requireVerified`, `requireStaff` (ADMIN/MUNICIPAL_STAFF), `requireModerator`
+  (ADMIN/MODERATOR), `requireAdmin`.
+- **Tipi di profilo** (`User.accountType`): `CITIZEN`, `ASSOCIATION`, `BUSINESS`, `MUNICIPAL`.
+- **Verifica** (`ProfileVerification` + `User.verifiedType`): il cittadino/organizzazione **richiede**
+  una verifica (identità, residenza, associazione, attività); il Comune **approva/rifiuta** da una coda
+  nell'area admin. All'approvazione viene impostato `verifiedType`, assegnato un `CitizenBadge` e
+  inviata una notifica. **In questa fase la verifica è simulata** (no SPID/CIE) ed è etichettata come
+  tale nella UI — coerente con l'ethos di trasparenza.
+- **Gating** (tabella §5 del proposal): commentare / aprire segnalazioni / votare sondaggi aperti →
+  **registrato**; votare **consultazioni ufficiali** (`Poll.requiresVerified`) e **sostenere proposte**
+  → **verificato**. Il gating è applicato lato server nelle action.
+- **Moderazione & audit**: ogni azione del Comune/moderatore (verifica, cambio stato, risposta,
+  nascondi post, broadcast) è registrata in `ModerationAction` — un log append-only che funge anche da
+  audit trail. I moderatori possono nascondere post (`CommunityPost.hidden`, soft-hide).
+- **Privacy**: ogni utente ha un **nome pubblico abbreviato** (`publicName`, es. "Lorenzo C.") usato
+  nei contenuti pubblici; il nome completo resta interno.
+
 ---
 
 ## 6. Modello dati (Prisma)
@@ -176,9 +208,20 @@ pistoia-dashboard/
 | `Assessore` / `AssessoreFollow` | Giunta (albero `parentId`) e follow dei cittadini |
 | `CommunityPost` / `OfficialAnswer` / `PostComment` / `PostLike` | Feed "la città risponde" |
 | `ServiceReview` | Recensioni a stelle dei servizi |
-| `Notification` | Centro notifiche per utente |
+| `Notification` / `NotificationPreference` | Centro notifiche per utente + preferenze per canale |
+| `Neighborhood` | Quartieri e frazioni di Pistoia (territorialità, "Vicino a te") |
+| `ProfileVerification` | Richieste di verifica con coda di approvazione admin |
+| `CitizenBadge` | Badge assegnati (verifica + reputazione civica) |
+| `OrganizationProfile` | Profilo verificato di associazione / attività locale |
+| `Report` / `ReportConfirmation` / `ReportStatusHistory` | Segnalazioni: workflow di stato, "Anche io", storico ufficiale |
+| `Proposal` / `ProposalSupport` | Proposte cittadine con sostegni e soglie (50/200/500) |
+| `Follow` | "Segui" generico (quartieri, opere, segnalazioni, proposte) |
+| `ModerationAction` | Log append-only di azioni admin/moderatore (audit) |
 
-Enum modellati come stringhe (SQLite non ha enum nativi).
+Enum modellati come stringhe (SQLite non ha enum nativi). Estensioni a entità esistenti: `User`
+(`publicName`, `role`, `accountType`, `verifiedType`, `neighborhoodId`), `CommunityPost`
+(`kind`, `neighborhoodId`, `hidden`), `OfficialAnswer` (`department`, `authorId`, `updatedAt`),
+`Poll` (`kind`, `requiresVerified`, `neighborhoodId`). Migrazione `community_mvp` applicata.
 
 ---
 
@@ -186,15 +229,18 @@ Enum modellati come stringhe (SQLite non ha enum nativi).
 
 | Sezione | Stato | Note |
 |---|---|---|
+| La mia città | ✅ | Home personalizzata: saluto, quartiere, KPI ("vicino a te"), segnalazioni vicine, proposte in evidenza, scorciatoie. È il redirect post-login |
 | Bilancio | ✅ | 142 mln (contatore animato), 3 anelli (riscossione/impegni/PNRR), grafico a linee mensile, spesa per missione |
 | Opere | ✅ | 318 censiti, cantieri in evidenza con barre animate, griglia di tutti i cantieri, KPI aggregati |
-| Sondaggi | ✅ | Voto ottimistico in tempo reale, assessore di riferimento con follow, gauge soddisfazione |
-| Comunità | ✅ | Composer, feed con like/commenti ottimistici, risposte ufficiali verificate, recensioni servizi |
+| Sondaggi | ✅ | Voto ottimistico; **consultazioni ufficiali** e **voti territoriali** riservati ai verificati (`requiresVerified`) |
+| Comunità | ✅ | Composer con **tipo post** (domanda/idea/avviso…) e **quartiere**; feed con badge di verifica autore, like/commenti ottimistici, risposte ufficiali con **ufficio**; moderazione (nascondi) |
+| Segnalazioni | ✅ | Lista con filtri + KPI, creazione, **workflow di stato** (stepper), **"Anche io"** (conferme anti-doppione), dettaglio con timeline ufficiale, follow, mappa placeholder |
+| Proposte | ✅ | Lista + creazione, **soglie di sostegno** (50/200/500) con barra, **sostegno gated ai verificati**, risposta ufficiale del Comune, dettaglio |
 | Organigramma | ✅ | Sindaco + giunta, follower, follow/unfollow |
-| Notifiche | ✅ | Lista per tipo, segna-come-letta, badge nel TopBar |
-| Profilo | ✅ | Dati, statistiche attività, modifica (nome/quartiere/bio/colore avatar) |
-| Impostazioni | ✅ | Tema chiaro/scuro/sistema, cambio password, logout globale |
-| Area admin | ✅ | Rispondi alle domande, aggiorna cantieri, crea sondaggi, invia notifiche broadcast |
+| Notifiche | ✅ | Lista per tipo (incl. segnalazione/proposta/verifica), segna-come-letta, badge nel TopBar |
+| Profilo | ✅ | Dati, **badge** e stato verifica, **richiesta verifica**, statistiche (segnalazioni/proposte/voti/segui), nome pubblico |
+| Impostazioni | ✅ | **Preferenze notifiche** per canale, tema chiaro/scuro/sistema, cambio password, logout globale |
+| Area Comune | ✅ | **Coda verifiche** (approva/rifiuta), **triage segnalazioni** (stato/ufficio/nota), **revisione proposte**, risposte ufficiali, broadcast, **registro azioni** |
 | Tema chiaro/scuro | ✅ | next-themes, colori di Pistoia mantenuti |
 
 ---
@@ -236,3 +282,114 @@ esecuzione (Server Actions, sessioni, database). Opzioni gratuite valide:
   secondario in entrambi i temi; stato cantieri preservato in admin; percentuali sondaggi che sommano
   a 100 (largest-remainder); fix mismatch di hydration sui tempi relativi; label/aria su form, nav e
   toast; skip-to-content; `authorId` sui commenti. Migrazione `comment_author` applicata.
+- **2026-06-09 (analisi next-phase)** — Analisi multi-agente esaustiva (7 specialisti: architettura,
+  sicurezza, dati reali, funzionalità, testing/CI, UX/a11y/perf, modello dati) → 67 finding e una
+  **roadmap a 5 fasi** (vedi §11). Scoperta chiave: il portale open-data del Comune di Pistoia
+  (`cloud.ldpgis.it/pistoiaopen`) pubblica **0 dataset**, quindi la strategia dati deve essere
+  **"national-first"** (BDAP, OpenCUP, ReGiS/PNRR, ANAC filtrati per Pistoia, ISTAT 047014). Nessuna
+  modifica al codice in questa sessione: solo pianificazione.
+- **2026-06-09 (Community MVP — fase 2)** — Implementata la **community civica** dal
+  [`pistoia-community-proposal.md`](./pistoia-community-proposal.md), branch `feat/community-mvp`.
+  **Profili verificati** (identità/residenza/associazione/attività) con **coda di approvazione admin**
+  (verifica simulata, no SPID), **badge** e ruoli (cittadino/moderatore/staff/admin); **Segnalazioni**
+  con workflow di stato + **"Anche io"** + storico ufficiale; **Proposte** con soglie di sostegno e
+  risposta del Comune; **quartieri/frazioni** + home **"La mia città"** ("vicino a te"); feed Comunità
+  potenziato (tipo post, quartiere, badge, ufficio nella risposta, moderazione); **gating** per
+  consultazioni/sostegni riservati ai verificati; **preferenze notifiche**; **registro azioni/audit**
+  (`ModerationAction`). 10 nuovi modelli Prisma (migrazione `community_mvp`), 6 action, ~30 file.
+  Verificato: `next build` pulito + smoke test browser (login→La mia città, segnalazioni, proposte,
+  feed, approvazione verifica admin end-to-end). Tutto ancora **dati mockup**.
+
+---
+
+## 11. Roadmap — dalla fase mock alla fase prodotto
+
+> Definita il 2026-06-09 a partire dall'analisi multi-agente. Obiettivo: portare il progetto da
+> "demo che sembra vera" a "prodotto che **è** vero", su due binari paralleli — **abilitatori
+> infrastrutturali** (DB/Redis, test+CI, astrazione delle fonti dati con provenienza, mailer) e
+> **credibilità** (ingestione di dati pubblici reali + funzioni partecipative).
+> Ethos non negoziabile: **"la trasparenza reale non abbellisce"** — ogni dato porta la sua fonte e
+> la data di aggiornamento; cantieri fermi/sospesi etichettati onestamente; baseline finti
+> (`baseVotes`/`baseLikes`/stelle 4.6/risposte "verified" di default) azzerati prima di ogni lancio.
+> Regola di sequenza: gli abilitatori arrivano **prima** delle funzioni che ne dipendono.
+
+### Quick win (alto valore / basso costo — da fare subito)
+1. **Security headers + CSP + `serverActions.allowedOrigins`** in `next.config.ts` (oggi assenti).
+2. **`error.tsx` / `loading.tsx` / `not-found.tsx`** per rotta (usa la classe `.skeleton` già esistente ma mai usata).
+3. **Azzerare i baseline finti** dietro un flag `DEMO_MODE` (default off in prod).
+4. **Test unitari ad alto valore** (Vitest): `toPercents` (largest-remainder), `safeNext`, rate-limiter, `validation`, `colors`.
+5. **`pistoia.config.ts`** con gli identificativi reali del Comune (ISTAT 047014, codice ente BDAP, P.IVA).
+6. **Alternative testuali ai grafici** SVG (`role=img` + tabella sr-only) — fallimento WCAG 1.1.1 oggi.
+7. **Fix integrità voto**: verificare `option.pollId === pollId` in `voteAction` (buco cross-poll).
+8. **Empty state per cittadini** (sostituire "Esegui il seed del database" e aggiungere zero-state a feed/sondaggi/commenti).
+
+### Fasi
+
+**Fase 0 — Hardening & Onestà (≈3-5 settimane).** Rendere il prototipo attuale sicuro, osservabile,
+testato e legalmente presentabile **senza cambiare la fonte dati**. Security headers/CSP/CSRF esplicito;
+error/loading boundary + `result` helper + logger + Sentry + `env.ts` (Zod); harness Vitest + CI
+(GitHub Actions: lint, typecheck, test, build, migration-drift) + Husky + Dependabot; honesty hygiene
+(flag `DEMO_MODE`, `OfficialAnswer.verified` legato all'admin reale); scaffolding a11y/legale
+(alt grafici, contrasto light-theme, footer istituzionale + `/accessibilita` `/privacy` `/note-legali`,
+menu profilo accessibile); fix integrità dati (voto, transazioni, rate-limit su **tutte** le write action).
+
+**Fase 1 — Abilitatori di piattaforma (≈4-6 settimane).** Le migrazioni da fare **mentre i dati sono
+ancora mock** (rischio zero). SQLite → **Postgres/Neon** (`@prisma/adapter-pg`) + **Redis/Upstash** per
+il rate-limit; **astrazione delle fonti dati + schema di provenienza** (interfacce `BudgetSource`/
+`OpereSource`; campi `externalId`/`sourceUrl`/`sourceName`/`lastSyncedAt`; modelli `DataSource` +
+`ImportRun`; flag `DATA_MODE` per-sezione, default mock); **mailer transazionale** (verifica email +
+"password dimenticata", oggi impossibili — nessun mailer); schema pronto per geo/audit
+(`latitude`/`longitude` su `Opera`, modello `Quartiere`, soft-delete, `AuditLog`, indici sui filtri caldi,
+revalidation a tag); layer test integration + E2E (Playwright).
+
+**Fase 2 — Dati reali: prima Bilancio, poi Opere (≈8-12 settimane).** Il salto concept→prodotto.
+*2a Bilancio → BDAP/OpenBDAP* (fonte unica, pulita, canonica per legge — d.lgs 33/2013 art. 9-bis):
+`totale entrate/spese/avanzo → BudgetYear`, missioni armonizzate → 6 categorie display; gestire il gap
+mensile **onestamente** (SIOPE+ per i flussi mensili reali, oppure ri-etichettare `BudgetMonth` come
+curva derivata); + switch anno e confronto anno-su-anno + glossario "spiega in parole semplici".
+*2b Opere → OpenCUP + ReGiS/PNRR + ANAC* (fusione multi-fonte, XL): base record da OpenCUP, avanzamento
+reale dai lavori PNRR via ReGiS, appalti da ANAC; status derivato da regola; geocoding per la mappa;
+etichette di freschezza oneste; pagine dettaglio `/opere/[id]`. *ETL come job schedulato separato*
+(mai nel request path): download → filtro Pistoia → upsert idempotente; monitor sul portale comunale
+(oggi vuoto); pagina "Fonti dei dati" + badge di attribuzione (CC-BY OpenCUP, ODbL PNRR).
+
+**Fase 3 — Prodotto partecipativo (≈8-12 settimane).** Le funzioni first-party che chiudono il loop
+cittadino↔amministrazione (non sono ETL: diventano reali quando i cittadini le usano). **Segnalazioni**
+(modello + lifecycle `ricevuta→presa_in_carico→in_lavorazione→risolta|non_accolta` + coda di triage
+admin + notifica a ogni cambio stato) — feature di punta; **mappa interattiva** (MapLibre/Leaflet, tile
+OSM, pin per categoria, "vicino a te" su `quartiere`); **ricerca globale** (cmd-k) + **open-data-out**
+(export CSV/JSON, API read-only) + **home personalizzata** "La mia Pistoia" (Follow generico); **digest
+email** (cron, usa il mailer della Fase 1).
+
+**Fase 4 — Fiducia istituzionale & layer decisionale (≈10-16 settimane).** Ciò che rende la piattaforma
+un servizio comunale adottabile ufficialmente. **SPID/CIE** (identità verificata, OIDC/SAML — palo
+lungo); **hardening account** (lockout persistente, check password compromesse via HIBP, 2FA TOTP
+obbligatorio per admin, IP da hop fidato, rotazione `SESSION_SECRET`); **conformità GDPR/AgID completa**
+(consenso cookie, privacy/retention, export + diritto all'oblio, dichiarazione di accessibilità formale,
+audit WCAG 2.1 AA); **Delibere + documenti** (modello `Delibera` + `Attachment`, calendario sedute,
+snapshot di bilancio versionati) per completare la narrazione decisione→soldi→opera.
+
+### Rischi principali (con mitigazione)
+- **Disponibilità dati asimmetrica/assente** → design national-first; reclassificare Sondaggi/Comunità/
+  Segnalazioni come first-party, non ETL; monitor sul portale comunale.
+- **Qualità/freschezza dati** vs ethos → rendere l'onestà una feature (badge provenienza, stati
+  "dato non disponibile dalla fonte"); lo schema di provenienza (Fase 1) precede ogni flip a dati reali.
+- **Non conformità legale/GDPR/a11y** → anticipare i fix economici in Fase 0, completare il layer prima
+  del lancio pubblico (gate su checklist di conformità).
+- **Ceiling di scala** (SQLite + rate-limit in-memory single-instance) → migrazione Postgres+Redis in
+  Fase 1 mentre i dati sono mock.
+- **Regressioni su codice security-critical non testato** → harness test+CI in Fase 0 **prima** dei refactor.
+- **Scope sprawl** (~67 finding) → gating rigido per fasi; ogni sezione non ancora "reale" resta mock
+  dietro `DATA_MODE`.
+
+### Fonti dati reali individuate (verificate)
+| Fonte | Alimenta | Formato / Licenza | Caveat |
+|---|---|---|---|
+| **OpenBDAP/BDAP** (RGS-MEF) | Bilancio (`BudgetYear`/`Category`) | CSV/JSON/XML | Solo granularità annuale (no mensile); canonica per legge |
+| **SIOPE+** (Banca d'Italia) | Bilancio `BudgetMonth` | dati pagamenti/incassi | Unica fonte a cadenza mensile |
+| **OpenCUP** | Opere (record base) | API/CSV · **CC-BY** | No % fisica per opere non-PNRR; dataset nazionale ~1.7 GB |
+| **ReGiS/Italia Domani + OpenPNRR** | Opere (avanzamento PNRR) | CSV/JSON · **ODbL 1.0** | Solo opere finanziate dal PNRR |
+| **ANAC** | Opere (appalti/contratti) | CSV/JSON/OCDS | Cadenza mensile; matching non banale |
+| **Comune di Pistoia** (`pistoiaopen` + SIT) | monitor + base map | CKAN / WMS-WFS | **Portale VUOTO (0 dataset)**; SIT solo cartografia base |
+| **ISTAT 047014** | chiave di filtro Pistoia | CSV/JSON | Usato come join key |
+| **Pagine Comune (giunta) / Albo Pretorio** | Organigramma / Delibere | HTML (curato a mano) | Nessun feed aperto; SPID/CIE è dipendenza identità, non dataset |

@@ -5,22 +5,25 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/dal";
 import { clamp } from "@/lib/utils";
+import { notify } from "@/lib/notify";
 
 export type AdminState = { ok?: boolean; error?: string } | undefined;
 
 const answerSchema = z.object({
   postId: z.string().min(1),
   body: z.string().trim().min(4, "La risposta è troppo breve.").max(600),
+  department: z.string().trim().max(80).optional(),
 });
 
 export async function answerPostAction(
   _prev: AdminState,
   formData: FormData,
 ): Promise<AdminState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const parsed = answerSchema.safeParse({
     postId: formData.get("postId"),
     body: formData.get("body"),
+    department: formData.get("department") || undefined,
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Dati non validi." };
@@ -32,21 +35,34 @@ export async function answerPostAction(
   });
   if (!post) return { error: "Domanda non trovata." };
 
+  const department = parsed.data.department || null;
   await prisma.officialAnswer.upsert({
     where: { postId: post.id },
-    create: { postId: post.id, body: parsed.data.body, verified: true },
-    update: { body: parsed.data.body, verified: true },
+    create: {
+      postId: post.id,
+      body: parsed.data.body,
+      verified: true,
+      authorId: admin.id,
+      department,
+    },
+    update: { body: parsed.data.body, verified: true, authorId: admin.id, department },
+  });
+
+  await prisma.moderationAction.create({
+    data: {
+      actorId: admin.id,
+      action: "answer",
+      targetType: "post",
+      targetId: post.id,
+    },
   });
 
   if (post.authorId) {
-    await prisma.notification.create({
-      data: {
-        userId: post.authorId,
-        type: "answer",
-        title: "Il Comune ha risposto",
-        body: parsed.data.body.slice(0, 140),
-        href: "/comunita",
-      },
+    await notify(post.authorId, {
+      type: "answer",
+      title: "Il Comune ha risposto",
+      body: parsed.data.body.slice(0, 140),
+      href: "/comunita",
     });
   }
 

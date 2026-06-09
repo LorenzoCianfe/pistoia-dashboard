@@ -28,10 +28,16 @@ async function wipe() {
   await prisma.postComment.deleteMany();
   await prisma.officialAnswer.deleteMany();
   await prisma.communityPost.deleteMany();
+  await prisma.reportConfirmation.deleteMany();
+  await prisma.reportStatusHistory.deleteMany();
+  await prisma.report.deleteMany();
+  await prisma.proposalSupport.deleteMany();
+  await prisma.proposal.deleteMany();
   await prisma.vote.deleteMany();
   await prisma.pollOption.deleteMany();
   await prisma.poll.deleteMany();
   await prisma.assessoreFollow.deleteMany();
+  await prisma.follow.deleteMany();
   await prisma.assessore.deleteMany();
   await prisma.operaUpdate.deleteMany();
   await prisma.opera.deleteMany();
@@ -39,7 +45,13 @@ async function wipe() {
   await prisma.budgetCategory.deleteMany();
   await prisma.budgetYear.deleteMany();
   await prisma.serviceReview.deleteMany();
+  await prisma.profileVerification.deleteMany();
+  await prisma.citizenBadge.deleteMany();
+  await prisma.organizationProfile.deleteMany();
+  await prisma.moderationAction.deleteMany();
+  await prisma.notificationPreference.deleteMany();
   await prisma.session.deleteMany();
+  await prisma.neighborhood.deleteMany();
   await prisma.user.deleteMany();
 }
 
@@ -47,17 +59,50 @@ async function main() {
   console.log("⛏  Seeding Dashboard di Pistoia (mock data)…");
   await wipe();
 
+  // --- Quartieri e frazioni ------------------------------------------------
+  const NEIGHBORHOODS: { name: string; slug: string; kind: string }[] = [
+    { name: "Pistoia Centro", slug: "centro", kind: "quartiere" },
+    { name: "Sant'Agostino", slug: "sant-agostino", kind: "quartiere" },
+    { name: "Bottegone", slug: "bottegone", kind: "frazione" },
+    { name: "Bonelle", slug: "bonelle", kind: "frazione" },
+    { name: "Candeglia", slug: "candeglia", kind: "frazione" },
+    { name: "Pontenuovo", slug: "pontenuovo", kind: "frazione" },
+    { name: "Le Fornaci", slug: "le-fornaci", kind: "quartiere" },
+    { name: "Vergine", slug: "vergine", kind: "quartiere" },
+    { name: "Ramini", slug: "ramini", kind: "frazione" },
+    { name: "Collina e frazioni montane", slug: "collina", kind: "frazione" },
+  ];
+  await prisma.neighborhood.createMany({
+    data: NEIGHBORHOODS.map((n, i) => ({ ...n, order: i + 1 })),
+  });
+  const nbRows = await prisma.neighborhood.findMany();
+  const nb = Object.fromEntries(nbRows.map((n) => [n.slug, n.id])) as Record<string, string>;
+
   // --- Users ---------------------------------------------------------------
   const citizen = await prisma.user.create({
     data: {
       email: "cittadino@pistoia.it",
       name: "Giulia Vannucci",
+      publicName: "Giulia V.",
       passwordHash: await hashPw("Pistoia2026"),
       role: "CITIZEN",
+      accountType: "CITIZEN",
+      verifiedType: "RESIDENCY",
       avatarColor: "viola",
       quartiere: "Centro storico",
+      neighborhoodId: nb["centro"],
       bio: "Curiosa di come funziona la mia città.",
       emailVerified: true,
+      badges: {
+        create: [
+          { badgeType: "residency", label: "Residente verificato", icon: "🏠" },
+          { badgeType: "identity", label: "Identità verificata", icon: "✅" },
+          { badgeType: "active_citizen", label: "Cittadino attivo", icon: "⭐" },
+        ],
+      },
+      verifications: {
+        create: [{ type: "RESIDENCY", status: "APPROVED", reviewedAt: daysAgo(30) }],
+      },
     },
   });
 
@@ -65,12 +110,153 @@ async function main() {
     data: {
       email: "comune@pistoia.it",
       name: "Redazione Comune",
+      publicName: "Comune di Pistoia",
       passwordHash: await hashPw("Comune2026!"),
       role: "ADMIN",
+      accountType: "MUNICIPAL",
+      verifiedType: "MUNICIPAL_STAFF",
       avatarColor: "red",
       quartiere: "Comune di Pistoia",
       bio: "Account ufficiale (mock) della redazione del Comune.",
       emailVerified: true,
+      badges: { create: [{ badgeType: "municipal", label: "Account ufficiale Comune", icon: "🏛️" }] },
+    },
+  });
+
+  // Lorenzo — verified citizen (the "Lorenzo C." of the proposal).
+  const lorenzo = await prisma.user.create({
+    data: {
+      email: "lorenzo@pistoia.it",
+      name: "Lorenzo Cianferoni",
+      publicName: "Lorenzo C.",
+      passwordHash: await hashPw("Pistoia2026"),
+      role: "CITIZEN",
+      accountType: "CITIZEN",
+      verifiedType: "IDENTITY",
+      avatarColor: "teal",
+      neighborhoodId: nb["centro"],
+      bio: "Cittadino attivo, interessato a mobilità e verde.",
+      emailVerified: true,
+      badges: {
+        create: [
+          { badgeType: "identity", label: "Identità verificata", icon: "✅" },
+          { badgeType: "useful_proposals", label: "Proposte utili", icon: "💡" },
+          { badgeType: "reliable_reporter", label: "Segnalatore affidabile", icon: "📣" },
+        ],
+      },
+      verifications: { create: [{ type: "IDENTITY", status: "APPROVED", reviewedAt: daysAgo(60) }] },
+    },
+  });
+
+  // Marco — registered but NOT verified, with a PENDING request (admin queue demo).
+  const marco = await prisma.user.create({
+    data: {
+      email: "marco@pistoia.it",
+      name: "Marco Gentili",
+      publicName: "Marco G.",
+      passwordHash: await hashPw("Pistoia2026"),
+      role: "CITIZEN",
+      accountType: "CITIZEN",
+      avatarColor: "amber",
+      neighborhoodId: nb["sant-agostino"],
+      emailVerified: true,
+      verifications: { create: [{ type: "IDENTITY", status: "PENDING", note: "Vorrei poter supportare le proposte del mio quartiere." }] },
+    },
+  });
+
+  // Sara — civic moderator.
+  const moderatore = await prisma.user.create({
+    data: {
+      email: "moderatore@pistoia.it",
+      name: "Sara Niccolini",
+      publicName: "Sara N.",
+      passwordHash: await hashPw("Pistoia2026"),
+      role: "MODERATOR",
+      accountType: "CITIZEN",
+      verifiedType: "IDENTITY",
+      avatarColor: "green",
+      neighborhoodId: nb["pontenuovo"],
+      bio: "Moderatrice civica della community.",
+      emailVerified: true,
+      badges: {
+        create: [
+          { badgeType: "moderator", label: "Moderatore civico", icon: "🛡️" },
+          { badgeType: "identity", label: "Identità verificata", icon: "✅" },
+        ],
+      },
+      verifications: { create: [{ type: "IDENTITY", status: "APPROVED", reviewedAt: daysAgo(90) }] },
+    },
+  });
+
+  // Verified association.
+  const assoc = await prisma.user.create({
+    data: {
+      email: "associazione@pistoia.it",
+      name: "Amici del Parco di Monteoliveto",
+      publicName: "Amici del Parco",
+      passwordHash: await hashPw("Pistoia2026"),
+      role: "CITIZEN",
+      accountType: "ASSOCIATION",
+      verifiedType: "ASSOCIATION",
+      avatarColor: "green",
+      neighborhoodId: nb["le-fornaci"],
+      bio: "Associazione di volontariato per la cura del verde pubblico.",
+      emailVerified: true,
+      badges: { create: [{ badgeType: "association", label: "Associazione verificata", icon: "🤝" }] },
+      verifications: { create: [{ type: "ASSOCIATION", status: "APPROVED", organizationName: "Amici del Parco di Monteoliveto", reviewedAt: daysAgo(45) }] },
+      organization: {
+        create: {
+          type: "ASSOCIATION",
+          name: "Amici del Parco di Monteoliveto",
+          description: "Volontari per la manutenzione e l'animazione delle aree verdi del quartiere.",
+          category: "Ambiente",
+          verified: true,
+        },
+      },
+    },
+  });
+
+  // Verified local business.
+  const attivita = await prisma.user.create({
+    data: {
+      email: "attivita@pistoia.it",
+      name: "Bottega del Corso",
+      publicName: "Bottega del Corso",
+      passwordHash: await hashPw("Pistoia2026"),
+      role: "CITIZEN",
+      accountType: "BUSINESS",
+      verifiedType: "BUSINESS",
+      avatarColor: "amber",
+      neighborhoodId: nb["centro"],
+      bio: "Attività storica del centro, attenta alla vita del quartiere.",
+      emailVerified: true,
+      badges: { create: [{ badgeType: "business", label: "Attività locale verificata", icon: "🛍️" }] },
+      verifications: { create: [{ type: "BUSINESS", status: "APPROVED", organizationName: "Bottega del Corso", reviewedAt: daysAgo(20) }] },
+      organization: {
+        create: {
+          type: "BUSINESS",
+          name: "Bottega del Corso",
+          description: "Bottega di prodotti tipici in Corso Gramsci.",
+          category: "Commercio",
+          verified: true,
+        },
+      },
+    },
+  });
+
+  // A business awaiting verification (admin queue demo).
+  await prisma.user.create({
+    data: {
+      email: "caffe@pistoia.it",
+      name: "Caffè Globo",
+      publicName: "Caffè Globo",
+      passwordHash: await hashPw("Pistoia2026"),
+      role: "CITIZEN",
+      accountType: "BUSINESS",
+      avatarColor: "red",
+      neighborhoodId: nb["centro"],
+      emailVerified: true,
+      verifications: { create: [{ type: "BUSINESS", status: "PENDING", organizationName: "Caffè Globo", note: "Bar storico di Piazza della Sala." }] },
     },
   });
 
@@ -419,6 +605,48 @@ async function main() {
     },
   });
 
+  // Consultazione ufficiale (riservata ai profili verificati).
+  await prisma.poll.create({
+    data: {
+      question: "Piano mobilità del centro storico: cosa privilegiare?",
+      description: "Consultazione ufficiale riservata ai cittadini verificati. Il tuo contributo confluisce nel percorso partecipativo del nuovo piano.",
+      year: 2026,
+      category: "Consultazione ufficiale",
+      kind: "consultazione",
+      requiresVerified: true,
+      active: true,
+      assessoreId: vicesindaco.id,
+      options: {
+        create: [
+          { label: "Più aree pedonali", color: "green", baseVotes: 280, order: 1 },
+          { label: "Più parcheggi di scambio", color: "viola", baseVotes: 240, order: 2 },
+          { label: "Più trasporto pubblico", color: "teal", baseVotes: 190, order: 3 },
+        ],
+      },
+    },
+  });
+
+  // Voto territoriale (verificati del quartiere).
+  await prisma.poll.create({
+    data: {
+      question: "Quale area verde di Le Fornaci riqualificare per prima?",
+      description: "Voto territoriale riservato ai residenti verificati del quartiere.",
+      year: 2026,
+      category: "Voto territoriale",
+      kind: "territoriale",
+      requiresVerified: true,
+      neighborhoodId: nb["le-fornaci"],
+      active: true,
+      assessoreId: belli.id,
+      options: {
+        create: [
+          { label: "Parco di Monteoliveto", color: "green", baseVotes: 142, order: 1 },
+          { label: "Giardino di Via delle Fornaci", color: "teal", baseVotes: 98, order: 2 },
+        ],
+      },
+    },
+  });
+
   // --- Recensioni servizi --------------------------------------------------
   await prisma.serviceReview.createMany({
     data: [
@@ -435,6 +663,8 @@ async function main() {
       authorName: "Marco Gentili",
       authorInitials: "MG",
       authorColor: "teal",
+      kind: "domanda",
+      neighborhoodId: nb["centro"],
       content: "Quando riapre il giardino di Via Pacini? I bambini lo aspettano da mesi!",
       imageSeed: "parco",
       category: "verde",
@@ -460,6 +690,8 @@ async function main() {
       authorName: "Sofia Lenzi",
       authorInitials: "SL",
       authorColor: "amber",
+      kind: "avviso",
+      neighborhoodId: nb["centro"],
       content: "I nuovi cestini in Piazza della Sala sono bellissimi e fanno la differenza. Complimenti!",
       category: "servizi",
       baseLikes: 64,
@@ -473,6 +705,8 @@ async function main() {
       authorName: "Riccardo Fini",
       authorInitials: "RF",
       authorColor: "viola",
+      kind: "domanda",
+      neighborhoodId: nb["sant-agostino"],
       content: "Il semaforo di Via Ciliegiole è rotto da una settimana, è pericoloso. Si può intervenire?",
       category: "mobilita",
       baseLikes: 212,
@@ -492,6 +726,8 @@ async function main() {
       authorName: citizen.name,
       authorInitials: "GV",
       authorColor: citizen.avatarColor,
+      kind: "idea",
+      neighborhoodId: nb["centro"],
       content: "Sarebbe bello avere più rastrelliere per le bici in centro. Chi è d'accordo?",
       category: "mobilita",
       baseLikes: 41,
@@ -504,6 +740,8 @@ async function main() {
       authorName: "Giulio Taddei",
       authorInitials: "GT",
       authorColor: "green",
+      kind: "domanda",
+      neighborhoodId: nb["centro"],
       content: "Quando partono davvero i lavori della ciclabile sull'Ombrone? Bellissimo progetto.",
       category: "mobilita",
       baseLikes: 87,
@@ -517,9 +755,274 @@ async function main() {
     },
   });
 
+  // --- Segnalazioni (reports) ---------------------------------------------
+  const repLampione = await prisma.report.create({
+    data: {
+      authorId: marco.id,
+      authorName: marco.publicName ?? marco.name,
+      authorInitials: "MG",
+      authorColor: marco.avatarColor,
+      title: "Lampione spento in Via Ciliegiole",
+      description:
+        "Il lampione all'incrocio con Via di Gello è spento da oltre una settimana. La sera la zona è completamente al buio ed è pericolosa per i pedoni.",
+      category: "illuminazione",
+      status: "in_lavorazione",
+      neighborhoodId: nb["sant-agostino"],
+      location: "Via Ciliegiole, incrocio Via di Gello",
+      assignedDepartment: "Ufficio Strade e Manutenzioni",
+      baseConfirmations: 47,
+      createdAt: daysAgo(9),
+      updates: {
+        create: [
+          { status: "ricevuta", note: "Segnalazione ricevuta.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(9) },
+          { status: "validata", note: "Segnalazione validata e inoltrata all'ufficio competente.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(8) },
+          { status: "presa_in_carico", note: "Presa in carico dall'Ufficio Strade e Manutenzioni.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(5) },
+          { status: "in_lavorazione", note: "Intervento programmato: sostituzione del corpo illuminante entro 72 ore.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(2) },
+        ],
+      },
+    },
+  });
+
+  await prisma.report.create({
+    data: {
+      authorId: lorenzo.id,
+      authorName: lorenzo.publicName ?? lorenzo.name,
+      authorInitials: "LC",
+      authorColor: lorenzo.avatarColor,
+      title: "Buca pericolosa in Via di Bigiano",
+      description: "Grossa buca vicino alla scuola Marino Marini, rischiosa per bici e scooter.",
+      category: "buche",
+      status: "presa_in_carico",
+      neighborhoodId: nb["centro"],
+      location: "Via di Bigiano",
+      assignedDepartment: "Ufficio Strade e Manutenzioni",
+      baseConfirmations: 23,
+      createdAt: daysAgo(6),
+      updates: {
+        create: [
+          { status: "ricevuta", note: "Segnalazione ricevuta.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(6) },
+          { status: "presa_in_carico", note: "Sopralluogo effettuato, intervento in programmazione.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(3) },
+        ],
+      },
+    },
+  });
+
+  const repCestini = await prisma.report.create({
+    data: {
+      authorId: citizen.id,
+      authorName: citizen.publicName ?? citizen.name,
+      authorInitials: "GV",
+      authorColor: citizen.avatarColor,
+      title: "Cestini stracolmi in Piazza della Sala",
+      description: "Nei weekend i cestini della piazza sono sempre pieni già al mattino.",
+      category: "rifiuti",
+      status: "risolta",
+      neighborhoodId: nb["centro"],
+      location: "Piazza della Sala",
+      assignedDepartment: "Ufficio Igiene Urbana",
+      baseConfirmations: 15,
+      createdAt: daysAgo(14),
+      resolvedAt: daysAgo(3),
+      updates: {
+        create: [
+          { status: "ricevuta", note: "Segnalazione ricevuta.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(14) },
+          { status: "in_lavorazione", note: "Aumentata la frequenza di svuotamento nel weekend.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(8) },
+          { status: "risolta", note: "Installati due cestini aggiuntivi. Grazie per la segnalazione.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(3) },
+        ],
+      },
+    },
+  });
+
+  const repParco = await prisma.report.create({
+    data: {
+      authorId: citizen.id,
+      authorName: citizen.publicName ?? citizen.name,
+      authorInitials: "GV",
+      authorColor: citizen.avatarColor,
+      title: "Giochi rotti al giardino di Via Pacini",
+      description: "Lo scivolo e un'altalena sono rotti e transennati da settimane.",
+      category: "parchi",
+      status: "validata",
+      neighborhoodId: nb["centro"],
+      location: "Giardino di Via Pacini",
+      baseConfirmations: 8,
+      createdAt: daysAgo(4),
+      updates: {
+        create: [
+          { status: "ricevuta", note: "Segnalazione ricevuta.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(4) },
+          { status: "validata", note: "Verificata, inserita nel piano di manutenzione dei giochi.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(1) },
+        ],
+      },
+    },
+  });
+
+  await prisma.report.create({
+    data: {
+      authorName: "Anna R.",
+      authorInitials: "AR",
+      authorColor: "viola",
+      title: "Marciapiede inaccessibile in carrozzina",
+      description: "Il marciapiede di Via Bottegone non ha scivoli e costringe in mezzo alla strada.",
+      category: "barriere",
+      status: "ricevuta",
+      neighborhoodId: nb["bottegone"],
+      location: "Via Bottegone",
+      baseConfirmations: 12,
+      createdAt: daysAgo(2),
+      updates: { create: [{ status: "ricevuta", note: "Segnalazione ricevuta.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(2) }] },
+    },
+  });
+
+  await prisma.report.create({
+    data: {
+      authorName: "Riccardo F.",
+      authorInitials: "RF",
+      authorColor: "amber",
+      title: "Schiamazzi notturni nella zona della movida",
+      description: "Rumore fino a tarda notte nei weekend in centro.",
+      category: "rumore",
+      status: "non_di_competenza",
+      neighborhoodId: nb["centro"],
+      baseConfirmations: 31,
+      createdAt: daysAgo(11),
+      updates: {
+        create: [
+          { status: "ricevuta", note: "Segnalazione ricevuta.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(11) },
+          { status: "non_di_competenza", note: "Per i controlli notturni rivolgersi alla Polizia Municipale (numero unico). Segnalazione inoltrata per conoscenza.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(9) },
+        ],
+      },
+    },
+  });
+
+  // "Anche io" confirmations from verified citizens.
+  await prisma.reportConfirmation.createMany({
+    data: [
+      { reportId: repLampione.id, userId: citizen.id },
+      { reportId: repLampione.id, userId: lorenzo.id },
+      { reportId: repLampione.id, userId: moderatore.id },
+      { reportId: repParco.id, userId: lorenzo.id },
+      { reportId: repParco.id, userId: marco.id },
+    ],
+  });
+
+  // --- Proposte cittadine -------------------------------------------------
+  const propRastrelliere = await prisma.proposal.create({
+    data: {
+      authorId: lorenzo.id,
+      authorName: lorenzo.publicName ?? lorenzo.name,
+      authorInitials: "LC",
+      authorColor: lorenzo.avatarColor,
+      title: "Più rastrelliere per le bici in centro",
+      description:
+        "Installare rastrelliere coperte vicino alle principali piazze del centro per incentivare gli spostamenti in bici e ridurre il parcheggio selvaggio dei mezzi.",
+      category: "Mobilità",
+      neighborhoodId: nb["centro"],
+      status: "in_valutazione",
+      baseSupports: 124,
+      createdAt: daysAgo(12),
+    },
+  });
+
+  await prisma.proposal.create({
+    data: {
+      authorId: citizen.id,
+      authorName: citizen.publicName ?? citizen.name,
+      authorInitials: "GV",
+      authorColor: citizen.avatarColor,
+      title: "Una fontanella in Piazza della Resistenza",
+      description: "Una fontanella di acqua potabile renderebbe la piazza più vivibile d'estate.",
+      category: "Verde",
+      neighborhoodId: nb["centro"],
+      status: "pubblicata",
+      baseSupports: 62,
+      createdAt: daysAgo(7),
+    },
+  });
+
+  const propOrti = await prisma.proposal.create({
+    data: {
+      authorId: assoc.id,
+      authorName: assoc.publicName ?? assoc.name,
+      authorInitials: "AP",
+      authorColor: assoc.avatarColor,
+      title: "Orti urbani condivisi a Le Fornaci",
+      description:
+        "Assegnare un'area comunale inutilizzata a orti urbani gestiti dai residenti, con priorità ad anziani e famiglie.",
+      category: "Ambiente",
+      neighborhoodId: nb["le-fornaci"],
+      status: "risposta",
+      baseSupports: 210,
+      officialReply:
+        "Proposta accolta in valutazione: l'area di Via delle Fornaci è in fase di verifica urbanistica. Aggiorneremo entro l'autunno.",
+      officialReplyAt: daysAgo(5),
+      createdAt: daysAgo(40),
+    },
+  });
+
+  await prisma.proposal.create({
+    data: {
+      authorId: marco.id,
+      authorName: marco.publicName ?? marco.name,
+      authorInitials: "MG",
+      authorColor: marco.avatarColor,
+      title: "Area pattinaggio per ragazzi a Bottegone",
+      description: "Uno spazio attrezzato per skate e pattini darebbe ai ragazzi un luogo dove ritrovarsi.",
+      category: "Sport",
+      neighborhoodId: nb["bottegone"],
+      status: "pubblicata",
+      baseSupports: 38,
+      createdAt: daysAgo(5),
+    },
+  });
+
+  // Support from verified citizens.
+  await prisma.proposalSupport.createMany({
+    data: [
+      { proposalId: propRastrelliere.id, userId: citizen.id },
+      { proposalId: propRastrelliere.id, userId: moderatore.id },
+      { proposalId: propOrti.id, userId: citizen.id },
+      { proposalId: propOrti.id, userId: lorenzo.id },
+    ],
+  });
+
+  // --- Generic follows for the demo citizen -------------------------------
+  await prisma.follow.createMany({
+    data: [
+      { userId: citizen.id, targetType: "neighborhood", targetId: nb["centro"] },
+      { userId: citizen.id, targetType: "report", targetId: repLampione.id },
+      { userId: citizen.id, targetType: "proposal", targetId: propRastrelliere.id },
+    ],
+  });
+
+  // --- Moderation / audit log (a few seeded entries) ----------------------
+  await prisma.moderationAction.createMany({
+    data: [
+      { actorId: admin.id, action: "report_status", targetType: "report", targetId: repCestini.id, reason: "Risolta", createdAt: daysAgo(3) },
+      { actorId: admin.id, action: "proposal_status", targetType: "proposal", targetId: propOrti.id, reason: "Risposta del Comune", createdAt: daysAgo(5) },
+    ],
+  });
+
   // --- Notifiche per il cittadino demo ------------------------------------
   await prisma.notification.createMany({
     data: [
+      {
+        userId: citizen.id,
+        type: "report",
+        title: "Aggiornamento sulla tua segnalazione",
+        body: "«Cestini stracolmi in Piazza della Sala» → Risolta. Grazie per la segnalazione.",
+        href: "/segnalazioni",
+        read: false,
+        createdAt: daysAgo(3),
+      },
+      {
+        userId: citizen.id,
+        type: "verification",
+        title: "Profilo verificato",
+        body: "La tua verifica «Residente verificato» è stata approvata.",
+        href: "/profilo",
+        read: true,
+        createdAt: daysAgo(30),
+      },
       {
         userId: citizen.id,
         type: "answer",
@@ -565,8 +1068,13 @@ async function main() {
   });
 
   console.log("✅ Seed completato.");
-  console.log("   Cittadino: cittadino@pistoia.it / Pistoia2026");
-  console.log("   Admin:     comune@pistoia.it / Comune2026!");
+  console.log("   Cittadino (residente verif.): cittadino@pistoia.it / Pistoia2026");
+  console.log("   Admin / Comune:               comune@pistoia.it / Comune2026!");
+  console.log("   Cittadino verif. (Lorenzo):   lorenzo@pistoia.it / Pistoia2026");
+  console.log("   Cittadino NON verificato:     marco@pistoia.it / Pistoia2026");
+  console.log("   Moderatore civico:            moderatore@pistoia.it / Pistoia2026");
+  console.log("   Associazione verificata:      associazione@pistoia.it / Pistoia2026");
+  console.log("   Attività verificata:          attivita@pistoia.it / Pistoia2026");
 }
 
 main()
