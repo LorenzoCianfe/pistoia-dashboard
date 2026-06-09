@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
-import { Shield, MessageCircleQuestion, HardHat, Vote, Megaphone } from "lucide-react";
+import {
+  Shield,
+  MessageCircleQuestion,
+  HardHat,
+  Vote,
+  Megaphone,
+  BadgeCheck,
+  Lightbulb,
+  History,
+} from "lucide-react";
 import { requireAdmin } from "@/lib/auth/dal";
 import { getAdminData } from "@/lib/data/admin";
 import { Card } from "@/components/ui/card";
@@ -8,8 +17,22 @@ import { AnswerForm } from "@/components/admin/answer-form";
 import { OperaProgressForm } from "@/components/admin/opera-progress-form";
 import { CreatePollForm } from "@/components/admin/create-poll-form";
 import { BroadcastForm } from "@/components/admin/broadcast-form";
+import { VerificationQueue } from "@/components/admin/verification-queue";
+import { ReportTriage } from "@/components/admin/report-triage";
+import { ProposalReview } from "@/components/admin/proposal-review";
+import { formatRelativeTime } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Area Comune" };
+
+const MOD_LABEL: Record<string, string> = {
+  verify_approve: "Verifica approvata",
+  verify_reject: "Verifica rifiutata",
+  report_status: "Stato segnalazione aggiornato",
+  proposal_status: "Stato proposta aggiornato",
+  hide_post: "Post nascosto",
+  answer: "Risposta pubblicata",
+  broadcast: "Notifica inviata",
+};
 
 export default async function AdminPage() {
   await requireAdmin();
@@ -17,8 +40,8 @@ export default async function AdminPage() {
 
   const stats = [
     { label: "Cittadini registrati", value: data.userCount },
-    { label: "Sondaggi attivi", value: data.pollCount },
-    { label: "Risposte pubblicate", value: data.answeredCount },
+    { label: "Verifiche in attesa", value: data.pendingVerifications.length },
+    { label: "Segnalazioni aperte", value: data.openReportsCount },
     { label: "Domande in attesa", value: data.unanswered.length },
   ];
 
@@ -27,7 +50,7 @@ export default async function AdminPage() {
       <SectionHeader
         eyebrow="Riservato al Comune"
         title="Area Comune"
-        description="Rispondi ai cittadini, aggiorna i cantieri e lancia nuovi sondaggi. Tutto simulato."
+        description="Verifica i profili, gestisci segnalazioni e proposte, rispondi ai cittadini. Tutto simulato."
         icon={<Shield size={22} className="text-[var(--red)]" />}
       />
 
@@ -40,6 +63,49 @@ export default async function AdminPage() {
           </Card>
         ))}
       </div>
+
+      {/* Verifiche + Segnalazioni */}
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Card>
+          <div className="flex items-center gap-2">
+            <BadgeCheck size={18} className="text-teal" />
+            <h2 className="text-base font-semibold">Richieste di verifica</h2>
+          </div>
+          <p className="mt-1 text-sm text-muted">
+            Approva o rifiuta le richieste dei cittadini e delle organizzazioni.
+          </p>
+          <div className="mt-4">
+            <VerificationQueue items={data.pendingVerifications} />
+          </div>
+        </Card>
+
+        <Card>
+          <div className="flex items-center gap-2">
+            <Megaphone size={18} className="text-teal" />
+            <h2 className="text-base font-semibold">Segnalazioni aperte</h2>
+          </div>
+          <p className="mt-1 text-sm text-muted">
+            Cambia stato, assegna un ufficio e lascia una nota ufficiale.
+          </p>
+          <div className="mt-4 max-h-[36rem] overflow-y-auto pr-1">
+            <ReportTriage items={data.openReports} />
+          </div>
+        </Card>
+      </div>
+
+      {/* Proposte da valutare */}
+      <Card>
+        <div className="flex items-center gap-2">
+          <Lightbulb size={18} className="text-teal" />
+          <h2 className="text-base font-semibold">Proposte cittadine</h2>
+        </div>
+        <p className="mt-1 text-sm text-muted">
+          Le proposte ordinate per sostegno: aggiorna lo stato e rispondi ufficialmente.
+        </p>
+        <div className="mt-4">
+          <ProposalReview items={data.proposalsToReview} />
+        </div>
+      </Card>
 
       {/* Domande senza risposta */}
       <Card>
@@ -56,9 +122,7 @@ export default async function AdminPage() {
               Nessuna domanda in attesa. Ottimo lavoro! 🎉
             </p>
           ) : (
-            data.unanswered.map((post) => (
-              <AnswerForm key={post.id} post={post} />
-            ))
+            data.unanswered.map((post) => <AnswerForm key={post.id} post={post} />)
           )}
         </div>
       </Card>
@@ -93,12 +157,35 @@ export default async function AdminPage() {
           <Megaphone size={18} className="text-teal" />
           <h2 className="text-base font-semibold">Invia una notifica</h2>
         </div>
-        <p className="mt-1 text-sm text-muted">
-          Raggiunge tutti i cittadini registrati.
-        </p>
+        <p className="mt-1 text-sm text-muted">Raggiunge tutti i cittadini registrati.</p>
         <div className="mt-4 max-w-md">
           <BroadcastForm />
         </div>
+      </Card>
+
+      {/* Registro moderazione / audit */}
+      <Card>
+        <div className="flex items-center gap-2">
+          <History size={18} className="text-teal" />
+          <h2 className="text-base font-semibold">Registro delle azioni</h2>
+        </div>
+        {data.recentModeration.length === 0 ? (
+          <p className="mt-3 text-sm text-muted">Nessuna azione registrata.</p>
+        ) : (
+          <ul className="mt-3 divide-y divide-border text-sm">
+            {data.recentModeration.map((m) => (
+              <li key={m.id} className="flex items-center justify-between gap-3 py-2.5">
+                <span>
+                  <span className="font-medium">{MOD_LABEL[m.action] ?? m.action}</span>
+                  {m.reason ? <span className="text-muted"> · {m.reason}</span> : null}
+                </span>
+                <span className="shrink-0 text-xs text-muted-2" suppressHydrationWarning>
+                  {m.actor?.name ?? "—"} · {formatRelativeTime(m.createdAt)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </Card>
     </div>
   );

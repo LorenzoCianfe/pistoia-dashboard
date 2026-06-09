@@ -7,10 +7,13 @@ import { NextResponse, type NextRequest } from "next/server";
 const SESSION_COOKIE = "pistoia_session";
 
 const PROTECTED_PREFIXES = [
+  "/la-mia-citta",
   "/bilancio",
   "/opere",
   "/sondaggi",
   "/comunita",
+  "/segnalazioni",
+  "/proposte",
   "/organigramma",
   "/notifiche",
   "/profilo",

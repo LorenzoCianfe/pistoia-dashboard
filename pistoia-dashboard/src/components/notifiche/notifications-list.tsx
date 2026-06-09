@@ -8,6 +8,9 @@ import {
   HardHat,
   Bell,
   CheckCheck,
+  Megaphone,
+  Lightbulb,
+  BadgeCheck,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -24,6 +27,9 @@ const TYPE: Record<string, { icon: LucideIcon; color: string }> = {
   answer: { icon: MessageCircle, color: "teal" },
   poll: { icon: Vote, color: "viola" },
   opera: { icon: HardHat, color: "amber" },
+  report: { icon: Megaphone, color: "amber" },
+  proposal: { icon: Lightbulb, color: "green" },
+  verification: { icon: BadgeCheck, color: "teal" },
   system: { icon: Bell, color: "green" },
 };
 

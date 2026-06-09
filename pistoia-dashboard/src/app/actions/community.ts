@@ -5,6 +5,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth/dal";
 import { initialsOf } from "@/lib/colors";
+import { POST_KIND, publicNameOf } from "@/lib/community";
+import { awardBadge } from "@/lib/badges";
 
 export async function toggleLikeAction(postId: string) {
   const user = await requireUser();
@@ -35,7 +37,9 @@ const postSchema = z.object({
     .trim()
     .min(4, "Scrivi almeno qualche parola.")
     .max(500, "Il messaggio è troppo lungo."),
+  kind: z.string().refine((k) => k in POST_KIND, "Tipo non valido.").optional(),
   category: z.string().trim().max(30).optional(),
+  neighborhoodId: z.string().optional(),
 });
 
 export type FeedActionState = { ok?: boolean; error?: string } | undefined;
@@ -48,7 +52,9 @@ export async function createPostAction(
 
   const parsed = postSchema.safeParse({
     content: formData.get("content"),
+    kind: formData.get("kind") || undefined,
     category: formData.get("category") || undefined,
+    neighborhoodId: formData.get("neighborhoodId") || undefined,
   });
 
   if (!parsed.success) {
@@ -62,14 +68,17 @@ export async function createPostAction(
   await prisma.communityPost.create({
     data: {
       authorId: user.id,
-      authorName: user.name,
+      authorName: publicNameOf(user.name, user.publicName),
       authorInitials: initialsOf(user.name),
       authorColor: user.avatarColor,
+      kind: parsed.data.kind ?? "domanda",
       content: parsed.data.content,
       category: parsed.data.category ?? null,
+      neighborhoodId: parsed.data.neighborhoodId || user.neighborhoodId || null,
     },
   });
 
+  await awardBadge(user.id, "first_contribution");
   revalidatePath("/comunita");
   return { ok: true };
 }

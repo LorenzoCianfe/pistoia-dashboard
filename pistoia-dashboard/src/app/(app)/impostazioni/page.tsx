@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
-import { Settings, ShieldCheck, Palette, LogOut, KeyRound } from "lucide-react";
+import { Settings, ShieldCheck, Palette, LogOut, KeyRound, Bell } from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
 import { logoutEverywhereAction } from "@/app/actions/profile";
+import { getNotifPrefs } from "@/lib/data/preferences";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { ChangePasswordForm } from "@/components/impostazioni/change-password-form";
 import { ThemeSelector } from "@/components/impostazioni/theme-selector";
+import { NotificationPreferencesForm } from "@/components/impostazioni/notification-preferences-form";
 
 export const metadata: Metadata = { title: "Impostazioni" };
 
 export default async function ImpostazioniPage() {
   const user = await requireUser();
+  const prefs = await getNotifPrefs(user.id);
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
@@ -20,6 +23,20 @@ export default async function ImpostazioniPage() {
         title="Impostazioni"
         icon={<Settings size={22} />}
       />
+
+      {/* Notifiche */}
+      <Card>
+        <div className="flex items-center gap-2">
+          <Bell size={18} className="text-teal" />
+          <h2 className="text-base font-semibold">Notifiche</h2>
+        </div>
+        <p className="mt-1 text-sm text-muted">
+          Scegli di cosa vuoi essere avvisato.
+        </p>
+        <div className="mt-3">
+          <NotificationPreferencesForm prefs={prefs} />
+        </div>
+      </Card>
 
       {/* Aspetto */}
       <Card>

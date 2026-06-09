@@ -6,7 +6,7 @@ import { RegisterForm } from "@/components/auth/register-form";
 export const metadata: Metadata = { title: "Registrati" };
 
 export default async function RegisterPage() {
-  if (await getCurrentUser()) redirect("/bilancio");
+  if (await getCurrentUser()) redirect("/la-mia-citta");
 
   return (
     <div>

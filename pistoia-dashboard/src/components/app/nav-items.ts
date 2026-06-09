@@ -1,8 +1,11 @@
 import {
+  Sparkles,
   Wallet,
   HardHat,
   Vote,
   MessagesSquare,
+  Megaphone,
+  Lightbulb,
   Network,
   Bell,
   User,
@@ -15,14 +18,18 @@ export type NavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
+  /** Shown in the mobile bottom navigation. */
   core: boolean;
 };
 
 export const NAV_ITEMS: NavItem[] = [
+  { href: "/la-mia-citta", label: "La mia città", icon: Sparkles, core: true },
   { href: "/bilancio", label: "Bilancio", icon: Wallet, core: true },
   { href: "/opere", label: "Opere", icon: HardHat, core: true },
-  { href: "/sondaggi", label: "Sondaggi", icon: Vote, core: true },
+  { href: "/sondaggi", label: "Sondaggi", icon: Vote, core: false },
   { href: "/comunita", label: "Comunità", icon: MessagesSquare, core: true },
+  { href: "/segnalazioni", label: "Segnalazioni", icon: Megaphone, core: true },
+  { href: "/proposte", label: "Proposte", icon: Lightbulb, core: false },
   { href: "/organigramma", label: "Organigramma", icon: Network, core: false },
 ];
 

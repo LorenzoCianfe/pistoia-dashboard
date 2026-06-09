@@ -3,21 +3,25 @@ import { MessagesSquare } from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
 import { getCommunityFeed } from "@/lib/data/comunita";
 import { getServiceReviews } from "@/lib/data/sondaggi";
+import { getNeighborhoods } from "@/lib/data/neighborhoods";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { StarRating } from "@/components/ui/star-rating";
 import { Composer } from "@/components/comunita/composer";
 import { PostCard } from "@/components/comunita/post-card";
+import { canModerate } from "@/lib/community";
 import { formatNumber } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Comunità" };
 
 export default async function ComunitaPage() {
   const user = await requireUser();
-  const [feed, reviews] = await Promise.all([
+  const [feed, reviews, neighborhoods] = await Promise.all([
     getCommunityFeed(user.id),
     getServiceReviews(),
+    getNeighborhoods(),
   ]);
+  const moderator = canModerate(user.role);
 
   return (
     <div className="space-y-5">
@@ -28,13 +32,29 @@ export default async function ComunitaPage() {
         icon={<MessagesSquare size={22} />}
       />
 
-      <Composer name={user.name} color={user.avatarColor} />
+      <Composer
+        name={user.name}
+        color={user.avatarColor}
+        neighborhoods={neighborhoods}
+        defaultNeighborhoodId={user.neighborhoodId}
+      />
 
-      <div className="space-y-4">
-        {feed.map((post) => (
-          <PostCard key={post.id} post={post} currentUserName={user.name} />
-        ))}
-      </div>
+      {feed.length === 0 ? (
+        <Card className="text-center text-sm text-muted">
+          Ancora nessuna conversazione. Apri tu la prima domanda al Comune.
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {feed.map((post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              currentUserName={user.name}
+              canModerate={moderator}
+            />
+          ))}
+        </div>
+      )}
 
       <Card>
         <h2 className="text-base font-semibold">Recensioni dei servizi</h2>

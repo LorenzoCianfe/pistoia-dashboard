@@ -31,6 +31,19 @@ export function RegisterForm() {
         />
       </Field>
 
+      <Field label="Tipo di account" htmlFor="accountType">
+        <select
+          id="accountType"
+          name="accountType"
+          defaultValue="CITIZEN"
+          className="h-11 w-full rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3.5 text-sm text-foreground focus-visible:border-teal focus-visible:outline-none"
+        >
+          <option value="CITIZEN">Cittadino</option>
+          <option value="ASSOCIATION">Associazione</option>
+          <option value="BUSINESS">Attività locale</option>
+        </select>
+      </Field>
+
       <Field label="Email" htmlFor="email" error={state?.fieldErrors?.email}>
         <Input
           id="email"

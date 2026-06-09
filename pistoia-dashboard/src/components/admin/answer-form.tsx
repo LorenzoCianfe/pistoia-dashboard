@@ -7,6 +7,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";
 import { formatRelativeTime } from "@/lib/format";
+import { DEPARTMENTS } from "@/lib/community";
 
 export function AnswerForm({
   post,
@@ -43,6 +44,19 @@ export function AnswerForm({
           {state?.error ? (
             <p className="text-xs font-medium text-[var(--red)]">{state.error}</p>
           ) : null}
+          <select
+            name="department"
+            defaultValue=""
+            aria-label="Ufficio responsabile"
+            className="h-9 w-full rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm focus-visible:border-teal focus-visible:outline-none"
+          >
+            <option value="">Ufficio responsabile (facoltativo)…</option>
+            {DEPARTMENTS.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
           <textarea
             name="body"
             rows={2}

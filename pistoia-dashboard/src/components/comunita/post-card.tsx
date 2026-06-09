@@ -9,6 +9,8 @@ import {
   Bike,
   Sparkles,
   Landmark,
+  MapPin,
+  EyeOff,
   type LucideIcon,
 } from "lucide-react";
 import { motion } from "motion/react";
@@ -17,8 +19,11 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Crest } from "@/components/brand/crest";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { AuthorVerification } from "@/components/community/badges";
 import { toggleLikeAction, addCommentAction } from "@/app/actions/community";
+import { hidePostAction } from "@/app/actions/moderation";
 import { postCategory } from "@/lib/labels";
+import { postKind } from "@/lib/community";
 import { accent } from "@/lib/colors";
 import { formatRelativeTime, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -34,9 +39,11 @@ const BANNER_ICON: Record<string, LucideIcon> = {
 export function PostCard({
   post,
   currentUserName,
+  canModerate = false,
 }: {
   post: FeedPost;
   currentUserName: string;
+  canModerate?: boolean;
 }) {
   const [like, toggleLikeOptimistic] = useOptimistic(
     { count: post.likeCount, liked: post.likedByMe },
@@ -59,8 +66,10 @@ export function PostCard({
   const [pending, startTransition] = useTransition();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [hidden, setHidden] = useState(false);
 
   const cat = postCategory(post.category);
+  const kind = postKind(post.kind);
   const BannerIcon = post.category ? BANNER_ICON[post.category] : undefined;
 
   function like_() {
@@ -82,6 +91,15 @@ export function PostCard({
     });
   }
 
+  function hide() {
+    setHidden(true);
+    startTransition(async () => {
+      await hidePostAction(post.id);
+    });
+  }
+
+  if (hidden) return null;
+
   return (
     <Card>
       {/* header */}
@@ -92,19 +110,26 @@ export function PostCard({
           color={post.authorColor}
         />
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-2 font-semibold leading-tight">
+          <p className="flex items-center gap-1.5 font-semibold leading-tight">
             <span className="truncate">{post.authorName}</span>
+            <AuthorVerification type={post.authorVerifiedType} />
             {post.isMine ? (
               <span className="rounded-pill bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold text-muted">
                 Tu
               </span>
             ) : null}
           </p>
-          <p className="text-xs text-muted-2" suppressHydrationWarning>
-            {formatRelativeTime(post.createdAt)}
+          <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted-2">
+            {post.neighborhoodName ? (
+              <span className="flex items-center gap-0.5">
+                <MapPin size={11} />
+                {post.neighborhoodName}
+              </span>
+            ) : null}
+            <span suppressHydrationWarning>· {formatRelativeTime(post.createdAt)}</span>
           </p>
         </div>
-        {cat ? <Badge color={cat.color}>{cat.label}</Badge> : null}
+        <Badge color={kind.color}>{kind.label}</Badge>
       </div>
 
       {/* content */}
@@ -143,6 +168,11 @@ export function PostCard({
               {formatRelativeTime(post.answer.createdAt)}
             </span>
           </div>
+          {post.answer.department ? (
+            <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-2">
+              {post.answer.department}
+            </p>
+          ) : null}
           <p className="mt-2 text-sm leading-relaxed text-foreground/90">
             {post.answer.body}
           </p>
@@ -158,16 +188,11 @@ export function PostCard({
           aria-pressed={like.liked}
           className={cn(
             "flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-sm font-medium transition-colors",
-            like.liked
-              ? "text-[var(--red)]"
-              : "text-muted hover:text-foreground",
+            like.liked ? "text-[var(--red)]" : "text-muted hover:text-foreground",
           )}
         >
           <motion.span whileTap={{ scale: 0.8 }}>
-            <Heart
-              size={18}
-              className={cn(like.liked && "fill-[var(--red)]")}
-            />
+            <Heart size={18} className={cn(like.liked && "fill-[var(--red)]")} />
           </motion.span>
           {formatNumber(like.count)}
         </button>
@@ -180,6 +205,19 @@ export function PostCard({
           <MessageCircle size={18} />
           {formatNumber(comments.length)}
         </button>
+
+        {canModerate ? (
+          <button
+            type="button"
+            onClick={hide}
+            disabled={pending}
+            className="ml-auto flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-xs font-medium text-muted-2 transition-colors hover:text-[var(--red)]"
+            title="Nascondi (moderazione)"
+          >
+            <EyeOff size={15} />
+            Nascondi
+          </button>
+        ) : null}
       </div>
 
       {/* comments */}

@@ -20,21 +20,251 @@ model User {
   email         String   @unique
   passwordHash  String
   name          String
-  role          String   @default("CITIZEN") // CITIZEN | ADMIN
+  publicName    String? // abbreviated public display, e.g. "Lorenzo C." (privacy)
+  role          String   @default("CITIZEN") // CITIZEN | MODERATOR | MUNICIPAL_STAFF | ADMIN
+  accountType   String   @default("CITIZEN") // CITIZEN | ASSOCIATION | BUSINESS | MUNICIPAL
+  verifiedType  String? // null = not verified; else IDENTITY | RESIDENCY | ASSOCIATION | BUSINESS | MUNICIPAL_STAFF
   avatarColor   String   @default("teal") // teal | viola | amber | red | green
   bio           String?
-  quartiere     String? // neighbourhood, free text
+  quartiere     String? // legacy free-text neighbourhood label (kept for back-compat)
+  neighborhoodId String?
+  neighborhood   Neighborhood? @relation(fields: [neighborhoodId], references: [id], onDelete: SetNull)
   emailVerified Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  sessions      Session[]
-  votes         Vote[]
-  likes         PostLike[]
-  follows       AssessoreFollow[]
-  posts         CommunityPost[]
-  comments      PostComment[]
-  notifications Notification[]
+  sessions            Session[]
+  votes               Vote[]
+  likes               PostLike[]
+  follows             AssessoreFollow[]
+  generalFollows      Follow[]
+  posts               CommunityPost[]
+  comments            PostComment[]
+  notifications       Notification[]
+  verifications       ProfileVerification[]
+  badges              CitizenBadge[]
+  organization        OrganizationProfile?
+  reports             Report[]
+  reportConfirmations ReportConfirmation[]
+  proposals           Proposal[]
+  proposalSupports    ProposalSupport[]
+  moderationActions   ModerationAction[]
+  notifPref           NotificationPreference?
+
+  @@index([neighborhoodId])
+}
+
+// ---------------------------------------------------------------------------
+// Community: trust layer (verified profiles, badges, organizations)
+// ---------------------------------------------------------------------------
+
+// Neighbourhoods and frazioni of the Comune di Pistoia. Territorial backbone
+// for "Vicino a te", local feeds, reports and territorial polls.
+model Neighborhood {
+  id    String @id @default(cuid())
+  name  String
+  slug  String @unique
+  kind  String @default("quartiere") // quartiere | frazione
+  order Int    @default(0)
+
+  users     User[]
+  posts     CommunityPost[]
+  reports   Report[]
+  proposals Proposal[]
+  polls     Poll[]
+}
+
+// A request to verify a profile. In this mock phase verification is granted by
+// an admin/staff review queue (no SPID/CIE yet — labelled "simulata" in the UI).
+model ProfileVerification {
+  id               String    @id @default(cuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type             String // IDENTITY | RESIDENCY | ASSOCIATION | BUSINESS | MUNICIPAL_STAFF
+  status           String    @default("PENDING") // PENDING | APPROVED | REJECTED | EXPIRED
+  organizationName String? // for ASSOCIATION / BUSINESS requests
+  note             String? // citizen note (request) or reviewer note (decision)
+  requestedAt      DateTime  @default(now())
+  reviewedAt       DateTime?
+  reviewedById     String? // user id of the reviewer (no relation: avoids ambiguity)
+  expiresAt        DateTime?
+
+  @@index([userId])
+  @@index([status])
+}
+
+// A badge awarded to a user: verification badges + soft civic-reputation badges.
+model CitizenBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeType String // identity | residency | municipal | association | business | moderator | first_contribution | reliable_reporter | active_citizen | useful_proposals
+  label     String
+  icon      String? // emoji or lucide name
+  issuedAt  DateTime @default(now())
+
+  @@unique([userId, badgeType])
+  @@index([userId])
+}
+
+// Verified profile for an association or a local business.
+model OrganizationProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String // ASSOCIATION | BUSINESS
+  name        String
+  description String?
+  category    String?
+  websiteUrl  String?
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Community: segnalazioni (citizen reports) with tracked lifecycle
+// ---------------------------------------------------------------------------
+
+model Report {
+  id                 String    @id @default(cuid())
+  authorId           String?
+  author             User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorName         String
+  authorInitials     String
+  authorColor        String    @default("teal")
+  title              String
+  description        String
+  category           String // buche | illuminazione | rifiuti | verde | sicurezza | rumore | trasporto | barriere | scuole | parchi | animali | decoro
+  status             String    @default("ricevuta") // ricevuta | validata | presa_in_carico | in_lavorazione | risolta | chiusa | duplicata | non_di_competenza
+  neighborhoodId     String?
+  neighborhood       Neighborhood? @relation(fields: [neighborhoodId], references: [id], onDelete: SetNull)
+  location           String?
+  latitude           Float?
+  longitude          Float?
+  imageSeed          String?
+  assignedDepartment String?
+  baseConfirmations  Int       @default(0) // mock baseline of "anche io" confirmations
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  resolvedAt         DateTime?
+
+  confirmations ReportConfirmation[]
+  updates       ReportStatusHistory[]
+
+  @@index([status])
+  @@index([neighborhoodId])
+}
+
+// "Anche io" — a citizen confirms an existing report (dedupe + priority signal).
+model ReportConfirmation {
+  id        String   @id @default(cuid())
+  reportId  String
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([reportId, userId])
+  @@index([reportId])
+}
+
+model ReportStatusHistory {
+  id         String   @id @default(cuid())
+  reportId   String
+  report     Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  status     String
+  note       String?
+  official   Boolean  @default(false) // true when written by the Comune
+  authorName String?
+  createdAt  DateTime @default(now())
+
+  @@index([reportId])
+}
+
+// ---------------------------------------------------------------------------
+// Community: proposte cittadine (citizen proposals) with support thresholds
+// ---------------------------------------------------------------------------
+
+model Proposal {
+  id               String    @id @default(cuid())
+  authorId         String?
+  author           User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorName       String
+  authorInitials   String
+  authorColor      String    @default("teal")
+  title            String
+  description      String
+  category         String?
+  neighborhoodId   String?
+  neighborhood     Neighborhood? @relation(fields: [neighborhoodId], references: [id], onDelete: SetNull)
+  imageSeed        String?
+  status           String    @default("pubblicata") // bozza | pubblicata | in_valutazione | risposta | approvata | respinta
+  baseSupports     Int       @default(0) // mock baseline of supporters
+  officialReply    String?
+  officialReplyAt  DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  supports ProposalSupport[]
+
+  @@index([status])
+  @@index([neighborhoodId])
+}
+
+model ProposalSupport {
+  id         String   @id @default(cuid())
+  proposalId String
+  proposal   Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([proposalId, userId])
+  @@index([proposalId])
+}
+
+// ---------------------------------------------------------------------------
+// Community: generic follow + moderation/audit + notification preferences
+// ---------------------------------------------------------------------------
+
+// Generic "Segui" relation for neighborhoods, opere, reports, proposals, polls.
+// (AssessoreFollow is kept separate for back-compat with the organigramma.)
+model Follow {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetType String // neighborhood | opera | report | proposal | poll
+  targetId   String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, targetType, targetId])
+  @@index([userId])
+}
+
+// Append-only log of moderation + admin actions (also serves as a light audit trail).
+model ModerationAction {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action     String // verify_approve | verify_reject | report_status | proposal_status | hide_post | answer | broadcast | ...
+  targetType String
+  targetId   String
+  reason     String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+}
+
+model NotificationPreference {
+  id                  String  @id @default(cuid())
+  userId              String  @unique
+  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  neighborhood        Boolean @default(true)
+  followedItems       Boolean @default(true)
+  polls               Boolean @default(true)
+  proposals           Boolean @default(true)
+  generalDiscussions  Boolean @default(false)
+  urgent              Boolean @default(true)
 }
 
 // Opaque server-side session. `id` stores the SHA-256 hash (hex) of the cookie
@@ -126,17 +356,23 @@ model OperaUpdate {
 // ---------------------------------------------------------------------------
 
 model Poll {
-  id          String       @id @default(cuid())
-  question    String
-  description String?
-  year        Int
-  category    String
-  active      Boolean      @default(true)
-  assessoreId String?
-  assessore   Assessore?   @relation(fields: [assessoreId], references: [id], onDelete: SetNull)
-  createdAt   DateTime     @default(now())
-  options     PollOption[]
-  votes       Vote[]
+  id               String        @id @default(cuid())
+  question         String
+  description      String?
+  year             Int
+  category         String
+  active           Boolean       @default(true)
+  kind             String        @default("sondaggio") // sondaggio | consultazione | territoriale
+  requiresVerified Boolean       @default(false) // official consultations: verified citizens only
+  neighborhoodId   String? // territorial poll scoped to an area
+  neighborhood     Neighborhood? @relation(fields: [neighborhoodId], references: [id], onDelete: SetNull)
+  assessoreId      String?
+  assessore        Assessore?    @relation(fields: [assessoreId], references: [id], onDelete: SetNull)
+  createdAt        DateTime      @default(now())
+  options          PollOption[]
+  votes            Vote[]
+
+  @@index([neighborhoodId])
 }
 
 model PollOption {
@@ -205,14 +441,20 @@ model CommunityPost {
   authorName     String // display name snapshot (mock authors have no account)
   authorInitials String
   authorColor    String          @default("teal")
+  kind           String          @default("discussione") // domanda | discussione | avviso | idea | info
   content        String
   imageSeed      String? // drives the decorative gradient
   category       String? // verde | mobilita | servizi | cultura
+  neighborhoodId String?
+  neighborhood   Neighborhood?   @relation(fields: [neighborhoodId], references: [id], onDelete: SetNull)
+  hidden         Boolean         @default(false) // soft-hidden by moderation
   baseLikes      Int             @default(0)
   createdAt      DateTime        @default(now())
   likes          PostLike[]
   comments       PostComment[]
   answer         OfficialAnswer?
+
+  @@index([neighborhoodId])
 }
 
 model OfficialAnswer {
@@ -220,9 +462,12 @@ model OfficialAnswer {
   postId     String        @unique
   post       CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
   body       String
-  verified   Boolean       @default(true)
+  verified   Boolean       @default(false) // true only when authored by a real Comune account
   authorRole String        @default("Comune di Pistoia")
+  department String? // responsible office, e.g. "Ufficio Mobilità"
+  authorId   String? // real admin/staff author (no relation: display only)
   createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt @default(now())
 }
 
 model PostComment {
