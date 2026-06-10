@@ -18,6 +18,7 @@ export type CurrentUser = {
   quartiere: string | null;
   neighborhoodId: string | null;
   emailVerified: boolean;
+  geoConsent: boolean;
   createdAt: Date;
 };
 
@@ -47,6 +48,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     quartiere: u.quartiere,
     neighborhoodId: u.neighborhoodId,
     emailVerified: u.emailVerified,
+    geoConsent: u.geoConsent,
     createdAt: u.createdAt,
   };
 });
