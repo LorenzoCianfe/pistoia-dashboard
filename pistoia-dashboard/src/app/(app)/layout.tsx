@@ -3,6 +3,7 @@ import { getUnreadCount } from "@/lib/data/notifiche";
 import { TopBar } from "@/components/app/top-bar";
 import { SideNav } from "@/components/app/side-nav";
 import { BottomNav } from "@/components/app/bottom-nav";
+import { Footer } from "@/components/app/footer";
 
 export default async function AppLayout({
   children,
@@ -31,6 +32,7 @@ export default async function AppLayout({
           className="min-w-0 flex-1 pb-28 pt-6 outline-none lg:pb-12"
         >
           {children}
+          <Footer />
         </main>
       </div>
       <BottomNav />
