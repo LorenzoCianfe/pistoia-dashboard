@@ -5,6 +5,7 @@ import { ArrowLeft, MapPin, Lightbulb } from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
 import { getProposal } from "@/lib/data/proposals";
 import { isFollowing } from "@/lib/data/follow";
+import { getAnswerFeedback } from "@/lib/data/feedback";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
@@ -12,6 +13,7 @@ import { Crest } from "@/components/brand/crest";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { SupportButton } from "@/components/community/support-button";
 import { FollowButton } from "@/components/community/follow-button";
+import { AnswerFeedback } from "@/components/community/answer-feedback";
 import { ThresholdBar } from "@/components/community/threshold-bar";
 import { proposalStatus } from "@/lib/community";
 import { formatDate, formatRelativeTime } from "@/lib/format";
@@ -30,6 +32,9 @@ export default async function ProposalDetailPage({
 
   const following = await isFollowing(user.id, "proposal", proposal.id);
   const st = proposalStatus(proposal.status);
+  const fb = proposal.officialReply
+    ? await getAnswerFeedback("proposal", proposal.id, user.id)
+    : null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
@@ -109,6 +114,16 @@ export default async function ProposalDetailPage({
           <p className="mt-2 text-sm leading-relaxed text-foreground/90">
             {proposal.officialReply}
           </p>
+          {fb ? (
+            <div className="mt-3 border-t border-border pt-3">
+              <AnswerFeedback
+                targetType="proposal"
+                targetId={proposal.id}
+                helpfulCount={fb.helpfulCount}
+                myVote={fb.myVote}
+              />
+            </div>
+          ) : null}
         </Card>
       ) : null}
     </div>
