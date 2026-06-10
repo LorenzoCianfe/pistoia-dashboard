@@ -21,8 +21,22 @@ const daysAgo = (d: number) => new Date(Date.now() - d * 24 * 60 * 60 * 1000);
 const hoursAgo = (h: number) => new Date(Date.now() - h * 60 * 60 * 1000);
 const daysAhead = (d: number) => new Date(Date.now() + d * 24 * 60 * 60 * 1000);
 
+/** A small inline SVG used as a stand-in "photo" for the works gallery (mock). */
+const photoSvg = (label: string, c1: string, c2: string) =>
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='${c1}'/><stop offset='1' stop-color='${c2}'/></linearGradient></defs><rect width='400' height='300' fill='url(#g)'/><text x='50%' y='50%' fill='white' font-family='sans-serif' font-size='30' font-weight='bold' text-anchor='middle' dominant-baseline='middle'>${label}</text></svg>`,
+  );
+
 async function wipe() {
   // Child-first deletion to satisfy foreign keys.
+  await prisma.answerFeedback.deleteMany();
+  await prisma.commentReport.deleteMany();
+  await prisma.event.deleteMany();
+  await prisma.operaComment.deleteMany();
+  await prisma.operaPhoto.deleteMany();
+  await prisma.operaFaq.deleteMany();
+  await prisma.blockedWord.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.postLike.deleteMany();
   await prisma.postComment.deleteMany();
@@ -1066,6 +1080,71 @@ async function main() {
   await prisma.postLike.create({
     data: { postId: postPacini.id, userId: citizen.id },
   });
+
+  // --- §18 Opere: geo, RUP, fonte, foto, FAQ, commenti --------------------
+  await prisma.opera.update({
+    where: { id: marini.id },
+    data: {
+      latitude: 43.929, longitude: 10.905, neighborhoodId: nb["centro"],
+      fundingSource: "PNRR M4C1 — Istruzione", rup: "Ing. Paolo Bonechi",
+      photos: {
+        create: [
+          { phase: "prima", data: photoSvg("Prima", "#9ca3af", "#6b7280"), caption: "L'edificio prima dei lavori", order: 1 },
+          { phase: "durante", data: photoSvg("Durante", "#0F9E8E", "#7C6BD9"), caption: "Cantiere in corso", order: 2 },
+          { phase: "dopo", data: photoSvg("Render", "#2FA66B", "#0F9E8E"), caption: "Render del progetto finale", order: 3 },
+        ],
+      },
+      faqs: {
+        create: [
+          { question: "La scuola resta aperta durante i lavori?", answer: "Le attività didattiche sono trasferite temporaneamente in una sede vicina fino al termine dei lavori.", order: 1 },
+          { question: "Quando finiranno i lavori?", answer: "Il termine previsto è tra circa quattro mesi, salvo imprevisti legati alle forniture.", order: 2 },
+        ],
+      },
+      comments: {
+        create: [
+          { authorId: citizen.id, authorName: "Giulia V.", authorInitials: "GV", authorColor: "viola", body: "Ottimo che si investa sulle scuole. Speriamo nei tempi!", createdAt: daysAgo(3) },
+          { authorName: "Un genitore", authorInitials: "UG", authorColor: "amber", body: "La nuova mensa era attesissima.", createdAt: daysAgo(1) },
+        ],
+      },
+    },
+  });
+  await prisma.opera.update({ where: { id: ciclabile.id }, data: { latitude: 43.927, longitude: 10.93, neighborhoodId: nb["sant-agostino"], fundingSource: "Bilancio comunale + Regione Toscana", rup: "Arch. Laura Niccoli" } });
+  await prisma.opera.update({ where: { id: piazza.id }, data: { latitude: 43.9352, longitude: 10.9201, neighborhoodId: nb["centro"], fundingSource: "Bilancio comunale", rup: "Ing. Marco Salvi" } });
+  await prisma.opera.update({ where: { id: campanile.id }, data: { latitude: 43.9333, longitude: 10.9189, neighborhoodId: nb["centro"], fundingSource: "Fondi ministeriali (Ministero della Cultura)", rup: "Arch. Giulia Pieri" } });
+  await prisma.opera.update({ where: { id: pacini.id }, data: { latitude: 43.9262, longitude: 10.9148, neighborhoodId: nb["centro"], fundingSource: "Bilancio comunale", rup: "Geom. Anna Ferri" } });
+
+  // --- §9/§10 Segnalazioni geolocalizzate ---------------------------------
+  await prisma.report.update({ where: { id: repLampione.id }, data: { latitude: 43.929, longitude: 10.938 } });
+  await prisma.report.update({ where: { id: repCestini.id }, data: { latitude: 43.9335, longitude: 10.9168 } });
+  await prisma.report.update({ where: { id: repParco.id }, data: { latitude: 43.9262, longitude: 10.915 } });
+
+  // --- §17 Eventi ----------------------------------------------------------
+  await prisma.event.createMany({
+    data: [
+      { title: "Consiglio Comunale aperto", description: "Seduta pubblica del Consiglio Comunale: ordine del giorno e interventi dei cittadini.", category: "consiglio", startAt: daysAhead(3), location: "Palazzo Comunale", neighborhoodId: nb["centro"], latitude: 43.933, longitude: 10.9183, organizerId: admin.id, organizerName: "Comune di Pistoia", status: "published" },
+      { title: "Mercato contadino a km0", description: "Prodotti locali e di stagione dei produttori del territorio.", category: "mercato", startAt: daysAhead(5), location: "Piazza della Sala", neighborhoodId: nb["centro"], latitude: 43.9335, longitude: 10.917, organizerId: admin.id, organizerName: "Comune di Pistoia", status: "published" },
+      { title: "Giornata ecologica al Parco di Monteoliveto", description: "Puliamo insieme il parco: guanti e sacchi forniti dall'associazione.", category: "ecologica", startAt: daysAhead(8), location: "Parco di Monteoliveto", neighborhoodId: nb["le-fornaci"], latitude: 43.9258, longitude: 10.9223, organizerId: assoc.id, organizerName: "Amici del Parco", status: "published" },
+      { title: "Concerto della banda cittadina", description: "Concerto di primavera aperto a tutta la cittadinanza.", category: "teatro", startAt: daysAhead(12), location: "Teatro Manzoni", neighborhoodId: nb["centro"], latitude: 43.9341, longitude: 10.9166, organizerId: admin.id, organizerName: "Comune di Pistoia", status: "published" },
+      { title: "Festa di quartiere a Bottegone", description: "Musica, stand gastronomici e giochi per bambini, organizzati dai volontari.", category: "associazione", startAt: daysAhead(15), location: "Bottegone", neighborhoodId: nb["bottegone"], organizerId: assoc.id, organizerName: "Amici del Parco", status: "proposed" },
+    ],
+  });
+
+  // --- §14 Moderazione: parole bloccate + un commento segnalato ------------
+  await prisma.blockedWord.createMany({
+    data: [
+      { word: "idiota", createdById: admin.id },
+      { word: "imbecille", createdById: admin.id },
+    ],
+  });
+  const flaggable = await prisma.postComment.create({
+    data: { postId: postPacini.id, authorId: marco.id, authorName: "Marco G.", body: "Ma basta lamentarsi, tanto non cambia mai niente.", createdAt: hoursAgo(3) },
+  });
+  await prisma.commentReport.create({
+    data: { commentId: flaggable.id, reporterId: citizen.id, reason: "Tono ostile / fuori tema" },
+  });
+
+  // --- §21 Follow del cittadino demo su opera ed evento -------------------
+  await prisma.follow.create({ data: { userId: citizen.id, targetType: "opera", targetId: marini.id } });
 
   console.log("✅ Seed completato.");
   console.log("   Cittadino (residente verif.): cittadino@pistoia.it / Pistoia2026");
