@@ -95,3 +95,58 @@ export async function getAdminData() {
 }
 
 export type AdminData = Awaited<ReturnType<typeof getAdminData>>;
+
+/** Community moderation surface (§14): flagged comments, blocked words, sanctioned users. */
+export async function getModerationData() {
+  const [flaggedRaw, blockedWords, sanctioned] = await Promise.all([
+    prisma.commentReport.findMany({
+      where: { status: "open" },
+      orderBy: { createdAt: "desc" },
+      include: { comment: { select: { id: true, postId: true, authorId: true, authorName: true, body: true, hidden: true } } },
+    }),
+    prisma.blockedWord.findMany({ orderBy: { word: "asc" } }),
+    prisma.user.findMany({
+      where: { OR: [{ banned: true }, { suspendedUntil: { gt: new Date() } }] },
+      select: { id: true, name: true, banned: true, suspendedUntil: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+
+  const byComment = new Map<
+    string,
+    {
+      commentId: string;
+      postId: string;
+      authorId: string | null;
+      authorName: string;
+      body: string;
+      hidden: boolean;
+      count: number;
+      reasons: string[];
+    }
+  >();
+  for (const f of flaggedRaw) {
+    if (!f.comment) continue;
+    const e = byComment.get(f.commentId) ?? {
+      commentId: f.comment.id,
+      postId: f.comment.postId,
+      authorId: f.comment.authorId,
+      authorName: f.comment.authorName,
+      body: f.comment.body,
+      hidden: f.comment.hidden,
+      count: 0,
+      reasons: [],
+    };
+    e.count += 1;
+    if (f.reason) e.reasons.push(f.reason);
+    byComment.set(f.commentId, e);
+  }
+
+  return {
+    flaggedComments: [...byComment.values()],
+    blockedWords,
+    sanctioned,
+  };
+}
+
+export type ModerationData = Awaited<ReturnType<typeof getModerationData>>;

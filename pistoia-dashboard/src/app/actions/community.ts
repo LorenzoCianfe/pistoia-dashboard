@@ -7,6 +7,7 @@ import { requireUser } from "@/lib/auth/dal";
 import { initialsOf } from "@/lib/colors";
 import { POST_KIND, publicNameOf } from "@/lib/community";
 import { awardBadge } from "@/lib/badges";
+import { checkContribution } from "@/lib/moderation";
 
 export async function toggleLikeAction(postId: string) {
   const user = await requireUser();
@@ -65,6 +66,9 @@ export async function createPostAction(
     };
   }
 
+  const check = await checkContribution(user.id, parsed.data.content);
+  if (!check.ok) return { error: check.error };
+
   await prisma.communityPost.create({
     data: {
       authorId: user.id,
@@ -87,6 +91,9 @@ export async function addCommentAction(postId: string, body: string) {
   const user = await requireUser();
   const text = body.trim().slice(0, 400);
   if (text.length < 1) return { ok: false as const };
+
+  const check = await checkContribution(user.id, text);
+  if (!check.ok) return { ok: false as const, error: check.error };
 
   const post = await prisma.communityPost.findUnique({
     where: { id: postId },

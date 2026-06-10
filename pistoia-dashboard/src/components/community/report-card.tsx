@@ -46,12 +46,21 @@ export function ReportCard({ report }: { report: ReportListItem }) {
   return (
     <Card hover className="flex flex-col gap-3">
       <div className="flex items-start gap-3">
-        <span
-          className="mt-0.5 grid size-10 shrink-0 place-items-center rounded-[var(--radius-sm)]"
-          style={{ backgroundColor: a.soft, color: a.fg }}
-        >
-          <Icon size={20} />
-        </span>
+        {report.photoData ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={report.photoData}
+            alt=""
+            className="mt-0.5 size-10 shrink-0 rounded-[var(--radius-sm)] object-cover"
+          />
+        ) : (
+          <span
+            className="mt-0.5 grid size-10 shrink-0 place-items-center rounded-[var(--radius-sm)]"
+            style={{ backgroundColor: a.soft, color: a.fg }}
+          >
+            <Icon size={20} />
+          </span>
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <Badge color={cat.color}>{cat.label}</Badge>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Settings, ShieldCheck, Palette, LogOut, KeyRound, Bell } from "lucide-react";
+import Link from "next/link";
+import { Settings, ShieldCheck, Palette, LogOut, KeyRound, Bell, Lock } from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
 import { logoutEverywhereAction } from "@/app/actions/profile";
 import { getNotifPrefs } from "@/lib/data/preferences";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ChangePasswordForm } from "@/components/impostazioni/change-password-form";
 import { ThemeSelector } from "@/components/impostazioni/theme-selector";
 import { NotificationPreferencesForm } from "@/components/impostazioni/notification-preferences-form";
+import { PrivacyControls } from "@/components/impostazioni/privacy-controls";
 
 export const metadata: Metadata = { title: "Impostazioni" };
 
@@ -98,6 +100,25 @@ export default async function ImpostazioniPage() {
             dispositivi.
           </p>
         </div>
+      </Card>
+
+      {/* Privacy e dati (§23) */}
+      <Card>
+        <div className="flex items-center gap-2">
+          <Lock size={18} className="text-teal" />
+          <h2 className="text-base font-semibold">Privacy e dati</h2>
+        </div>
+        <p className="mt-1 text-sm text-muted">
+          Gestisci il consenso alla geolocalizzazione, esporta i tuoi dati o cancella l&apos;account.
+        </p>
+        <div className="mt-4">
+          <PrivacyControls geoConsent={user.geoConsent} />
+        </div>
+        <p className="mt-4 flex flex-wrap gap-x-4 gap-y-1 border-t border-border pt-4 text-xs text-muted-2">
+          <Link href="/privacy" className="hover:text-foreground">Informativa privacy</Link>
+          <Link href="/cookie" className="hover:text-foreground">Cookie policy</Link>
+          <Link href="/note-comunita" className="hover:text-foreground">Regole della community</Link>
+        </p>
       </Card>
 
       <p className="px-1 text-xs text-muted-2">

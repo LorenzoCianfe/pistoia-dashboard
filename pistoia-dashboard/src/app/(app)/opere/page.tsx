@@ -1,19 +1,24 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { HardHat, MapPin, ArrowUpRight } from "lucide-react";
 import { getOpere, TOTALE_CANTIERI_CENSITI, type OperaItem } from "@/lib/data/opere";
+import { getCurrentUser } from "@/lib/auth/dal";
+import { getFollowedIds } from "@/lib/data/follow";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Stat } from "@/components/ui/stat";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { AnimatedNumber } from "@/components/ui/animated-number";
+import { FollowButton } from "@/components/community/follow-button";
 import { formatEuroCompact, formatDateShort } from "@/lib/format";
 import { operaStatus, operaCategory } from "@/lib/labels";
 
 export const metadata: Metadata = { title: "Opere" };
 
 export default async function OperePage() {
-  const data = await getOpere();
+  const [data, me] = await Promise.all([getOpere(), getCurrentUser()]);
+  const followed = me ? await getFollowedIds(me.id, "opera") : new Set<string>();
   const others = data.opere.filter((o) => !o.featured);
 
   return (
@@ -60,7 +65,13 @@ export default async function OperePage() {
         <p className="text-sm text-muted">I cantieri più seguiti dalla città.</p>
         <ul className="mt-5 divide-y divide-border">
           {data.featured.map((o, i) => (
-            <FeaturedRow key={o.id} opera={o} index={i} />
+            <FeaturedRow
+              key={o.id}
+              opera={o}
+              index={i}
+              following={followed.has(o.id)}
+              canFollow={!!me}
+            />
           ))}
         </ul>
       </Card>
@@ -70,7 +81,13 @@ export default async function OperePage() {
         <h2 className="mb-3 px-1 text-base font-semibold">Tutti i cantieri</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           {others.map((o, i) => (
-            <OperaCard key={o.id} opera={o} index={i} />
+            <OperaCard
+              key={o.id}
+              opera={o}
+              index={i}
+              following={followed.has(o.id)}
+              canFollow={!!me}
+            />
           ))}
         </div>
       </div>
@@ -78,13 +95,28 @@ export default async function OperePage() {
   );
 }
 
-function FeaturedRow({ opera, index }: { opera: OperaItem; index: number }) {
+function FeaturedRow({
+  opera,
+  index,
+  following,
+  canFollow,
+}: {
+  opera: OperaItem;
+  index: number;
+  following: boolean;
+  canFollow: boolean;
+}) {
   const status = operaStatus(opera.status);
   return (
     <li className="py-4 first:pt-0 last:pb-0">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="font-semibold leading-snug">{opera.name}</p>
+          <Link
+            href={`/opere/${opera.id}`}
+            className="font-semibold leading-snug hover:text-teal"
+          >
+            {opera.name}
+          </Link>
           <p className="mt-1 flex items-center gap-1.5 text-xs text-muted">
             <MapPin size={13} />
             {opera.location ?? "Pistoia"} · {operaCategory(opera.category)}
@@ -102,17 +134,37 @@ function FeaturedRow({ opera, index }: { opera: OperaItem; index: number }) {
       <div className="mt-3">
         <ProgressBar value={opera.progress} delay={index * 0.12} />
       </div>
-      <div className="mt-2 flex items-center justify-between text-xs text-muted-2">
+      <div className="mt-2 flex items-center justify-between gap-3 text-xs text-muted-2">
         <span>{formatEuroCompact(opera.investment)} di investimento</span>
-        {opera.expectedEnd ? (
-          <span>Fine prevista: {formatDateShort(opera.expectedEnd)}</span>
-        ) : null}
+        <div className="flex items-center gap-3">
+          {opera.expectedEnd ? (
+            <span>Fine prevista: {formatDateShort(opera.expectedEnd)}</span>
+          ) : null}
+          {canFollow ? (
+            <FollowButton
+              targetType="opera"
+              targetId={opera.id}
+              following={following}
+              size="sm"
+            />
+          ) : null}
+        </div>
       </div>
     </li>
   );
 }
 
-function OperaCard({ opera, index }: { opera: OperaItem; index: number }) {
+function OperaCard({
+  opera,
+  index,
+  following,
+  canFollow,
+}: {
+  opera: OperaItem;
+  index: number;
+  following: boolean;
+  canFollow: boolean;
+}) {
   const status = operaStatus(opera.status);
   return (
     <Card hover className="flex flex-col">
@@ -122,7 +174,12 @@ function OperaCard({ opera, index }: { opera: OperaItem; index: number }) {
         </Badge>
         <Badge color={status.color}>{status.label}</Badge>
       </div>
-      <h3 className="mt-3 font-semibold leading-snug">{opera.name}</h3>
+      <Link
+        href={`/opere/${opera.id}`}
+        className="mt-3 font-semibold leading-snug hover:text-teal"
+      >
+        {opera.name}
+      </Link>
       <p className="mt-1 line-clamp-2 text-sm text-muted">{opera.description}</p>
 
       <div className="mt-auto pt-4">
@@ -134,10 +191,20 @@ function OperaCard({ opera, index }: { opera: OperaItem; index: number }) {
           <span className="font-bold tabular-nums">{opera.progress}%</span>
         </div>
         <ProgressBar value={opera.progress} delay={index * 0.05} height={8} />
-        <p className="mt-2 flex items-center gap-1 text-xs text-muted-2">
-          <ArrowUpRight size={12} />
-          {formatEuroCompact(opera.investment)} di investimento
-        </p>
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <p className="flex items-center gap-1 text-xs text-muted-2">
+            <ArrowUpRight size={12} />
+            {formatEuroCompact(opera.investment)} di investimento
+          </p>
+          {canFollow ? (
+            <FollowButton
+              targetType="opera"
+              targetId={opera.id}
+              following={following}
+              size="sm"
+            />
+          ) : null}
+        </div>
       </div>
     </Card>
   );

@@ -98,6 +98,40 @@ export function postKind(k: string | null | undefined) {
 }
 
 // ---------------------------------------------------------------------------
+// Eventi (events calendar) — §17
+// ---------------------------------------------------------------------------
+
+export const EVENT_CATEGORY: Record<string, { label: string; color: string }> = {
+  comune: { label: "Evento del Comune", color: "red" },
+  associazione: { label: "Evento associazione", color: "viola" },
+  mercato: { label: "Mercato", color: "amber" },
+  mostra: { label: "Mostra", color: "viola" },
+  teatro: { label: "Teatro", color: "viola" },
+  sport: { label: "Sport", color: "teal" },
+  incontro: { label: "Incontro pubblico", color: "teal" },
+  consiglio: { label: "Consiglio comunale", color: "red" },
+  assemblea: { label: "Assemblea di quartiere", color: "teal" },
+  ecologica: { label: "Giornata ecologica", color: "green" },
+  volontariato: { label: "Volontariato", color: "green" },
+};
+
+export const EVENT_CATEGORIES = Object.keys(EVENT_CATEGORY);
+
+export function eventCategory(c: string) {
+  return EVENT_CATEGORY[c] ?? { label: c, color: "teal" };
+}
+
+export const EVENT_STATUS: Record<string, { label: string; color: string }> = {
+  proposed: { label: "In attesa di approvazione", color: "amber" },
+  published: { label: "Pubblicato", color: "green" },
+  rejected: { label: "Non approvato", color: "red" },
+};
+
+export function eventStatus(s: string) {
+  return EVENT_STATUS[s] ?? { label: s, color: "teal" };
+}
+
+// ---------------------------------------------------------------------------
 // Segnalazioni (reports)
 // ---------------------------------------------------------------------------
 

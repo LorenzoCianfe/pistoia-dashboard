@@ -6,4 +6,7 @@ Thumbs.db
 # Claude Code local config
 .claude/
 
+# Generated knowledge graph (regenerable with `graphify update .`)
+graphify-out/
+
 # App-level ignores live in pistoia-dashboard/.gitignore

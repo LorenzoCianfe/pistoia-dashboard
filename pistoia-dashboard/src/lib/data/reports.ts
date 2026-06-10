@@ -37,6 +37,8 @@ function mapReport(r: RawReport, userId: string) {
     latitude: r.latitude,
     longitude: r.longitude,
     imageSeed: r.imageSeed,
+    photoData: r.photoData,
+    anonymous: r.anonymous,
     assignedDepartment: r.assignedDepartment,
     neighborhoodName: r.neighborhood?.name ?? null,
     authorName: r.authorName,

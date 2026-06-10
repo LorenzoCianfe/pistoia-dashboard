@@ -30,6 +30,9 @@ model User {
   neighborhoodId String?
   neighborhood   Neighborhood? @relation(fields: [neighborhoodId], references: [id], onDelete: SetNull)
   emailVerified Boolean  @default(false)
+  geoConsent    Boolean  @default(false) // consent to share precise geolocation (§23)
+  suspendedUntil DateTime? // temporary suspension end set by moderation (§14)
+  banned        Boolean  @default(false) // permanent ban set by moderation (§14)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -50,6 +53,10 @@ model User {
   proposalSupports    ProposalSupport[]
   moderationActions   ModerationAction[]
   notifPref           NotificationPreference?
+  organizedEvents     Event[]
+  operaComments       OperaComment[]
+  commentReports      CommentReport[]
+  answerFeedback      AnswerFeedback[]
 
   @@index([neighborhoodId])
 }
@@ -72,6 +79,8 @@ model Neighborhood {
   reports   Report[]
   proposals Proposal[]
   polls     Poll[]
+  opere     Opera[]
+  events    Event[]
 }
 
 // A request to verify a profile. In this mock phase verification is granted by
@@ -142,6 +151,9 @@ model Report {
   latitude           Float?
   longitude          Float?
   imageSeed          String?
+  photoData          String? // uploaded photo as a data URL (§9); falls back to imageSeed gradient
+  anonymous          Boolean   @default(false) // partially-anonymous report: hide author publicly (§23)
+  mergedIntoId       String? // when a moderator merges this into a canonical report (§14)
   assignedDepartment String?
   baseConfirmations  Int       @default(0) // mock baseline of "anche io" confirmations
   createdAt          DateTime  @default(now())
@@ -332,12 +344,66 @@ model Opera {
   progress    Int // 0..100
   status      String // in_corso | completata | pianificata | sospesa
   investment  Int // euro
+  fundingSource String? // fonte di finanziamento, es. "PNRR M4C1" / "Bilancio comunale" (§18)
+  rup         String? // Responsabile Unico del Procedimento (§18)
   location    String?
+  latitude    Float? // for the interactive map (§10)
+  longitude   Float?
+  neighborhoodId String?
+  neighborhood   Neighborhood? @relation(fields: [neighborhoodId], references: [id], onDelete: SetNull)
   startedAt   DateTime?
   expectedEnd DateTime?
   featured    Boolean       @default(false)
   createdAt   DateTime      @default(now())
   updates     OperaUpdate[]
+  photos      OperaPhoto[]
+  faqs        OperaFaq[]
+  comments    OperaComment[]
+
+  @@index([neighborhoodId])
+}
+
+// Before / during / after photos for a public work (§18). Stored as data URLs.
+model OperaPhoto {
+  id        String   @id @default(cuid())
+  operaId   String
+  opera     Opera    @relation(fields: [operaId], references: [id], onDelete: Cascade)
+  phase     String // prima | durante | dopo
+  data      String // image as a data URL
+  caption   String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([operaId])
+}
+
+// Frequently-asked questions curated by the Comune for a public work (§18).
+model OperaFaq {
+  id       String @id @default(cuid())
+  operaId  String
+  opera    Opera  @relation(fields: [operaId], references: [id], onDelete: Cascade)
+  question String
+  answer   String
+  order    Int    @default(0)
+
+  @@index([operaId])
+}
+
+// Citizen comments on a public work (§18). Soft-hideable by moderation.
+model OperaComment {
+  id             String   @id @default(cuid())
+  operaId        String
+  opera          Opera    @relation(fields: [operaId], references: [id], onDelete: Cascade)
+  authorId       String?
+  author         User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorName     String
+  authorInitials String
+  authorColor    String   @default("teal")
+  body           String
+  hidden         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  @@index([operaId])
 }
 
 model OperaUpdate {
@@ -478,7 +544,10 @@ model PostComment {
   author     User?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
   authorName String
   body       String
+  hidden     Boolean       @default(false) // soft-hidden by moderation (§14)
   createdAt  DateTime      @default(now())
+
+  reports CommentReport[]
 
   @@index([postId])
 }
@@ -511,7 +580,7 @@ model Notification {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      String // answer | poll | opera | system
+  type      String // answer | poll | opera | system | event | report | proposal
   title     String
   body      String
   href      String?
@@ -519,4 +588,77 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Eventi (events calendar) — §17
+// ---------------------------------------------------------------------------
+
+// Local events: published by the Comune, or proposed by verified associations
+// and approved by the Comune/moderators before becoming public.
+model Event {
+  id             String        @id @default(cuid())
+  title          String
+  description    String
+  category       String // comune | associazione | mercato | mostra | teatro | sport | incontro | consiglio | assemblea | ecologica | volontariato
+  startAt        DateTime
+  endAt          DateTime?
+  location       String?
+  latitude       Float? // for the interactive map (§10)
+  longitude      Float?
+  neighborhoodId String?
+  neighborhood   Neighborhood? @relation(fields: [neighborhoodId], references: [id], onDelete: SetNull)
+  organizerId    String? // null for Comune-authored events
+  organizer      User?         @relation(fields: [organizerId], references: [id], onDelete: SetNull)
+  organizerName  String // display name snapshot (e.g. "Comune di Pistoia", association name)
+  status         String        @default("published") // proposed | published | rejected
+  imageSeed      String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([status])
+  @@index([startAt])
+  @@index([neighborhoodId])
+}
+
+// ---------------------------------------------------------------------------
+// Moderation extras (§14) & "was this answer useful?" (§8)
+// ---------------------------------------------------------------------------
+
+// Per-user helpfulness vote on an official Comune answer (§8). The answer can be
+// a community-post OfficialAnswer, a proposal officialReply or a report timeline.
+model AnswerFeedback {
+  id         String   @id @default(cuid())
+  targetType String // post_answer | proposal | report
+  targetId   String
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  helpful    Boolean
+  createdAt  DateTime @default(now())
+
+  @@unique([targetType, targetId, userId])
+  @@index([targetType, targetId])
+}
+
+// A citizen flags a community comment for moderator review (§14).
+model CommentReport {
+  id         String      @id @default(cuid())
+  commentId  String
+  comment    PostComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  reporterId String
+  reporter   User        @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  reason     String? // optional free-text or category
+  status     String      @default("open") // open | reviewed | dismissed
+  createdAt  DateTime    @default(now())
+
+  @@unique([commentId, reporterId])
+  @@index([status])
+}
+
+// Blocked words filter for community content (§14). Admin-managed.
+model BlockedWord {
+  id          String   @id @default(cuid())
+  word        String   @unique // stored lowercased
+  createdById String? // reviewer id (display only, no relation)
+  createdAt   DateTime @default(now())
 }

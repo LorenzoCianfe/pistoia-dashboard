@@ -12,11 +12,16 @@ import {
   publicNameOf,
 } from "@/lib/community";
 import { awardBadge } from "@/lib/badges";
+import { checkContribution } from "@/lib/moderation";
 import { notify } from "@/lib/notify";
 
 export type ReportFormState =
   | { ok?: boolean; error?: string; id?: string }
   | undefined;
+
+// Max length of an uploaded photo as a data URL (§9). The composer downscales
+// client-side, so a real photo lands well under this ceiling.
+const MAX_PHOTO_CHARS = 1_500_000;
 
 const createSchema = z.object({
   title: z.string().trim().min(6, "Il titolo è troppo breve.").max(120),
@@ -27,6 +32,26 @@ const createSchema = z.object({
   neighborhoodId: z.string().optional(),
   location: z.string().trim().max(160).optional(),
 });
+
+/** Parse + validate the optional precise coordinates (§9). */
+function parseCoords(formData: FormData): { latitude: number; longitude: number } | null {
+  const latRaw = formData.get("latitude");
+  const lngRaw = formData.get("longitude");
+  if (typeof latRaw !== "string" || typeof lngRaw !== "string" || !latRaw || !lngRaw) {
+    return null;
+  }
+  const latitude = Number(latRaw);
+  const longitude = Number(lngRaw);
+  if (
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    Math.abs(latitude) > 90 ||
+    Math.abs(longitude) > 180
+  ) {
+    return null;
+  }
+  return { latitude, longitude };
+}
 
 export async function createReportAction(
   _prev: ReportFormState,
@@ -45,17 +70,38 @@ export async function createReportAction(
   }
   const { title, description, category, neighborhoodId, location } = parsed.data;
 
+  const check = await checkContribution(user.id, `${title} ${description}`);
+  if (!check.ok) return { error: check.error };
+
+  // Optional uploaded photo (data URL) — §9.
+  const photoRaw = formData.get("photoData");
+  let photoData: string | null = null;
+  if (typeof photoRaw === "string" && photoRaw.startsWith("data:image/")) {
+    if (photoRaw.length > MAX_PHOTO_CHARS) {
+      return { error: "La foto è troppo grande. Riprova con un'immagine più piccola." };
+    }
+    photoData = photoRaw;
+  }
+
+  const coords = parseCoords(formData);
+  const anonymous =
+    formData.get("anonymous") === "on" || formData.get("anonymous") === "true";
+
   const report = await prisma.report.create({
     data: {
-      authorId: user.id,
-      authorName: publicNameOf(user.name, user.publicName),
-      authorInitials: initialsOf(user.name),
-      authorColor: user.avatarColor,
+      authorId: user.id, // kept internally even when anonymous (partial anonymity, §23)
+      authorName: anonymous ? "Segnalazione anonima" : publicNameOf(user.name, user.publicName),
+      authorInitials: anonymous ? "?" : initialsOf(user.name),
+      authorColor: anonymous ? "viola" : user.avatarColor,
       title,
       description,
       category,
       neighborhoodId: neighborhoodId || user.neighborhoodId || null,
       location: location || null,
+      latitude: coords?.latitude ?? null,
+      longitude: coords?.longitude ?? null,
+      photoData,
+      anonymous,
       status: "ricevuta",
       updates: {
         create: {
@@ -66,9 +112,15 @@ export async function createReportAction(
     },
   });
 
+  // Record geolocation consent when the citizen shared precise coordinates (§23).
+  if (coords && !user.geoConsent) {
+    await prisma.user.update({ where: { id: user.id }, data: { geoConsent: true } });
+  }
+
   await awardBadge(user.id, "first_contribution");
   revalidatePath("/segnalazioni");
   revalidatePath("/la-mia-citta");
+  revalidatePath("/mappa");
   return { ok: true, id: report.id };
 }
 

@@ -5,10 +5,13 @@ import { ArrowLeft, MapPin, Building2, Clock } from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
 import { getReport } from "@/lib/data/reports";
 import { isFollowing } from "@/lib/data/follow";
+import { getAnswerFeedback } from "@/lib/data/feedback";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmButton } from "@/components/community/confirm-button";
 import { FollowButton } from "@/components/community/follow-button";
+import { AnswerFeedback } from "@/components/community/answer-feedback";
+import { MapCanvas } from "@/components/mappa/map-canvas";
 import { ReportStatusTrack } from "@/components/community/report-status-track";
 import { reportCategory, reportStatus } from "@/lib/community";
 import { accent } from "@/lib/colors";
@@ -28,6 +31,10 @@ export default async function ReportDetailPage({
 
   const following = await isFollowing(user.id, "report", report.id);
   const cat = reportCategory(report.category);
+  const hasOfficial = report.updates.some((u) => u.official);
+  const fb = hasOfficial
+    ? await getAnswerFeedback("report", report.id, user.id)
+    : null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
@@ -71,18 +78,49 @@ export default async function ReportDetailPage({
 
         <p className="text-[15px] leading-relaxed">{report.description}</p>
 
-        {/* Map placeholder */}
-        <div
-          className="grid h-32 place-items-center rounded-[var(--radius-sm)] text-center text-xs text-muted-2"
-          style={{
-            background: `linear-gradient(120deg, ${accent(cat.color).soft}, ${accent("teal").soft})`,
-          }}
-        >
-          <span className="flex items-center gap-1.5">
-            <MapPin size={16} />
-            {report.location ?? "Posizione non specificata"} · mappa in arrivo
-          </span>
-        </div>
+        {/* Uploaded photo (§9) */}
+        {report.photoData ? (
+          <figure className="overflow-hidden rounded-[var(--radius-sm)] border border-border">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={report.photoData}
+              alt={`Foto della segnalazione: ${report.title}`}
+              className="max-h-96 w-full object-cover"
+            />
+          </figure>
+        ) : null}
+
+        {/* Location map (§10) */}
+        {report.latitude != null && report.longitude != null ? (
+          <div className="overflow-hidden rounded-[var(--radius-sm)] border border-border">
+            <MapCanvas
+              points={[
+                {
+                  id: report.id,
+                  layer: "segnalazioni",
+                  lat: report.latitude,
+                  lng: report.longitude,
+                  title: report.title,
+                  subtitle: report.location,
+                  color: cat.color,
+                },
+              ]}
+              className="h-56 w-full"
+            />
+          </div>
+        ) : (
+          <div
+            className="grid h-32 place-items-center rounded-[var(--radius-sm)] text-center text-xs text-muted-2"
+            style={{
+              background: `linear-gradient(120deg, ${accent(cat.color).soft}, ${accent("teal").soft})`,
+            }}
+          >
+            <span className="flex items-center gap-1.5">
+              <MapPin size={16} />
+              {report.location ?? "Posizione non specificata"}
+            </span>
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
           <ConfirmButton
@@ -132,6 +170,16 @@ export default async function ReportDetailPage({
             );
           })}
         </ol>
+        {fb ? (
+          <div className="mt-4 border-t border-border pt-3">
+            <AnswerFeedback
+              targetType="report"
+              targetId={report.id}
+              helpfulCount={fb.helpfulCount}
+              myVote={fb.myVote}
+            />
+          </div>
+        ) : null}
       </Card>
     </div>
   );

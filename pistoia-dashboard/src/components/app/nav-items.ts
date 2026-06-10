@@ -11,6 +11,9 @@ import {
   User,
   Settings,
   Shield,
+  CalendarDays,
+  Map as MapIcon,
+  MapPinned,
   type LucideIcon,
 } from "lucide-react";
 
@@ -26,10 +29,13 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/la-mia-citta", label: "La mia città", icon: Sparkles, core: true },
   { href: "/bilancio", label: "Bilancio", icon: Wallet, core: true },
   { href: "/opere", label: "Opere", icon: HardHat, core: true },
+  { href: "/mappa", label: "Mappa", icon: MapIcon, core: false },
   { href: "/sondaggi", label: "Sondaggi", icon: Vote, core: false },
   { href: "/comunita", label: "Comunità", icon: MessagesSquare, core: true },
   { href: "/segnalazioni", label: "Segnalazioni", icon: Megaphone, core: true },
   { href: "/proposte", label: "Proposte", icon: Lightbulb, core: false },
+  { href: "/eventi", label: "Eventi", icon: CalendarDays, core: false },
+  { href: "/quartieri", label: "Quartieri", icon: MapPinned, core: false },
   { href: "/organigramma", label: "Organigramma", icon: Network, core: false },
 ];
 

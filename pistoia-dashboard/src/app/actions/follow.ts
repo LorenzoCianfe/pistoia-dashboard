@@ -4,14 +4,23 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth/dal";
 
-export type FollowTarget = "neighborhood" | "opera" | "report" | "proposal" | "poll";
+export type FollowTarget =
+  | "neighborhood"
+  | "opera"
+  | "report"
+  | "proposal"
+  | "poll"
+  | "event"
+  | "organization";
 
 const PATHS: Record<string, string[]> = {
-  neighborhood: ["/la-mia-citta"],
+  neighborhood: ["/la-mia-citta", "/quartieri"],
   opera: ["/opere"],
   report: ["/segnalazioni"],
   proposal: ["/proposte"],
   poll: ["/sondaggi"],
+  event: ["/eventi"],
+  organization: ["/eventi"],
 };
 
 /** Generic "Segui" toggle for neighborhoods, opere, reports, proposals, polls. */
