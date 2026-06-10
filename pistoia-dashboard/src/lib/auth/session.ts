@@ -95,6 +95,12 @@ export async function validateSession() {
     return null;
   }
 
+  // Permanently banned accounts are fully signed out (§14).
+  if (session.user.banned) {
+    await prisma.session.deleteMany({ where: { userId: session.userId } }).catch(() => {});
+    return null;
+  }
+
   return session;
 }
 

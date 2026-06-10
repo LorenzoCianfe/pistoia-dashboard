@@ -10,7 +10,7 @@ import {
   History,
 } from "lucide-react";
 import { requireAdmin } from "@/lib/auth/dal";
-import { getAdminData } from "@/lib/data/admin";
+import { getAdminData, getModerationData } from "@/lib/data/admin";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { AnswerForm } from "@/components/admin/answer-form";
@@ -20,6 +20,8 @@ import { BroadcastForm } from "@/components/admin/broadcast-form";
 import { VerificationQueue } from "@/components/admin/verification-queue";
 import { ReportTriage } from "@/components/admin/report-triage";
 import { ProposalReview } from "@/components/admin/proposal-review";
+import { ModerationPanel } from "@/components/admin/moderation-panel";
+import { ShieldAlert } from "lucide-react";
 import { formatRelativeTime } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Area Comune" };
@@ -30,13 +32,21 @@ const MOD_LABEL: Record<string, string> = {
   report_status: "Stato segnalazione aggiornato",
   proposal_status: "Stato proposta aggiornato",
   hide_post: "Post nascosto",
+  hide_comment: "Commento nascosto",
+  hide_opera_comment: "Commento opera nascosto",
+  suspend_user: "Utente sospeso",
+  ban_user: "Utente bannato",
+  lift_sanction: "Sanzione revocata",
+  merge_reports: "Segnalazioni unite",
+  event_approve: "Evento approvato",
+  event_reject: "Evento rifiutato",
   answer: "Risposta pubblicata",
   broadcast: "Notifica inviata",
 };
 
 export default async function AdminPage() {
   await requireAdmin();
-  const data = await getAdminData();
+  const [data, moderation] = await Promise.all([getAdminData(), getModerationData()]);
 
   const stats = [
     { label: "Cittadini registrati", value: data.userCount },
@@ -160,6 +170,25 @@ export default async function AdminPage() {
         <p className="mt-1 text-sm text-muted">Raggiunge tutti i cittadini registrati.</p>
         <div className="mt-4 max-w-md">
           <BroadcastForm />
+        </div>
+      </Card>
+
+      {/* Moderazione community (§14) */}
+      <Card>
+        <div className="flex items-center gap-2">
+          <ShieldAlert size={18} className="text-[var(--red)]" />
+          <h2 className="text-base font-semibold">Moderazione community</h2>
+        </div>
+        <p className="mt-1 text-sm text-muted">
+          Commenti segnalati, ban e sospensioni, parole bloccate e unione di segnalazioni duplicate.
+        </p>
+        <div className="mt-4">
+          <ModerationPanel
+            flaggedComments={moderation.flaggedComments}
+            blockedWords={moderation.blockedWords}
+            sanctioned={moderation.sanctioned}
+            openReports={data.openReports.map((r) => ({ id: r.id, title: r.title }))}
+          />
         </div>
       </Card>
 
