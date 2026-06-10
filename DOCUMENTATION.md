@@ -1,7 +1,7 @@
 # Dashboard di Pistoia — Documentazione
 
 > Documento vivo. Viene aggiornato a ogni cambiamento rilevante del progetto.
-> Ultimo aggiornamento: 2026-06-09
+> Ultimo aggiornamento: 2026-06-10
 
 ---
 
@@ -42,6 +42,7 @@ Vision e concept originali: vedi [`pistoia-dashboard-concept.txt`](./pistoia-das
 | Tema chiaro/scuro | **next-themes** (classe su `<html>`) |
 | Icone | **lucide-react** |
 | Grafici | Componenti **SVG custom** animati (anelli, linee morbide, barre) |
+| Mappe | **Leaflet** (tile OSM, marker vettoriali, caricato via dynamic import client-only) |
 
 L'app vive nella sottocartella [`pistoia-dashboard/`](./pistoia-dashboard/).
 
@@ -213,15 +214,20 @@ pistoia-dashboard/
 | `ProfileVerification` | Richieste di verifica con coda di approvazione admin |
 | `CitizenBadge` | Badge assegnati (verifica + reputazione civica) |
 | `OrganizationProfile` | Profilo verificato di associazione / attività locale |
-| `Report` / `ReportConfirmation` / `ReportStatusHistory` | Segnalazioni: workflow di stato, "Anche io", storico ufficiale |
+| `Report` / `ReportConfirmation` / `ReportStatusHistory` | Segnalazioni: workflow di stato, "Anche io", storico ufficiale, **foto** (`photoData`), **geo** (`latitude`/`longitude`), **anonime** (`anonymous`), **merge** (`mergedIntoId`) |
 | `Proposal` / `ProposalSupport` | Proposte cittadine con sostegni e soglie (50/200/500) |
-| `Follow` | "Segui" generico (quartieri, opere, segnalazioni, proposte) |
+| `Follow` | "Segui" generico (quartieri, opere, segnalazioni, proposte, **eventi**, **organizzazioni**) |
 | `ModerationAction` | Log append-only di azioni admin/moderatore (audit) |
+| `Opera` (+ `OperaPhoto` / `OperaFaq` / `OperaComment`) | Opere arricchite: `rup`, `fundingSource`, `neighborhoodId`, geo, foto prima/durante/dopo, FAQ, commenti cittadini |
+| `Event` | Eventi: pubblicati dal Comune o **proposti dalle associazioni verificate** e approvati (workflow `proposed→published/rejected`) |
+| `AnswerFeedback` | "Questa risposta ti è stata utile?" sulle risposte ufficiali (post/proposte/segnalazioni) |
+| `CommentReport` / `BlockedWord` | Moderazione avanzata: segnalazione commenti + filtro parole bloccate |
 
 Enum modellati come stringhe (SQLite non ha enum nativi). Estensioni a entità esistenti: `User`
-(`publicName`, `role`, `accountType`, `verifiedType`, `neighborhoodId`), `CommunityPost`
-(`kind`, `neighborhoodId`, `hidden`), `OfficialAnswer` (`department`, `authorId`, `updatedAt`),
-`Poll` (`kind`, `requiresVerified`, `neighborhoodId`). Migrazione `community_mvp` applicata.
+(`publicName`, `role`, `accountType`, `verifiedType`, `neighborhoodId`, **`geoConsent`**, **`banned`**,
+**`suspendedUntil`**), `CommunityPost` (`kind`, `neighborhoodId`, `hidden`), `PostComment` (**`hidden`**),
+`OfficialAnswer` (`department`, `authorId`, `updatedAt`), `Poll` (`kind`, `requiresVerified`,
+`neighborhoodId`). Migrazioni `community_mvp` e **`community_v2`** applicate.
 
 ---
 
@@ -231,16 +237,20 @@ Enum modellati come stringhe (SQLite non ha enum nativi). Estensioni a entità e
 |---|---|---|
 | La mia città | ✅ | Home personalizzata: saluto, quartiere, KPI ("vicino a te"), segnalazioni vicine, proposte in evidenza, scorciatoie. È il redirect post-login |
 | Bilancio | ✅ | 142 mln (contatore animato), 3 anelli (riscossione/impegni/PNRR), grafico a linee mensile, spesa per missione |
-| Opere | ✅ | 318 censiti, cantieri in evidenza con barre animate, griglia di tutti i cantieri, KPI aggregati |
+| Opere | ✅ | 318 censiti, cantieri in evidenza, griglia, KPI; **follow** per cantiere; **pagina dettaglio `/opere/[id]`** (fonte finanziamento, RUP, foto prima/durante/dopo, FAQ, commenti cittadini, mini-mappa) |
+| Mappa | ✅ | **Mappa interattiva `/mappa`** (Leaflet + tile OSM): layer attivabili (opere, segnalazioni, eventi, uffici, scuole, verde, servizi), pin per categoria, popup con link |
 | Sondaggi | ✅ | Voto ottimistico; **consultazioni ufficiali** e **voti territoriali** riservati ai verificati (`requiresVerified`) |
-| Comunità | ✅ | Composer con **tipo post** (domanda/idea/avviso…) e **quartiere**; feed con badge di verifica autore, like/commenti ottimistici, risposte ufficiali con **ufficio**; moderazione (nascondi) |
-| Segnalazioni | ✅ | Lista con filtri + KPI, creazione, **workflow di stato** (stepper), **"Anche io"** (conferme anti-doppione), dettaglio con timeline ufficiale, follow, mappa placeholder |
-| Proposte | ✅ | Lista + creazione, **soglie di sostegno** (50/200/500) con barra, **sostegno gated ai verificati**, risposta ufficiale del Comune, dettaglio |
+| Comunità | ✅ | Composer con **tipo post** e **quartiere**; feed con badge autore, like/commenti ottimistici, risposte ufficiali con **ufficio** + **"questa risposta è utile?"**; **segnala commento**; moderazione (nascondi) |
+| Segnalazioni | ✅ | Lista con filtri + KPI, creazione con **foto reale** (upload) e **geolocalizzazione precisa**, **invio anonimo**, **workflow di stato**, **"Anche io"**, dettaglio con timeline ufficiale, **mappa reale**, follow |
+| Eventi | ✅ | **Calendario `/eventi`** per mese; **pubblicazione dal Comune** e **proposta dalle associazioni verificate** con **approvazione** del Comune/moderatori; follow evento/associazione |
+| Quartieri | ✅ | **Indice `/quartieri`** + **pagina per area `/quartieri/[slug]`** che aggrega segnalazioni, opere, eventi, proposte e discussioni; follow del quartiere |
+| Proposte | ✅ | Lista + creazione, **soglie di sostegno** (50/200/500), **sostegno gated ai verificati**, risposta ufficiale + **"questa risposta è utile?"**, dettaglio |
 | Organigramma | ✅ | Sindaco + giunta, follower, follow/unfollow |
-| Notifiche | ✅ | Lista per tipo (incl. segnalazione/proposta/verifica), segna-come-letta, badge nel TopBar |
-| Profilo | ✅ | Dati, **badge** e stato verifica, **richiesta verifica**, statistiche (segnalazioni/proposte/voti/segui), nome pubblico |
-| Impostazioni | ✅ | **Preferenze notifiche** per canale, tema chiaro/scuro/sistema, cambio password, logout globale |
-| Area Comune | ✅ | **Coda verifiche** (approva/rifiuta), **triage segnalazioni** (stato/ufficio/nota), **revisione proposte**, risposte ufficiali, broadcast, **registro azioni** |
+| Notifiche | ✅ | Lista per tipo (incl. segnalazione/proposta/verifica/evento), segna-come-letta, badge nel TopBar |
+| Profilo | ✅ | Dati, **badge** e stato verifica, **richiesta verifica**, statistiche, nome pubblico |
+| Impostazioni | ✅ | Preferenze notifiche, tema, cambio password, logout globale; **Privacy e dati** (consenso geo, **export JSON**, **cancellazione account**, link a privacy/cookie/regole) |
+| Area Comune | ✅ | Coda verifiche, triage segnalazioni, revisione proposte, risposte, broadcast, registro azioni; **moderazione community** (commenti segnalati, ban/sospensione, parole bloccate, **unione duplicati**); **approvazione eventi** |
+| Pagine legali | ✅ | `/privacy`, `/cookie`, `/note-comunita` (pubbliche) + **footer istituzionale** |
 | Tema chiaro/scuro | ✅ | next-themes, colori di Pistoia mantenuti |
 
 ---
@@ -301,6 +311,22 @@ esecuzione (Server Actions, sessioni, database). Opzioni gratuite valide:
   feed, approvazione verifica admin end-to-end). Tutto ancora **dati mockup**.
 
 ---
+
+- **2026-06-10 (Community v2 — estensione fase partecipativa)** — Implementati 9 blocchi del
+  [`pistoia-community-proposal.md`](./pistoia-community-proposal.md) in una migrazione unica
+  **`community_v2`** (7 nuovi modelli: `Event`, `OperaPhoto`/`OperaFaq`/`OperaComment`,
+  `AnswerFeedback`, `CommentReport`, `BlockedWord`; campi nuovi su `User`/`Report`/`Opera`/`PostComment`):
+  **§10 mappa interattiva** (Leaflet + tile OSM, layer attivabili, `/mappa` + mini-mappe su segnalazione
+  e opera); **§9 foto reali** (upload con downscale client→data-URL in DB) + **geolocalizzazione precisa**
+  + **segnalazioni anonime**; **§18 dettaglio opere** ricco (`/opere/[id]`: fonte, RUP, foto
+  prima/durante/dopo, FAQ, commenti); **§17 calendario eventi** (`/eventi`) con pubblicazione delle
+  associazioni verificate e approvazione del Comune; **§14 moderazione avanzata** (segnala commento,
+  ban/sospensione con logout forzato dei bannati, parole bloccate, unione segnalazioni duplicate);
+  **§23 privacy** (consenso geo, export dati JSON, cancellazione account, pagine `/privacy` `/cookie`
+  `/note-comunita` + footer); **§8 "questa risposta ti è stata utile?"** su risposte ufficiali;
+  **§21 follow** esteso a opere/quartieri/eventi/associazioni; **§6 pagine per quartiere** che aggregano
+  i contenuti dell'area. Guard di moderazione (`lib/moderation.ts`) applicato a tutte le write action
+  community. Verificato: `next build` pulito (24 rotte), `tsc` pulito, seed aggiornato. Ancora **dati mockup**.
 
 ## 11. Roadmap — dalla fase mock alla fase prodotto
 
