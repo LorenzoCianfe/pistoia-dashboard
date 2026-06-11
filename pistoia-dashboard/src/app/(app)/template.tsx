@@ -15,6 +15,9 @@ export default function AppTemplate({
       initial={reduce ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+      // L'animazione può completarsi prima dell'hydration: lo style inline
+      // server (stato iniziale) non coinciderebbe più. Mismatch atteso e voluto.
+      suppressHydrationWarning
     >
       {children}
     </motion.div>

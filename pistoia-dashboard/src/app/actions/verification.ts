@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { requireUser, requireStaff } from "@/lib/auth/dal";
 import { VERIFICATION } from "@/lib/community";
 import { awardVerificationBadge } from "@/lib/badges";
+import { limitWrite } from "@/lib/limits";
 import { notify } from "@/lib/notify";
 
 export type VerificationState = { ok?: boolean; error?: string } | undefined;
@@ -27,6 +28,9 @@ export async function requestVerificationAction(
     note: formData.get("note") || undefined,
   });
   if (!parsed.success) return { error: "Dati non validi." };
+
+  const lw = await limitWrite(user.id, "verification");
+  if (!lw.ok) return { error: lw.error };
 
   const { type, organizationName, note } = parsed.data;
   if ((type === "ASSOCIATION" || type === "BUSINESS") && !organizationName) {

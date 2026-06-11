@@ -12,6 +12,9 @@ import {
   publicNameOf,
 } from "@/lib/community";
 import { awardBadge } from "@/lib/badges";
+import { checkContribution } from "@/lib/moderation";
+import { demoBaseline } from "@/lib/demo";
+import { limitWrite } from "@/lib/limits";
 import { notify } from "@/lib/notify";
 
 export type ProposalFormState =
@@ -40,6 +43,13 @@ export async function createProposalAction(
     return { error: parsed.error.issues[0]?.message ?? "Dati non validi." };
   }
   const { title, description, category, neighborhoodId } = parsed.data;
+
+  const lw = await limitWrite(user.id, "proposal");
+  if (!lw.ok) return { error: lw.error };
+
+  // Guard moderazione: era assente qui (ban/sospensione + parole bloccate).
+  const check = await checkContribution(user.id, `${title} ${description}`);
+  if (!check.ok) return { error: check.error };
 
   const proposal = await prisma.proposal.create({
     data: {
@@ -71,6 +81,9 @@ export async function supportProposalAction(proposalId: string) {
     };
   }
 
+  const lw = await limitWrite(user.id, "support");
+  if (!lw.ok) return { ok: false as const, error: lw.error };
+
   const existing = await prisma.proposalSupport.findUnique({
     where: { proposalId_userId: { proposalId, userId: user.id } },
   });
@@ -90,7 +103,7 @@ export async function supportProposalAction(proposalId: string) {
     // Auto-escalate to "in valutazione" once the official threshold is reached.
     if (proposal.status === "pubblicata") {
       const total =
-        proposal.baseSupports +
+        demoBaseline(proposal.baseSupports) +
         (await prisma.proposalSupport.count({ where: { proposalId } }));
       if (total >= PROPOSAL_THRESHOLDS.official) {
         await prisma.proposal.update({

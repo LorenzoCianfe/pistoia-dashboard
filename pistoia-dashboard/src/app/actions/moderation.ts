@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireUser, requireModerator } from "@/lib/auth/dal";
 import { invalidateBlockedWords } from "@/lib/moderation";
+import { limitWrite } from "@/lib/limits";
 
 /** Soft-hide a community post (moderators / admin). Logged to ModerationAction. */
 export async function hidePostAction(postId: string, reason?: string) {
@@ -42,6 +43,10 @@ export async function hidePostAction(postId: string, reason?: string) {
 /** A citizen flags a community comment for review (§14). */
 export async function reportCommentAction(commentId: string, reason?: string) {
   const user = await requireUser();
+
+  const lw = await limitWrite(user.id, "flag");
+  if (!lw.ok) return { ok: false as const, error: lw.error };
+
   const comment = await prisma.postComment.findUnique({
     where: { id: commentId },
     select: { id: true },

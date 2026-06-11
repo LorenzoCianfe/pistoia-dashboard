@@ -10,7 +10,8 @@ import {
 } from "@/lib/auth/password";
 import { createSession, destroyCurrentSession } from "@/lib/auth/session";
 import { signupSchema, loginSchema } from "@/lib/auth/validation";
-import { rateLimit, rateLimitReset, sweepRateLimits } from "@/lib/auth/rate-limit";
+import { rateLimit, rateLimitReset } from "@/lib/auth/rate-limit";
+import { safeNext } from "@/lib/auth/redirect";
 import { accentFromString } from "@/lib/colors";
 import { abbreviateName } from "@/lib/community";
 
@@ -39,15 +40,6 @@ async function clientMeta() {
   return { ip, userAgent };
 }
 
-/** Only allow same-origin relative paths as a post-login redirect target. */
-function safeNext(value: FormDataEntryValue | null): string {
-  const v = typeof value === "string" ? value : "";
-  if (v.startsWith("/") && !v.startsWith("//") && !v.startsWith("/\\")) {
-    return v;
-  }
-  return "/la-mia-citta";
-}
-
 export async function signupAction(
   _prev: AuthState,
   formData: FormData,
@@ -71,8 +63,7 @@ export async function signupAction(
   const { name, email, password } = parsed.data;
   const { ip, userAgent } = await clientMeta();
 
-  sweepRateLimits();
-  const rl = rateLimit(`signup:${ip}`, 8, 60 * 60 * 1000);
+  const rl = await rateLimit(`signup:${ip}`, 8, 60 * 60 * 1000);
   if (!rl.ok) {
     return {
       error: `Troppi tentativi. Riprova tra ${rl.retryAfterSeconds} secondi.`,
@@ -139,16 +130,15 @@ export async function loginAction(
   const { email, password } = parsed.data;
   const { ip, userAgent } = await clientMeta();
 
-  sweepRateLimits();
   const WINDOW = 15 * 60 * 1000;
   const pairKey = `login:${ip}:${email}`;
   const acctKey = `login-acct:${email}`; // IP-independent: caps brute-force of one account
   const ipKey = `login-ip:${ip}`; // coarse per-source cap (defense in depth)
-  const limits = [
+  const limits = await Promise.all([
     rateLimit(pairKey, 5, WINDOW),
     rateLimit(acctKey, 10, WINDOW),
     rateLimit(ipKey, 40, WINDOW),
-  ];
+  ]);
   const blocked = limits.find((l) => !l.ok);
   if (blocked) {
     const mins = Math.max(1, Math.ceil(blocked.retryAfterSeconds / 60));
@@ -171,8 +161,7 @@ export async function loginAction(
     return { error: "Email o password non corretti.", values: { email } };
   }
 
-  rateLimitReset(pairKey);
-  rateLimitReset(acctKey);
+  await Promise.all([rateLimitReset(pairKey), rateLimitReset(acctKey)]);
   await createSession(user.id, { ip, userAgent });
   redirect(safeNext(formData.get("next")));
 }

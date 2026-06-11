@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth/dal";
 import { destroyCurrentSession } from "@/lib/auth/session";
+import { limitWrite } from "@/lib/limits";
 
 /** Toggle the citizen's geolocation consent (§23). */
 export async function setGeoConsentAction(value: boolean) {
@@ -17,6 +18,12 @@ export async function setGeoConsentAction(value: boolean) {
 /** Export all personal data as JSON (GDPR portability, §23). Never includes the password hash. */
 export async function exportMyDataAction() {
   const user = await requireUser();
+
+  // L'export aggrega tutto il contenuto dell'utente: è la query più pesante
+  // esposta a un click, quindi ha un budget stretto.
+  const lw = await limitWrite(user.id, "privacy");
+  if (!lw.ok) return { ok: false as const, error: lw.error };
+
   const data = await prisma.user.findUnique({
     where: { id: user.id },
     include: {

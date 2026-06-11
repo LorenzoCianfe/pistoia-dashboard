@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth/dal";
+import { limitWrite } from "@/lib/limits";
 
 export type FollowTarget =
   | "neighborhood"
@@ -26,6 +27,10 @@ const PATHS: Record<string, string[]> = {
 /** Generic "Segui" toggle for neighborhoods, opere, reports, proposals, polls. */
 export async function toggleFollowAction(targetType: FollowTarget, targetId: string) {
   const user = await requireUser();
+
+  const lw = await limitWrite(user.id, "follow");
+  if (!lw.ok) return { ok: false as const, error: lw.error };
+
   const existing = await prisma.follow.findUnique({
     where: {
       userId_targetType_targetId: { userId: user.id, targetType, targetId },

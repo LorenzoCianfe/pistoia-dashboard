@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db";
+import { demoBaseline, DEMO_MODE } from "@/lib/demo";
 import { toPercents } from "@/lib/percent";
 
 export type PollOptionResult = {
@@ -47,7 +48,7 @@ export async function getPolls(userId: string): Promise<PollResult[]> {
       id: o.id,
       label: o.label,
       color: o.color,
-      votes: o.baseVotes + o._count.votes,
+      votes: demoBaseline(o.baseVotes) + o._count.votes,
     }));
     const total = opts.reduce((s, o) => s + o.votes, 0) || 1;
     const percents = toPercents(opts.map((o) => o.votes));
@@ -78,8 +79,12 @@ export async function getPolls(userId: string): Promise<PollResult[]> {
 }
 
 export async function getServiceReviews() {
+  // Le recensioni dei servizi sono interamente mock: fuori da DEMO_MODE
+  // spariscono (la UI mostra lo zero-state onesto).
+  if (!DEMO_MODE) return [];
   return prisma.serviceReview.findMany({ orderBy: { order: "asc" } });
 }
 
 // Soddisfazione media servizi digitali (mock KPI from the concept).
-export const SODDISFAZIONE_DIGITALE = 78;
+// Null fuori da DEMO_MODE: la UI deve nascondere il KPI, non inventarlo.
+export const SODDISFAZIONE_DIGITALE = DEMO_MODE ? 78 : null;

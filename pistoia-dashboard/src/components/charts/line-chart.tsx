@@ -31,14 +31,24 @@ function smoothPath(pts: [number, number][]): string {
   return d;
 }
 
+const defaultFormat = new Intl.NumberFormat("it-IT", {
+  maximumFractionDigits: 1,
+}).format;
+
 export function LineChart({
   series,
   labels,
   height = 220,
+  title = "Grafico ad andamento",
+  formatValue = defaultFormat,
 }: {
   series: Series[];
   labels: string[];
   height?: number;
+  /** Descrizione del grafico per gli screen reader (WCAG 1.1.1). */
+  title?: string;
+  /** Formatta i valori nella tabella alternativa (default: it-IT, 1 decimale). */
+  formatValue?: (v: number) => string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-8% 0px" });
@@ -63,12 +73,40 @@ export function LineChart({
 
   return (
     <div ref={ref} className="w-full">
+      {/* Alternativa testuale: gli stessi dati del grafico, in tabella. */}
+      <table className="sr-only">
+        <caption>{title}</caption>
+        <thead>
+          <tr>
+            <th scope="col">Periodo</th>
+            {series.map((s) => (
+              <th scope="col" key={s.name}>
+                {s.name}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {labels.map((lab, i) => (
+            <tr key={lab + i}>
+              <th scope="row">{lab}</th>
+              {series.map((s) => (
+                <td key={s.name}>
+                  {s.points[i] != null ? formatValue(s.points[i]) : "—"}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
       <svg
         viewBox={`0 0 ${W} ${height}`}
         width="100%"
         height={height}
         preserveAspectRatio="none"
         className="overflow-visible"
+        role="img"
+        aria-label={title}
       >
         <defs>
           {series.map((s) => {
@@ -145,7 +183,10 @@ export function LineChart({
 
       </svg>
       {/* x-axis labels rendered as HTML so they never stretch with the chart */}
-      <div className="mt-1 flex justify-between px-1 text-[11px] text-muted-2">
+      <div
+        aria-hidden="true"
+        className="mt-1 flex justify-between px-1 text-[11px] text-muted-2"
+      >
         {labels.map((lab, i) => {
           const show = n <= 8 || i % 2 === 0 || i === n - 1;
           return (

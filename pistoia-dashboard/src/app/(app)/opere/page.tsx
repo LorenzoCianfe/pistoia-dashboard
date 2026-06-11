@@ -13,6 +13,8 @@ import { AnimatedNumber } from "@/components/ui/animated-number";
 import { FollowButton } from "@/components/community/follow-button";
 import { formatEuroCompact, formatDateShort } from "@/lib/format";
 import { operaStatus, operaCategory } from "@/lib/labels";
+import { sourceInfo } from "@/lib/sources";
+import { SourceBadge } from "@/components/ui/source-badge";
 
 export const metadata: Metadata = { title: "Opere" };
 
@@ -36,7 +38,9 @@ export default async function OperePage() {
           <div>
             <p className="text-sm font-medium text-muted">Cantieri censiti</p>
             <p className="mt-1 text-5xl font-extrabold tracking-tight sm:text-6xl">
-              <AnimatedNumber value={TOTALE_CANTIERI_CENSITI} />
+              <AnimatedNumber
+                value={TOTALE_CANTIERI_CENSITI ?? data.opere.length}
+              />
             </p>
             <p className="mt-1 text-sm text-muted-2">
               di cui{" "}
@@ -50,11 +54,15 @@ export default async function OperePage() {
               value={formatEuroCompact(data.totalInvestmentInCorso)}
             />
             <Stat label="Avanzamento medio" value={`${data.avgProgress}%`} />
-            <Stat
-              label="Nuovi questo mese"
-              value={`+${data.nuoviQuestoMese}`}
-              trend={{ value: "mese", direction: "up" }}
-            />
+            {data.nuoviQuestoMese != null ? (
+              <Stat
+                label="Nuovi questo mese"
+                value={`+${data.nuoviQuestoMese}`}
+                trend={{ value: "mese", direction: "up" }}
+              />
+            ) : (
+              <Stat label="Completati" value={`${data.completateCount}`} />
+            )}
           </div>
         </div>
       </Card>
@@ -91,6 +99,8 @@ export default async function OperePage() {
           ))}
         </div>
       </div>
+
+      <SourceBadge source={sourceInfo("opere")} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db";
+import { demoBaseline } from "@/lib/demo";
 import type { Prisma } from "@/generated/prisma/client";
 
 export type ReportFilter = {
@@ -44,7 +45,7 @@ function mapReport(r: RawReport, userId: string) {
     authorName: r.authorName,
     authorInitials: r.authorInitials,
     authorColor: r.authorColor,
-    confirmations: r.baseConfirmations + r._count.confirmations,
+    confirmations: demoBaseline(r.baseConfirmations) + r._count.confirmations,
     confirmedByMe: r.confirmations.length > 0,
     isMine: r.authorId === userId,
     createdAt: r.createdAt,

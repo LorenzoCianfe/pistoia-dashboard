@@ -231,7 +231,7 @@ async function main() {
   });
 
   // Verified local business.
-  const attivita = await prisma.user.create({
+  await prisma.user.create({
     data: {
       email: "attivita@pistoia.it",
       name: "Bottega del Corso",

@@ -39,8 +39,13 @@ export function RingGauge({
       className="flex flex-col items-center gap-2"
       style={{ width: size }}
     >
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="-rotate-90">
+      <div
+        className="relative"
+        style={{ width: size, height: size }}
+        role="img"
+        aria-label={`${label ?? "Indicatore"}: ${new Intl.NumberFormat("it-IT", { maximumFractionDigits: 1 }).format(v)}${suffix}`}
+      >
+        <svg width={size} height={size} className="-rotate-90" aria-hidden="true">
           <circle
             cx={size / 2}
             cy={size / 2}
@@ -67,7 +72,10 @@ export function RingGauge({
             }}
           />
         </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 flex items-center justify-center"
+        >
           <span className="text-2xl font-semibold tabular-nums tracking-tight">
             <AnimatedNumber value={v} delay={delay} />
             <span className="text-base font-medium text-muted">{suffix}</span>
@@ -75,7 +83,12 @@ export function RingGauge({
         </div>
       </div>
       {label ? (
-        <span className="text-center text-xs font-medium text-muted leading-tight">
+        // aria-hidden: l'etichetta è già nell'accessible name del role="img";
+        // lasciarla visibile allo SR la farebbe leggere due volte.
+        <span
+          aria-hidden="true"
+          className="text-center text-xs font-medium text-muted leading-tight"
+        >
           {label}
         </span>
       ) : null}

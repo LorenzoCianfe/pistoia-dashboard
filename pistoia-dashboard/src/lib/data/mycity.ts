@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db";
+import { demoBaseline } from "@/lib/demo";
 import { getUnreadCount } from "./notifiche";
 
 const NOT_OPEN = ["risolta", "chiusa", "non_di_competenza", "duplicata"];
@@ -50,7 +51,7 @@ export async function getMyCity(user: { id: string; neighborhoodId: string | nul
       id: p.id,
       title: p.title,
       status: p.status,
-      supports: p.baseSupports + p._count.supports,
+      supports: demoBaseline(p.baseSupports) + p._count.supports,
       supportedByMe: p.supports.length > 0,
     }))
     .sort((a, b) => b.supports - a.supports)
@@ -64,7 +65,7 @@ export async function getMyCity(user: { id: string; neighborhoodId: string | nul
       title: r.title,
       category: r.category,
       status: r.status,
-      confirmations: r.baseConfirmations + r._count.confirmations,
+      confirmations: demoBaseline(r.baseConfirmations) + r._count.confirmations,
       createdAt: r.createdAt,
     })),
     trending,

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth/dal";
+import { limitWrite } from "@/lib/limits";
 
 /** Where an official answer lives: a community-post answer, a proposal reply, a report timeline. */
 export type FeedbackTarget = "post_answer" | "proposal" | "report";
@@ -17,6 +18,9 @@ export async function answerFeedbackAction(
   helpful: boolean,
 ) {
   const user = await requireUser();
+
+  const lw = await limitWrite(user.id, "feedback");
+  if (!lw.ok) return { ok: false as const, error: lw.error };
 
   const key = { targetType_targetId_userId: { targetType, targetId, userId: user.id } };
   const existing = await prisma.answerFeedback.findUnique({ where: key });

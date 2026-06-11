@@ -2,20 +2,15 @@ import "server-only";
 import { cookies } from "next/headers";
 import { createHmac, randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db";
+import { env } from "@/lib/env";
 
 const COOKIE_NAME = "pistoia_session";
 const SESSION_DURATION_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
 
-// Fail fast: the whole session scheme's forgery-resistance depends on this
-// secret being private. Never let a production build boot with the dev fallback.
-if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
-  throw new Error(
-    "SESSION_SECRET must be set in production (no insecure fallback allowed).",
-  );
-}
-
-const secret =
-  process.env.SESSION_SECRET ?? "dev-only-insecure-secret-change-me";
+// La resistenza alla contraffazione delle sessioni dipende da questo segreto.
+// env.ts garantisce il fail-fast: in produzione richiede >=32 caratteri,
+// in sviluppo usa un fallback dichiaratamente insicuro.
+const secret = env.SESSION_SECRET;
 
 /**
  * The cookie holds a high-entropy opaque token. The database stores only its

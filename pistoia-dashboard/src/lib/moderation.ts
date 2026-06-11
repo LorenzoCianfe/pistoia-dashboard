@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/format";
+import { findBlockedIn } from "@/lib/word-filter";
 
 /**
  * Shared moderation guards (§14). Used by every community write action so that
@@ -49,20 +50,7 @@ export function invalidateBlockedWords() {
 
 /** Returns the first blocked word contained in `text`, or null if clean. */
 export async function findBlockedWord(text: string): Promise<string | null> {
-  const words = await blockedWords();
-  if (words.length === 0) return null;
-  const lower = ` ${text.toLowerCase()} `;
-  for (const w of words) {
-    if (!w) continue;
-    // Match as a whole word where possible, fall back to substring for short tokens.
-    const re = new RegExp(`(^|[^\\p{L}])${escapeRegExp(w)}([^\\p{L}]|$)`, "iu");
-    if (re.test(lower)) return w;
-  }
-  return null;
-}
-
-function escapeRegExp(s: string) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return findBlockedIn(text, await blockedWords());
 }
 
 /** Combined guard for a text contribution: ban/suspension + blocked words. */

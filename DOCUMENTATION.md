@@ -1,7 +1,7 @@
 # Dashboard di Pistoia — Documentazione
 
 > Documento vivo. Viene aggiornato a ogni cambiamento rilevante del progetto.
-> Ultimo aggiornamento: 2026-06-10
+> Ultimo aggiornamento: 2026-06-11
 
 ---
 
@@ -66,8 +66,10 @@ Vision e concept originali: vedi [`pistoia-dashboard-concept.txt`](./pistoia-das
 | Animazioni | **Motion** (`motion/react`) |
 | Tema chiaro/scuro | **next-themes** (classe su `<html>`) |
 | Icone | **lucide-react** |
-| Grafici | Componenti **SVG custom** animati (anelli, linee morbide, barre) |
+| Grafici | Componenti **SVG custom** animati (anelli, linee morbide, barre) — con alternativa testuale `sr-only` (WCAG 1.1.1) |
 | Mappe | **Leaflet** (tile OSM, marker vettoriali, caricato via dynamic import client-only) |
+| Test | **Vitest** (unit, `tests/unit/`) + **Playwright** (E2E, `tests/e2e/`) |
+| CI | **GitHub Actions** (`.github/workflows/ci.yml`): lint → typecheck → unit → drift migrazioni → build (+ job E2E) |
 
 L'app vive nella sottocartella [`pistoia-dashboard/`](./pistoia-dashboard/).
 
@@ -110,12 +112,25 @@ Poi apri http://localhost:3000.
 | `npm run db:reset` | Reset DB + reseed |
 | `npm run db:studio` | Apre Prisma Studio |
 | `npm run setup` | `migrate` + `seed` |
+| `npm test` / `npm run test:watch` | Unit test Vitest (one-shot / watch) |
+| `npm run test:e2e` | E2E Playwright (avvia da solo il dev server sulla porta 3939) |
+| `npm run typecheck` | `tsc --noEmit` |
 
 ### Variabili d'ambiente (`.env`)
+
+Tutte le variabili sono **validate all'avvio** da [`src/lib/env.ts`](./pistoia-dashboard/src/lib/env.ts)
+(Zod, caricato da `instrumentation.ts`): valori mancanti o malformati **bloccano il boot** con un
+messaggio esplicito.
+
 | Variabile | Descrizione |
 |---|---|
 | `DATABASE_URL` | Percorso SQLite, default `file:./prisma/dev.db` |
-| `SESSION_SECRET` | Segreto per l'HMAC dei token di sessione (rigenerabile) |
+| `SESSION_SECRET` | Segreto per l'HMAC dei token di sessione. **In produzione: obbligatorio, ≥32 caratteri** |
+| `DEMO_MODE` | `true`/`false` — attiva i baseline finti del seed (default: `true` in dev, `false` in prod) |
+| `DATA_MODE_BILANCIO` / `DATA_MODE_OPERE` | `mock` (default) o `real` quando l'ETL di Fase 2 alimenta la sezione |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Opzionali, insieme: rate-limit distribuito su Upstash Redis (REST); altrimenti store in memoria |
+| `SENTRY_DSN` | Opzionale: error tracking (hook già pronto in `instrumentation.ts`) |
+| `SERVER_ACTIONS_ALLOWED_ORIGINS` | Opzionale: host extra ammessi per le Server Actions dietro reverse proxy |
 
 Template: [`pistoia-dashboard/.env.example`](./pistoia-dashboard/.env.example).
 
@@ -138,27 +153,41 @@ Template: [`pistoia-dashboard/.env.example`](./pistoia-dashboard/.env.example).
 ```
 pistoia-dashboard/
 ├─ prisma/
-│  ├─ schema.prisma        # modello dati
+│  ├─ schema.prisma        # modello dati (+ campi di provenienza source*/lastSyncedAt)
 │  ├─ migrations/          # migrazioni SQL
 │  └─ seed.ts              # dati mockup
 ├─ prisma.config.ts        # config Prisma 7 (schema, migrazioni, datasource)
+├─ vitest.config.ts        # unit test (alias @ e stub server-only)
+├─ playwright.config.ts    # E2E (avvia il dev server su :3939)
+├─ tests/
+│  ├─ unit/                # percent, safeNext, rate-limit, validation, colors, word-filter, env
+│  └─ e2e/                 # auth, voto, segnalazione (Chromium)
 ├─ src/
-│  ├─ proxy.ts             # ex-middleware: guard ottimistico delle rotte protette
+│  ├─ proxy.ts             # guard ottimistico rotte protette + CSP con nonce per-request
+│  ├─ instrumentation.ts   # boot: valida env (fail-fast) + onRequestError (log strutturato)
 │  ├─ app/
-│  │  ├─ layout.tsx        # root: font, ThemeProvider, metadata
+│  │  ├─ layout.tsx        # root: font, ThemeProvider (+ nonce CSP), metadata
 │  │  ├─ page.tsx          # landing pubblica
-│  │  ├─ (auth)/           # login, registrati (+ layout brandizzato)
-│  │  ├─ (app)/            # area protetta: le 4 sezioni + extra (+ layout con nav)
+│  │  ├─ global-error.tsx, not-found.tsx   # boundary globali
+│  │  ├─ (auth)/           # login, registrati (+ error.tsx)
+│  │  ├─ (app)/            # area protetta (+ error/not-found/loading + loading per sezione)
 │  │  └─ actions/          # Server Actions (auth, polls, community, ...)
 │  ├─ components/
-│  │  ├─ ui/               # primitivi (Card, Button, Badge, Avatar, ...)
-│  │  ├─ charts/           # RingGauge, LineChart (SVG animati)
+│  │  ├─ ui/               # primitivi (Card, Button, Badge, SourceBadge, ...)
+│  │  ├─ charts/           # RingGauge, LineChart (SVG animati + tabella sr-only)
 │  │  ├─ brand/            # Crest (stemma di Pistoia)
-│  │  ├─ app/              # TopBar, SideNav, BottomNav, ProfileMenu
+│  │  ├─ app/              # TopBar, SideNav, BottomNav, Footer (badge demo)
 │  │  └─ <sezione>/        # componenti client per sondaggi, comunità, admin, ...
 │  ├─ lib/
-│  │  ├─ db.ts             # singleton PrismaClient (+ adapter sqlite)
-│  │  ├─ auth/             # password, session, dal, rate-limit, validation
+│  │  ├─ env.ts            # validazione Zod delle variabili d'ambiente (fail-fast)
+│  │  ├─ db.ts             # singleton PrismaClient (+ adapter sqlite, guard anti-Postgres)
+│  │  ├─ cache.ts          # cache a tag per letture condivise (unstable_cache + reviveDates)
+│  │  ├─ limits.ts         # budget anti-abuso per-utente delle write action
+│  │  ├─ demo.ts           # DEMO_MODE: azzera i baseline finti fuori dalla demo
+│  │  ├─ sources.ts        # provenienza dati + DATA_MODE + contratti ETL (Fase 2)
+│  │  ├─ pistoia.config.ts # costanti istituzionali (ISTAT 047014, Belfiore G713, ...)
+│  │  ├─ word-filter.ts    # matcher puro parole bloccate (testabile)
+│  │  ├─ auth/             # password, session, dal, rate-limit (store memoria/Upstash), redirect, validation
 │  │  ├─ data/             # query per ogni sezione (DTO)
 │  │  ├─ colors.ts, format.ts, labels.ts, utils.ts
 │  └─ generated/prisma/    # client Prisma generato (gitignored)
@@ -175,7 +204,21 @@ pistoia-dashboard/
 ### Pattern dati
 - **Server Components** leggono i dati tramite `src/lib/data/*` (ritornano DTO).
 - **Server Actions** (`src/app/actions/*`) gestiscono le mutazioni (voto, like, commento, follow,
-  notifiche, profilo, admin) con `requireUser`/`requireAdmin` + `revalidatePath`.
+  notifiche, profilo, admin) con `requireUser`/`requireAdmin` + `revalidatePath`. Ogni write action
+  citizen-facing passa anche da **`limitWrite()`** (anti-abuso) e, per i contenuti testuali, dal
+  guard di moderazione (`checkContribution`).
+- **Cache a tag** (`src/lib/cache.ts`): le letture **condivise** tra tutti gli utenti — bilancio,
+  lista opere, eventi pubblicati, quartieri — passano da `cachedShared()` (`unstable_cache` + tag
+  `budget`/`opere`/`eventi`/`quartieri` + TTL). Le action che mutano quei dati chiamano
+  `revalidateTag(tag, "max")`. Regola: **mai dati per-utente nella cache condivisa** (lo stato di
+  follow/voto viene letto fuori dalla cache e ricomposto dopo). `reviveDates` riconverte le date
+  (la cache serializza in JSON).
+- **DEMO_MODE** (`src/lib/demo.ts`): i baseline finti (`baseVotes`, `baseLikes`, `baseSupports`,
+  `baseConfirmations`, recensioni servizi, KPI mock) contano **solo** in demo; fuori, i numeri
+  partono da zero e la UI mostra zero-state onesti.
+- **Provenienza dati** (`src/lib/sources.ts` + campi `sourceName`/`sourceUrl`/`externalId`/
+  `lastSyncedAt` su `BudgetYear`/`Opera`): ogni sezione dichiara la fonte via `<SourceBadge/>`;
+  finché `DATA_MODE_* = mock` l'etichetta dice esplicitamente "dati dimostrativi".
 - **Client Components** usano `useActionState` / `useOptimistic` / `useTransition` per UI reattiva.
 
 ---
@@ -187,11 +230,23 @@ pistoia-dashboard/
   solo il suo **HMAC-SHA256** (chiave = `SESSION_SECRET`). Un leak del DB non permette di forgiare
   un cookie valido.
 - Cookie `pistoia_session`: `HttpOnly`, `SameSite=Lax`, `Secure` in produzione, durata 30 giorni.
-- `SESSION_SECRET` **obbligatorio in produzione**: l'app rifiuta di avviarsi senza (nessun fallback insicuro).
-- **Rate-limiting** in-memory a più livelli sul login: per coppia IP+email (5/15min), **per-account
+- `SESSION_SECRET` **obbligatorio in produzione** (≥32 caratteri): la validazione vive in
+  `src/lib/env.ts` e blocca il boot (fail-fast via `instrumentation.ts`).
+- **Content-Security-Policy con nonce per-request** (`src/proxy.ts`): `script-src 'self' 'nonce-…'
+  'strict-dynamic'`, `frame-ancestors 'none'`, `form-action 'self'`, tile OSM in `img-src`. Il nonce
+  arriva al root layout via header `x-nonce` (per lo script inline di next-themes). **Header statici**
+  in `next.config.ts`: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (solo `geolocation=(self)`),
+  `Strict-Transport-Security`; più `serverActions.allowedOrigins` da env per i reverse proxy.
+- **Rate-limiting** a più livelli sul login: per coppia IP+email (5/15min), **per-account
   indipendente dall'IP** (10/15min, vera difesa anti-brute-force anche con IP spoofato) e per-IP
-  (40/15min, difesa in profondità); registrazione 8/ora per IP. (In-memory ⇒ per-istanza, si azzera
-  al riavvio; in produzione l'IP va letto da un reverse proxy fidato e il limiter spostato su Redis/DB.)
+  (40/15min, difesa in profondità); registrazione 8/ora per IP.
+- **Rate-limit su tutte le write action** (`src/lib/limits.ts`): budget per-utente per post (10/h),
+  commenti (30/h), segnalazioni (6/h), proposte (4/giorno), voti, follow, like, feedback, flag,
+  richieste di verifica, export dati, ecc. Chiave = userId (stabile), non IP (spoofabile).
+- **Store del rate-limiter intercambiabile** (`src/lib/auth/rate-limit.ts`): in memoria (default,
+  per-istanza) oppure **Upstash Redis via REST** quando `UPSTASH_REDIS_REST_URL/TOKEN` sono impostati
+  (pipeline atomica `INCR`+`PEXPIRE NX`+`PTTL`, timeout 3s, fallback in memoria se Redis è giù).
 - Redirect post-login con parametro `next` validato (solo path locali, niente open-redirect).
 - **Equalizzazione dei tempi** sul login (verify contro un hash fittizio) anti user-enumeration.
 - **CSRF**: protezione integrata delle Server Actions (controllo Origin/Host) + cookie `SameSite=Lax`.
@@ -252,7 +307,9 @@ Enum modellati come stringhe (SQLite non ha enum nativi). Estensioni a entità e
 (`publicName`, `role`, `accountType`, `verifiedType`, `neighborhoodId`, **`geoConsent`**, **`banned`**,
 **`suspendedUntil`**), `CommunityPost` (`kind`, `neighborhoodId`, `hidden`), `PostComment` (**`hidden`**),
 `OfficialAnswer` (`department`, `authorId`, `updatedAt`), `Poll` (`kind`, `requiresVerified`,
-`neighborhoodId`). Migrazioni `community_mvp` e **`community_v2`** applicate.
+`neighborhoodId`). **Provenienza** (migrazione `provenance`): `BudgetYear` e `Opera` hanno
+`sourceName`/`sourceUrl`/`externalId`/`lastSyncedAt`, valorizzati dall'ETL di Fase 2 (null = dato
+dimostrativo del seed). Migrazioni applicate: `community_mvp`, `community_v2`, **`provenance`**.
 
 ---
 
@@ -300,9 +357,23 @@ esecuzione (Server Actions, sessioni, database). Opzioni gratuite valide:
 | **Vercel** (Hobby, gratis) | Casa naturale di Next.js. È serverless ⇒ va sostituito SQLite con un **Postgres gestito** (es. **Neon**, gratis): cambiare il `provider` Prisma in `postgresql`, usare l'adapter `@prisma/adapter-pg`, lanciare migrazioni + seed sul DB remoto. Sempre attivo, veloce. **Consigliato.** |
 | **Render / Railway / Fly.io** | Eseguono un container Node persistente ⇒ si può **mantenere SQLite** (i dati si resettano a ogni redeploy, va bene per un mock). Tier free con sospensione su inattività. |
 
-> Promemoria sicurezza per il deploy: impostare `SESSION_SECRET` (l'app in produzione rifiuta di
-> avviarsi senza), servire in HTTPS (il cookie diventa `Secure`), e leggere l'IP del client da un
-> reverse proxy fidato per il rate-limiting.
+> Promemoria sicurezza per il deploy: impostare `SESSION_SECRET` (≥32 caratteri — l'app in produzione
+> rifiuta di avviarsi senza), servire in HTTPS (il cookie diventa `Secure`), leggere l'IP del client
+> da un reverse proxy fidato per il rate-limiting e impostare `UPSTASH_REDIS_REST_URL/TOKEN` se ci
+> sono più istanze (altrimenti il limite è per-istanza). Dietro reverse proxy con host diverso:
+> `SERVER_ACTIONS_ALLOWED_ORIGINS`.
+
+### Migrazione a Postgres (procedura, Fase 1→2)
+
+Il client Prisma 7 è **dialect-specific**: il passaggio SQLite → PostgreSQL/Neon non è uno switch a
+runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock** (zero rischio):
+
+1. `npm i @prisma/adapter-pg pg` e in `prisma/schema.prisma`: `datasource db { provider = "postgresql" }`.
+2. Rigenerare la baseline delle migrazioni (le SQL sono dialect-specific):
+   svuotare `prisma/migrations/`, poi `npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script > prisma/migrations/0_init/migration.sql` e `npx prisma migrate resolve --applied 0_init` sul DB nuovo (o semplicemente `npx prisma migrate dev --name init` puntando al Postgres vuoto).
+3. In `src/lib/db.ts`: sostituire `PrismaBetterSqlite3` con `PrismaPg` (`new PrismaPg({ connectionString: url })`) e rimuovere il guard anti-Postgres.
+4. `DATABASE_URL=postgres://…` in `.env`, poi `npx prisma generate`, `migrate deploy`, `db:seed`.
+5. Aggiornare la CI (servizio Postgres o Neon branch) e rimuovere `better-sqlite3` dalle dipendenze.
 
 ## 10. Decisioni e changelog
 
@@ -353,12 +424,52 @@ esecuzione (Server Actions, sessioni, database). Opzioni gratuite valide:
   i contenuti dell'area. Guard di moderazione (`lib/moderation.ts`) applicato a tutte le write action
   community. Verificato: `next build` pulito (24 rotte), `tsc` pulito, seed aggiornato. Ancora **dati mockup**.
 
+- **2026-06-11 (Fase 0 Hardening + Fase 1 Abilitatori)** — Implementate le prime due fasi della
+  roadmap (senza mailer, rinviato). **Fase 0:** CSP con **nonce per-request** + `strict-dynamic` nel
+  proxy e security headers statici (`X-Frame-Options`, `nosniff`, `Referrer-Policy`,
+  `Permissions-Policy`, HSTS) in `next.config.ts`; **`env.ts`** con validazione Zod fail-fast
+  (caricato da `instrumentation.ts`, che aggiunge anche `onRequestError` con log strutturato);
+  **rate-limit su tutte le write action** (`lib/limits.ts`, ~12 action, chiave per-utente);
+  **`DEMO_MODE`** che azzera i baseline finti (voti/like/sostegni/conferme base, recensioni servizi,
+  KPI mock) con zero-state onesti e badge "demo" nel footer; `error.tsx`/`loading.tsx`/`not-found.tsx`
+  (boundary globali + per gruppo + skeleton per bilancio/opere/comunità); **grafici SVG accessibili**
+  (tabella `sr-only` + `role="img"`); empty state cittadini (via "esegui il seed");
+  **`pistoia.config.ts`** (ISTAT `047014`, Belfiore `G713`); **Vitest** (32 unit test: largest-
+  remainder, anti open-redirect, rate-limiter, validazione, colori, word-filter, env) + **CI GitHub
+  Actions** (lint→typecheck→test→drift migrazioni→build + job E2E). **Fase 1:** rate-limiter con
+  **store intercambiabile** (memoria / **Upstash Redis REST** senza dipendenze npm, fallback sicuro);
+  **cache a tag** per le letture condivise (`lib/cache.ts`: `unstable_cache` + `revalidateTag(tag,"max")`
+  + revival delle date) su bilancio/opere/eventi/quartieri; **schema di provenienza dati** (migrazione
+  `provenance`: `sourceName`/`sourceUrl`/`externalId`/`lastSyncedAt` su `BudgetYear`/`Opera`) +
+  `lib/sources.ts` (DATA_MODE per sezione + contratti `BudgetSource`/`OpereSource` per l'ETL) +
+  `<SourceBadge/>` in UI; **E2E Playwright** (5 test: redirect protetto, login errato/valido, voto,
+  segnalazione end-to-end); **procedura Postgres documentata** (§9) con guard esplicito in `db.ts`.
+  Fix collaterali: guard moderazione **mancante sulle proposte**, hydration mismatch del ThemeToggle
+  (`useSyncExternalStore`) e del template Motion, 3 errori lint preesistenti, `safeNext` e word-filter
+  estratti in moduli puri testabili. Verificato: `tsc` pulito, eslint 0 problemi, Vitest 32/32,
+  Playwright 5/5, `next build` pulito, header e CSP verificati live nel browser (nessuna violazione).
+- **2026-06-11 (review multi-agente + ideazione)** — Review adversariale delle modifiche Fase 0/1:
+  la lente **a11y/UX** ha confermato 8 finding, **tutti corretti**: (1) errori del rate-limit mai
+  mostrati nelle component ottimistiche → nuovo `<ActionError/>` (live region sempre montata) +
+  gestione `res.error` in poll/post/confirm/follow/support, col testo del commento ripristinato se
+  rifiutato; (2) skeleton con `role="status"` + testo `sr-only` (prima: `aria-label` su div generico,
+  mai annunciato); (3) focus programmatico sull'`h1` nei 3 error boundary + digest/log uniformati;
+  (4) tabella sr-only del LineChart localizzata it-IT (`formatValue`); (5) `aria-disabled` + guard al
+  posto di `disabled={pending}` (perdita focus da tastiera); (6) live region del toast voto resa
+  persistente; (7) avviso sr-only "nuova scheda" sul link fonte; (8) aria-label del RingGauge
+  localizzato + etichetta `aria-hidden`. Le lenti sicurezza/cache/idiomi-Next della review e le lenti
+  cybersecurity/performance dell'ideazione sono saltate per limiti di sessione (tracciate in roadmap
+  come code residue). L'ideazione ha prodotto **16 idee nuove** (8 partecipazione + 8 open data),
+  catalogate in `ROADMAP.md` con impatto/sforzo/fase. Riverificato dopo i fix: eslint, `tsc`,
+  32/32 unit, 5/5 E2E, `next build` — tutto pulito.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.
 
 Struttura del documento:
-- **✅ Completate** — v1 base, review sicurezza, Community MVP, Community v2 (9 blocchi §6/§8/§9/§10/§14/§17/§18/§21/§23)
+- **✅ Completate** — v1 base, review sicurezza, Community MVP, Community v2, **Fase 0 Hardening &
+  Onestà**, **Fase 1 Abilitatori di piattaforma** (senza mailer)
 - **🔄 In corso** — nessuna attività al momento
-- **🔜 Prossime attività** — Fase 0 Hardening (security headers, CSP, `env.ts` Zod, rate-limit write action, Vitest+CI, a11y, `DEMO_MODE`, Sentry)
-- **💡 Idee future** — §19 Bilancio partecipativo, §20 AI civica, §22 Pistoia Pulse; Fase 1 (Postgres/Redis/mailer), Fase 2 (dati reali BDAP/OpenCUP/ReGiS/ANAC), Fase 3 (ricerca globale, open-data-out, digest email), Fase 4 (SPID/CIE, 2FA, GDPR, Delibere)
+- **🔜 Prossime attività** — Fase 2: dati reali (BDAP/SIOPE+ → bilancio; OpenCUP/ReGiS/ANAC → opere) + code residue di Fase 1 (mailer, switch Postgres effettivo)
+- **💡 Idee future** — §19 Bilancio partecipativo, §20 AI civica, §22 Pistoia Pulse; Fase 3 (ricerca globale, open-data-out, digest email), Fase 4 (SPID/CIE, 2FA, GDPR, Delibere) + idee nuove dalla sessione di ideazione 2026-06-11

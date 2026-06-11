@@ -80,24 +80,26 @@ export default async function SondaggiPage() {
             </Card>
           ) : null}
 
-          {/* Soddisfazione servizi digitali */}
-          <Card>
-            <div className="flex items-center gap-2">
-              <Smile size={18} className="text-teal" />
-              <h3 className="text-base font-semibold">Servizi digitali</h3>
-            </div>
-            <p className="mt-1 text-sm text-muted">
-              Soddisfazione media dei cittadini.
-            </p>
-            <div className="mt-2 flex justify-center">
-              <RingGauge
-                value={SODDISFAZIONE_DIGITALE}
-                color="green"
-                size={120}
-                label="Soddisfazione"
-              />
-            </div>
-          </Card>
+          {/* Soddisfazione servizi digitali — KPI mock, visibile solo in DEMO_MODE */}
+          {SODDISFAZIONE_DIGITALE != null ? (
+            <Card>
+              <div className="flex items-center gap-2">
+                <Smile size={18} className="text-teal" />
+                <h3 className="text-base font-semibold">Servizi digitali</h3>
+              </div>
+              <p className="mt-1 text-sm text-muted">
+                Soddisfazione media dei cittadini.
+              </p>
+              <div className="mt-2 flex justify-center">
+                <RingGauge
+                  value={SODDISFAZIONE_DIGITALE}
+                  color="green"
+                  size={120}
+                  label="Soddisfazione"
+                />
+              </div>
+            </Card>
+          ) : null}
         </div>
       </div>
     </div>

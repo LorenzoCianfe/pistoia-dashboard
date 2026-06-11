@@ -13,6 +13,7 @@ import {
 } from "@/lib/community";
 import { awardBadge } from "@/lib/badges";
 import { checkContribution } from "@/lib/moderation";
+import { limitWrite } from "@/lib/limits";
 import { notify } from "@/lib/notify";
 
 export type ReportFormState =
@@ -69,6 +70,9 @@ export async function createReportAction(
     return { error: parsed.error.issues[0]?.message ?? "Dati non validi." };
   }
   const { title, description, category, neighborhoodId, location } = parsed.data;
+
+  const lw = await limitWrite(user.id, "report");
+  if (!lw.ok) return { error: lw.error };
 
   const check = await checkContribution(user.id, `${title} ${description}`);
   if (!check.ok) return { error: check.error };
@@ -127,6 +131,10 @@ export async function createReportAction(
 /** "Anche io" — toggle a confirmation on an existing report (dedupe signal). */
 export async function confirmReportAction(reportId: string) {
   const user = await requireUser();
+
+  const lw = await limitWrite(user.id, "confirm");
+  if (!lw.ok) return { ok: false as const, error: lw.error };
+
   const existing = await prisma.reportConfirmation.findUnique({
     where: { reportId_userId: { reportId, userId: user.id } },
   });

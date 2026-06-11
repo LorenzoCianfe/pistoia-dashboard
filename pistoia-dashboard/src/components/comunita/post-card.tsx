@@ -18,6 +18,7 @@ import { motion } from "motion/react";
 import { Card } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { ActionError } from "@/components/ui/action-error";
 import { Crest } from "@/components/brand/crest";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { AuthorVerification } from "@/components/community/badges";
@@ -71,6 +72,7 @@ export function PostCard({
   const [commentText, setCommentText] = useState("");
   const [hidden, setHidden] = useState(false);
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
+  const [actionError, setActionError] = useState<string | null>(null);
 
   function flagComment(id: string) {
     setFlagged((s) => new Set(s).add(id));
@@ -84,9 +86,12 @@ export function PostCard({
   const BannerIcon = post.category ? BANNER_ICON[post.category] : undefined;
 
   function like_() {
+    if (pending) return;
+    setActionError(null);
     startTransition(async () => {
       toggleLikeOptimistic(undefined);
-      await toggleLikeAction(post.id);
+      const res = await toggleLikeAction(post.id);
+      if (res && "error" in res && res.error) setActionError(res.error);
     });
   }
 
@@ -94,11 +99,17 @@ export function PostCard({
     e.preventDefault();
     const body = commentText.trim();
     if (!body) return;
+    setActionError(null);
     setCommentText("");
     setShowComments(true);
     startTransition(async () => {
       addCommentOptimistic(body);
-      await addCommentAction(post.id, body);
+      const res = await addCommentAction(post.id, body);
+      if (res && "error" in res && res.error) {
+        setActionError(res.error);
+        // Give the rejected text back instead of losing it silently.
+        setCommentText((cur) => (cur ? cur : body));
+      }
     });
   }
 
@@ -203,7 +214,7 @@ export function PostCard({
         <button
           type="button"
           onClick={like_}
-          disabled={pending}
+          aria-disabled={pending}
           aria-pressed={like.liked}
           className={cn(
             "flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-sm font-medium transition-colors",
@@ -238,6 +249,8 @@ export function PostCard({
           </button>
         ) : null}
       </div>
+
+      <ActionError error={actionError} />
 
       {/* comments */}
       {showComments ? (

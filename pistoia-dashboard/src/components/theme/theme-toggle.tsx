@@ -1,16 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Hydration-safe "siamo sul client?" senza setState-in-effect:
+// lato server restituisce false, al primo render client true.
+const useMounted = () =>
+  useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
 export function ThemeToggle({ className }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useMounted();
 
-  const isDark = resolvedTheme === "dark";
+  // Gate su `mounted`: il server non conosce il tema risolto, quindi durante
+  // l'hydration entrambi i lati devono rendere lo stesso label (no mismatch).
+  const isDark = mounted && resolvedTheme === "dark";
 
   return (
     <button

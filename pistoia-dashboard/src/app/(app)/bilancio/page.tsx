@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import { Wallet, TrendingUp } from "lucide-react";
+import { Wallet } from "lucide-react";
 import { getBudgetYear } from "@/lib/data/budget";
+import { sourceInfo } from "@/lib/sources";
+import { SourceBadge } from "@/components/ui/source-badge";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Stat } from "@/components/ui/stat";
@@ -17,9 +19,17 @@ export default async function BilancioPage() {
   const by = await getBudgetYear(2026);
   if (!by) {
     return (
-      <p className="text-muted">
-        Nessun dato di bilancio. Esegui il seed del database.
-      </p>
+      <div className="grid min-h-[40vh] place-items-center text-center">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">
+            Dati di bilancio non ancora disponibili
+          </h1>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
+            Questa sezione si riempirà appena i dati del Comune saranno
+            pubblicati. Torna a trovarci presto.
+          </p>
+        </div>
+      </div>
     );
   }
 
@@ -75,6 +85,7 @@ export default async function BilancioPage() {
 
         <LineChart
           height={240}
+          title="Andamento mensile 2026 di entrate, spese e investimenti in milioni di euro"
           labels={by.months.map((m) => monthLabel(m.month))}
           series={[
             { name: "Entrate", color: "teal", points: by.months.map((m) => m.entrate / 1e6) },
@@ -139,11 +150,7 @@ export default async function BilancioPage() {
         </ul>
       </Card>
 
-      <p className="px-1 text-xs text-muted-2">
-        <TrendingUp size={12} className="mr-1 inline" />
-        Dati dimostrativi. In una versione reale, le cifre verrebbero dalle fonti
-        open data ufficiali del Comune.
-      </p>
+      <SourceBadge source={sourceInfo("bilancio", by)} />
     </div>
   );
 }

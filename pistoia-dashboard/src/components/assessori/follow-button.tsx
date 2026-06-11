@@ -1,8 +1,9 @@
 "use client";
 
-import { useOptimistic, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import { Check, Plus } from "lucide-react";
 import { toggleFollowAction } from "@/app/actions/assessori";
+import { ActionError } from "@/components/ui/action-error";
 import { cn } from "@/lib/utils";
 
 export function FollowButton({
@@ -19,22 +20,28 @@ export function FollowButton({
     (_current, value: boolean) => value,
   );
   const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   function toggle() {
+    if (pending) return;
+    setError(null);
     startTransition(async () => {
       setOptimistic(!optimistic);
-      await toggleFollowAction(assessoreId);
+      const res = await toggleFollowAction(assessoreId);
+      if (res && "error" in res && res.error) setError(res.error);
     });
   }
 
   return (
+    <>
     <button
       type="button"
       onClick={toggle}
-      disabled={pending}
+      aria-disabled={pending}
       aria-pressed={optimistic}
       className={cn(
-        "inline-flex h-9 items-center gap-1.5 rounded-pill px-4 text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-60",
+        "inline-flex h-9 items-center gap-1.5 rounded-pill px-4 text-sm font-semibold transition-all active:scale-[0.98]",
+        pending && "opacity-60",
         optimistic
           ? "border border-border bg-surface-2 text-foreground"
           : "gradient-teal-viola text-white",
@@ -53,5 +60,7 @@ export function FollowButton({
         </>
       )}
     </button>
+    <ActionError error={error} />
+    </>
   );
 }

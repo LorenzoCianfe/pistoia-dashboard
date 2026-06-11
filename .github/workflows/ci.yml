@@ -1,0 +1,88 @@
+# CI della Dashboard di Pistoia (Fase 0).
+# lint → typecheck → unit test → drift delle migrazioni → build.
+# Gli E2E Playwright girano in un job separato (non bloccante per ora).
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/**", "fix/**"]
+  pull_request:
+
+env:
+  # Valori fittizi sufficienti per build e test: nessun segreto reale in CI.
+  DATABASE_URL: "file:./prisma/dev.db"
+  SESSION_SECRET: "ci-only-secret-abcdefghijklmnopqrstuvwxyz012345"
+
+defaults:
+  run:
+    working-directory: pistoia-dashboard
+
+jobs:
+  quality:
+    name: Lint · Typecheck · Test · Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: pistoia-dashboard/package-lock.json
+
+      - name: Installa dipendenze (esegue anche prisma generate)
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit test (Vitest)
+        run: npm test
+
+      - name: Drift migrazioni (schema ↔ migrations)
+        # exit 2 se lo schema diverge dalle migrazioni committate.
+        run: npx prisma migrate diff --from-migrations prisma/migrations --to-schema prisma/schema.prisma --exit-code
+
+      - name: Prepara database (migrate + seed)
+        run: npx prisma migrate deploy && npx tsx prisma/seed.ts
+
+      - name: Build di produzione
+        run: npm run build
+
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    needs: quality
+    # Non bloccante finché la suite non è stata rodata in CI.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: pistoia-dashboard/package-lock.json
+
+      - name: Installa dipendenze
+        run: npm ci
+
+      - name: Prepara database (migrate + seed)
+        run: npx prisma migrate deploy && npx tsx prisma/seed.ts
+
+      - name: Installa Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Test end-to-end
+        run: npm run test:e2e
+
+      - name: Carica il report in caso di fallimento
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: pistoia-dashboard/playwright-report/
+          retention-days: 7

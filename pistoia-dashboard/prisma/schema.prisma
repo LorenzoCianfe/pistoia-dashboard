@@ -308,6 +308,13 @@ model BudgetYear {
   pnrr         Int // % of PNRR-funded quota progressed
   months       BudgetMonth[]
   categories   BudgetCategory[]
+
+  // Provenienza del dato (Fase 1): valorizzati dall'ETL di Fase 2 (BDAP/SIOPE+).
+  // Null = dato dimostrativo dal seed.
+  sourceName   String? // es. "OpenBDAP (RGS-MEF)"
+  sourceUrl    String?
+  externalId   String? // chiave del record nella fonte
+  lastSyncedAt DateTime?
 }
 
 model BudgetMonth {
@@ -360,7 +367,15 @@ model Opera {
   faqs        OperaFaq[]
   comments    OperaComment[]
 
+  // Provenienza del dato (Fase 1): valorizzati dall'ETL di Fase 2
+  // (OpenCUP/ReGiS/ANAC). Null = dato dimostrativo dal seed.
+  sourceName   String? // es. "OpenCUP"
+  sourceUrl    String?
+  externalId   String? // es. il CUP dell'opera
+  lastSyncedAt DateTime?
+
   @@index([neighborhoodId])
+  @@index([externalId])
 }
 
 // Before / during / after photos for a public work (§18). Stored as data URLs.

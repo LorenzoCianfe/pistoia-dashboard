@@ -1,11 +1,13 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { TAGS } from "@/lib/cache";
 import { requireUser, requireModerator } from "@/lib/auth/dal";
 import { EVENT_CATEGORIES, isStaff, publicNameOf } from "@/lib/community";
 import { checkContribution } from "@/lib/moderation";
+import { limitWrite } from "@/lib/limits";
 import { notify } from "@/lib/notify";
 
 export type EventFormState = { ok?: boolean; error?: string } | undefined;
@@ -52,6 +54,9 @@ export async function createEventAction(
     return { error: parsed.error.issues[0]?.message ?? "Dati non validi." };
   }
 
+  const lw = await limitWrite(user.id, "event");
+  if (!lw.ok) return { error: lw.error };
+
   const check = await checkContribution(user.id, `${parsed.data.title} ${parsed.data.description}`);
   if (!check.ok) return { error: check.error };
 
@@ -82,6 +87,7 @@ export async function createEventAction(
     },
   });
 
+  revalidateTag(TAGS.eventi, "max");
   revalidatePath("/eventi");
   return { ok: true };
 }
@@ -121,6 +127,7 @@ export async function reviewEventAction(eventId: string, approve: boolean) {
     });
   }
 
+  revalidateTag(TAGS.eventi, "max");
   revalidatePath("/eventi");
   revalidatePath("/admin");
   return { ok: true as const };

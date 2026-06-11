@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Crest } from "@/components/brand/crest";
+import { DEMO_MODE } from "@/lib/demo";
 
 const LINKS = [
   { href: "/privacy", label: "Privacy" },
@@ -18,7 +19,14 @@ export function Footer() {
           </span>
           <div className="text-xs text-muted-2">
             <p className="font-semibold text-muted">Dashboard di Pistoia</p>
-            <p>Progetto dimostrativo · dati di esempio</p>
+            <p>
+              Progetto dimostrativo · dati di esempio
+              {DEMO_MODE ? (
+                <span className="ml-1.5 rounded-pill bg-amber-soft px-1.5 py-0.5 font-semibold text-foreground">
+                  demo
+                </span>
+              ) : null}
+            </p>
           </div>
         </div>
         <nav aria-label="Link istituzionali" className="flex flex-wrap gap-x-4 gap-y-1 text-xs">

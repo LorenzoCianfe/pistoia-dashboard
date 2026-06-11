@@ -1,9 +1,12 @@
 import "server-only";
 import { cache } from "react";
 import { prisma } from "@/lib/db";
+import { cachedShared, TAGS } from "@/lib/cache";
+import { DEMO_MODE } from "@/lib/demo";
 
 // "Cantieri censiti" headline figure from the concept (historical total, mock).
-export const TOTALE_CANTIERI_CENSITI = 318;
+// Null fuori da DEMO_MODE: la UI ricade sul conteggio reale dal DB.
+export const TOTALE_CANTIERI_CENSITI = DEMO_MODE ? 318 : null;
 
 /** Full detail for a single public work (§18): photos, FAQ, updates, comments. */
 export const getOperaById = cache(async (id: string) => {
@@ -22,11 +25,20 @@ export const getOperaById = cache(async (id: string) => {
 export type OperaDetail = NonNullable<Awaited<ReturnType<typeof getOperaById>>>;
 export type OperaComment = OperaDetail["comments"][number];
 
+// Lista condivisa (nessun dato per-utente): cache a tag "opere", invalidata
+// dall'admin quando aggiorna un cantiere.
+const getOpereRows = cachedShared(
+  async () =>
+    prisma.opera.findMany({
+      orderBy: [{ featured: "desc" }, { status: "asc" }, { progress: "desc" }],
+      include: { updates: { orderBy: { date: "desc" }, take: 3 } },
+    }),
+  "opere-list",
+  [TAGS.opere],
+);
+
 export async function getOpere() {
-  const opere = await prisma.opera.findMany({
-    orderBy: [{ featured: "desc" }, { status: "asc" }, { progress: "desc" }],
-    include: { updates: { orderBy: { date: "desc" }, take: 3 } },
-  });
+  const opere = await getOpereRows();
 
   const inCorso = opere.filter((o) => o.status === "in_corso");
   const totalInvestmentInCorso = inCorso.reduce((s, o) => s + o.investment, 0);
@@ -41,7 +53,7 @@ export async function getOpere() {
     completateCount: opere.filter((o) => o.status === "completata").length,
     totalInvestmentInCorso,
     avgProgress,
-    nuoviQuestoMese: 4, // mock KPI from the concept ("+4")
+    nuoviQuestoMese: DEMO_MODE ? 4 : null, // mock KPI from the concept ("+4")
   };
 }
 

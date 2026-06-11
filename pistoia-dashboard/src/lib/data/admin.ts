@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db";
+import { demoBaseline } from "@/lib/demo";
 
 const REPORT_OPEN = { notIn: ["risolta", "chiusa", "non_di_competenza", "duplicata"] };
 
@@ -64,7 +65,7 @@ export async function getAdminData() {
     status: r.status,
     neighborhoodName: r.neighborhood?.name ?? null,
     assignedDepartment: r.assignedDepartment,
-    confirmations: r.baseConfirmations + r._count.confirmations,
+    confirmations: demoBaseline(r.baseConfirmations) + r._count.confirmations,
     createdAt: r.createdAt,
   }));
 
@@ -74,7 +75,7 @@ export async function getAdminData() {
       title: p.title,
       status: p.status,
       hasReply: !!p.officialReply,
-      supports: p.baseSupports + p._count.supports,
+      supports: demoBaseline(p.baseSupports) + p._count.supports,
       createdAt: p.createdAt,
     }))
     .sort((a, b) => b.supports - a.supports);

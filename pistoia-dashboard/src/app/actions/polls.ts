@@ -3,9 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth/dal";
+import { limitWrite } from "@/lib/limits";
 
 export async function voteAction(pollId: string, optionId: string) {
   const user = await requireUser();
+
+  const lw = await limitWrite(user.id, "vote");
+  if (!lw.ok) return { ok: false as const, error: lw.error };
 
   const option = await prisma.pollOption.findUnique({
     where: { id: optionId },

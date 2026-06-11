@@ -1,20 +1,30 @@
 import "server-only";
 import { prisma } from "@/lib/db";
+import { cachedShared, TAGS } from "@/lib/cache";
 
 const orgInclude = {
   neighborhood: { select: { name: true, slug: true } },
   organizer: { select: { accountType: true, verifiedType: true } },
 } as const;
 
-/** Published events split into upcoming and past, with the viewer's follow state (§17). */
-export async function getPublishedEvents(userId?: string) {
-  const now = new Date();
-  const [events, followedEvents, followedOrgs] = await Promise.all([
+// Parte condivisa della query (uguale per tutti): cache a tag "eventi".
+// Lo stato di follow del singolo utente resta FUORI dalla cache.
+const getPublishedEventRows = cachedShared(
+  async () =>
     prisma.event.findMany({
       where: { status: "published" },
       orderBy: { startAt: "asc" },
       include: orgInclude,
     }),
+  "events-published",
+  [TAGS.eventi],
+);
+
+/** Published events split into upcoming and past, with the viewer's follow state (§17). */
+export async function getPublishedEvents(userId?: string) {
+  const now = new Date();
+  const [events, followedEvents, followedOrgs] = await Promise.all([
+    getPublishedEventRows(),
     userId
       ? prisma.follow.findMany({
           where: { userId, targetType: "event" },

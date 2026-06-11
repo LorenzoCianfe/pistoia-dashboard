@@ -1,8 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { TAGS } from "@/lib/cache";
 import { requireAdmin } from "@/lib/auth/dal";
 import { clamp } from "@/lib/utils";
 import { notify } from "@/lib/notify";
@@ -116,6 +117,7 @@ export async function updateOperaProgressAction(
     },
   });
 
+  revalidateTag(TAGS.opere, "max");
   revalidatePath("/opere");
   revalidatePath("/admin");
   return { ok: true };

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Heart, Check, Lock } from "lucide-react";
 import { motion } from "motion/react";
 import { supportProposalAction } from "@/app/actions/proposals";
+import { ActionError } from "@/components/ui/action-error";
 import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -50,6 +51,7 @@ export function SupportButton({
   }
 
   function toggle() {
+    if (pending) return;
     setError(null);
     startTransition(async () => {
       toggleOptimistic(undefined);
@@ -63,10 +65,11 @@ export function SupportButton({
       <button
         type="button"
         onClick={toggle}
-        disabled={pending}
+        aria-disabled={pending}
         aria-pressed={state.supported}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-pill px-4 py-1.5 text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-60",
+          "inline-flex items-center justify-center gap-2 rounded-pill px-4 py-1.5 text-sm font-semibold transition-all active:scale-[0.98]",
+          pending && "opacity-60",
           full && "w-full",
           state.supported
             ? "border border-border bg-surface-2 text-foreground"
@@ -79,9 +82,7 @@ export function SupportButton({
         {state.supported ? "Sostieni" : "Sostieni"}
         <span className="tabular-nums opacity-80">· {formatNumber(state.count)}</span>
       </button>
-      {error ? (
-        <p className="mt-1 text-xs font-medium text-[var(--red)]">{error}</p>
-      ) : null}
+      <ActionError error={error} />
     </div>
   );
 }

@@ -36,15 +36,20 @@ export function PollCard({ poll }: { poll: PollResult }) {
   const [optimistic, addOptimistic] = useOptimistic(poll, applyVote);
   const [pending, startTransition] = useTransition();
   const [toast, setToast] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function vote(optionId: string) {
-    if (!poll.active || optionId === optimistic.userOptionId) return;
+    if (!poll.active || pending || optionId === optimistic.userOptionId) return;
+    setError(null);
     startTransition(async () => {
       addOptimistic(optionId);
       const res = await voteAction(poll.id, optionId);
       if (res?.ok) {
         setToast(true);
         setTimeout(() => setToast(false), 2200);
+      } else {
+        // The optimistic vote has already rolled back; say why.
+        setError(res?.error ?? "Non è stato possibile registrare il voto. Riprova.");
       }
     });
   }
@@ -78,7 +83,8 @@ export function PollCard({ poll }: { poll: PollResult }) {
               <button
                 type="button"
                 onClick={() => vote(o.id)}
-                disabled={!poll.active || pending}
+                disabled={!poll.active}
+                aria-disabled={!poll.active || pending}
                 aria-pressed={chosen}
                 className={cn(
                   "relative w-full overflow-hidden rounded-[var(--radius-sm)] border text-left transition-all",
@@ -125,6 +131,15 @@ export function PollCard({ poll }: { poll: PollResult }) {
         })}
       </ul>
 
+      {error ? (
+        <p className="mt-3 text-sm font-medium text-[var(--red)]">{error}</p>
+      ) : null}
+
+      {/* Persistent live region: must exist before the message for SR announcement. */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {toast ? "Voto registrato" : error ?? ""}
+      </div>
+
       <div className="mt-3 flex items-center justify-between text-xs text-muted-2">
         <span className="flex items-center gap-1.5">
           <Users size={13} />
@@ -137,15 +152,14 @@ export function PollCard({ poll }: { poll: PollResult }) {
             Hai votato · puoi cambiare
           </span>
         ) : (
-          <span>Tocca un'opzione per votare</span>
+          <span>Tocca un&apos;opzione per votare</span>
         )}
       </div>
 
       <AnimatePresence>
         {toast ? (
           <motion.div
-            role="status"
-            aria-live="polite"
+            aria-hidden="true"
             initial={{ opacity: 0, y: 8, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}

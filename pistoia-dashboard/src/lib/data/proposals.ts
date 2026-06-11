@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db";
+import { demoBaseline } from "@/lib/demo";
 import type { Prisma } from "@/generated/prisma/client";
 
 export type ProposalFilter = {
@@ -38,7 +39,7 @@ function mapProposal(p: RawProposal, userId: string) {
     authorColor: p.authorColor,
     officialReply: p.officialReply,
     officialReplyAt: p.officialReplyAt,
-    supports: p.baseSupports + p._count.supports,
+    supports: demoBaseline(p.baseSupports) + p._count.supports,
     supportedByMe: p.supports.length > 0,
     isMine: p.authorId === userId,
     createdAt: p.createdAt,

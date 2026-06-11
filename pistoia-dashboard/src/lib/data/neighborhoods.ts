@@ -1,14 +1,25 @@
 import "server-only";
 import { cache } from "react";
 import { prisma } from "@/lib/db";
+import { cachedShared, TAGS } from "@/lib/cache";
 
-/** All neighbourhoods/frazioni, ordered for menus and filters. */
-export const getNeighborhoods = cache(async () => {
-  return prisma.neighborhood.findMany({
-    orderBy: [{ order: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, slug: true, kind: true },
-  });
-});
+/**
+ * All neighbourhoods/frazioni, ordered for menus and filters.
+ * Lista statica e condivisa: cache a tag (oltre al dedupe per-render).
+ */
+export const getNeighborhoods = cache(
+  cachedShared(
+    async () => {
+      return prisma.neighborhood.findMany({
+        orderBy: [{ order: "asc" }, { name: "asc" }],
+        select: { id: true, name: true, slug: true, kind: true },
+      });
+    },
+    "neighborhoods-list",
+    [TAGS.quartieri],
+    3600,
+  ),
+);
 
 export type NeighborhoodOption = Awaited<
   ReturnType<typeof getNeighborhoods>

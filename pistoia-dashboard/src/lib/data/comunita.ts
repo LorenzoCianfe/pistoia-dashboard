@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db";
+import { demoBaseline } from "@/lib/demo";
 import type { Prisma } from "@/generated/prisma/client";
 
 export type FeedFilter = { kind?: string; neighborhoodId?: string };
@@ -62,7 +63,7 @@ export async function getCommunityFeed(userId: string, filter?: FeedFilter) {
         }
       : null,
     comments: p.comments,
-    likeCount: p.baseLikes + p._count.likes,
+    likeCount: demoBaseline(p.baseLikes) + p._count.likes,
     likedByMe: p.likes.length > 0,
     isMine: p.authorId === userId,
   }));

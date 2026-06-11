@@ -6,12 +6,16 @@ import { requireUser, requireModerator } from "@/lib/auth/dal";
 import { initialsOf } from "@/lib/colors";
 import { publicNameOf } from "@/lib/community";
 import { checkContribution } from "@/lib/moderation";
+import { limitWrite } from "@/lib/limits";
 
 /** A citizen comments on a public work (§18). */
 export async function addOperaCommentAction(operaId: string, body: string) {
   const user = await requireUser();
   const text = body.trim().slice(0, 600);
   if (text.length < 1) return { ok: false as const, error: "Scrivi un commento." };
+
+  const lw = await limitWrite(user.id, "comment");
+  if (!lw.ok) return { ok: false as const, error: lw.error };
 
   const check = await checkContribution(user.id, text);
   if (!check.ok) return { ok: false as const, error: check.error };

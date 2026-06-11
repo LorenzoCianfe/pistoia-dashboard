@@ -15,6 +15,7 @@ import {
   destroyCurrentSession,
 } from "@/lib/auth/session";
 import { ACCENTS } from "@/lib/colors";
+import { limitWrite } from "@/lib/limits";
 
 export type ProfileState =
   | {
@@ -29,6 +30,9 @@ export async function updateProfileAction(
   formData: FormData,
 ): Promise<ProfileState> {
   const user = await requireUser();
+
+  const lw = await limitWrite(user.id, "profile");
+  if (!lw.ok) return { error: lw.error };
 
   const parsed = updateProfileSchema.safeParse({
     name: formData.get("name"),
