@@ -1,6 +1,13 @@
 import "server-only";
 import { prisma } from "@/lib/db";
 import { reportCategory, reportStatus, proposalStatus, eventCategory } from "@/lib/community";
+import {
+  decisionOutcome,
+  decisionKind,
+  commitmentStatus,
+  noticeKind,
+  faqCategory,
+} from "@/lib/transparency";
 import { operaStatus } from "@/lib/labels";
 import { formatDate } from "@/lib/format";
 import type { SearchResult } from "@/lib/search-types";
@@ -16,7 +23,7 @@ export async function globalSearch(raw: string): Promise<SearchResult[]> {
   if (q.length < 2 || q.length > 80) return [];
   const like = { contains: q };
 
-  const [reports, proposals, opere, events, polls, neighborhoods] = await Promise.all([
+  const [reports, proposals, opere, events, polls, neighborhoods, decisions, commitments, notices, faqs] = await Promise.all([
     prisma.report.findMany({
       where: { OR: [{ title: like }, { description: like }, { location: like }] },
       select: { id: true, title: true, category: true, status: true },
@@ -53,6 +60,30 @@ export async function globalSearch(raw: string): Promise<SearchResult[]> {
     prisma.neighborhood.findMany({
       where: { name: like },
       select: { id: true, name: true, slug: true, kind: true },
+      take: PER_TYPE,
+    }),
+    // Trasparenza (O3): decisioni, promesse, avvisi e FAQ entrano in Ctrl+K.
+    prisma.decision.findMany({
+      where: { OR: [{ title: like }, { summary: like }, { reason: like }] },
+      select: { id: true, title: true, kind: true, outcome: true },
+      orderBy: { decidedAt: "desc" },
+      take: PER_TYPE,
+    }),
+    prisma.commitment.findMany({
+      where: { OR: [{ title: like }, { description: like }] },
+      select: { id: true, title: true, status: true },
+      orderBy: { promisedAt: "desc" },
+      take: PER_TYPE,
+    }),
+    prisma.notice.findMany({
+      where: { OR: [{ title: like }, { body: like }, { location: like }] },
+      select: { id: true, title: true, kind: true, active: true },
+      orderBy: { startsAt: "desc" },
+      take: PER_TYPE,
+    }),
+    prisma.cityFaq.findMany({
+      where: { OR: [{ question: like }, { answer: like }] },
+      select: { id: true, question: true, category: true },
       take: PER_TYPE,
     }),
   ]);
@@ -99,6 +130,34 @@ export async function globalSearch(raw: string): Promise<SearchResult[]> {
       title: n.name,
       subtitle: n.kind === "frazione" ? "Frazione" : "Quartiere",
       href: `/quartieri/${n.slug}`,
+    })),
+    ...decisions.map<SearchResult>((d) => ({
+      type: "decision",
+      id: d.id,
+      title: d.title,
+      subtitle: `${decisionKind(d.kind)} · ${decisionOutcome(d.outcome).label}`,
+      href: "/decisioni",
+    })),
+    ...commitments.map<SearchResult>((c) => ({
+      type: "commitment",
+      id: c.id,
+      title: c.title,
+      subtitle: commitmentStatus(c.status).label,
+      href: "/promesse",
+    })),
+    ...notices.map<SearchResult>((n) => ({
+      type: "notice",
+      id: n.id,
+      title: n.title,
+      subtitle: `${noticeKind(n.kind).label} · ${n.active ? "Attivo" : "Concluso"}`,
+      href: "/avvisi",
+    })),
+    ...faqs.map<SearchResult>((f) => ({
+      type: "faq",
+      id: f.id,
+      title: f.question,
+      subtitle: faqCategory(f.category),
+      href: "/faq",
     })),
   ];
 }

@@ -1,7 +1,7 @@
 # Roadmap — Dashboard di Pistoia
 
 > Documento strategico e operativo del progetto: visione, obiettivi, piano a ondate e catalogo completo delle idee.
-> **Ultimo aggiornamento:** 2026-06-11 · Il dettaglio tecnico di quanto già costruito è in [DOCUMENTATION.md](DOCUMENTATION.md).
+> **Ultimo aggiornamento:** 2026-06-12 (Ondata 3 completata) · Il dettaglio tecnico di quanto già costruito è in [DOCUMENTATION.md](DOCUMENTATION.md).
 
 ---
 
@@ -99,6 +99,7 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 | **Ondata 2 — Semplicità & profilo** | 2026-06-11 | Ricerca globale Ctrl+K, home a percorsi guidati, preferenze civiche + feed "Per te", Civic ID Card + impatto civico, modalità semplice, wizard proposte, valutazione sintetica del Comune |
 | **Ondata 0 — Fondamenta visive & design system** | 2026-06-12 | [DESIGN.md](DESIGN.md) (direzione estetica istituzionale), token estesi (font display Fraunces, easing civico, color-scheme, glow serali), motivi identitari CSS (fasce romaniche, scacchiera), motion system (View Transitions + stagger + pulse civico), EmptyState illustrato, centro notifiche 2.0 (filtri, bucket temporali, azione inline), command palette 2.0 (comandi: tema, tour), treemap squarified del bilancio, tour demo guidato in 9 passi |
 | **Ondata 1 — Segnalazioni 2.0** | 2026-06-12 | Timeline pubblica, conferma del cittadino con riapertura, foto prima/durante/dopo (upload staff dal triage), ufficio competente + tempi medi per categoria, urgenza con validazione moderatore, anti-duplicati con "Anche io" inline, "Segnala in 30 secondi" mobile-first, mock "vivo" (seed deterministico giornaliero). Schema: `urgency`, `resolutionFeedback`, `ReportPhoto` |
+| **Ondata 3 — Trasparenza che chiude il cerchio** | 2026-06-12 | Archivio decisioni con motivo in linguaggio semplice, "Perché non si può fare?" sulle proposte respinte, tracker "Promesse e risultati", bacheca avvisi urgenti (+ layer mappa e banner in home) con "Cosa cambia per me?", impatto cantieri sul dettaglio opera, FAQ della città con badge risposta ufficiale, report civico mensile con export PDF (print stylesheet), "Spiegamelo semplice" redazionale, glossario + tooltip nel bilancio, hero "Stato della città" con sparkline in home, sezione Trasparenza in nav/ricerca/palette/tour. Schema: `Decision`, `Commitment`, `Notice`, `CityFaq`, `Opera.impactNotes/simpleText`, `Proposal.rejectionReasons` |
 
 > Già coperte dagli addenda e **fatte**: sistema fonti con freschezza (`A1 §25` → provenance + SourceBadge), modalità demo/ufficiale (`A1 §26` → DEMO_MODE), partecipazione aggregata senza esporre dati personali (`A1 §10` → contatori aggregati, ora regola di prodotto in [§7](#7-regole-di-prodotto)).
 
@@ -118,22 +119,9 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 
 ### Ondata 2 — Semplicità & profilo civico ✅ *(completata 2026-06-11, dettagli in [§3](#3-completato))*
 
-### Ondata 3 — Trasparenza che chiude il cerchio 🔜
+### Ondata 3 — Trasparenza che chiude il cerchio ✅ *(completata 2026-06-12)*
 
-**Obiettivo (→ OB-1, OB-3):** mostrare cosa succede *dopo* la partecipazione: decisioni, motivazioni, impegni, linguaggio semplice.
-
-| Voce | Livello | Fonte |
-|---|---|---|
-| Archivio decisioni del Comune | `FE` `BE` | `A1 §12` |
-| Sezione "Perché non si può fare?" sulle proposte respinte | `FE` `BE` `UX` | `A1 §13` |
-| "Promesse e risultati": tracker pubblico degli impegni | `FE` `BE` | `A1 §30` + Promessa→Fatto |
-| "Cosa cambia per me?" su opere/avvisi + impatto cantieri su attività locali | `FE` `BE` `UX` | `A1 §24` + `A2 §30` |
-| Bacheca avvisi urgenti + avvisi geolocalizzati | `FE` `BE` | `A1 §21` + idea 2026-06-11 |
-| FAQ della città con badge "risposta ufficiale" | `FE` `BE` | `A1 §11` |
-| Civic digest pubblico mensile (+ export PDF 🆕) | `FE` `BE` | `A2 §19` |
-| "Spiegamelo semplice" (versione redazionale sui contenuti seed; AI in futuro) | `FE` `UX` | `A2 §11` |
-| Glossario dei termini amministrativi (quick win) | `FE` `A11Y` | `A2 §27` |
-| "Stato della città": hero in home con indicatori sintetici e sparkline | `FE` `DES` | 🆕 |
+**Obiettivo (→ OB-1, OB-3):** mostrare cosa succede *dopo* la partecipazione: decisioni, motivazioni, impegni, linguaggio semplice. Tutte le dieci voci consegnate; dettaglio in [§3](#3-completato). La versione AI di "Spiegamelo semplice" resta un'idea 💡 (per ora il testo è redazionale dal seed).
 
 ### Ondata 4 — Territorio & partecipazione 🔜
 
@@ -199,8 +187,8 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 | **Data-viz bilancio next-gen (treemap, confronti)** | `FE` `DES` | Il bilancio è la pagina più "istituzionale": una visualizzazione memorabile la trasforma | ✅ O0 (2026-06-12) |
 | **Tour demo guidato / modalità presentazione** | `UX` | Il progetto è una demo: deve sapersi presentare da solo, passo passo | ✅ O0 (2026-06-12) |
 | **Mock data "vivo" (seed temporale deterministico)** | `BE` `ENG` | Una demo dove "succedono cose" è infinitamente più credibile di una statica | ✅ O1 (2026-06-12) |
-| **Export PDF del civic digest** | `BE` | Estensione naturale del digest (`A2 §19`), utile per comunicazione | 🔜 O3 |
-| **"Stato della città" hero con indicatori** | `FE` `DES` | Colpo d'occhio immediato sulla salute della città appena si entra | 🔜 O3 |
+| **Export PDF del civic digest** | `BE` | Estensione naturale del digest (`A2 §19`), utile per comunicazione | ✅ O3 (2026-06-12) |
+| **"Stato della città" hero con indicatori** | `FE` `DES` | Colpo d'occhio immediato sulla salute della città appena si entra | ✅ O3 (2026-06-12) |
 | **Test a11y automatici (axe in E2E)** | `ENG` `A11Y` | L'a11y già raggiunta non deve regredire mai | ♾️ qualità continua |
 | **Lighthouse CI + performance budget** | `ENG` | La percezione di qualità passa anche dalla velocità; il budget la difende | ♾️ qualità continua |
 | **Audit dipendenze in CI** | `SEC` | Sicurezza della supply chain a costo quasi zero | ♾️ qualità continua |
@@ -225,7 +213,7 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 | Motion design | View Transitions, micro-interazioni, animazioni di stato | `FE` `UX` | 🆕 | ✅ O0 (2026-06-12) |
 | Empty state & illustrazioni custom | Identità visiva anche dove non ci sono dati | `DES` | 🆕 | ✅ O0 (2026-06-12) |
 | Data-viz bilancio next-gen | Treemap missioni, confronti leggibili anno su anno | `FE` `DES` | 🆕 | ✅ O0 (2026-06-12) |
-| "Stato della città" hero | Indicatori sintetici con sparkline in home | `FE` `DES` | 🆕 | 🔜 O3 |
+| "Stato della città" hero | Indicatori sintetici con sparkline in home | `FE` `DES` | 🆕 | ✅ O3 (2026-06-12) |
 | OG image dinamiche | Anteprima curata dei link condivisi | `FE` | 🆕 | 📋 |
 | Restyling continuo | Ogni ondata rifinisce le pagine toccate | `DES` | direttrice Estetica | trasversale |
 
@@ -258,13 +246,13 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 
 | Idea | Cosa fa | Livello | Fonte | Stato |
 |---|---|---|---|---|
-| Archivio decisioni | Esito di proposte/consultazioni con motivo e stato | `FE` `BE` | `A1 §12` | 🔜 O3 |
-| "Perché non si può fare?" | Motivazioni semplici dei rifiuti | `FE` `BE` `UX` | `A1 §13` | 🔜 O3 |
-| Promesse e risultati | Tracker impegni: promesso/in corso/completato/rimandato | `FE` `BE` | `A1 §30` + Promessa→Fatto | 🔜 O3 |
-| "Cosa cambia per me?" + impatto cantieri | Impatto pratico di opere/ordinanze; accessi, parcheggi, durata | `FE` `BE` `UX` | `A1 §24` + `A2 §30` | 🔜 O3 |
-| Bacheca avvisi urgenti | Allerte, chiusure, emergenze in evidenza + geolocalizzate | `FE` `BE` | `A1 §21` + idea 2026-06-11 | 🔜 O3 |
-| FAQ della città | Domande ricorrenti → risposte ufficiali con badge | `FE` `BE` | `A1 §11` | 🔜 O3 |
-| Civic digest pubblico mensile | Pagina-report mensile della città + export PDF 🆕 | `FE` `BE` | `A2 §19` | 🔜 O3 |
+| Archivio decisioni | Esito di proposte/consultazioni con motivo e stato | `FE` `BE` | `A1 §12` | ✅ O3 (2026-06-12) |
+| "Perché non si può fare?" | Motivazioni semplici dei rifiuti | `FE` `BE` `UX` | `A1 §13` | ✅ O3 (2026-06-12) |
+| Promesse e risultati | Tracker impegni: promesso/in corso/completato/rimandato | `FE` `BE` | `A1 §30` + Promessa→Fatto | ✅ O3 (2026-06-12) |
+| "Cosa cambia per me?" + impatto cantieri | Impatto pratico di opere/ordinanze; accessi, parcheggi, durata | `FE` `BE` `UX` | `A1 §24` + `A2 §30` | ✅ O3 (2026-06-12) |
+| Bacheca avvisi urgenti | Allerte, chiusure, emergenze in evidenza + geolocalizzate | `FE` `BE` | `A1 §21` + idea 2026-06-11 | ✅ O3 (2026-06-12) |
+| FAQ della città | Domande ricorrenti → risposte ufficiali con badge | `FE` `BE` | `A1 §11` | ✅ O3 (2026-06-12) |
+| Civic digest pubblico mensile | Pagina-report mensile della città + export PDF 🆕 | `FE` `BE` | `A2 §19` | ✅ O3 (2026-06-12) |
 | "Spiegamelo semplice" | Traduzione in linguaggio cittadino di atti/voci di bilancio | `FE` `UX` | `A2 §11` | 🔜 O3 (redazionale) · 💡 versione AI |
 | Sistema fonti + freschezza | Fonte, data aggiornamento, tipo dato su ogni numero | `BE` | `A1 §25` | ✅ Fase 1 |
 | Modalità demo / ufficiale | Badge "dati non ufficiali" in demo | `FE` `BE` | `A1 §26` | ✅ Fase 0 |
@@ -324,7 +312,7 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 | Base a11y (ARIA, contrasto, tastiera) | Review fatte e verificate | `A11Y` | `A1 §18` (parte) | ✅ |
 | Test a11y automatici | axe-core dentro gli E2E: l'a11y non regredisce | `ENG` `A11Y` | 🆕 | 📋 da impostare (prossima ondata) |
 | Alto contrasto, font grande, lettura audio | Preferenze di visualizzazione avanzate | `FE` `A11Y` | `A1 §18` | 📋 |
-| Glossario termini amministrativi | Tooltip/pagina dei termini burocratici | `FE` `A11Y` | `A2 §27` (parte) | 🔜 O3 |
+| Glossario termini amministrativi | Tooltip/pagina dei termini burocratici | `FE` `A11Y` | `A2 §27` (parte) | ✅ O3 (2026-06-12) |
 | Multilingua + easy-to-read ("Pistoia Facile") | EN, AL, RO, ZH, UK + linguaggio facilitato | `FE` `A11Y` | `A2 §27` + Fase 4 | 💡 pre-lancio |
 
 ### 📰 Contenuti & storytelling

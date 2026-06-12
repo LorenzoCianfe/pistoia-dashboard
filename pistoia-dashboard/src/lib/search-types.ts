@@ -7,7 +7,11 @@ export type SearchResultType =
   | "opera"
   | "event"
   | "poll"
-  | "neighborhood";
+  | "neighborhood"
+  | "decision"
+  | "commitment"
+  | "notice"
+  | "faq";
 
 export type SearchResult = {
   type: SearchResultType;
@@ -25,4 +29,8 @@ export const SEARCH_GROUP_LABEL: Record<SearchResultType, string> = {
   event: "Eventi",
   poll: "Sondaggi e consultazioni",
   neighborhood: "Quartieri e frazioni",
+  decision: "Decisioni del Comune",
+  commitment: "Promesse e risultati",
+  notice: "Avvisi urgenti",
+  faq: "FAQ della città",
 };

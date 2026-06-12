@@ -302,6 +302,10 @@ pistoia-dashboard/
 | `Event` | Eventi: pubblicati dal Comune o **proposti dalle associazioni verificate** e approvati (workflow `proposed→published/rejected`) |
 | `AnswerFeedback` | "Questa risposta ti è stata utile?" sulle risposte ufficiali (post/proposte/segnalazioni) |
 | `CommentReport` / `BlockedWord` | Moderazione avanzata: segnalazione commenti + filtro parole bloccate |
+| `Decision` | Archivio decisioni (O3): esito, motivo in linguaggio semplice, `simpleText`, link a proposta/segnalazione/opera (`linkedType`/`linkedId`) |
+| `Commitment` | "Promesse e risultati" (O3): stato promesso/in_corso/completato/rimandato/non_fattibile, origine, scadenza comunicata, nota di aggiornamento |
+| `Notice` | Bacheca avvisi urgenti (O3): tipo, severità info/attenzione/critico, geo opzionale, `whatChanges` (JSON array "cosa cambia per me") |
+| `CityFaq` | FAQ della città (O3): domanda/risposta ufficiale, categoria, ordine redazionale |
 
 Enum modellati come stringhe (SQLite non ha enum nativi). Estensioni a entità esistenti: `User`
 (`publicName`, `role`, `accountType`, `verifiedType`, `neighborhoodId`, **`geoConsent`**, **`banned`**,
@@ -309,7 +313,10 @@ Enum modellati come stringhe (SQLite non ha enum nativi). Estensioni a entità e
 `OfficialAnswer` (`department`, `authorId`, `updatedAt`), `Poll` (`kind`, `requiresVerified`,
 `neighborhoodId`). **Provenienza** (migrazione `provenance`): `BudgetYear` e `Opera` hanno
 `sourceName`/`sourceUrl`/`externalId`/`lastSyncedAt`, valorizzati dall'ETL di Fase 2 (null = dato
-dimostrativo del seed). Migrazioni applicate: `community_mvp`, `community_v2`, **`provenance`**.
+dimostrativo del seed). **Ondata 3**: `Opera.impactNotes`/`Opera.simpleText` (impatto pratico +
+linguaggio semplice) e `Proposal.rejectionReasons` (motivi del rifiuto, JSON array). Migrazioni
+applicate: `community_mvp`, `community_v2`, **`provenance`**, `ondata2_semplicita_profilo`,
+`ondata1_segnalazioni2`, `ondata3_trasparenza`.
 
 ---
 
@@ -317,21 +324,27 @@ dimostrativo del seed). Migrazioni applicate: `community_mvp`, `community_v2`, *
 
 | Sezione | Stato | Note |
 |---|---|---|
-| La mia città | ✅ | Home personalizzata: saluto, quartiere, KPI ("vicino a te"), segnalazioni vicine, proposte in evidenza, scorciatoie. È il redirect post-login |
+| La mia città | ✅ | Home personalizzata: saluto, quartiere, KPI ("vicino a te"), segnalazioni vicine, proposte in evidenza, scorciatoie; **banner avvisi attivi** + **hero "Stato della città"** con sparkline (O3). È il redirect post-login |
 | Bilancio | ✅ | 142 mln (contatore animato), 3 anelli (riscossione/impegni/PNRR), grafico a linee mensile, spesa per missione |
-| Opere | ✅ | 318 censiti, cantieri in evidenza, griglia, KPI; **follow** per cantiere; **pagina dettaglio `/opere/[id]`** (fonte finanziamento, RUP, foto prima/durante/dopo, FAQ, commenti cittadini, mini-mappa) |
-| Mappa | ✅ | **Mappa interattiva `/mappa`** (Leaflet + tile OSM): layer attivabili (opere, segnalazioni, eventi, uffici, scuole, verde, servizi), pin per categoria, popup con link |
+| Opere | ✅ | 318 censiti, cantieri in evidenza, griglia, KPI; **follow** per cantiere; **pagina dettaglio `/opere/[id]`** (fonte finanziamento, RUP, foto prima/durante/dopo, FAQ, commenti cittadini, mini-mappa, **"Cosa cambia per me"** + **"Spiegamelo semplice"** O3) |
+| Mappa | ✅ | **Mappa interattiva `/mappa`** (Leaflet + tile OSM): layer attivabili (opere, segnalazioni, eventi, **avvisi urgenti** O3, uffici, scuole, verde, servizi), pin per categoria, popup con link |
 | Sondaggi | ✅ | Voto ottimistico; **consultazioni ufficiali** e **voti territoriali** riservati ai verificati (`requiresVerified`) |
 | Comunità | ✅ | Composer con **tipo post** e **quartiere**; feed con badge autore, like/commenti ottimistici, risposte ufficiali con **ufficio** + **"questa risposta è utile?"**; **segnala commento**; moderazione (nascondi) |
 | Segnalazioni | ✅ | Lista con filtri + KPI, creazione con **foto reale** (upload) e **geolocalizzazione precisa**, **invio anonimo**, **workflow di stato**, **"Anche io"**, dettaglio con timeline ufficiale, **mappa reale**, follow |
 | Eventi | ✅ | **Calendario `/eventi`** per mese; **pubblicazione dal Comune** e **proposta dalle associazioni verificate** con **approvazione** del Comune/moderatori; follow evento/associazione |
 | Quartieri | ✅ | **Indice `/quartieri`** + **pagina per area `/quartieri/[slug]`** che aggrega segnalazioni, opere, eventi, proposte e discussioni; follow del quartiere |
-| Proposte | ✅ | Lista + creazione, **soglie di sostegno** (50/200/500), **sostegno gated ai verificati**, risposta ufficiale + **"questa risposta è utile?"**, dettaglio |
+| Proposte | ✅ | Lista + creazione, **soglie di sostegno** (50/200/500), **sostegno gated ai verificati**, risposta ufficiale + **"questa risposta è utile?"**, dettaglio con **"Perché non si può fare?"** sulle respinte (O3) |
 | Organigramma | ✅ | Sindaco + giunta, follower, follow/unfollow |
 | Notifiche | ✅ | Lista per tipo (incl. segnalazione/proposta/verifica/evento), segna-come-letta, badge nel TopBar |
 | Profilo | ✅ | Dati, **badge** e stato verifica, **richiesta verifica**, statistiche, nome pubblico |
 | Impostazioni | ✅ | Preferenze notifiche, tema, cambio password, logout globale; **Privacy e dati** (consenso geo, **export JSON**, **cancellazione account**, link a privacy/cookie/regole) |
 | Area Comune | ✅ | Coda verifiche, triage segnalazioni, revisione proposte, risposte, broadcast, registro azioni; **moderazione community** (commenti segnalati, ban/sospensione, parole bloccate, **unione duplicati**); **approvazione eventi** |
+| Decisioni | ✅ | **Archivio decisioni `/decisioni`** (O3): esito + motivo in semplice, "perché non si può fare" evidenziato sulle respinte, link al percorso |
+| Promesse | ✅ | **Tracker `/promesse`** (O3): impegni per stato con riepilogo a pill, origine, scadenza comunicata e nota di aggiornamento |
+| Avvisi urgenti | ✅ | **Bacheca `/avvisi`** (O3): severità, "cosa cambia per me" a punti, mini-mappa dei geolocalizzati, archivio conclusi; **banner in home** e **layer dedicato su /mappa** |
+| FAQ della città | ✅ | **`/faq`** (O3): domande raggruppate per tema, badge 🏛️ "Risposta ufficiale", rimando alla Comunità |
+| Report del mese | ✅ | **Civic digest `/digest`** (O3): riepilogo 30 giorni calcolato dai dati (segnalazioni, opere, proposte, decisioni, eventi) + **export PDF** via print stylesheet |
+| Glossario | ✅ | **`/glossario`** (O3): termini amministrativi in linguaggio semplice (statico in `lib/glossary.ts`) + tooltip **`GlossaryTip`** nel bilancio |
 | Pagine legali | ✅ | `/privacy`, `/cookie`, `/note-comunita` (pubbliche) + **footer istituzionale** |
 | Tema chiaro/scuro | ✅ | next-themes, colori di Pistoia mantenuti |
 
@@ -544,6 +557,37 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   **56/56** (9 nuovi su quickReportTitle/urgenza/fasi), Playwright 5/5, `next build` pulito.
   Tutto ancora **dati mockup**.
 
+- **2026-06-12 (Ondata 3 — Trasparenza che chiude il cerchio)** — Cosa succede *dopo* la
+  partecipazione (ROADMAP OB-1, OB-3). **Schema** (migrazione `ondata3_trasparenza`): nuovi modelli
+  `Decision`, `Commitment`, `Notice`, `CityFaq` + `Opera.impactNotes`/`simpleText` e
+  `Proposal.rejectionReasons` (JSON array, parse sicuro `parseStringArray`). **Archivio decisioni**
+  (`A1 §12`, `/decisioni`): esito (approvata/in parte/respinta/rinviata), motivo in semplice, riquadro
+  "perché non si può fare" sulle respinte, link al percorso (proposta/segnalazione). **"Perché non si
+  può fare?"** (`A1 §13`): card a punti sul dettaglio della proposta respinta. **Promesse e
+  risultati** (`A1 §30`, `/promesse`): tracker per stato con riepilogo a pill, origine
+  (`sourceLabel`), scadenza comunicata (`dueLabel`), nota di aggiornamento. **Bacheca avvisi**
+  (`A1 §21`, `/avvisi`): severità info/attenzione/critico, "Cosa cambia per me" (`A1 §24`) a punti,
+  mini-mappa dei geolocalizzati, archivio conclusi; **banner in home** (`NoticeBanner`, i critici
+  con `.pulse-civico`) e **layer "avvisi"** su `/mappa` (`MapLayerKey` esteso). **Impatto cantieri**
+  (`A2 §30`): "Cosa cambia per me" + **"Spiegamelo semplice"** (`A2 §11`, componente
+  `SimpleExplainer`, redazionale con disclaimer "fa fede il testo ufficiale") sul dettaglio opera.
+  **FAQ della città** (`A1 §11`, `/faq`): gruppi per categoria (Map, niente chiavi duplicate),
+  badge "Risposta ufficiale". **Report civico del mese** (`A2 §19`, `/digest`): `getMonthlyDigest`
+  calcola 30 giorni dai dati reali (groupBy categorie, top proposte con baseline demo, decisioni,
+  eventi futuri); **export PDF** = print stylesheet con variant Tailwind `print:` (testata con
+  stemma solo in stampa; top bar/nav/footer/tour `print:hidden` globali) + `PrintButton`
+  (`window.print()`), zero dipendenze. **Glossario** (`A2 §27`, `/glossario`): 12 voci statiche in
+  `lib/glossary.ts` + tooltip accessibile `GlossaryTip` (disclosure button, Esc/click-fuori) su
+  riscossione/impegni/PNRR/avanzo nel bilancio. **Hero "Stato della città"** (🆕, home): 4
+  indicatori (risolte 8 settimane con **sparkline** SVG server-rendered, cantieri + avanzamento
+  medio, proposte attive, avvisi attivi), helper puro `weeklyBuckets` in `lib/citystats.ts`.
+  **Integrazioni**: sezione "Trasparenza" nella side-nav (6 voci), 4 nuovi tipi nella ricerca
+  globale e nella palette (decision/commitment/notice/faq), nuovo passo del tour demo. Tassonomie
+  pure in `lib/transparency.ts`. Seed: 5 decisioni, 6 impegni, 4 avvisi, 8 FAQ, proposta respinta
+  "Navetta serale" con 3 motivi, impatto su 3 opere, notifica avviso critico. Verificato: `tsc`
+  pulito, eslint 0 problemi, Vitest **69/69** (13 nuovi), Playwright **8/8** (3 nuovi), `next build`
+  pulito. Versione **0.9.0**. Tutto ancora **dati mockup**.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.
@@ -559,8 +603,8 @@ di livello (FE·DES·UX·BE·ENG·SEC·A11Y·AI) su ogni idea e 18 proposte nuov
 - **§0 Come leggere** — legende di stato e di livello
 - **§1 Visione** — north star, "cosa è / cosa non è", tre direttrici, decisione mock
 - **§2 Obiettivi** — OB-1…OB-5 verificabili (ciclo civico chiuso, design distintivo, semplicità radicale, demo autoesplicativa, qualità continua)
-- **§3 Completato** — …, **Ondata 2 Semplicità & profilo (2026-06-11)**, **Ondata 0 Fondamenta visive (2026-06-12)**, **Ondata 1 Segnalazioni 2.0 (2026-06-12)**
-- **§4 Piano a ondate** — ~~O0 Fondamenta visive~~ ✅ → ~~O1 Segnalazioni 2.0~~ ✅ → O3 Trasparenza (prossima) → O4 Territorio & partecipazione → O5 Admin & nuovi pubblici (con **Vetrina aziende & sponsor**) + traccia "Qualità continua"
+- **§3 Completato** — …, **Ondata 2 Semplicità & profilo (2026-06-11)**, **Ondata 0 Fondamenta visive (2026-06-12)**, **Ondata 1 Segnalazioni 2.0 (2026-06-12)**, **Ondata 3 Trasparenza (2026-06-12)**
+- **§4 Piano a ondate** — ~~O0 Fondamenta visive~~ ✅ → ~~O1 Segnalazioni 2.0~~ ✅ → ~~O3 Trasparenza~~ ✅ → O4 Territorio & partecipazione (prossima) → O5 Admin & nuovi pubblici (con **Vetrina aziende & sponsor**) + traccia "Qualità continua"
 - **§5 Nuove proposte (revisione 2026-06-11)** — le 🆕 con motivazione e destinazione
 - **§6 Catalogo delle idee per tema** — tutte le idee deduplicate con livello, fonte e stato (✅/🔜/📋/💡/🧊)
 - **§7 Regole di prodotto** — 9 vincoli trasversali (…, n. 8 "il design è progettato, non generato" → `DESIGN.md`, n. 9 "gli sponsor sono ospiti, non padroni")

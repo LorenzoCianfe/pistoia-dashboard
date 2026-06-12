@@ -16,9 +16,18 @@ import {
   Moon,
   Sun,
   Play,
+  Landmark,
+  Target,
+  Siren,
+  HelpCircle,
   type LucideIcon,
 } from "lucide-react";
-import { NAV_ITEMS, SECONDARY_NAV, GUIDED_ACTIONS } from "./nav-items";
+import {
+  NAV_ITEMS,
+  TRANSPARENCY_NAV,
+  SECONDARY_NAV,
+  GUIDED_ACTIONS,
+} from "./nav-items";
 import { SEARCH_GROUP_LABEL, type SearchResult, type SearchResultType } from "@/lib/search-types";
 import { accent, type AccentColor } from "@/lib/colors";
 import { cn } from "@/lib/utils";
@@ -47,9 +56,13 @@ const TYPE_META: Record<SearchResultType, { icon: LucideIcon; color: AccentColor
   event: { icon: CalendarDays, color: "viola" },
   poll: { icon: Vote, color: "viola" },
   neighborhood: { icon: MapPinned, color: "teal" },
+  decision: { icon: Landmark, color: "viola" },
+  commitment: { icon: Target, color: "green" },
+  notice: { icon: Siren, color: "red" },
+  faq: { icon: HelpCircle, color: "teal" },
 };
 
-const PAGES: Item[] = [...NAV_ITEMS, ...SECONDARY_NAV].map((n) => ({
+const PAGES: Item[] = [...NAV_ITEMS, ...TRANSPARENCY_NAV, ...SECONDARY_NAV].map((n) => ({
   key: `page:${n.href}`,
   title: n.label,
   href: n.href,

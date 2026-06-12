@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, MapPin, Lightbulb } from "lucide-react";
+import { ArrowLeft, MapPin, Lightbulb, CircleSlash, ArrowRight } from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
 import { getProposal } from "@/lib/data/proposals";
 import { isFollowing } from "@/lib/data/follow";
@@ -134,6 +134,35 @@ export default async function ProposalDetailPage({
       </Card>
 
       <ProposalAssessmentCard assessment={proposal.assessment} />
+
+      {/* "Perché non si può fare?" (A1 §13, O3): il rifiuto spiegato punto
+          per punto trasforma un no in comunicazione trasparente. */}
+      {proposal.status === "respinta" && proposal.rejectionReasons.length > 0 ? (
+        <Card className="border-[var(--red)]/20">
+          <h2 className="flex items-center gap-2 text-base font-semibold">
+            <CircleSlash size={18} className="text-[var(--red)]" aria-hidden />
+            Perché non si può fare?
+          </h2>
+          <ul className="mt-3 space-y-2.5">
+            {proposal.rejectionReasons.map((reason) => (
+              <li key={reason} className="flex gap-2.5 text-sm leading-relaxed">
+                <span
+                  className="mt-[7px] size-1.5 shrink-0 rounded-full bg-[var(--red)]"
+                  aria-hidden
+                />
+                {reason}
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/decisioni"
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-teal hover:underline"
+          >
+            Tutte le decisioni del Comune
+            <ArrowRight size={15} aria-hidden />
+          </Link>
+        </Card>
+      ) : null}
 
       {proposal.officialReply ? (
         <Card>

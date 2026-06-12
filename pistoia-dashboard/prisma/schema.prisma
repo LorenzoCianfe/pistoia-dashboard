@@ -242,6 +242,9 @@ model Proposal {
   baseSupports     Int       @default(0) // mock baseline of supporters
   officialReply    String?
   officialReplyAt  DateTime?
+  // "Perché non si può fare?" (A1 §13): per le respinte, i motivi in
+  // linguaggio semplice come array JSON di stringhe.
+  rejectionReasons String?
 
   // Valutazione sintetica del Comune (A1 §15 + A2 §10): indicativa, mai vincolante.
   estimatedImpact  String? // basso | medio | alto
@@ -396,6 +399,11 @@ model Opera {
   startedAt   DateTime?
   expectedEnd DateTime?
   featured    Boolean       @default(false)
+  // "Cosa cambia per me?" + impatto del cantiere su residenti e attività
+  // (A1 §24 + A2 §30): array JSON di punti pratici, redazionali.
+  impactNotes String?
+  // "Spiegamelo semplice" (A2 §11): l'opera raccontata in linguaggio cittadino.
+  simpleText  String?
   createdAt   DateTime      @default(now())
   updates     OperaUpdate[]
   photos      OperaPhoto[]
@@ -688,6 +696,79 @@ model AnswerFeedback {
 
   @@unique([targetType, targetId, userId])
   @@index([targetType, targetId])
+}
+
+// ---------------------------------------------------------------------------
+// Ondata 3 — Trasparenza che chiude il cerchio
+// ---------------------------------------------------------------------------
+
+// Archivio decisioni del Comune (A1 §12): cosa è stato deciso dopo proposte,
+// consultazioni o segnalazioni importanti — con motivo in linguaggio semplice.
+model Decision {
+  id         String   @id @default(cuid())
+  title      String
+  kind       String // proposta | consultazione | segnalazione | ordinanza | delibera
+  outcome    String // approvata | approvata_parzialmente | respinta | rinviata
+  summary    String // la decisione, in breve
+  reason     String // il motivo, in linguaggio semplice (A1 §13)
+  simpleText String? // "Spiegamelo semplice" redazionale (A2 §11)
+  department String? // ufficio o assessorato responsabile
+  linkedType String? // proposal | poll | report | opera
+  linkedId   String?
+  decidedAt  DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([outcome])
+}
+
+// "Promesse e risultati" (A1 §30): tracker pubblico degli impegni del Comune.
+model Commitment {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  status      String // promesso | in_corso | completato | rimandato | non_fattibile
+  statusNote  String? // ultima nota di aggiornamento ("perché è rimandato")
+  category    String? // mobilita | verde | scuola | sociale | cultura | servizi
+  sourceLabel String? // da dove nasce: "Proposta cittadina", "Programma di mandato"…
+  linkedType  String? // proposal | opera
+  linkedId    String?
+  promisedAt  DateTime @default(now())
+  dueLabel    String? // scadenza comunicata, es. "entro l'estate 2026"
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+}
+
+// Bacheca avvisi urgenti (A1 §21), anche geolocalizzati. `whatChanges` è la
+// sezione "Cosa cambia per me?" (A1 §24): punti pratici come array JSON.
+model Notice {
+  id          String    @id @default(cuid())
+  title       String
+  body        String
+  kind        String // meteo | scuole | traffico | emergenza | interruzione | sciopero | ordinanza
+  severity    String    @default("info") // info | attenzione | critico
+  active      Boolean   @default(true)
+  location    String?
+  latitude    Float?
+  longitude   Float?
+  whatChanges String? // JSON array di stringhe: impatto pratico per il cittadino
+  startsAt    DateTime  @default(now())
+  endsAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([active])
+}
+
+// FAQ della città (A1 §11): domande ricorrenti dei cittadini con risposta
+// ufficiale del Comune.
+model CityFaq {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  category  String? // mobilita | rifiuti | tributi | scuole | servizi | casa
+  official  Boolean  @default(true)
+  order     Int      @default(0)
+  updatedAt DateTime @updatedAt @default(now())
 }
 
 // A citizen flags a community comment for moderator review (§14).

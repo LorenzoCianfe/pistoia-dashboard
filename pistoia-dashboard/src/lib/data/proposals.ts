@@ -2,6 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import { demoBaseline } from "@/lib/demo";
 import { parseAffectedGroups } from "@/lib/civic-topics";
+import { parseStringArray } from "@/lib/transparency";
 import type { Prisma } from "@/generated/prisma/client";
 
 export type ProposalFilter = {
@@ -42,6 +43,8 @@ function mapProposal(p: RawProposal, userId: string) {
     authorColor: p.authorColor,
     officialReply: p.officialReply,
     officialReplyAt: p.officialReplyAt,
+    // "Perché non si può fare?" (A1 §13): motivi del rifiuto, in semplice.
+    rejectionReasons: parseStringArray(p.rejectionReasons),
     supports: demoBaseline(p.baseSupports) + p._count.supports,
     supportedByMe: p.supports.length > 0,
     isMine: p.authorId === userId,

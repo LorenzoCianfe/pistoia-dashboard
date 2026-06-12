@@ -24,7 +24,7 @@ export default async function AppLayout({
       </a>
       <TopBar user={user} unread={unread} />
       <div className="mx-auto flex max-w-6xl gap-7 px-4 sm:px-6">
-        <aside className="sticky top-16 hidden h-[calc(100dvh-4rem)] w-56 shrink-0 overflow-y-auto py-6 lg:block">
+        <aside className="sticky top-16 hidden h-[calc(100dvh-4rem)] w-56 shrink-0 overflow-y-auto py-6 lg:block print:hidden">
           <SideNav isAdmin={user.role === "ADMIN"} />
         </aside>
         <main

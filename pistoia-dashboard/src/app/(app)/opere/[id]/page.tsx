@@ -8,6 +8,7 @@ import {
   UserCog,
   HelpCircle,
   Images,
+  Footprints,
 } from "lucide-react";
 import { getOperaById } from "@/lib/data/opere";
 import { requireUser } from "@/lib/auth/dal";
@@ -19,7 +20,9 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { FollowButton } from "@/components/community/follow-button";
 import { OperaComments } from "@/components/opere/opera-comments";
 import { MapCanvas } from "@/components/mappa/map-canvas";
+import { SimpleExplainer } from "@/components/trasparenza/simple-explainer";
 import { canModerate } from "@/lib/community";
+import { parseStringArray } from "@/lib/transparency";
 import { operaStatus, operaCategory } from "@/lib/labels";
 import {
   formatEuroCompact,
@@ -50,6 +53,7 @@ export default async function OperaDetailPage({
   const status = operaStatus(opera.status);
   const latest = opera.updates[0];
   const hasPhotos = opera.photos.length > 0;
+  const impactNotes = parseStringArray(opera.impactNotes);
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
@@ -151,6 +155,34 @@ export default async function OperaDetailPage({
           ) : null}
         </div>
       </Card>
+
+      {/* "Spiegamelo semplice" (A2 §11, O3): l'opera in linguaggio cittadino. */}
+      {opera.simpleText ? <SimpleExplainer text={opera.simpleText} /> : null}
+
+      {/* "Cosa cambia per me?" (A1 §24 + A2 §30, O3): impatto pratico del
+          cantiere su chi ci vive e ci lavora intorno. */}
+      {impactNotes.length > 0 ? (
+        <Card>
+          <h2 className="flex items-center gap-2 text-base font-semibold">
+            <Footprints size={18} aria-hidden />
+            Cosa cambia per me
+          </h2>
+          <ul className="mt-3 space-y-2.5">
+            {impactNotes.map((note) => (
+              <li key={note} className="flex gap-2.5 text-sm leading-relaxed">
+                <span
+                  className="mt-[7px] size-1.5 shrink-0 rounded-full bg-[var(--teal)]"
+                  aria-hidden
+                />
+                {note}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-[11px] text-muted-2">
+            Informazioni pratiche a cura del Comune · aggiornate con l&apos;avanzamento del cantiere
+          </p>
+        </Card>
+      ) : null}
 
       {/* Location map (§10) */}
       {opera.latitude != null && opera.longitude != null ? (

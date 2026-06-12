@@ -56,6 +56,11 @@ const STEPS: Step[] = [
     body: "Il dialogo con il Comune è pubblico e ordinato: niente botta e risposta dispersi sui social.",
   },
   {
+    route: "/decisioni",
+    title: "Cosa succede dopo la partecipazione",
+    body: "Ogni proposta arriva a una decisione con il suo motivo — anche quando è un no. Promesse, avvisi urgenti e report mensile chiudono il cerchio della trasparenza.",
+  },
+  {
     route: "/quartieri",
     title: "Il tuo quartiere",
     body: "Ogni zona ha la sua pagina: segnalazioni, eventi e novità di chi ci vive.",
@@ -122,7 +127,7 @@ export function DemoTour() {
       role="dialog"
       aria-label={`Presentazione guidata, passo ${step + 1} di ${STEPS.length}`}
       tabIndex={-1}
-      className="card fixed inset-x-4 bottom-20 z-40 mx-auto max-w-md p-0 outline-none lg:bottom-6 lg:right-6 lg:left-auto lg:mx-0 lg:w-96"
+      className="card fixed inset-x-4 bottom-20 z-40 mx-auto max-w-md p-0 outline-none lg:bottom-6 lg:right-6 lg:left-auto lg:mx-0 lg:w-96 print:hidden"
     >
       {/* Filo rosso identitario: la scacchiera dello stemma. */}
       <div className="scacchiera h-1.5 w-full rounded-t-[var(--radius)] opacity-60" aria-hidden />

@@ -14,6 +14,12 @@ import {
   CalendarDays,
   Map as MapIcon,
   MapPinned,
+  Landmark,
+  Target,
+  Siren,
+  HelpCircle,
+  Newspaper,
+  BookOpenText,
   type LucideIcon,
 } from "lucide-react";
 
@@ -37,6 +43,17 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/eventi", label: "Eventi", icon: CalendarDays, core: false },
   { href: "/quartieri", label: "Quartieri", icon: MapPinned, core: false },
   { href: "/organigramma", label: "Organigramma", icon: Network, core: false },
+];
+
+// Sezione "Trasparenza" (O3): le pagine che chiudono il cerchio della
+// partecipazione. Gruppo separato nella side-nav, sotto un'etichetta propria.
+export const TRANSPARENCY_NAV: NavItem[] = [
+  { href: "/avvisi", label: "Avvisi urgenti", icon: Siren, core: false },
+  { href: "/decisioni", label: "Decisioni", icon: Landmark, core: false },
+  { href: "/promesse", label: "Promesse", icon: Target, core: false },
+  { href: "/digest", label: "Report del mese", icon: Newspaper, core: false },
+  { href: "/faq", label: "FAQ della città", icon: HelpCircle, core: false },
+  { href: "/glossario", label: "Glossario", icon: BookOpenText, core: false },
 ];
 
 export const SECONDARY_NAV: NavItem[] = [

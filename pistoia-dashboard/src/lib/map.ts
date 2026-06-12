@@ -4,6 +4,7 @@ export type MapLayerKey =
   | "opere"
   | "segnalazioni"
   | "eventi"
+  | "avvisi"
   | "uffici"
   | "scuole"
   | "verde"
@@ -24,6 +25,7 @@ export const MAP_LAYERS: { key: MapLayerKey; label: string; color: string }[] = 
   { key: "opere", label: "Opere e cantieri", color: "teal" },
   { key: "segnalazioni", label: "Segnalazioni", color: "amber" },
   { key: "eventi", label: "Eventi", color: "viola" },
+  { key: "avvisi", label: "Avvisi urgenti", color: "red" },
   { key: "uffici", label: "Uffici comunali", color: "red" },
   { key: "scuole", label: "Scuole", color: "teal" },
   { key: "verde", label: "Aree verdi", color: "green" },

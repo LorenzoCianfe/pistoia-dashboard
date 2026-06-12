@@ -2,13 +2,14 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import { CIVIC_POIS } from "@/lib/poi";
 import { reportCategory } from "@/lib/community";
+import { noticeKind } from "@/lib/transparency";
 import { operaStatus } from "@/lib/labels";
 import { formatDateShort } from "@/lib/format";
 import type { MapPoint } from "@/lib/map";
 
 /** All geolocated activity for the interactive map (§10): opere, segnalazioni, eventi + static POIs. */
 export async function getMapPoints(): Promise<MapPoint[]> {
-  const [opere, reports, events] = await Promise.all([
+  const [opere, reports, events, notices] = await Promise.all([
     prisma.opera.findMany({
       where: { latitude: { not: null }, longitude: { not: null } },
       select: { id: true, name: true, latitude: true, longitude: true, status: true },
@@ -24,6 +25,11 @@ export async function getMapPoints(): Promise<MapPoint[]> {
     prisma.event.findMany({
       where: { status: "published", latitude: { not: null }, longitude: { not: null } },
       select: { id: true, title: true, latitude: true, longitude: true, startAt: true },
+    }),
+    // Avvisi urgenti geolocalizzati (A1 §21, O3): solo quelli attivi.
+    prisma.notice.findMany({
+      where: { active: true, latitude: { not: null }, longitude: { not: null } },
+      select: { id: true, title: true, latitude: true, longitude: true, kind: true },
     }),
   ]);
 
@@ -63,6 +69,19 @@ export async function getMapPoints(): Promise<MapPoint[]> {
       subtitle: formatDateShort(e.startAt),
       color: "viola",
       href: "/eventi",
+    });
+  }
+
+  for (const n of notices) {
+    points.push({
+      id: `nt-${n.id}`,
+      layer: "avvisi",
+      lat: n.latitude!,
+      lng: n.longitude!,
+      title: n.title,
+      subtitle: noticeKind(n.kind).label,
+      color: "red",
+      href: "/avvisi",
     });
   }
 

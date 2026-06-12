@@ -15,7 +15,7 @@ export function TopBar({
   unread: number;
 }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-surface/80 backdrop-blur-lg">
+    <header className="sticky top-0 z-30 border-b border-border bg-surface/80 backdrop-blur-lg print:hidden">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link href="/la-mia-citta" className="flex items-center gap-2.5">
           <Crest className="h-8 w-auto" />

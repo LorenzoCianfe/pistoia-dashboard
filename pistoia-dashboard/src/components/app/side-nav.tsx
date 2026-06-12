@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
-import { NAV_ITEMS, SECONDARY_NAV, ADMIN_NAV, type NavItem } from "./nav-items";
+import {
+  NAV_ITEMS,
+  TRANSPARENCY_NAV,
+  SECONDARY_NAV,
+  ADMIN_NAV,
+  type NavItem,
+} from "./nav-items";
 import { cn } from "@/lib/utils";
 
 function NavLink({ item, active }: { item: NavItem; active: boolean }) {
@@ -42,6 +48,12 @@ export function SideNav({ isAdmin }: { isAdmin: boolean }) {
   return (
     <nav aria-label="Navigazione principale" className="flex flex-col gap-1">
       {NAV_ITEMS.map((item) => (
+        <NavLink key={item.href} item={item} active={isActive(item.href)} />
+      ))}
+      <p className="mt-3 px-3.5 pb-1 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-2">
+        Trasparenza
+      </p>
+      {TRANSPARENCY_NAV.map((item) => (
         <NavLink key={item.href} item={item} active={isActive(item.href)} />
       ))}
       <div className="my-2 h-px bg-border" />

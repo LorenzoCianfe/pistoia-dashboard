@@ -18,6 +18,10 @@ import {
 import { requireUser } from "@/lib/auth/dal";
 import { getMyCity, getForYou, type ForYouItem } from "@/lib/data/mycity";
 import { getUnreadCount } from "@/lib/data/notifiche";
+import { getCityState } from "@/lib/data/citystate";
+import { getActiveNotices } from "@/lib/data/transparency";
+import { CityStateHero } from "@/components/trasparenza/city-state-hero";
+import { NoticeBanner } from "@/components/trasparenza/notice-banner";
 import { Card } from "@/components/ui/card";
 import { Stat } from "@/components/ui/stat";
 import { Badge } from "@/components/ui/badge";
@@ -48,9 +52,11 @@ export default async function MyCityPage() {
   const simple = (await cookies()).get(SIMPLE_MODE_COOKIE)?.value === "1";
   if (simple) return <SimpleHome user={user} />;
 
-  const [city, forYou] = await Promise.all([
+  const [city, forYou, cityState, activeNotices] = await Promise.all([
     getMyCity(user),
     user.civicInterests.length > 0 ? getForYou(user.civicInterests) : Promise.resolve([]),
+    getCityState(),
+    getActiveNotices(),
   ]);
   const firstName = (user.publicName ?? user.name).split(" ")[0];
 
@@ -71,6 +77,12 @@ export default async function MyCityPage() {
             : "Imposta il tuo quartiere dal profilo per vedere cosa succede vicino a te"}
         </p>
       </div>
+
+      {/* Avvisi urgenti attivi (A1 §21, O3): prima di tutto il resto. */}
+      <NoticeBanner notices={activeNotices} />
+
+      {/* "Stato della città" (O3): il colpo d'occhio sugli indicatori. */}
+      <CityStateHero state={cityState} />
 
       {/* Percorsi guidati (A1 §23): la home parte dagli obiettivi, non dai menu */}
       <section aria-labelledby="cosa-vuoi-fare">

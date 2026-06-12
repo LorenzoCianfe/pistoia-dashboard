@@ -41,6 +41,10 @@ const photoSvg = (label: string, c1: string, c2: string) =>
 
 async function wipe() {
   // Child-first deletion to satisfy foreign keys.
+  await prisma.decision.deleteMany();
+  await prisma.commitment.deleteMany();
+  await prisma.notice.deleteMany();
+  await prisma.cityFaq.deleteMany();
   await prisma.answerFeedback.deleteMany();
   await prisma.commentReport.deleteMany();
   await prisma.event.deleteMany();
@@ -1155,6 +1159,41 @@ async function main() {
     },
   });
 
+  // Proposta respinta con "Perché non si può fare?" (A1 §13, O3): il rifiuto
+  // diventa comunicazione trasparente, con motivi in linguaggio semplice.
+  const propNavetta = await prisma.proposal.create({
+    data: {
+      authorId: lorenzo.id,
+      authorName: lorenzo.publicName ?? lorenzo.name,
+      authorInitials: "LC",
+      authorColor: lorenzo.avatarColor,
+      title: "Navetta gratuita serale per le frazioni",
+      problem:
+        "La sera le frazioni restano isolate: l'ultima corsa utile è alle 20 e chi non guida non può partecipare alla vita del centro.",
+      description:
+        "Una navetta circolare gratuita nei weekend, dalle 20 all'una, che colleghi Bottegone, Ramini e Pontenuovo con il centro storico.",
+      affectedGroups: JSON.stringify(["giovani", "anziani", "residenti"]),
+      category: "Mobilità",
+      neighborhoodId: nb["bottegone"],
+      status: "respinta",
+      baseSupports: 154,
+      estimatedImpact: "alto",
+      estimatedCost: "alto",
+      estimatedTime: "lungo",
+      feasibility: "complessa",
+      assessedAt: daysAgo(16),
+      officialReply:
+        "La proposta è stata valutata con attenzione insieme all'azienda del trasporto pubblico, ma non può essere attivata quest'anno. Qui sotto trovi i motivi, uno per uno. L'esigenza è reale: il tema entra nel tavolo del nuovo contratto di servizio TPL.",
+      officialReplyAt: daysAgo(10),
+      rejectionReasons: JSON.stringify([
+        "Il costo stimato (circa 180.000 € l'anno) supera il budget disponibile per la mobilità di quest'anno.",
+        "Il servizio notturno richiede una modifica del contratto con il gestore del trasporto pubblico, che si rinnova nel 2027.",
+        "È già in valutazione un servizio a chiamata per le frazioni, alternativo alla linea fissa.",
+      ]),
+      createdAt: daysAgo(55),
+    },
+  });
+
   // Support from verified citizens.
   await prisma.proposalSupport.createMany({
     data: [
@@ -1253,6 +1292,15 @@ async function main() {
     data: {
       latitude: 43.929, longitude: 10.905, neighborhoodId: nb["centro"],
       fundingSource: "PNRR M4C1 — Istruzione", rup: "Ing. Paolo Bonechi",
+      // "Cosa cambia per me?" (A1 §24 + A2 §30) e "Spiegamelo semplice" (A2 §11).
+      impactNotes: JSON.stringify([
+        "Le lezioni proseguono nella sede provvisoria di Via dello Stadio fino a fine lavori",
+        "Via di Bigiano resta percorribile: restringimento solo davanti al cantiere",
+        "I parcheggi della scuola sono occupati dal cantiere: disponibili quelli di Via dello Stadio",
+        "Accesso pedonale al giardino pubblico adiacente sempre garantito",
+      ]),
+      simpleText:
+        "Stiamo rendendo la scuola Marino Marini più sicura in caso di terremoto e meno costosa da riscaldare. I bambini intanto fanno lezione in un'altra sede, e quando torneranno troveranno anche una mensa nuova e nuovi laboratori.",
       photos: {
         create: [
           { phase: "prima", data: photoSvg("Prima", "#9ca3af", "#6b7280"), caption: "L'edificio prima dei lavori", order: 1 },
@@ -1274,8 +1322,27 @@ async function main() {
       },
     },
   });
-  await prisma.opera.update({ where: { id: ciclabile.id }, data: { latitude: 43.927, longitude: 10.93, neighborhoodId: nb["sant-agostino"], fundingSource: "Bilancio comunale + Regione Toscana", rup: "Arch. Laura Niccoli" } });
-  await prisma.opera.update({ where: { id: piazza.id }, data: { latitude: 43.9352, longitude: 10.9201, neighborhoodId: nb["centro"], fundingSource: "Bilancio comunale", rup: "Ing. Marco Salvi" } });
+  await prisma.opera.update({ where: { id: ciclabile.id }, data: {
+    latitude: 43.927, longitude: 10.93, neighborhoodId: nb["sant-agostino"], fundingSource: "Bilancio comunale + Regione Toscana", rup: "Arch. Laura Niccoli",
+    impactNotes: JSON.stringify([
+      "Il percorso pedonale lungo l'argine resta aperto, con deviazioni segnalate nei tratti di lavoro",
+      "Nessuna modifica al traffico: il cantiere non tocca strade carrabili",
+      "L'area pesca dell'Ombrone è raggiungibile dall'accesso di Via dei Frati",
+    ]),
+    simpleText:
+      "Stiamo costruendo 3,4 km di pista ciclabile lungo il fiume: alla fine si potrà andare in bici dal centro alla periferia est senza mai passare in mezzo alle auto.",
+  } });
+  await prisma.opera.update({ where: { id: piazza.id }, data: {
+    latitude: 43.9352, longitude: 10.9201, neighborhoodId: nb["centro"], fundingSource: "Bilancio comunale", rup: "Ing. Marco Salvi",
+    impactNotes: JSON.stringify([
+      "La piazza è chiusa ai veicoli per tutta la durata dei lavori",
+      "Negozi e bar della piazza restano aperti: passaggio pedonale sempre garantito",
+      "Parcheggi alternativi: Piazza della Resistenza e parcheggio Cellini",
+      "Il mercato del giovedì è spostato in Piazza San Francesco fino a fine lavori",
+    ]),
+    simpleText:
+      "Rifacciamo la pavimentazione e l'illuminazione di Piazza San Lorenzo per restituirla ai pedoni: meno auto in sosta, più spazio per camminare e stare insieme.",
+  } });
   await prisma.opera.update({ where: { id: campanile.id }, data: { latitude: 43.9333, longitude: 10.9189, neighborhoodId: nb["centro"], fundingSource: "Fondi ministeriali (Ministero della Cultura)", rup: "Arch. Giulia Pieri" } });
   await prisma.opera.update({ where: { id: pacini.id }, data: { latitude: 43.9262, longitude: 10.9148, neighborhoodId: nb["centro"], fundingSource: "Bilancio comunale", rup: "Geom. Anna Ferri" } });
 
@@ -1311,6 +1378,235 @@ async function main() {
 
   // --- §21 Follow del cittadino demo su opera ed evento -------------------
   await prisma.follow.create({ data: { userId: citizen.id, targetType: "opera", targetId: marini.id } });
+
+  // --- Ondata 3 — Trasparenza che chiude il cerchio ------------------------
+
+  // Archivio decisioni (A1 §12): cosa è successo DOPO la partecipazione.
+  await prisma.decision.createMany({
+    data: [
+      {
+        title: "Più rastrelliere per le bici in centro",
+        kind: "proposta",
+        outcome: "approvata_parzialmente",
+        summary: "Saranno installate 12 nuove rastrelliere coperte in 4 piazze del centro, anziché le 20 proposte.",
+        reason: "La proposta è valida ma due delle piazze indicate sono sotto tutela della Soprintendenza: lì servono autorizzazioni con tempi più lunghi. Si parte dove si può subito.",
+        simpleText: "In breve: le rastrelliere si fanno, ma in 4 piazze invece di 6. Nelle altre due servono permessi speciali perché sono zone storiche protette.",
+        department: "Assessorato alla Mobilità",
+        linkedType: "proposal",
+        linkedId: propRastrelliere.id,
+        decidedAt: daysAgo(2),
+      },
+      {
+        title: "Navetta gratuita serale per le frazioni",
+        kind: "proposta",
+        outcome: "respinta",
+        summary: "La navetta serale non sarà attivata quest'anno; l'esigenza entra nel tavolo del nuovo contratto del trasporto pubblico.",
+        reason: "Il costo annuo stimato supera il budget mobilità disponibile e il servizio richiede una modifica del contratto TPL, rinnovabile solo nel 2027. In valutazione un servizio a chiamata come alternativa.",
+        department: "Assessorato alla Mobilità",
+        linkedType: "proposal",
+        linkedId: propNavetta.id,
+        decidedAt: daysAgo(10),
+      },
+      {
+        title: "Piano mobilità del centro storico",
+        kind: "consultazione",
+        outcome: "approvata",
+        summary: "Accolto l'orientamento emerso dalla consultazione: priorità alle aree pedonali, con due nuovi parcheggi di scambio ai margini del centro.",
+        reason: "Il 46% dei partecipanti ha indicato le aree pedonali come prima scelta. Il piano adottato le estende gradualmente, compensando con parcheggi di scambio e navette.",
+        simpleText: "In breve: avete votato per un centro più pedonale, e il piano va in quella direzione. Chi arriva in auto troverà due nuovi parcheggi appena fuori, collegati con navette.",
+        department: "Giunta comunale",
+        linkedType: "poll",
+        decidedAt: daysAgo(6),
+      },
+      {
+        title: "Attraversamenti rialzati davanti alle scuole",
+        kind: "segnalazione",
+        outcome: "approvata",
+        summary: "Dopo le segnalazioni ripetute sulla sicurezza davanti ai plessi scolastici, approvato un piano per 8 attraversamenti rialzati.",
+        reason: "Le segnalazioni dei cittadini hanno mostrato un problema diffuso, non episodico: la risposta è un piano organico invece di interventi spot.",
+        department: "Ufficio Strade e Manutenzioni",
+        linkedType: "report",
+        decidedAt: daysAgo(20),
+      },
+      {
+        title: "Orario estivo delle ZTL",
+        kind: "ordinanza",
+        outcome: "rinviata",
+        summary: "L'estensione serale della ZTL estiva è rinviata a dopo l'estate, in attesa dei dati dei nuovi varchi.",
+        reason: "I varchi elettronici installati a maggio forniranno dati reali sui flussi: decidere prima significherebbe decidere alla cieca.",
+        department: "Polizia Municipale",
+        decidedAt: daysAgo(13),
+      },
+    ],
+  });
+
+  // Promesse e risultati (A1 §30): il tracker pubblico degli impegni.
+  await prisma.commitment.createMany({
+    data: [
+      {
+        title: "Completare la ciclabile dell'Ombrone",
+        description: "3,4 km di pista ciclabile dal centro alla periferia est lungo l'argine del fiume.",
+        status: "in_corso",
+        statusNote: "Avanzamento al 45%: completato il primo tratto e la passerella.",
+        category: "mobilita",
+        sourceLabel: "Programma di mandato",
+        linkedType: "opera",
+        linkedId: ciclabile.id,
+        promisedAt: daysAgo(300),
+        dueLabel: "entro la primavera 2027",
+      },
+      {
+        title: "Riaprire il giardino di Via Pacini",
+        description: "Nuovi giochi inclusivi, area cani e irrigazione per il giardino di quartiere.",
+        status: "in_corso",
+        statusNote: "Lavori al 90%: riapertura prevista il 15 marzo.",
+        category: "verde",
+        sourceLabel: "Segnalazioni dei cittadini",
+        linkedType: "opera",
+        linkedId: pacini.id,
+        promisedAt: daysAgo(180),
+        dueLabel: "entro marzo 2026",
+      },
+      {
+        title: "Installare le prime rastrelliere coperte in centro",
+        description: "Le 12 rastrelliere approvate dopo la proposta cittadina, nelle 4 piazze autorizzate.",
+        status: "promesso",
+        statusNote: "Gara di fornitura in preparazione.",
+        category: "mobilita",
+        sourceLabel: "Proposta cittadina",
+        linkedType: "proposal",
+        linkedId: propRastrelliere.id,
+        promisedAt: daysAgo(2),
+        dueLabel: "entro l'autunno 2026",
+      },
+      {
+        title: "Sostituire tutti i punti luce con LED",
+        description: "6.400 lampioni a LED per consumare meno e illuminare meglio.",
+        status: "completato",
+        statusNote: "Intervento concluso: −38% di consumi rispetto al 2024.",
+        category: "servizi",
+        sourceLabel: "Programma di mandato",
+        promisedAt: daysAgo(420),
+      },
+      {
+        title: "Estendere l'orario della biblioteca San Giorgio",
+        description: "Apertura serale fino alle 23 nei mesi invernali per studenti e lavoratori.",
+        status: "rimandato",
+        statusNote: "Rimandato all'autunno: la copertura del personale serale non è ancora finanziata.",
+        category: "cultura",
+        sourceLabel: "Question time con i cittadini",
+        promisedAt: daysAgo(150),
+        dueLabel: "riprogrammato per ottobre 2026",
+      },
+      {
+        title: "Wi-Fi pubblico in tutte le frazioni",
+        description: "Copertura Wi-Fi gratuita nelle piazze principali delle frazioni.",
+        status: "non_fattibile",
+        statusNote: "I costi di collegamento delle zone collinari superano di 4 volte il preventivo: si valuta una soluzione satellitare nel 2027.",
+        category: "servizi",
+        sourceLabel: "Proposta cittadina",
+        promisedAt: daysAgo(240),
+      },
+    ],
+  });
+
+  // Bacheca avvisi urgenti (A1 §21 + A1 §24): con "cosa cambia per me".
+  await prisma.notice.createMany({
+    data: [
+      {
+        title: "Interruzione idrica notturna in zona Sant'Agostino",
+        body: "Per un intervento urgente sulla rete, l'acqua sarà sospesa dalle 23 alle 5 nella notte tra giovedì e venerdì nelle vie comprese tra Viale Adua e Via Ciliegiole.",
+        kind: "interruzione",
+        severity: "critico",
+        active: true,
+        location: "Zona Sant'Agostino",
+        latitude: 43.9285,
+        longitude: 10.9365,
+        whatChanges: JSON.stringify([
+          "Niente acqua dal rubinetto dalle 23 alle 5",
+          "Riempire qualche bottiglia prima delle 23 per le necessità notturne",
+          "Al ripristino l'acqua può uscire torbida per qualche minuto: lasciarla scorrere",
+          "Numero verde del gestore attivo tutta la notte: 800 887 755",
+        ]),
+        startsAt: hoursAgo(6),
+        endsAt: daysAhead(2),
+      },
+      {
+        title: "Allerta meteo arancione: temporali forti",
+        body: "La Regione Toscana ha emesso un'allerta arancione per temporali forti dalle 14 di domani alle 8 del giorno successivo. Possibili allagamenti localizzati e raffiche di vento.",
+        kind: "meteo",
+        severity: "attenzione",
+        active: true,
+        location: "Tutto il territorio comunale",
+        whatChanges: JSON.stringify([
+          "Evitare i sottopassi in caso di pioggia intensa",
+          "Parchi e giardini pubblici chiusi dalle 14 di domani",
+          "Mercato all'aperto di venerdì annullato",
+          "Aggiornamenti sul canale ufficiale del Comune",
+        ]),
+        startsAt: hoursAgo(3),
+        endsAt: daysAhead(2),
+      },
+      {
+        title: "Sciopero del trasporto pubblico locale venerdì",
+        body: "Sciopero nazionale di 24 ore del personale del trasporto pubblico. Le corse sono garantite nelle fasce 6:00–9:00 e 12:00–15:00.",
+        kind: "sciopero",
+        severity: "info",
+        active: true,
+        location: "Rete urbana ed extraurbana",
+        whatChanges: JSON.stringify([
+          "Bus garantiti solo dalle 6 alle 9 e dalle 12 alle 15",
+          "Lo scuolabus del mattino è regolare, il ritorno è anticipato alle 13",
+          "Possibili disagi anche sui collegamenti per Firenze",
+        ]),
+        startsAt: hoursAgo(20),
+        endsAt: daysAhead(3),
+      },
+      {
+        title: "Via della Madonna chiusa per lavori sulla rete del gas",
+        body: "Chiusura completata: la strada è stata riaperta al traffico in anticipo rispetto al previsto.",
+        kind: "traffico",
+        severity: "info",
+        active: false,
+        location: "Via della Madonna",
+        latitude: 43.9338,
+        longitude: 10.9155,
+        whatChanges: JSON.stringify([
+          "Strada riaperta al traffico in entrambe le direzioni",
+          "Ripristinate le fermate del bus «Madonna 1» e «Madonna 2»",
+        ]),
+        startsAt: daysAgo(9),
+        endsAt: daysAgo(2),
+      },
+    ],
+  });
+
+  // FAQ della città (A1 §11): risposte ufficiali alle domande ricorrenti.
+  await prisma.cityFaq.createMany({
+    data: [
+      { question: "Come ottengo il permesso ZTL per i residenti?", answer: "Il permesso si richiede online sul portale del Comune o allo sportello della Polizia Municipale, con carta di circolazione e documento. Per i residenti il primo permesso è gratuito e vale 3 anni.", category: "mobilita", order: 1 },
+      { question: "La ZTL è attiva anche la domenica?", answer: "Sì: la ZTL del centro storico è attiva tutti i giorni dalle 7:30 alle 19:30. Nei giorni festivi i varchi restano accesi; gli orari estesi estivi vengono comunicati con ordinanza dedicata.", category: "mobilita", order: 2 },
+      { question: "Dove porto gli ingombranti?", answer: "Gli ingombranti si portano gratuitamente alla stazione ecologica di Via dell'Annona (lun–sab 8–18). In alternativa si può prenotare il ritiro a domicilio gratuito chiamando il gestore o tramite l'app dedicata.", category: "rifiuti", order: 3 },
+      { question: "Come pago la TARI a rate?", answer: "La TARI si paga in 3 rate (aprile, luglio, ottobre) o in unica soluzione ad aprile. I bollettini arrivano a casa e su PagoPA; per la domiciliazione bancaria basta presentare il modulo una sola volta.", category: "tributi", order: 4 },
+      { question: "Quando aprono le iscrizioni ai nidi comunali?", answer: "Il bando per i nidi comunali apre ogni anno a maggio e resta aperto un mese. La graduatoria esce a luglio; le iscrizioni fuori termine entrano in lista d'attesa.", category: "scuole", order: 5 },
+      { question: "Come prenoto un appuntamento all'anagrafe?", answer: "Gli appuntamenti si prenotano online sul portale del Comune o telefonando allo 0573 3711. Per carta d'identità elettronica servono foto recente e vecchio documento; il rinnovo si può chiedere da 6 mesi prima della scadenza.", category: "servizi", order: 6 },
+      { question: "Posso occupare il suolo pubblico per un trasloco?", answer: "Sì: serve l'autorizzazione temporanea, da richiedere almeno 5 giorni prima allo sportello SUAP o online. Per un trasloco di un giorno il costo è fisso e include la segnaletica di divieto di sosta.", category: "casa", order: 7 },
+      { question: "A chi segnalo una buca o un lampione spento?", answer: "Dalla sezione Segnalazioni di questa piattaforma: la segnalazione arriva all'ufficio competente e puoi seguirne lo stato passo passo, fino alla conferma di risoluzione.", category: "servizi", order: 8 },
+    ],
+  });
+
+  // Avviso critico → notifica al cittadino demo (il canale «urgente» esiste già).
+  await prisma.notification.create({
+    data: {
+      userId: citizen.id,
+      type: "system",
+      title: "Avviso urgente: interruzione idrica",
+      body: "Sospensione notturna dell'acqua in zona Sant'Agostino: leggi cosa cambia per te.",
+      href: "/avvisi",
+      read: false,
+      createdAt: hoursAgo(6),
+    },
+  });
 
   console.log("✅ Seed completato.");
   console.log("   Cittadino (residente verif.): cittadino@pistoia.it / Pistoia2026");

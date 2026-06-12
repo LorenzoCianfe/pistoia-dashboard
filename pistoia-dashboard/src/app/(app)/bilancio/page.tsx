@@ -11,6 +11,7 @@ import { LineChart } from "@/components/charts/line-chart";
 import { Treemap } from "@/components/charts/treemap";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { GlossaryTip } from "@/components/trasparenza/glossary-tip";
 import { formatEuro, formatEuroCompact, monthLabel } from "@/lib/format";
 import { accent } from "@/lib/colors";
 
@@ -66,6 +67,16 @@ export default async function BilancioPage() {
             <RingGauge value={by.pnrr} color="amber" label="Avanzamento PNRR" delay={0.4} />
           </div>
         </div>
+
+        {/* Glossario in linea (A2 §27, O3): i termini tecnici si spiegano
+            dove si incontrano, senza cambiare pagina. */}
+        <p className="mt-5 border-t border-border pt-4 text-sm text-muted">
+          Parole difficili? <GlossaryTip slug="riscossione">Riscossione</GlossaryTip>,{" "}
+          <GlossaryTip slug="impegni">impegni</GlossaryTip>,{" "}
+          <GlossaryTip slug="pnrr">PNRR</GlossaryTip> e{" "}
+          <GlossaryTip slug="avanzo">avanzo</GlossaryTip> sono spiegate nel
+          glossario: tocca una parola sottolineata.
+        </p>
       </Card>
 
       {/* Andamento annuale */}
