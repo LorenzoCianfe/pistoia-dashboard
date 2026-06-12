@@ -57,17 +57,23 @@ export async function getAdminData() {
     prisma.report.count({ where: { status: "risolta" } }),
   ]);
 
-  const openReports = openReportsRaw.map((r) => ({
-    id: r.id,
-    title: r.title,
-    description: r.description,
-    category: r.category,
-    status: r.status,
-    neighborhoodName: r.neighborhood?.name ?? null,
-    assignedDepartment: r.assignedDepartment,
-    confirmations: demoBaseline(r.baseConfirmations) + r._count.confirmations,
-    createdAt: r.createdAt,
-  }));
+  // Le richieste di urgenza da validare (A1 §8) salgono in cima al triage.
+  const urgencyRank = (u: string | null) =>
+    u === "richiesta" ? 0 : u === "confermata" ? 1 : 2;
+  const openReports = openReportsRaw
+    .map((r) => ({
+      id: r.id,
+      title: r.title,
+      description: r.description,
+      category: r.category,
+      status: r.status,
+      urgency: r.urgency,
+      neighborhoodName: r.neighborhood?.name ?? null,
+      assignedDepartment: r.assignedDepartment,
+      confirmations: demoBaseline(r.baseConfirmations) + r._count.confirmations,
+      createdAt: r.createdAt,
+    }))
+    .sort((a, b) => urgencyRank(a.urgency) - urgencyRank(b.urgency));
 
   const proposalsToReview = proposalsRaw
     .map((p) => ({

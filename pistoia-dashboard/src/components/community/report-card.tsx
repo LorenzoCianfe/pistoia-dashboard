@@ -17,7 +17,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmButton } from "@/components/community/confirm-button";
-import { reportCategory, reportStatus } from "@/lib/community";
+import { reportCategory, reportStatus, reportUrgency } from "@/lib/community";
 import { accent } from "@/lib/colors";
 import { formatRelativeTime } from "@/lib/format";
 import type { ReportListItem } from "@/lib/data/reports";
@@ -40,6 +40,8 @@ const CATEGORY_ICON: Record<string, LucideIcon> = {
 export function ReportCard({ report }: { report: ReportListItem }) {
   const cat = reportCategory(report.category);
   const st = reportStatus(report.status);
+  // Il badge urgenza compare solo quando confermata: niente allarmi non validati in lista.
+  const urgency = report.urgency === "confermata" ? reportUrgency(report.urgency) : null;
   const Icon = CATEGORY_ICON[report.category] ?? Sparkles;
   const a = accent(cat.color);
 
@@ -65,6 +67,7 @@ export function ReportCard({ report }: { report: ReportListItem }) {
           <div className="flex flex-wrap items-center gap-2">
             <Badge color={cat.color}>{cat.label}</Badge>
             <Badge color={st.color}>{st.label}</Badge>
+            {urgency ? <Badge color={urgency.color}>{urgency.label}</Badge> : null}
           </div>
           <Link
             href={`/segnalazioni/${report.id}`}

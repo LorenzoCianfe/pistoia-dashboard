@@ -98,6 +98,7 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 | **Review a11y/UX** | 2026-06-11 | 8 finding corretti: ActionError live-region, skeleton accessibili, focus sui boundary, numeri it-IT, aria-disabled, toast live region, RingGauge |
 | **Ondata 2 — Semplicità & profilo** | 2026-06-11 | Ricerca globale Ctrl+K, home a percorsi guidati, preferenze civiche + feed "Per te", Civic ID Card + impatto civico, modalità semplice, wizard proposte, valutazione sintetica del Comune |
 | **Ondata 0 — Fondamenta visive & design system** | 2026-06-12 | [DESIGN.md](DESIGN.md) (direzione estetica istituzionale), token estesi (font display Fraunces, easing civico, color-scheme, glow serali), motivi identitari CSS (fasce romaniche, scacchiera), motion system (View Transitions + stagger + pulse civico), EmptyState illustrato, centro notifiche 2.0 (filtri, bucket temporali, azione inline), command palette 2.0 (comandi: tema, tour), treemap squarified del bilancio, tour demo guidato in 9 passi |
+| **Ondata 1 — Segnalazioni 2.0** | 2026-06-12 | Timeline pubblica, conferma del cittadino con riapertura, foto prima/durante/dopo (upload staff dal triage), ufficio competente + tempi medi per categoria, urgenza con validazione moderatore, anti-duplicati con "Anche io" inline, "Segnala in 30 secondi" mobile-first, mock "vivo" (seed deterministico giornaliero). Schema: `urgency`, `resolutionFeedback`, `ReportPhoto` |
 
 > Già coperte dagli addenda e **fatte**: sistema fonti con freschezza (`A1 §25` → provenance + SourceBadge), modalità demo/ufficiale (`A1 §26` → DEMO_MODE), partecipazione aggregata senza esporre dati personali (`A1 §10` → contatori aggregati, ora regola di prodotto in [§7](#7-regole-di-prodotto)).
 
@@ -111,21 +112,9 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 
 **Obiettivo (→ OB-2, OB-4):** trasformare l'estetica da "curata" a "distintiva" e costruire la fondazione su cui ogni ondata successiva appoggia. La direzione estetica è formalizzata in [DESIGN.md](DESIGN.md); il dettaglio del consegnato è in [§3](#3-completato). La rifinitura "tutti gli stati su tutti i componenti" prosegue come lavoro trasversale a ogni ondata (regola di prodotto n. 8).
 
-### Ondata 1 — Segnalazioni 2.0 🔜
+### Ondata 1 — Segnalazioni 2.0 ✅ *(completata 2026-06-12)*
 
-**Obiettivo (→ OB-1):** completare il ciclo di vita della segnalazione, dal "segnala in 30 secondi" alla conferma del cittadino dopo la risoluzione. È il cluster a maggior valore percepito di entrambi gli addenda.
-
-| Voce | Livello | Fonte |
-|---|---|---|
-| Timeline pubblica della segnalazione (lo storico stati esiste già nel modello, manca la UI) | `FE` `UX` | `A1 §3` |
-| Conferma del cittadino dopo la risoluzione, con riapertura | `FE` `BE` | `A1 §5` |
-| Foto prima/durante/dopo, con confronto visivo curato (slider) | `FE` `BE` `DES` | `A1 §4` |
-| Ufficio competente visibile | `FE` `BE` | `A1 §6` |
-| Tempi medi indicativi per categoria (dati storici, non promesse) | `FE` `BE` | `A1 §7` |
-| Segnalazione urgente con validazione del moderatore | `FE` `BE` | `A1 §8` |
-| Suggerimento anti-duplicati alla creazione → "Anche io" | `FE` `BE` `UX` | `A1 §2` |
-| "Segnala in 30 secondi": flusso rapido mobile-first | `FE` `UX` | `A2 §4` |
-| Mock data "vivo": seed deterministico che simula l'evoluzione nel tempo (nuove segnalazioni, avanzamenti di stato) — la demo sembra una città vera | `BE` `ENG` | 🆕 |
+**Obiettivo (→ OB-1):** completare il ciclo di vita della segnalazione, dal "segnala in 30 secondi" alla conferma del cittadino dopo la risoluzione. Dettaglio del consegnato in [§3](#3-completato).
 
 ### Ondata 2 — Semplicità & profilo civico ✅ *(completata 2026-06-11, dettagli in [§3](#3-completato))*
 
@@ -209,7 +198,7 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 | **Command palette 2.0 (azioni, non solo ricerca)** | `FE` `UX` | Ctrl+K già esiste: estenderlo alle azioni è poco costo, molto valore | ✅ O0 (2026-06-12) |
 | **Data-viz bilancio next-gen (treemap, confronti)** | `FE` `DES` | Il bilancio è la pagina più "istituzionale": una visualizzazione memorabile la trasforma | ✅ O0 (2026-06-12) |
 | **Tour demo guidato / modalità presentazione** | `UX` | Il progetto è una demo: deve sapersi presentare da solo, passo passo | ✅ O0 (2026-06-12) |
-| **Mock data "vivo" (seed temporale deterministico)** | `BE` `ENG` | Una demo dove "succedono cose" è infinitamente più credibile di una statica | 🔜 O1 |
+| **Mock data "vivo" (seed temporale deterministico)** | `BE` `ENG` | Una demo dove "succedono cose" è infinitamente più credibile di una statica | ✅ O1 (2026-06-12) |
 | **Export PDF del civic digest** | `BE` | Estensione naturale del digest (`A2 §19`), utile per comunicazione | 🔜 O3 |
 | **"Stato della città" hero con indicatori** | `FE` `DES` | Colpo d'occhio immediato sulla salute della città appena si entra | 🔜 O3 |
 | **Test a11y automatici (axe in E2E)** | `ENG` `A11Y` | L'a11y già raggiunta non deve regredire mai | ♾️ qualità continua |
@@ -244,14 +233,14 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 
 | Idea | Cosa fa | Livello | Fonte | Stato |
 |---|---|---|---|---|
-| Timeline pubblica | Cronologia visibile: inviata → validata → assegnata → risolta | `FE` `UX` | `A1 §3` | 🔜 O1 |
-| Conferma del cittadino | "È davvero risolta?" sì/no, con riapertura | `FE` `BE` | `A1 §5` | 🔜 O1 |
-| Foto prima/durante/dopo | Confronto fotografico degli interventi | `FE` `BE` `DES` | `A1 §4` | 🔜 O1 |
-| Ufficio competente | Chi gestisce la pratica, sempre visibile | `FE` `BE` | `A1 §6` | 🔜 O1 |
-| Tempi medi / SLA informativi | Tempi storici medi per categoria (non promesse) | `FE` `BE` | `A1 §7` | 🔜 O1 |
-| Segnalazione urgente | Flag urgenza con validazione moderatore | `FE` `BE` | `A1 §8` | 🔜 O1 |
-| Anti-duplicati | Suggerisce segnalazioni simili → "Anche io" | `FE` `BE` `UX` | `A1 §2` | 🔜 O1 |
-| Segnala in 30 secondi | Foto → posizione → categoria → invia | `FE` `UX` | `A2 §4` | 🔜 O1 |
+| Timeline pubblica | Cronologia visibile: inviata → validata → assegnata → risolta | `FE` `UX` | `A1 §3` | ✅ O1 (2026-06-12) |
+| Conferma del cittadino | "È davvero risolta?" sì/no, con riapertura | `FE` `BE` | `A1 §5` | ✅ O1 (2026-06-12) |
+| Foto prima/durante/dopo | Confronto fotografico degli interventi | `FE` `BE` `DES` | `A1 §4` | ✅ O1 (2026-06-12) |
+| Ufficio competente | Chi gestisce la pratica, sempre visibile | `FE` `BE` | `A1 §6` | ✅ O1 (2026-06-12) |
+| Tempi medi / SLA informativi | Tempi storici medi per categoria (non promesse) | `FE` `BE` | `A1 §7` | ✅ O1 (2026-06-12) |
+| Segnalazione urgente | Flag urgenza con validazione moderatore | `FE` `BE` | `A1 §8` | ✅ O1 (2026-06-12) |
+| Anti-duplicati | Suggerisce segnalazioni simili → "Anche io" | `FE` `BE` `UX` | `A1 §2` | ✅ O1 (2026-06-12) |
+| Segnala in 30 secondi | Foto → posizione → categoria → invia | `FE` `UX` | `A2 §4` | ✅ O1 (2026-06-12) |
 | Categoria da foto (AI) | Suggerimento automatico della categoria | `AI` | `A2 §5` | 💡 richiede LLM |
 
 ### 💡 Proposte
@@ -380,7 +369,7 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 | Idea | Cosa fa | Livello | Fonte | Stato |
 |---|---|---|---|---|
 | Review lenti mancanti | Sicurezza, correttezza cache, idiomi Next 16 (saltate il 2026-06-11) | `SEC` `ENG` | debito qualità | 📋 consigliata presto |
-| Mock data "vivo" | Seed temporale deterministico: la demo evolve nel tempo | `BE` `ENG` | 🆕 | 🔜 O1 |
+| Mock data "vivo" | Seed temporale deterministico: la demo evolve nel tempo | `BE` `ENG` | 🆕 | ✅ O1 (2026-06-12) |
 | Lighthouse CI + performance budget | La velocità percepita non degrada | `ENG` | 🆕 | 📋 da impostare (prossima ondata) |
 | Audit dipendenze in CI | npm audit / osv-scanner sulla supply chain | `SEC` | 🆕 | 📋 da impostare (prossima ondata) |
 | PWA + offline + Web Push | App installabile, coda offline segnalazioni, push VAPID | `FE` `ENG` | idea esistente | 📋 |

@@ -185,6 +185,41 @@ export function reportStatus(s: string) {
   return REPORT_STATUS[s] ?? { label: s, color: "teal", step: 0 };
 }
 
+// Urgenza con validazione del moderatore (A1 §8): il cittadino la richiede,
+// un moderatore/staff la conferma o la respinge. Mai auto-conferma.
+export const REPORT_URGENCY: Record<string, { label: string; color: string }> = {
+  richiesta: { label: "Urgenza segnalata", color: "amber" },
+  confermata: { label: "Urgente", color: "red" },
+  respinta: { label: "Urgenza non confermata", color: "viola" },
+};
+
+export function reportUrgency(u: string | null | undefined) {
+  if (!u) return null;
+  return REPORT_URGENCY[u] ?? null;
+}
+
+// Fasi fotografiche dell'intervento (A1 §4).
+export const REPORT_PHOTO_PHASE: Record<string, { label: string; color: string }> = {
+  prima: { label: "Prima", color: "amber" },
+  durante: { label: "Durante", color: "teal" },
+  dopo: { label: "Dopo", color: "green" },
+};
+
+export const REPORT_PHOTO_PHASES = ["prima", "durante", "dopo"] as const;
+
+// Esiti della conferma del cittadino dopo la risoluzione (A1 §5).
+export const RESOLUTION_FEEDBACK: Record<string, { label: string; color: string }> = {
+  confermata: { label: "Risoluzione confermata dal cittadino", color: "green" },
+  riaperta: { label: "Riaperta dal cittadino", color: "amber" },
+};
+
+/** Titolo automatico del flusso rapido (A2 §4): categoria + dove, max 120. */
+export function quickReportTitle(category: string, location?: string | null): string {
+  const cat = REPORT_CATEGORY[category]?.label ?? "Segnalazione";
+  const title = location?.trim() ? `${cat} — ${location.trim()}` : cat;
+  return title.slice(0, 120);
+}
+
 export const DEPARTMENTS = [
   "Ufficio Strade e Manutenzioni",
   "Ufficio Mobilità",

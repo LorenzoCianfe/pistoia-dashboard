@@ -515,6 +515,35 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   Nota ambiente: il dev server manuale è morto in OOM di sistema durante un check visivo
   (irrilevante per il codice: build e E2E verdi). Tutto ancora **dati mockup**.
 
+- **2026-06-12 (Ondata 1 — Segnalazioni 2.0)** — Il ciclo di vita della segnalazione si chiude
+  (ROADMAP OB-1). **Schema** (migrazione `ondata1_segnalazioni2`): `Report.urgency`
+  (null|richiesta|confermata|respinta), `Report.resolutionFeedback(At)` (null|confermata|riaperta),
+  nuovo modello **`ReportPhoto`** (fase prima/durante/dopo, photoData o imageSeed, official).
+  **Timeline pubblica** (`A1 §3`): sezione "La storia di questa segnalazione" con connettore
+  verticale, autore per voce (pill rossa se Comune), data+tempo relativo. **Conferma cittadino**
+  (`A1 §5`): card "È davvero risolta?" per il solo autore su risolta/chiusa
+  (`confirmResolutionAction`, una sola volta); "no" riapre → status in_lavorazione + resolvedAt
+  null + nota pubblica non ufficiale. **Foto per fase** (`A1 §4`): `PhasePhotos` nel dettaglio
+  (prima = photoData del cittadino; placeholder "In attesa" se mancano fasi), upload staff dal
+  triage (`addReportPhotoAction`, riuso `downscaleImage` estratta in `lib/images.ts`). **Ufficio
+  competente** (`A1 §6`) e **tempi medi** (`A1 §7`): blocco dl nel dettaglio; `getCategoryAvgDays`
+  media i casi realmente risolti e integra una baseline demo pesata 3 campioni sotto i 3 casi —
+  etichetta "dato storico indicativo, non una promessa". **Urgenza** (`A1 §8`): checkbox nel
+  composer ("pericolo immediato"), `validateUrgencyAction` per moderatori+staff dal triage (banner
+  rosso, richieste in cima via sort), badge "Urgente" pubblico solo se confermata, notifica
+  all'autore, audit ModerationAction. **Anti-duplicati** (`A1 §2`): route `GET
+  /api/segnalazioni/simili` su `findSimilarReports` (stessi categoria+zona, aperte, 90 giorni,
+  top 4); pannello `SimilarReports` nel composer e nel flusso rapido con "Anche io" inline
+  (pattern chiave-derivata per evitare setState-in-effect, regola react-hooks). **Segnala in 30
+  secondi** (`A2 §4`): overlay `QuickReport` full-screen mobile in 3 passi (foto con
+  `capture=environment` → posizione → categoria a chips), `createReportAction` con `mode=rapida` e
+  titolo generato (`quickReportTitle`, max 120). **Mock vivo**: seed con hash deterministico del
+  giorno (`vary()`, segnalazione "fresca di oggi" a rotazione su 3 template), nuovi casi seed
+  (urgenza confermata + richiesta pendente, riaperta dal cittadino, 2 risolte extra per i tempi
+  medi, gallerie fasi con `photoSvg`). Verificato: `tsc` pulito, eslint 0 problemi, Vitest
+  **56/56** (9 nuovi su quickReportTitle/urgenza/fasi), Playwright 5/5, `next build` pulito.
+  Tutto ancora **dati mockup**.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.
@@ -530,8 +559,8 @@ di livello (FE·DES·UX·BE·ENG·SEC·A11Y·AI) su ogni idea e 18 proposte nuov
 - **§0 Come leggere** — legende di stato e di livello
 - **§1 Visione** — north star, "cosa è / cosa non è", tre direttrici, decisione mock
 - **§2 Obiettivi** — OB-1…OB-5 verificabili (ciclo civico chiuso, design distintivo, semplicità radicale, demo autoesplicativa, qualità continua)
-- **§3 Completato** — …, **Ondata 2 Semplicità & profilo (2026-06-11)**, **Ondata 0 Fondamenta visive (2026-06-12)**
-- **§4 Piano a ondate** — ~~O0 Fondamenta visive~~ ✅ → O1 Segnalazioni 2.0 (prossima) → O3 Trasparenza → O4 Territorio & partecipazione → O5 Admin & nuovi pubblici (con **Vetrina aziende & sponsor**) + traccia "Qualità continua"
+- **§3 Completato** — …, **Ondata 2 Semplicità & profilo (2026-06-11)**, **Ondata 0 Fondamenta visive (2026-06-12)**, **Ondata 1 Segnalazioni 2.0 (2026-06-12)**
+- **§4 Piano a ondate** — ~~O0 Fondamenta visive~~ ✅ → ~~O1 Segnalazioni 2.0~~ ✅ → O3 Trasparenza (prossima) → O4 Territorio & partecipazione → O5 Admin & nuovi pubblici (con **Vetrina aziende & sponsor**) + traccia "Qualità continua"
 - **§5 Nuove proposte (revisione 2026-06-11)** — le 🆕 con motivazione e destinazione
 - **§6 Catalogo delle idee per tema** — tutte le idee deduplicate con livello, fonte e stato (✅/🔜/📋/💡/🧊)
 - **§7 Regole di prodotto** — 9 vincoli trasversali (…, n. 8 "il design è progettato, non generato" → `DESIGN.md`, n. 9 "gli sponsor sono ospiti, non padroni")

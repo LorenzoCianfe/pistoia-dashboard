@@ -10,37 +10,13 @@ import {
 import { Field, Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/alert";
+import { SimilarReports } from "@/components/community/similar-reports";
 import { REPORT_CATEGORY } from "@/lib/community";
+import { downscaleImage } from "@/lib/images";
 import type { NeighborhoodOption } from "@/lib/data/neighborhoods";
 
 const selectClass =
   "h-11 w-full rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm text-foreground focus-visible:border-teal focus-visible:outline-none";
-
-/** Downscale an image file to a compact JPEG data URL so it fits comfortably in the DB. */
-async function downscaleImage(file: File, max = 1280, quality = 0.7): Promise<string> {
-  const dataUrl = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error("read"));
-    reader.readAsDataURL(file);
-  });
-  const img = document.createElement("img");
-  await new Promise<void>((resolve, reject) => {
-    img.onload = () => resolve();
-    img.onerror = () => reject(new Error("decode"));
-    img.src = dataUrl;
-  });
-  const scale = Math.min(1, max / Math.max(img.width, img.height));
-  const w = Math.round(img.width * scale);
-  const h = Math.round(img.height * scale);
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return dataUrl;
-  ctx.drawImage(img, 0, 0, w, h);
-  return canvas.toDataURL("image/jpeg", quality);
-}
 
 export function ReportComposer({
   neighborhoods,
@@ -60,6 +36,11 @@ export function ReportComposer({
   const [photoBusy, setPhotoBusy] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [geoStatus, setGeoStatus] = useState<"idle" | "loading" | "error">("idle");
+  // Categoria e zona alimentano il suggerimento anti-duplicati (A1 §2).
+  const [category, setCategory] = useState<string | null>(null);
+  const [neighborhood, setNeighborhood] = useState<string | null>(
+    defaultNeighborhoodId ?? null,
+  );
 
   useEffect(() => {
     // On success we navigate straight to the new report's detail page, so the
@@ -124,7 +105,14 @@ export function ReportComposer({
 
       <div className="grid gap-3.5 sm:grid-cols-2">
         <Field label="Categoria" htmlFor="category">
-          <select id="category" name="category" required defaultValue="" className={selectClass}>
+          <select
+            id="category"
+            name="category"
+            required
+            defaultValue=""
+            onChange={(e) => setCategory(e.target.value || null)}
+            className={selectClass}
+          >
             <option value="" disabled>
               Scegli…
             </option>
@@ -140,6 +128,7 @@ export function ReportComposer({
             id="neighborhoodId"
             name="neighborhoodId"
             defaultValue={defaultNeighborhoodId ?? ""}
+            onChange={(e) => setNeighborhood(e.target.value || null)}
             className={selectClass}
           >
             <option value="">Tutta la città</option>
@@ -151,6 +140,9 @@ export function ReportComposer({
           </select>
         </Field>
       </div>
+
+      {/* Anti-duplicati (A1 §2): appare appena la categoria è scelta */}
+      <SimilarReports category={category} neighborhoodId={neighborhood} />
 
       <Field label="Posizione (indirizzo)" htmlFor="location">
         <Input id="location" name="location" maxLength={160} placeholder="Es. Via Ciliegiole, incrocio Via di Gello" />
@@ -247,6 +239,21 @@ export function ReportComposer({
           className="size-4 rounded border-border-strong text-teal focus-visible:outline-none"
         />
         Invia in forma anonima (il tuo nome non sarà mostrato pubblicamente)
+      </label>
+
+      {/* Urgenza con validazione del moderatore (A1 §8) */}
+      <label className="flex items-start gap-2 text-sm text-muted">
+        <input
+          type="checkbox"
+          name="urgent"
+          className="mt-0.5 size-4 rounded border-border-strong text-teal focus-visible:outline-none"
+        />
+        <span>
+          È un pericolo immediato (tombino aperto, albero caduto, semaforo guasto…)
+          <span className="block text-xs text-muted-2">
+            Un moderatore verificherà l&apos;urgenza prima di dare priorità.
+          </span>
+        </span>
       </label>
 
       <div className="flex items-center justify-between gap-3">

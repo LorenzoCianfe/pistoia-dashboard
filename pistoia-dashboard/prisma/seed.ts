@@ -21,6 +21,17 @@ const daysAgo = (d: number) => new Date(Date.now() - d * 24 * 60 * 60 * 1000);
 const hoursAgo = (h: number) => new Date(Date.now() - h * 60 * 60 * 1000);
 const daysAhead = (d: number) => new Date(Date.now() + d * 24 * 60 * 60 * 1000);
 
+// Mock "vivo" (O1): un hash deterministico del giorno varia leggermente
+// contatori e contenuti freschi, così ogni ri-seed racconta una città un po'
+// diversa ma coerente — senza casualità non riproducibile.
+const DAY_KEY = new Date().toISOString().slice(0, 10);
+let dayHash = 0;
+for (let i = 0; i < DAY_KEY.length; i++) {
+  dayHash = (dayHash * 31 + DAY_KEY.charCodeAt(i)) >>> 0;
+}
+/** base + variazione giornaliera in [0, spread]. */
+const vary = (base: number, spread: number) => base + (dayHash % (spread + 1));
+
 /** A small inline SVG used as a stand-in "photo" for the works gallery (mock). */
 const photoSvg = (label: string, c1: string, c2: string) =>
   "data:image/svg+xml;utf8," +
@@ -42,6 +53,7 @@ async function wipe() {
   await prisma.postComment.deleteMany();
   await prisma.officialAnswer.deleteMany();
   await prisma.communityPost.deleteMany();
+  await prisma.reportPhoto.deleteMany();
   await prisma.reportConfirmation.deleteMany();
   await prisma.reportStatusHistory.deleteMany();
   await prisma.report.deleteMany();
@@ -786,14 +798,24 @@ async function main() {
       neighborhoodId: nb["sant-agostino"],
       location: "Via Ciliegiole, incrocio Via di Gello",
       assignedDepartment: "Ufficio Strade e Manutenzioni",
-      baseConfirmations: 47,
+      baseConfirmations: vary(45, 6),
       createdAt: daysAgo(9),
+      // Urgenza richiesta dal cittadino e confermata dal moderatore (A1 §8).
+      urgency: "confermata",
       updates: {
         create: [
-          { status: "ricevuta", note: "Segnalazione ricevuta.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(9) },
+          { status: "ricevuta", note: "Segnalazione ricevuta con richiesta di urgenza: un moderatore la verificherà a breve.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(9) },
+          { status: "ricevuta", note: "Urgenza confermata: la segnalazione viene trattata con priorità.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(9) },
           { status: "validata", note: "Segnalazione validata e inoltrata all'ufficio competente.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(8) },
           { status: "presa_in_carico", note: "Presa in carico dall'Ufficio Strade e Manutenzioni.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(5) },
           { status: "in_lavorazione", note: "Intervento programmato: sostituzione del corpo illuminante entro 72 ore.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(2) },
+        ],
+      },
+      // Foto per fase (A1 §4): "prima" del cittadino, "durante" del Comune.
+      photos: {
+        create: [
+          { phase: "prima", photoData: photoSvg("Prima — al buio", "#1f2937", "#374151"), caption: "L'incrocio la sera, senza illuminazione", authorName: "Marco G.", official: false, createdAt: daysAgo(9) },
+          { phase: "durante", photoData: photoSvg("Durante — cantiere", "#0c9488", "#f5a623"), caption: "La squadra al lavoro sul corpo illuminante", authorName: "Comune di Pistoia", official: true, createdAt: daysAgo(1) },
         ],
       },
     },
@@ -839,11 +861,23 @@ async function main() {
       baseConfirmations: 15,
       createdAt: daysAgo(14),
       resolvedAt: daysAgo(3),
+      // Ciclo completo: risolta e confermata dal cittadino (A1 §5).
+      resolutionFeedback: "confermata",
+      resolutionFeedbackAt: daysAgo(2),
       updates: {
         create: [
           { status: "ricevuta", note: "Segnalazione ricevuta.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(14) },
           { status: "in_lavorazione", note: "Aumentata la frequenza di svuotamento nel weekend.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(8) },
           { status: "risolta", note: "Installati due cestini aggiuntivi. Grazie per la segnalazione.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(3) },
+          { status: "risolta", note: "Risoluzione confermata dal cittadino. (Giulia V.)", official: false, authorName: "Giulia V.", createdAt: daysAgo(2) },
+        ],
+      },
+      // Confronto completo prima/durante/dopo (A1 §4).
+      photos: {
+        create: [
+          { phase: "prima", photoData: photoSvg("Prima — cestini pieni", "#9a3412", "#d63a57"), caption: "I cestini la domenica mattina", authorName: "Giulia V.", official: false, createdAt: daysAgo(14) },
+          { phase: "durante", photoData: photoSvg("Durante — posa", "#0c9488", "#f5a623"), caption: "Posa dei nuovi cestini", authorName: "Comune di Pistoia", official: true, createdAt: daysAgo(5) },
+          { phase: "dopo", photoData: photoSvg("Dopo — piazza pulita", "#2bbd77", "#10b3a3"), caption: "La piazza con i cestini aggiuntivi", authorName: "Comune di Pistoia", official: true, createdAt: daysAgo(3) },
         ],
       },
     },
@@ -861,8 +895,10 @@ async function main() {
       status: "validata",
       neighborhoodId: nb["centro"],
       location: "Giardino di Via Pacini",
-      baseConfirmations: 8,
+      baseConfirmations: vary(7, 3),
       createdAt: daysAgo(4),
+      // Richiesta di urgenza in attesa del moderatore: visibile nel triage admin.
+      urgency: "richiesta",
       updates: {
         create: [
           { status: "ricevuta", note: "Segnalazione ricevuta.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(4) },
@@ -905,6 +941,116 @@ async function main() {
         create: [
           { status: "ricevuta", note: "Segnalazione ricevuta.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(11) },
           { status: "non_di_competenza", note: "Per i controlli notturni rivolgersi alla Polizia Municipale (numero unico). Segnalazione inoltrata per conoscenza.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(9) },
+        ],
+      },
+    },
+  });
+
+  // Riaperta dal cittadino (A1 §5): il Comune aveva chiuso, il problema c'era ancora.
+  await prisma.report.create({
+    data: {
+      authorId: lorenzo.id,
+      authorName: lorenzo.publicName ?? lorenzo.name,
+      authorInitials: "LC",
+      authorColor: lorenzo.avatarColor,
+      title: "Attraversamento pedonale sbiadito in Viale Adua",
+      description: "Le strisce davanti alla fermata del bus sono quasi invisibili, di sera è pericoloso attraversare.",
+      category: "sicurezza",
+      status: "in_lavorazione",
+      neighborhoodId: nb["sant-agostino"],
+      location: "Viale Adua, fermata Pacinotti",
+      assignedDepartment: "Ufficio Strade e Manutenzioni",
+      baseConfirmations: vary(18, 4),
+      createdAt: daysAgo(20),
+      resolutionFeedback: "riaperta",
+      resolutionFeedbackAt: daysAgo(4),
+      updates: {
+        create: [
+          { status: "ricevuta", note: "Segnalazione ricevuta.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(20) },
+          { status: "in_lavorazione", note: "Rifacimento segnaletica programmato.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(12) },
+          { status: "risolta", note: "Segnaletica orizzontale rifatta.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(6) },
+          { status: "in_lavorazione", note: "Il cittadino segnala che il problema è ancora presente: pratica riaperta. (Lorenzo C.)", official: false, authorName: "Lorenzo C.", createdAt: daysAgo(4) },
+          { status: "in_lavorazione", note: "Verificato: il tratto lato sud è stato saltato. Nuovo intervento entro la settimana.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(3) },
+        ],
+      },
+    },
+  });
+
+  // Storico di risolte: alimenta i tempi medi per categoria (A1 §7).
+  await prisma.report.create({
+    data: {
+      authorName: "Paola M.",
+      authorInitials: "PM",
+      authorColor: "green",
+      title: "Lampione a intermittenza in Via Dalmazia",
+      description: "Il lampione lampeggia tutta la notte da giorni.",
+      category: "illuminazione",
+      status: "risolta",
+      neighborhoodId: nb["le-fornaci"] ?? nb["centro"],
+      location: "Via Dalmazia",
+      assignedDepartment: "Ufficio Strade e Manutenzioni",
+      baseConfirmations: 6,
+      createdAt: daysAgo(28),
+      resolvedAt: daysAgo(22),
+      resolutionFeedback: "confermata",
+      resolutionFeedbackAt: daysAgo(21),
+      updates: {
+        create: [
+          { status: "ricevuta", note: "Segnalazione ricevuta.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(28) },
+          { status: "risolta", note: "Sostituito il reattore del lampione.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(22) },
+        ],
+      },
+    },
+  });
+  await prisma.report.create({
+    data: {
+      authorName: "Franco B.",
+      authorInitials: "FB",
+      authorColor: "teal",
+      title: "Rifiuti abbandonati ai cassonetti di Via Erbosa",
+      description: "Ingombranti lasciati accanto ai cassonetti da una settimana.",
+      category: "rifiuti",
+      status: "risolta",
+      neighborhoodId: nb["bottegone"],
+      location: "Via Erbosa",
+      assignedDepartment: "Ufficio Igiene Urbana",
+      baseConfirmations: 4,
+      createdAt: daysAgo(10),
+      resolvedAt: daysAgo(8),
+      updates: {
+        create: [
+          { status: "ricevuta", note: "Segnalazione ricevuta.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(10) },
+          { status: "risolta", note: "Ritiro straordinario effettuato.", official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(8) },
+        ],
+      },
+    },
+  });
+
+  // Mock "vivo": una segnalazione fresca di oggi, scelta a rotazione dal
+  // giorno — a ogni ri-seed la home racconta qualcosa di nuovo.
+  const FRESH = [
+    { title: "Ramo pericolante sul percorso pedonale dell'Ombrone", category: "verde", location: "Parco fluviale dell'Ombrone", neighborhood: "sant-agostino" },
+    { title: "Cartello stradale divelto in Via Sestini", category: "sicurezza", location: "Via Sestini, altezza farmacia", neighborhood: "centro" },
+    { title: "Giostrina scheggiata ai giardini di Bonelle", category: "parchi", location: "Giardini di Bonelle", neighborhood: "bonelle" },
+  ] as const;
+  const fresh = FRESH[dayHash % FRESH.length];
+  await prisma.report.create({
+    data: {
+      authorId: citizen.id,
+      authorName: citizen.publicName ?? citizen.name,
+      authorInitials: "GV",
+      authorColor: citizen.avatarColor,
+      title: fresh.title,
+      description: "Segnalazione rapida inviata dal telefono. Dettagli aggiuntivi non ancora forniti.",
+      category: fresh.category,
+      status: "ricevuta",
+      neighborhoodId: nb[fresh.neighborhood] ?? nb["centro"],
+      location: fresh.location,
+      baseConfirmations: vary(1, 3),
+      createdAt: hoursAgo(2 + (dayHash % 6)),
+      updates: {
+        create: [
+          { status: "ricevuta", note: "Segnalazione ricevuta. In attesa di validazione.", official: true, authorName: "Comune di Pistoia", createdAt: hoursAgo(2 + (dayHash % 6)) },
         ],
       },
     },

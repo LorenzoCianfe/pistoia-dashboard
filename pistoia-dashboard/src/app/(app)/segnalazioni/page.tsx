@@ -10,6 +10,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Stat } from "@/components/ui/stat";
 import { ReportCard } from "@/components/community/report-card";
 import { ReportComposer } from "@/components/community/report-composer";
+import { QuickReport } from "@/components/community/quick-report";
 import { REPORT_CATEGORY, reportCategory } from "@/lib/community";
 import { cn } from "@/lib/utils";
 
@@ -49,6 +50,12 @@ export default async function SegnalazioniPage({
         <Stat label="Risolte" value={stats.resolved} />
         <Stat label="Totale" value={stats.total} />
       </div>
+
+      {/* Flusso rapido mobile-first (A2 §4) */}
+      <QuickReport
+        neighborhoods={neighborhoods}
+        defaultNeighborhoodId={user.neighborhoodId}
+      />
 
       <Card className="p-0">
         <details className="group">

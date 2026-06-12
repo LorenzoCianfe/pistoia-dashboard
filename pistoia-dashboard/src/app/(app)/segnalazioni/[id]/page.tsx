@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, Building2, Clock } from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
-import { getReport } from "@/lib/data/reports";
+import { getReport, getCategoryAvgDays } from "@/lib/data/reports";
 import { isFollowing } from "@/lib/data/follow";
 import { getAnswerFeedback } from "@/lib/data/feedback";
 import { Card } from "@/components/ui/card";
@@ -13,7 +13,14 @@ import { FollowButton } from "@/components/community/follow-button";
 import { AnswerFeedback } from "@/components/community/answer-feedback";
 import { MapCanvas } from "@/components/mappa/map-canvas";
 import { ReportStatusTrack } from "@/components/community/report-status-track";
-import { reportCategory, reportStatus } from "@/lib/community";
+import { PhasePhotos } from "@/components/community/phase-photos";
+import { ResolutionConfirm } from "@/components/community/resolution-confirm";
+import {
+  reportCategory,
+  reportStatus,
+  reportUrgency,
+  RESOLUTION_FEEDBACK,
+} from "@/lib/community";
 import { accent } from "@/lib/colors";
 import { formatDate, formatRelativeTime } from "@/lib/format";
 
@@ -31,9 +38,15 @@ export default async function ReportDetailPage({
 
   const following = await isFollowing(user.id, "report", report.id);
   const cat = reportCategory(report.category);
+  const urgency = reportUrgency(report.urgency);
+  const avg = await getCategoryAvgDays(report.category);
   const hasOfficial = report.updates.some((u) => u.official);
   const fb = hasOfficial
     ? await getAnswerFeedback("report", report.id, user.id)
+    : null;
+  const isResolved = report.status === "risolta" || report.status === "chiusa";
+  const feedback = report.resolutionFeedback
+    ? RESOLUTION_FEEDBACK[report.resolutionFeedback]
     : null;
 
   return (
@@ -52,6 +65,8 @@ export default async function ReportDetailPage({
           <Badge color={reportStatus(report.status).color}>
             {reportStatus(report.status).label}
           </Badge>
+          {urgency ? <Badge color={urgency.color}>{urgency.label}</Badge> : null}
+          {feedback ? <Badge color={feedback.color}>{feedback.label}</Badge> : null}
         </div>
 
         <h1 className="text-2xl font-bold tracking-tight">{report.title}</h1>
@@ -77,18 +92,6 @@ export default async function ReportDetailPage({
         </p>
 
         <p className="text-[15px] leading-relaxed">{report.description}</p>
-
-        {/* Uploaded photo (§9) */}
-        {report.photoData ? (
-          <figure className="overflow-hidden rounded-[var(--radius-sm)] border border-border">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={report.photoData}
-              alt={`Foto della segnalazione: ${report.title}`}
-              className="max-h-96 w-full object-cover"
-            />
-          </figure>
-        ) : null}
 
         {/* Location map (§10) */}
         {report.latitude != null && report.longitude != null ? (
@@ -132,38 +135,121 @@ export default async function ReportDetailPage({
         </div>
       </Card>
 
+      {/* Foto per fase (A1 §4): prima dal cittadino, durante/dopo dal Comune */}
+      {report.photoData || report.photos.length > 0 ? (
+        <Card>
+          <PhasePhotos
+            reportTitle={report.title}
+            citizenPhoto={report.photoData}
+            citizenName={report.authorName}
+            photos={report.photos}
+          />
+        </Card>
+      ) : null}
+
       {/* Lifecycle */}
       <Card>
         <h2 className="text-base font-semibold">Stato dell’intervento</h2>
         <div className="mt-4">
           <ReportStatusTrack status={report.status} />
         </div>
+
+        {/* Ufficio competente sempre visibile (A1 §6) + tempi medi (A1 §7) */}
+        <dl className="mt-5 grid gap-3 border-t border-border pt-4 text-sm sm:grid-cols-2">
+          <div className="flex items-start gap-2">
+            <Building2 size={16} className="mt-0.5 shrink-0 text-muted-2" aria-hidden />
+            <div>
+              <dt className="text-xs font-medium text-muted-2">Ufficio competente</dt>
+              <dd className="font-medium">
+                {report.assignedDepartment ?? "In attesa di assegnazione"}
+              </dd>
+            </div>
+          </div>
+          {avg ? (
+            <div className="flex items-start gap-2">
+              <Clock size={16} className="mt-0.5 shrink-0 text-muted-2" aria-hidden />
+              <div>
+                <dt className="text-xs font-medium text-muted-2">
+                  Tempo medio per «{cat.label}»
+                </dt>
+                <dd className="font-medium">
+                  ~{avg.days} {avg.days === 1 ? "giorno" : "giorni"}
+                  <span className="ml-1.5 text-xs font-normal text-muted-2">
+                    dato storico indicativo, non una promessa
+                  </span>
+                </dd>
+              </div>
+            </div>
+          ) : null}
+        </dl>
+
+        {/* Conferma del cittadino dopo la risoluzione (A1 §5) */}
+        {report.isMine && isResolved && !report.resolutionFeedback ? (
+          <div className="mt-5 rounded-[var(--radius-sm)] border border-[color-mix(in_oklab,var(--green)_30%,transparent)] bg-[var(--green-soft)]/40 p-4">
+            <ResolutionConfirm reportId={report.id} />
+          </div>
+        ) : null}
+        {feedback ? (
+          <p className="mt-4 flex items-center gap-2 text-sm text-muted">
+            <span
+              className="size-2 rounded-full"
+              style={{ backgroundColor: accent(feedback.color).fg }}
+              aria-hidden
+            />
+            {feedback.label}
+            {report.resolutionFeedbackAt ? (
+              <span className="text-xs text-muted-2" suppressHydrationWarning>
+                · {formatDate(report.resolutionFeedbackAt)}
+              </span>
+            ) : null}
+          </p>
+        ) : null}
       </Card>
 
-      {/* Official updates timeline */}
+      {/* Timeline pubblica (A1 §3): la cronologia completa, visibile a tutti */}
       <Card>
-        <h2 className="text-base font-semibold">Aggiornamenti</h2>
-        <ol className="mt-4 space-y-4">
-          {report.updates.map((u) => {
+        <h2 className="text-base font-semibold">La storia di questa segnalazione</h2>
+        <p className="text-sm text-muted">
+          Ogni passaggio è pubblico: chi ha fatto cosa, e quando.
+        </p>
+        <ol className="mt-5 space-y-0">
+          {report.updates.map((u, i) => {
             const st = reportStatus(u.status);
+            const last = i === report.updates.length - 1;
             return (
-              <li key={u.id} className="flex gap-3">
+              <li key={u.id} className="relative flex gap-3.5 pb-5 last:pb-0">
+                {/* Connettore verticale */}
+                {!last ? (
+                  <span
+                    className="absolute left-[7px] top-5 h-full w-0.5 bg-border"
+                    aria-hidden
+                  />
+                ) : null}
                 <span
-                  className="mt-1 size-2.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: accent(st.color).fg }}
-                />
+                  className="relative mt-1 grid size-4 shrink-0 place-items-center"
+                  aria-hidden
+                >
+                  <span
+                    className="size-2.5 rounded-full ring-4 ring-[var(--surface)]"
+                    style={{ backgroundColor: accent(st.color).fg }}
+                  />
+                </span>
                 <div className="min-w-0">
                   <p className="flex flex-wrap items-center gap-2 text-sm font-semibold">
                     {st.label}
-                    {u.official ? (
-                      <span className="rounded-pill bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold text-muted">
-                        {u.authorName ?? "Comune di Pistoia"}
-                      </span>
-                    ) : null}
+                    <span
+                      className={
+                        u.official
+                          ? "rounded-pill bg-[var(--red-soft)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--red)]"
+                          : "rounded-pill bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold text-muted"
+                      }
+                    >
+                      {u.authorName ?? (u.official ? "Comune di Pistoia" : "Cittadino")}
+                    </span>
                   </p>
                   {u.note ? <p className="mt-0.5 text-sm text-muted">{u.note}</p> : null}
                   <p className="mt-0.5 text-xs text-muted-2" suppressHydrationWarning>
-                    {formatDate(u.createdAt)}
+                    {formatDate(u.createdAt)} · {formatRelativeTime(u.createdAt)}
                   </p>
                 </div>
               </li>

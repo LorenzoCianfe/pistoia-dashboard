@@ -161,11 +161,36 @@ model Report {
   updatedAt          DateTime  @updatedAt
   resolvedAt         DateTime?
 
+  // Urgenza con validazione del moderatore (A1 §8): null | richiesta | confermata | respinta.
+  urgency            String?
+  // Conferma del cittadino dopo la risoluzione (A1 §5): null | confermata | riaperta.
+  resolutionFeedback   String?
+  resolutionFeedbackAt DateTime?
+
   confirmations ReportConfirmation[]
   updates       ReportStatusHistory[]
+  photos        ReportPhoto[]
 
   @@index([status])
   @@index([neighborhoodId])
+}
+
+// Foto per fase dell'intervento (A1 §4): "prima" dal cittadino (oltre alla
+// photoData della segnalazione), "durante"/"dopo" dal Comune. photoData è una
+// data URL; se assente, la UI mostra un placeholder a gradiente da imageSeed.
+model ReportPhoto {
+  id         String   @id @default(cuid())
+  reportId   String
+  report     Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  phase      String // prima | durante | dopo
+  photoData  String?
+  imageSeed  String?
+  caption    String?
+  authorName String?
+  official   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([reportId])
 }
 
 // "Anche io" — a citizen confirms an existing report (dedupe + priority signal).
