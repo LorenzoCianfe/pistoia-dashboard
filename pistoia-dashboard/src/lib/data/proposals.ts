@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db";
 import { demoBaseline } from "@/lib/demo";
+import { parseAffectedGroups } from "@/lib/civic-topics";
 import type { Prisma } from "@/generated/prisma/client";
 
 export type ProposalFilter = {
@@ -30,6 +31,8 @@ function mapProposal(p: RawProposal, userId: string) {
     id: p.id,
     title: p.title,
     description: p.description,
+    problem: p.problem,
+    affectedGroups: parseAffectedGroups(p.affectedGroups),
     category: p.category,
     status: p.status,
     imageSeed: p.imageSeed,
@@ -42,6 +45,14 @@ function mapProposal(p: RawProposal, userId: string) {
     supports: demoBaseline(p.baseSupports) + p._count.supports,
     supportedByMe: p.supports.length > 0,
     isMine: p.authorId === userId,
+    // Valutazione sintetica del Comune (A1 §15 + A2 §10).
+    assessment: {
+      estimatedImpact: p.estimatedImpact,
+      estimatedCost: p.estimatedCost,
+      estimatedTime: p.estimatedTime,
+      feasibility: p.feasibility,
+      assessedAt: p.assessedAt,
+    },
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
   };

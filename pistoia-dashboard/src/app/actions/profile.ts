@@ -16,6 +16,7 @@ import {
 } from "@/lib/auth/session";
 import { ACCENTS } from "@/lib/colors";
 import { limitWrite } from "@/lib/limits";
+import { CIVIC_TOPICS } from "@/lib/civic-topics";
 
 export type ProfileState =
   | {
@@ -60,6 +61,36 @@ export async function updateProfileAction(
 
   revalidatePath("/profilo");
   revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/**
+ * Salva i temi civici preferiti (A2 §3). Una scelta vuota è comunque una
+ * scelta: si persiste "[]" così l'onboarding in home smette di proporsi.
+ */
+export async function updateCivicInterestsAction(
+  _prev: ProfileState,
+  formData: FormData,
+): Promise<ProfileState> {
+  const user = await requireUser();
+
+  const lw = await limitWrite(user.id, "profile");
+  if (!lw.ok) return { error: lw.error };
+
+  const keys = formData.getAll("interests").map(String);
+  const valid = [...new Set(keys.filter((k) => k in CIVIC_TOPICS))];
+  if (keys.length > 0 && valid.length === 0) {
+    return { error: "Selezione non valida." };
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { civicInterests: JSON.stringify(valid) },
+  });
+
+  revalidatePath("/la-mia-citta");
+  revalidatePath("/impostazioni");
+  revalidatePath("/profilo");
   return { ok: true };
 }
 

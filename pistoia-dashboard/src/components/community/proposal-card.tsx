@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SupportButton } from "@/components/community/support-button";
 import { ThresholdBar } from "@/components/community/threshold-bar";
+import { AssessmentInline } from "@/components/community/proposal-assessment";
 import { Avatar } from "@/components/ui/avatar";
 import { proposalStatus } from "@/lib/community";
 import { formatRelativeTime } from "@/lib/format";
@@ -28,6 +29,9 @@ export function ProposalCard({
         {proposal.category ? (
           <span className="text-xs text-muted-2">· {proposal.category}</span>
         ) : null}
+        <span className="ml-auto">
+          <AssessmentInline assessment={proposal.assessment} />
+        </span>
       </div>
 
       <div>

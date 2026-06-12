@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { SIMPLE_MODE_COOKIE } from "@/lib/ui-prefs";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -40,12 +41,15 @@ export default async function RootLayout({
   // Nonce CSP generato per-request dal proxy: next-themes lo usa per il suo
   // script inline anti-FOUC, che altrimenti la CSP bloccherebbe.
   const nonce = (await headers()).get("x-nonce") ?? undefined;
+  // Modalità semplice (A1 §19): la classe arriva dal server, prima del paint.
+  const simpleMode =
+    (await cookies()).get(SIMPLE_MODE_COOKIE)?.value === "1";
 
   return (
     <html
       lang="it"
       suppressHydrationWarning
-      className={`${jakarta.variable} h-full antialiased`}
+      className={`${jakarta.variable} h-full antialiased${simpleMode ? " simple-mode" : ""}`}
     >
       <body className="min-h-full">
         <ThemeProvider

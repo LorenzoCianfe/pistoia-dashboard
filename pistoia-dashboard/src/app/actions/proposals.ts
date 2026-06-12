@@ -16,6 +16,13 @@ import { checkContribution } from "@/lib/moderation";
 import { demoBaseline } from "@/lib/demo";
 import { limitWrite } from "@/lib/limits";
 import { notify } from "@/lib/notify";
+import {
+  serializeAffectedGroups,
+  IMPACT_SCALE,
+  COST_SCALE,
+  TIME_SCALE,
+  FEASIBILITY_SCALE,
+} from "@/lib/civic-topics";
 
 export type ProposalFormState =
   | { ok?: boolean; error?: string; id?: string }
@@ -24,6 +31,7 @@ export type ProposalFormState =
 const createSchema = z.object({
   title: z.string().trim().min(6, "Il titolo è troppo breve.").max(140),
   description: z.string().trim().min(12, "Spiega la tua proposta.").max(1200),
+  problem: z.string().trim().max(800).optional(),
   category: z.string().trim().max(40).optional(),
   neighborhoodId: z.string().optional(),
 });
@@ -36,19 +44,27 @@ export async function createProposalAction(
   const parsed = createSchema.safeParse({
     title: formData.get("title"),
     description: formData.get("description"),
+    problem: formData.get("problem") || undefined,
     category: formData.get("category") || undefined,
     neighborhoodId: formData.get("neighborhoodId") || undefined,
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Dati non validi." };
   }
-  const { title, description, category, neighborhoodId } = parsed.data;
+  const { title, description, problem, category, neighborhoodId } = parsed.data;
+  // Gruppi impattati (A2 §26): chiavi ripetute nel form, filtrate sul catalogo.
+  const affectedGroups = serializeAffectedGroups(
+    formData.getAll("affectedGroups").map(String),
+  );
 
   const lw = await limitWrite(user.id, "proposal");
   if (!lw.ok) return { error: lw.error };
 
   // Guard moderazione: era assente qui (ban/sospensione + parole bloccate).
-  const check = await checkContribution(user.id, `${title} ${description}`);
+  const check = await checkContribution(
+    user.id,
+    `${title} ${problem ?? ""} ${description}`,
+  );
   if (!check.ok) return { error: check.error };
 
   const proposal = await prisma.proposal.create({
@@ -59,6 +75,8 @@ export async function createProposalAction(
       authorColor: user.avatarColor,
       title,
       description,
+      problem: problem || null,
+      affectedGroups,
       category: category || null,
       neighborhoodId: neighborhoodId || user.neighborhoodId || null,
       status: "pubblicata",
@@ -124,6 +142,11 @@ const reviewSchema = z.object({
   proposalId: z.string().min(1),
   status: z.string().refine((s) => s in PROPOSAL_STATUS, "Stato non valido."),
   reply: z.string().trim().max(800).optional(),
+  // Valutazione sintetica (A1 §15 + A2 §10): facoltativa, indicativa.
+  estimatedImpact: z.string().refine((s) => s in IMPACT_SCALE, "Valore non valido.").optional(),
+  estimatedCost: z.string().refine((s) => s in COST_SCALE, "Valore non valido.").optional(),
+  estimatedTime: z.string().refine((s) => s in TIME_SCALE, "Valore non valido.").optional(),
+  feasibility: z.string().refine((s) => s in FEASIBILITY_SCALE, "Valore non valido.").optional(),
 });
 
 export type ProposalAdminState = { ok?: boolean; error?: string } | undefined;
@@ -137,11 +160,19 @@ export async function reviewProposalAction(
     proposalId: formData.get("proposalId"),
     status: formData.get("status"),
     reply: formData.get("reply") || undefined,
+    estimatedImpact: formData.get("estimatedImpact") || undefined,
+    estimatedCost: formData.get("estimatedCost") || undefined,
+    estimatedTime: formData.get("estimatedTime") || undefined,
+    feasibility: formData.get("feasibility") || undefined,
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Dati non validi." };
   }
-  const { proposalId, status, reply } = parsed.data;
+  const { proposalId, status, reply, ...assessRaw } = parsed.data;
+  // Solo i campi compilati: i select vuoti non cancellano una valutazione già data.
+  const assess = Object.fromEntries(
+    Object.entries(assessRaw).filter(([, v]) => v !== undefined),
+  );
 
   const proposal = await prisma.proposal.findUnique({
     where: { id: proposalId },
@@ -156,6 +187,9 @@ export async function reviewProposalAction(
         status,
         ...(reply
           ? { officialReply: reply, officialReplyAt: new Date() }
+          : {}),
+        ...(Object.keys(assess).length > 0
+          ? { ...assess, assessedAt: new Date() }
           : {}),
       },
     });

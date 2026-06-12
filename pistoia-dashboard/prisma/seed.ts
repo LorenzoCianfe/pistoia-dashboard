@@ -106,6 +106,7 @@ async function main() {
       quartiere: "Centro storico",
       neighborhoodId: nb["centro"],
       bio: "Curiosa di come funziona la mia città.",
+      civicInterests: JSON.stringify(["ambiente", "cultura", "scuole"]),
       emailVerified: true,
       badges: {
         create: [
@@ -150,6 +151,7 @@ async function main() {
       avatarColor: "teal",
       neighborhoodId: nb["centro"],
       bio: "Cittadino attivo, interessato a mobilità e verde.",
+      civicInterests: JSON.stringify(["mobilita", "ambiente", "eventi"]),
       emailVerified: true,
       badges: {
         create: [
@@ -927,12 +929,21 @@ async function main() {
       authorInitials: "LC",
       authorColor: lorenzo.avatarColor,
       title: "Più rastrelliere per le bici in centro",
+      problem:
+        "Chi si muove in bici in centro non sa dove legarla: le rastrelliere sono poche, scoperte e quasi sempre piene, così le bici finiscono legate a pali e ringhiere.",
       description:
         "Installare rastrelliere coperte vicino alle principali piazze del centro per incentivare gli spostamenti in bici e ridurre il parcheggio selvaggio dei mezzi.",
+      affectedGroups: JSON.stringify(["residenti", "studenti", "pendolari"]),
       category: "Mobilità",
       neighborhoodId: nb["centro"],
       status: "in_valutazione",
       baseSupports: 124,
+      // Valutazione sintetica compilata dal Comune (A1 §15 + A2 §10).
+      estimatedImpact: "alto",
+      estimatedCost: "medio",
+      estimatedTime: "medio",
+      feasibility: "fattibile",
+      assessedAt: daysAgo(3),
       createdAt: daysAgo(12),
     },
   });
@@ -944,7 +955,10 @@ async function main() {
       authorInitials: "GV",
       authorColor: citizen.avatarColor,
       title: "Una fontanella in Piazza della Resistenza",
+      problem:
+        "D'estate la piazza è molto frequentata ma non c'è acqua potabile: chi resta a lungo deve comprare bottigliette o tornare a casa.",
       description: "Una fontanella di acqua potabile renderebbe la piazza più vivibile d'estate.",
+      affectedGroups: JSON.stringify(["famiglie", "anziani", "turisti"]),
       category: "Verde",
       neighborhoodId: nb["centro"],
       status: "pubblicata",
@@ -962,10 +976,16 @@ async function main() {
       title: "Orti urbani condivisi a Le Fornaci",
       description:
         "Assegnare un'area comunale inutilizzata a orti urbani gestiti dai residenti, con priorità ad anziani e famiglie.",
+      affectedGroups: JSON.stringify(["residenti", "anziani", "famiglie"]),
       category: "Ambiente",
       neighborhoodId: nb["le-fornaci"],
       status: "risposta",
       baseSupports: 210,
+      estimatedImpact: "medio",
+      estimatedCost: "basso",
+      estimatedTime: "lungo",
+      feasibility: "da_valutare",
+      assessedAt: daysAgo(5),
       officialReply:
         "Proposta accolta in valutazione: l'area di Via delle Fornaci è in fase di verifica urbanistica. Aggiorneremo entro l'autunno.",
       officialReplyAt: daysAgo(5),

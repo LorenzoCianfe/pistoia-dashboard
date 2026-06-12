@@ -76,6 +76,11 @@ export async function getAdminData() {
       status: p.status,
       hasReply: !!p.officialReply,
       supports: demoBaseline(p.baseSupports) + p._count.supports,
+      // Valutazione sintetica corrente (A1 §15): precompila il form di review.
+      estimatedImpact: p.estimatedImpact,
+      estimatedCost: p.estimatedCost,
+      estimatedTime: p.estimatedTime,
+      feasibility: p.feasibility,
       createdAt: p.createdAt,
     }))
     .sort((a, b) => b.supports - a.supports);

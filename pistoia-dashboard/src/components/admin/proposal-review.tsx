@@ -9,6 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/alert";
 import { PROPOSAL_STATUS, proposalStatus } from "@/lib/community";
+import {
+  IMPACT_SCALE,
+  COST_SCALE,
+  TIME_SCALE,
+  FEASIBILITY_SCALE,
+} from "@/lib/civic-topics";
 import { formatNumber } from "@/lib/format";
 
 type Item = {
@@ -17,7 +23,19 @@ type Item = {
   status: string;
   hasReply: boolean;
   supports: number;
+  estimatedImpact: string | null;
+  estimatedCost: string | null;
+  estimatedTime: string | null;
+  feasibility: string | null;
 };
+
+// Select della valutazione sintetica (A1 §15): vuoto = non modificare.
+const ASSESS_FIELDS = [
+  { name: "estimatedImpact", label: "Impatto", scale: IMPACT_SCALE },
+  { name: "estimatedCost", label: "Costo", scale: COST_SCALE },
+  { name: "estimatedTime", label: "Tempo", scale: TIME_SCALE },
+  { name: "feasibility", label: "Fattibilità", scale: FEASIBILITY_SCALE },
+] as const;
 
 const selectClass =
   "h-10 w-full rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm focus-visible:border-teal focus-visible:outline-none";
@@ -69,6 +87,27 @@ function ReviewItem({ item }: { item: Item }) {
             placeholder="Risposta ufficiale del Comune (facoltativa)…"
             className="w-full resize-none rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3.5 py-2 text-sm placeholder:text-muted-2 focus-visible:border-teal focus-visible:outline-none"
           />
+          <fieldset className="grid grid-cols-2 gap-2">
+            <legend className="col-span-2 pb-1 text-xs font-medium text-muted-2">
+              Valutazione sintetica (facoltativa, indicativa)
+            </legend>
+            {ASSESS_FIELDS.map((f) => (
+              <select
+                key={f.name}
+                name={f.name}
+                defaultValue={item[f.name] ?? ""}
+                aria-label={f.label}
+                className={selectClass}
+              >
+                <option value="">{f.label}: —</option>
+                {Object.entries(f.scale).map(([value, s]) => (
+                  <option key={value} value={value}>
+                    {f.label}: {s.label}
+                  </option>
+                ))}
+              </select>
+            ))}
+          </fieldset>
           <div className="flex justify-end">
             <SubmitButton size="sm" pendingText="Salvataggio…">
               Aggiorna proposta

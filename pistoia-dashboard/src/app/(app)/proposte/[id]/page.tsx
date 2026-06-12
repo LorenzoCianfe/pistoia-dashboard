@@ -15,7 +15,9 @@ import { SupportButton } from "@/components/community/support-button";
 import { FollowButton } from "@/components/community/follow-button";
 import { AnswerFeedback } from "@/components/community/answer-feedback";
 import { ThresholdBar } from "@/components/community/threshold-bar";
+import { ProposalAssessmentCard } from "@/components/community/proposal-assessment";
 import { proposalStatus } from "@/lib/community";
+import { AFFECTED_GROUPS } from "@/lib/civic-topics";
 import { formatDate, formatRelativeTime } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Proposta" };
@@ -76,9 +78,45 @@ export default async function ProposalDetailPage({
           <span suppressHydrationWarning>· {formatRelativeTime(proposal.createdAt)}</span>
         </div>
 
-        <p className="whitespace-pre-line text-[15px] leading-relaxed">
-          {proposal.description}
-        </p>
+        {proposal.problem ? (
+          <div className="space-y-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-2">
+                Il problema
+              </p>
+              <p className="mt-1 whitespace-pre-line text-[15px] leading-relaxed">
+                {proposal.problem}
+              </p>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-2">
+                La proposta
+              </p>
+              <p className="mt-1 whitespace-pre-line text-[15px] leading-relaxed">
+                {proposal.description}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="whitespace-pre-line text-[15px] leading-relaxed">
+            {proposal.description}
+          </p>
+        )}
+
+        {proposal.affectedGroups.length > 0 ? (
+          <p className="flex flex-wrap items-center gap-1.5 text-xs">
+            <span className="font-medium text-muted-2">Porta beneficio a:</span>
+            {proposal.affectedGroups.map((g) => (
+              <span
+                key={g}
+                className="rounded-pill bg-surface-2 px-2.5 py-1 font-medium text-muted"
+              >
+                <span aria-hidden>{AFFECTED_GROUPS[g]?.emoji}</span>{" "}
+                {AFFECTED_GROUPS[g]?.label ?? g}
+              </span>
+            ))}
+          </p>
+        ) : null}
 
         <div className="rounded-[var(--radius-sm)] border border-border bg-surface-2/50 p-4">
           <ThresholdBar supports={proposal.supports} />
@@ -94,6 +132,8 @@ export default async function ProposalDetailPage({
           <FollowButton targetType="proposal" targetId={proposal.id} following={following} />
         </div>
       </Card>
+
+      <ProposalAssessmentCard assessment={proposal.assessment} />
 
       {proposal.officialReply ? (
         <Card>

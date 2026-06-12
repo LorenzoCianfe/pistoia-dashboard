@@ -462,14 +462,46 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   come code residue). L'ideazione ha prodotto **16 idee nuove** (8 partecipazione + 8 open data),
   catalogate in `ROADMAP.md` con impatto/sforzo/fase. Riverificato dopo i fix: eslint, `tsc`,
   32/32 unit, 5/5 E2E, `next build` — tutto pulito.
+- **2026-06-11 (Ondata 2 — Semplicità & profilo civico)** — Prima ondata del piano mock-first
+  (ROADMAP §3), 7 funzioni dagli addenda. **Ricerca globale Ctrl/Cmd+K**: palette accessibile
+  (combobox + listbox, focus trap, live region) montata nella top bar, con azioni rapide, pagine e
+  contenuti via `/api/search` (route handler autenticato su `lib/data/search.ts`, LIKE su
+  segnalazioni/proposte/opere/eventi/sondaggi/quartieri). **Percorsi guidati** (`A1 §23`): home
+  "La mia città" ridisegnata con hero "Cosa vuoi fare?" (6 azioni in `GUIDED_ACTIONS`, condivise con
+  la palette). **Preferenze civiche** (`A2 §3`): 12 temi in `lib/civic-topics.ts` (mappati su
+  categorie di segnalazioni/proposte/eventi/opere), campo `User.civicInterests`, form a chips in
+  impostazioni (`#temi-civici`), onboarding in home e **feed "Per te"** (`getForYou`, etichetta
+  "perché lo vedi" col tema che combacia). **Civic ID Card** (`A2 §2`) nel profilo (intestazione a
+  gradiente "Carta civica", interessi, 4 contatori) + **"Il mio impatto civico"** (esiti in frasi:
+  risolte/risposte/voti/sostegni, `getCivicImpact`, zero migrazioni). **Modalità semplice** (`A1 §19`):
+  cookie `pst-simple` letto dal root layout (classe `simple-mode`, font 115%), home ridotta a 4 azioni
+  grandi + numeri utili + uscita rapida; toggle in impostazioni. **Wizard proposte** (`A1 §14`):
+  5 passi (problema→dove→beneficiari→proposta→riepilogo) con progress bar, focus sul titolo del passo,
+  Invio=avanti; nuovi campi `Proposal.problem` + `affectedGroups` (9 gruppi `A2 §26`, chips nel
+  dettaglio "Porta beneficio a"). **Valutazione sintetica** (`A1 §15` + `A2 §10`): campi
+  `estimatedImpact/Cost/Time/feasibility/assessedAt` compilabili dallo staff nella review admin
+  (select facoltativi, vuoto=non modifica), card dedicata nel dettaglio con disclaimer "indicativa"
+  e riga compatta "€€ · Impatto alto" nelle card elenco. Migrazione `ondata2_semplicita_profilo`,
+  seed arricchito (interessi per Giulia/Lorenzo, problem/gruppi/valutazioni su 3 proposte), fix
+  `db:reset` (Prisma 7 ha rimosso `--skip-seed`). Verificato: `tsc` pulito, eslint 0 problemi,
+  Vitest **47/47** (15 nuovi su taxonomy/parse/matchTopic), Playwright 5/5, `next build` pulito.
+  Tutto ancora **dati mockup**.
 
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.
 
+**Svolta strategica (2026-06-11):** il progetto resta una **demo mock** (locale + GitHub, nessun dato
+reale) e si evolve su tre direttrici — funzionalità, semplicità d'uso, estetica. I due addenda
+(`pistoia-community-addendum-ulteriori-proposte.md` e `pistoia-community-addendum-2-funzioni-evolutive.md`,
+~60 proposte) sono stati analizzati, deduplicati e integrati nella roadmap con riferimenti `A1 §n`/`A2 §n`.
+L'ex "Fase 2 dati reali" e l'ex "Fase 4 fiducia istituzionale" sono **in pausa**, conservate integralmente.
+
 Struttura del documento:
-- **✅ Completate** — v1 base, review sicurezza, Community MVP, Community v2, **Fase 0 Hardening &
-  Onestà**, **Fase 1 Abilitatori di piattaforma** (senza mailer)
-- **🔄 In corso** — nessuna attività al momento
-- **🔜 Prossime attività** — Fase 2: dati reali (BDAP/SIOPE+ → bilancio; OpenCUP/ReGiS/ANAC → opere) + code residue di Fase 1 (mailer, switch Postgres effettivo)
-- **💡 Idee future** — §19 Bilancio partecipativo, §20 AI civica, §22 Pistoia Pulse; Fase 3 (ricerca globale, open-data-out, digest email), Fase 4 (SPID/CIE, 2FA, GDPR, Delibere) + idee nuove dalla sessione di ideazione 2026-06-11
+- **§1 Strategia attuale** — mock-first, tre direttrici, dati reali in pausa
+- **§2 Completato** — v1 base, review sicurezza, Community MVP, Community v2, Fase 0 Hardening, Fase 1 Abilitatori, review a11y/UX, **Ondata 2 Semplicità & profilo (2026-06-11)**
+- **§3 Piano operativo a ondate** — O1 Segnalazioni 2.0 → ~~O2 Semplicità & profilo~~ ✅ (2026-06-11) → O3 Trasparenza → O4 Territorio & partecipazione → O5 Admin & nuovi pubblici
+- **§4 Catalogo delle idee per tema** — tutte le idee deduplicate con fonte e stato (✅/🔜/📋/💡/🧊)
+- **§5 Regole di prodotto** — vincoli trasversali (AI suggerisce mai decide, no gamification competitiva, privacy aggregata, semplicità non negoziabile…)
+- **§6–7 In pausa** — dati reali (fonti + ETL) e fiducia istituzionale (SPID, GDPR, AgID…)
+- **§8 Rischi** — aggiornati alla strategia mock-first

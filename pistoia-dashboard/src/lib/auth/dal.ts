@@ -3,6 +3,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { validateSession } from "./session";
 import { isStaff, canModerate, type Role, type AccountType } from "@/lib/community";
+import { parseCivicInterests, type CivicTopicKey } from "@/lib/civic-topics";
 
 export type CurrentUser = {
   id: string;
@@ -19,6 +20,10 @@ export type CurrentUser = {
   neighborhoodId: string | null;
   emailVerified: boolean;
   geoConsent: boolean;
+  /** Parsed civic-topic keys ("Per te" feed); empty = never chosen or none. */
+  civicInterests: CivicTopicKey[];
+  /** True when the user has saved civic preferences at least once. */
+  hasChosenInterests: boolean;
   createdAt: Date;
 };
 
@@ -49,6 +54,8 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     neighborhoodId: u.neighborhoodId,
     emailVerified: u.emailVerified,
     geoConsent: u.geoConsent,
+    civicInterests: parseCivicInterests(u.civicInterests),
+    hasChosenInterests: u.civicInterests !== null,
     createdAt: u.createdAt,
   };
 });

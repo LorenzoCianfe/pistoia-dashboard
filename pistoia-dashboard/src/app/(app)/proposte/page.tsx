@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Alert } from "@/components/ui/alert";
 import { ProposalCard } from "@/components/community/proposal-card";
-import { ProposalComposer } from "@/components/community/proposal-composer";
+import { ProposalWizard } from "@/components/community/proposal-wizard";
 import { PROPOSAL_THRESHOLDS } from "@/lib/community";
 import { cn } from "@/lib/utils";
 
@@ -59,14 +59,14 @@ export default async function PropostePage({
               </span>
               <div>
                 <p className="font-semibold">Nuova proposta</p>
-                <p className="text-xs text-muted">Un’idea concreta per migliorare la città</p>
+                <p className="text-xs text-muted">Ti guidiamo noi, una domanda alla volta</p>
               </div>
             </div>
             <span className="text-sm font-semibold text-teal group-open:hidden">Apri</span>
             <span className="hidden text-sm font-semibold text-muted group-open:inline">Chiudi</span>
           </summary>
           <div className="border-t border-border p-5 sm:p-6">
-            <ProposalComposer
+            <ProposalWizard
               neighborhoods={neighborhoods}
               defaultNeighborhoodId={user.neighborhoodId}
             />

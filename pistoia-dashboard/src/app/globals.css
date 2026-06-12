@@ -126,6 +126,12 @@
     text-rendering: optimizeLegibility;
   }
 
+  /* Modalità semplice (A1 §19): scala tutta la tipografia (unità rem) e dà
+     più aria ai bersagli touch. Attivata dalla classe sul root via cookie. */
+  html.simple-mode {
+    font-size: 115%;
+  }
+
   body {
     background-color: var(--bg);
     color: var(--foreground);

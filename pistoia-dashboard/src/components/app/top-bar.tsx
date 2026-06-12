@@ -4,6 +4,7 @@ import { Crest } from "@/components/brand/crest";
 import { PreviewBadge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { ProfileMenu } from "./profile-menu";
+import { CommandPalette } from "./command-palette";
 import type { CurrentUser } from "@/lib/auth/dal";
 
 export function TopBar({
@@ -25,6 +26,7 @@ export function TopBar({
         </Link>
 
         <div className="flex items-center gap-2">
+          <CommandPalette />
           <ThemeToggle />
           <Link
             href="/notifiche"

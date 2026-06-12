@@ -1,6 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Settings, ShieldCheck, Palette, LogOut, KeyRound, Bell, Lock } from "lucide-react";
+import { cookies } from "next/headers";
+import {
+  Settings,
+  ShieldCheck,
+  Palette,
+  LogOut,
+  KeyRound,
+  Bell,
+  Lock,
+  HeartHandshake,
+} from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
 import { logoutEverywhereAction } from "@/app/actions/profile";
 import { getNotifPrefs } from "@/lib/data/preferences";
@@ -11,12 +21,16 @@ import { ChangePasswordForm } from "@/components/impostazioni/change-password-fo
 import { ThemeSelector } from "@/components/impostazioni/theme-selector";
 import { NotificationPreferencesForm } from "@/components/impostazioni/notification-preferences-form";
 import { PrivacyControls } from "@/components/impostazioni/privacy-controls";
+import { CivicInterestsForm } from "@/components/impostazioni/civic-interests-form";
+import { SimpleModeToggle } from "@/components/impostazioni/simple-mode-toggle";
+import { SIMPLE_MODE_COOKIE } from "@/lib/ui-prefs";
 
 export const metadata: Metadata = { title: "Impostazioni" };
 
 export default async function ImpostazioniPage() {
   const user = await requireUser();
   const prefs = await getNotifPrefs(user.id);
+  const simpleMode = (await cookies()).get(SIMPLE_MODE_COOKIE)?.value === "1";
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
@@ -25,6 +39,20 @@ export default async function ImpostazioniPage() {
         title="Impostazioni"
         icon={<Settings size={22} />}
       />
+
+      {/* Temi civici (A2 §3) */}
+      <Card id="temi-civici" className="scroll-mt-24">
+        <div className="flex items-center gap-2">
+          <HeartHandshake size={18} className="text-teal" />
+          <h2 className="text-base font-semibold">I tuoi temi</h2>
+        </div>
+        <p className="mt-1 text-sm text-muted">
+          La home &ldquo;Per te&rdquo; mostra prima le novità sui temi che scegli qui.
+        </p>
+        <div className="mt-4">
+          <CivicInterestsForm interests={user.civicInterests} />
+        </div>
+      </Card>
 
       {/* Notifiche */}
       <Card>
@@ -51,6 +79,9 @@ export default async function ImpostazioniPage() {
         </p>
         <div className="mt-4">
           <ThemeSelector />
+        </div>
+        <div className="mt-4 border-t border-border pt-4">
+          <SimpleModeToggle enabled={simpleMode} />
         </div>
       </Card>
 

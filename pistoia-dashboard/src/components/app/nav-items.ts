@@ -51,3 +51,61 @@ export const ADMIN_NAV: NavItem = {
   icon: Shield,
   core: false,
 };
+
+// ---------------------------------------------------------------------------
+// Percorsi guidati "Cosa vuoi fare?" (A1 §23) — condivisi tra la home e le
+// azioni rapide della palette di ricerca.
+// ---------------------------------------------------------------------------
+
+export type GuidedAction = {
+  href: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  color: "teal" | "viola" | "amber" | "green" | "red";
+};
+
+export const GUIDED_ACTIONS: GuidedAction[] = [
+  {
+    href: "/segnalazioni",
+    title: "Segnala un problema",
+    description: "Buche, lampioni, rifiuti: avvisa il Comune",
+    icon: Megaphone,
+    color: "amber",
+  },
+  {
+    href: "/proposte",
+    title: "Proponi un'idea",
+    description: "Un'idea concreta per migliorare la città",
+    icon: Lightbulb,
+    color: "green",
+  },
+  {
+    href: "/sondaggi",
+    title: "Partecipa a un sondaggio",
+    description: "Di' la tua sulle scelte della città",
+    icon: Vote,
+    color: "viola",
+  },
+  {
+    href: "/bilancio",
+    title: "Scopri dove vanno i soldi",
+    description: "Il bilancio del Comune, leggibile",
+    icon: Wallet,
+    color: "teal",
+  },
+  {
+    href: "/eventi",
+    title: "Trova un evento",
+    description: "Cosa succede in città nei prossimi giorni",
+    icon: CalendarDays,
+    color: "viola",
+  },
+  {
+    href: "/organigramma",
+    title: "Contatta il Comune",
+    description: "Uffici, assessori e referenti",
+    icon: Network,
+    color: "red",
+  },
+];

@@ -31,6 +31,7 @@ model User {
   neighborhood   Neighborhood? @relation(fields: [neighborhoodId], references: [id], onDelete: SetNull)
   emailVerified Boolean  @default(false)
   geoConsent    Boolean  @default(false) // consent to share precise geolocation (§23)
+  civicInterests String? // JSON array of civic-topic keys (A2 §3); null = preferences never chosen
   suspendedUntil DateTime? // temporary suspension end set by moderation (§14)
   banned        Boolean  @default(false) // permanent ban set by moderation (§14)
   createdAt     DateTime @default(now())
@@ -206,6 +207,8 @@ model Proposal {
   authorColor      String    @default("teal")
   title            String
   description      String
+  problem          String? // "qual è il problema?" — separate step of the guided wizard (A1 §14)
+  affectedGroups   String? // JSON array of impacted citizen-group keys (A2 §26)
   category         String?
   neighborhoodId   String?
   neighborhood     Neighborhood? @relation(fields: [neighborhoodId], references: [id], onDelete: SetNull)
@@ -214,6 +217,13 @@ model Proposal {
   baseSupports     Int       @default(0) // mock baseline of supporters
   officialReply    String?
   officialReplyAt  DateTime?
+
+  // Valutazione sintetica del Comune (A1 §15 + A2 §10): indicativa, mai vincolante.
+  estimatedImpact  String? // basso | medio | alto
+  estimatedCost    String? // basso | medio | alto (mostrato come € / €€ / €€€)
+  estimatedTime    String? // breve | medio | lungo
+  feasibility      String? // da_valutare | fattibile | complessa
+  assessedAt       DateTime? // quando il Comune ha compilato la valutazione
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 

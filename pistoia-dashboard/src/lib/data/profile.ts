@@ -24,6 +24,43 @@ export async function getProfileStats(userId: string) {
   };
 }
 
+/**
+ * "Il mio impatto civico": esiti, non solo conteggi (A2 §2 + idea 2026-06-11).
+ * Query aggregate sui modelli esistenti — nessuna migrazione necessaria.
+ */
+export async function getCivicImpact(userId: string) {
+  const [
+    reportsTotal,
+    reportsResolved,
+    proposalsTotal,
+    proposalsAnswered,
+    votes,
+    supportsGiven,
+    confirmationsGiven,
+  ] = await Promise.all([
+    prisma.report.count({ where: { authorId: userId } }),
+    prisma.report.count({
+      where: { authorId: userId, status: { in: ["risolta", "chiusa"] } },
+    }),
+    prisma.proposal.count({ where: { authorId: userId } }),
+    prisma.proposal.count({
+      where: { authorId: userId, officialReply: { not: null } },
+    }),
+    prisma.vote.count({ where: { userId } }),
+    prisma.proposalSupport.count({ where: { userId } }),
+    prisma.reportConfirmation.count({ where: { userId } }),
+  ]);
+  return {
+    reports: { total: reportsTotal, resolved: reportsResolved },
+    proposals: { total: proposalsTotal, answered: proposalsAnswered },
+    votes,
+    supportsGiven,
+    confirmationsGiven,
+  };
+}
+
+export type CivicImpact = Awaited<ReturnType<typeof getCivicImpact>>;
+
 /** Badges, verification requests and org profile for the profile page. */
 export async function getProfileExtras(userId: string) {
   const [badges, verifications, organization, neighborhood] = await Promise.all([
