@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import { cookies, headers } from "next/headers";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
@@ -9,6 +9,15 @@ const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
   subsets: ["latin"],
   display: "swap",
+});
+
+// Voce display della piattaforma (DESIGN.md §3): serve solo ai titoli e ai
+// numeri protagonisti, mai al testo corrente.
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  display: "swap",
+  axes: ["opsz"],
 });
 
 export const metadata: Metadata = {
@@ -49,7 +58,7 @@ export default async function RootLayout({
     <html
       lang="it"
       suppressHydrationWarning
-      className={`${jakarta.variable} h-full antialiased${simpleMode ? " simple-mode" : ""}`}
+      className={`${jakarta.variable} ${fraunces.variable} h-full antialiased${simpleMode ? " simple-mode" : ""}`}
     >
       <body className="min-h-full">
         <ThemeProvider

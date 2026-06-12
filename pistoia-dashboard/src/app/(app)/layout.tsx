@@ -3,6 +3,7 @@ import { getUnreadCount } from "@/lib/data/notifiche";
 import { TopBar } from "@/components/app/top-bar";
 import { SideNav } from "@/components/app/side-nav";
 import { BottomNav } from "@/components/app/bottom-nav";
+import { DemoTour } from "@/components/app/demo-tour";
 import { Footer } from "@/components/app/footer";
 
 export default async function AppLayout({
@@ -36,6 +37,9 @@ export default async function AppLayout({
         </main>
       </div>
       <BottomNav />
+      {/* Modalità presentazione (O0): vive nel layout così sopravvive alle
+          navigazioni tra i passi del tour. */}
+      <DemoTour />
     </div>
   );
 }

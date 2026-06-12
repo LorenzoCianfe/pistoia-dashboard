@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth/dal";
 import { getReports, getReportStats } from "@/lib/data/reports";
 import { getNeighborhoods } from "@/lib/data/neighborhoods";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Stat } from "@/components/ui/stat";
 import { ReportCard } from "@/components/community/report-card";
@@ -92,9 +93,10 @@ export default async function SegnalazioniPage({
       </div>
 
       {reports.length === 0 ? (
-        <Card className="text-center text-sm text-muted">
-          Nessuna segnalazione qui. Sii il primo a segnalare un problema del tuo quartiere.
-        </Card>
+        <EmptyState
+          title="Nessuna segnalazione qui"
+          description="Con questi filtri non c'è ancora nulla. Sii il primo a segnalare un problema del tuo quartiere."
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {reports.map((r) => (

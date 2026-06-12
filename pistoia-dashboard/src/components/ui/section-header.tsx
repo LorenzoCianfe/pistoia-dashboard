@@ -26,7 +26,7 @@ export function SectionHeader({
         ) : null}
         <div className="flex items-center gap-2.5">
           {icon ? <span className="text-teal">{icon}</span> : null}
-          <h1 className="text-2xl font-bold tracking-tight sm:text-[28px]">
+          <h1 className="font-display text-[26px] font-semibold tracking-tight sm:text-[30px]">
             {title}
           </h1>
         </div>

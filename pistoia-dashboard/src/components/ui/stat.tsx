@@ -24,7 +24,7 @@ export function Stat({
     >
       <p className="text-xs font-medium text-muted">{label}</p>
       <div className="mt-1 flex items-baseline gap-2">
-        <span className="text-xl font-bold tracking-tight tabular-nums">
+        <span className="font-display text-[22px] font-semibold tracking-tight tabular-nums">
           {value}
         </span>
         {trend ? (

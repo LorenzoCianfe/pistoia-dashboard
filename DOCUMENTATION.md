@@ -1,7 +1,7 @@
 # Dashboard di Pistoia — Documentazione
 
 > Documento vivo. Viene aggiornato a ogni cambiamento rilevante del progetto.
-> Ultimo aggiornamento: 2026-06-11
+> Ultimo aggiornamento: 2026-06-12
 
 ---
 
@@ -339,11 +339,17 @@ dimostrativo del seed). Migrazioni applicate: `community_mvp`, `community_v2`, *
 
 ## 8. Design
 
-Moderno e minimal, mobile-first. Sfondo quasi bianco con sfumature morbide di **teal (verde acqua)**
-e **viola** agli angoli; badge **ambra**; il rosso dello **stemma a scacchi** di Pistoia. Linee
-morbide (raggi generosi), ombre delicate, font **Plus Jakarta Sans**. Numeri, anelli, linee e barre
-si animano all'ingresso ("i dati che arrivano in tempo reale"); ogni sezione entra con uno
-scivolamento verso l'alto, come nelle app native. Rispetta `prefers-reduced-motion`.
+La direzione estetica completa (carattere, motivi identitari, tipografia, colore, motion, data-viz,
+tema scuro, accessibilità) è formalizzata in **[`DESIGN.md`](./DESIGN.md)** (Ondata 0, 2026-06-12).
+
+In sintesi: istituzionale toscano contemporaneo, mobile-first. Sfondo quasi bianco con bagliori di
+**teal (verde acqua)** e **viola** agli angoli (più intensi nel tema scuro); badge **ambra**; il
+rosso dello **stemma a scacchi** riservato a brand e urgenza. Tre motivi identitari come unico
+vocabolario decorativo: **scacchiera** dello stemma, **fasce romaniche** (San Giovanni Fuorcivitas),
+**città verde** (vivai). Tipografia a due voci: **Fraunces** (serif display, solo titoli e numeri
+protagonisti) + **Plus Jakarta Sans** (interfaccia). Motion sobrio: View Transitions sulle rotte,
+ingresso di pagina con scivolamento, utility `.stagger`/`.pulse-civico`, easing
+`--ease-out-civic`. Rispetta `prefers-reduced-motion`.
 
 ---
 
@@ -487,6 +493,28 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   Vitest **47/47** (15 nuovi su taxonomy/parse/matchTopic), Playwright 5/5, `next build` pulito.
   Tutto ancora **dati mockup**.
 
+- **2026-06-12 (Ondata 0 — Fondamenta visive & design system)** — Direzione estetica formalizzata in
+  **`DESIGN.md`** (carattere istituzionale toscano, 3 motivi identitari, regole di colore/motion/
+  data-viz, "Sì/No"); ROADMAP.md riscritto come documento professionale (visione / obiettivi OB-1…OB-5 /
+  ondate / catalogo con tag di livello FE·DES·UX·BE·ENG·SEC·A11Y·AI; regole nuove n. 8 design e n. 9
+  sponsor; feature "Vetrina aziende & sponsorizzazioni" pianificata in O5). Implementazione:
+  **token estesi** in `globals.css` (`--font-display` Fraunces via next/font, `--ease-out-civic`,
+  `--glow-alpha` con boost serale, `color-scheme`) + utility identitarie (`.bande-romaniche`,
+  `.scacchiera`, `.divider-bande`) e motion (`.page-enter`, `.stagger`, `.pulse-civico`);
+  **View Transitions** (`experimental.viewTransition` + `<ViewTransition>` nel template, tipi
+  `react/canary` in `src/types/react-canary.d.ts`); **EmptyState** illustrato (arco romanico +
+  scacchiera, `ui/empty-state.tsx`) adottato in segnalazioni/proposte/eventi/comunità/notifiche;
+  **centro notifiche 2.0** (filtri per tema, bucket Oggi/Settimana/Più vecchie, azione inline "segna
+  letta", `Date.now` spostato in state initializer per la regola react-hooks/purity);
+  **command palette 2.0** (tipo `Item.run`: comandi "tema chiaro/scuro" e "avvia presentazione",
+  evento `TOUR_START_EVENT`); **tour demo** in 9 passi (`app/demo-tour.tsx`, scheda non modale nel
+  layout, naviga tra le rotte, Esc chiude, tacche di avanzamento); **treemap squarified** del
+  bilancio (`charts/treemap.tsx`, server-only, celle %, etichette adattive, elenco testuale in
+  `<details>`); titoli e numeri protagonisti in Fraunces (SectionHeader, Stat, hero bilancio).
+  Verificato: `tsc` pulito, eslint 0 problemi, Vitest 47/47, Playwright 5/5, `next build` pulito.
+  Nota ambiente: il dev server manuale è morto in OOM di sistema durante un check visivo
+  (irrilevante per il codice: build e E2E verdi). Tutto ancora **dati mockup**.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.
@@ -497,11 +525,15 @@ reale) e si evolve su tre direttrici — funzionalità, semplicità d'uso, estet
 ~60 proposte) sono stati analizzati, deduplicati e integrati nella roadmap con riferimenti `A1 §n`/`A2 §n`.
 L'ex "Fase 2 dati reali" e l'ex "Fase 4 fiducia istituzionale" sono **in pausa**, conservate integralmente.
 
-Struttura del documento:
-- **§1 Strategia attuale** — mock-first, tre direttrici, dati reali in pausa
-- **§2 Completato** — v1 base, review sicurezza, Community MVP, Community v2, Fase 0 Hardening, Fase 1 Abilitatori, review a11y/UX, **Ondata 2 Semplicità & profilo (2026-06-11)**
-- **§3 Piano operativo a ondate** — O1 Segnalazioni 2.0 → ~~O2 Semplicità & profilo~~ ✅ (2026-06-11) → O3 Trasparenza → O4 Territorio & partecipazione → O5 Admin & nuovi pubblici
-- **§4 Catalogo delle idee per tema** — tutte le idee deduplicate con fonte e stato (✅/🔜/📋/💡/🧊)
-- **§5 Regole di prodotto** — vincoli trasversali (AI suggerisce mai decide, no gamification competitiva, privacy aggregata, semplicità non negoziabile…)
-- **§6–7 In pausa** — dati reali (fonti + ETL) e fiducia istituzionale (SPID, GDPR, AgID…)
-- **§8 Rischi** — aggiornati alla strategia mock-first
+**Riscrittura professionale (2026-06-11/12):** ROADMAP.md è ora diviso tra visione e piano, con tag
+di livello (FE·DES·UX·BE·ENG·SEC·A11Y·AI) su ogni idea e 18 proposte nuove (🆕). Struttura:
+- **§0 Come leggere** — legende di stato e di livello
+- **§1 Visione** — north star, "cosa è / cosa non è", tre direttrici, decisione mock
+- **§2 Obiettivi** — OB-1…OB-5 verificabili (ciclo civico chiuso, design distintivo, semplicità radicale, demo autoesplicativa, qualità continua)
+- **§3 Completato** — …, **Ondata 2 Semplicità & profilo (2026-06-11)**, **Ondata 0 Fondamenta visive (2026-06-12)**
+- **§4 Piano a ondate** — ~~O0 Fondamenta visive~~ ✅ → O1 Segnalazioni 2.0 (prossima) → O3 Trasparenza → O4 Territorio & partecipazione → O5 Admin & nuovi pubblici (con **Vetrina aziende & sponsor**) + traccia "Qualità continua"
+- **§5 Nuove proposte (revisione 2026-06-11)** — le 🆕 con motivazione e destinazione
+- **§6 Catalogo delle idee per tema** — tutte le idee deduplicate con livello, fonte e stato (✅/🔜/📋/💡/🧊)
+- **§7 Regole di prodotto** — 9 vincoli trasversali (…, n. 8 "il design è progettato, non generato" → `DESIGN.md`, n. 9 "gli sponsor sono ospiti, non padroni")
+- **§8–9 In pausa** — dati reali (fonti + ETL) e fiducia istituzionale (SPID, GDPR, AgID…)
+- **§10 Rischi** — aggiunto il design debt, mitigato da O0 + token

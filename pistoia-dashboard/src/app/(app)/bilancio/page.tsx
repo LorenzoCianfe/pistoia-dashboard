@@ -8,6 +8,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Stat } from "@/components/ui/stat";
 import { RingGauge } from "@/components/charts/ring-gauge";
 import { LineChart } from "@/components/charts/line-chart";
+import { Treemap } from "@/components/charts/treemap";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { formatEuro, formatEuroCompact, monthLabel } from "@/lib/format";
@@ -52,9 +53,9 @@ export default async function BilancioPage() {
             <p className="text-sm font-medium text-muted">
               Spesa programmata per il 2026
             </p>
-            <p className="mt-2 flex items-baseline gap-2 text-5xl font-extrabold tracking-tight sm:text-6xl">
+            <p className="font-display mt-2 flex items-baseline gap-2 text-5xl font-semibold tracking-tight sm:text-6xl">
               <AnimatedNumber value={milioni} />
-              <span className="text-2xl font-bold text-muted">mln €</span>
+              <span className="text-2xl font-medium text-muted">mln €</span>
             </p>
             <p className="mt-2 text-sm text-muted-2">{formatEuro(by.totalSpesa)}</p>
           </div>
@@ -117,37 +118,55 @@ export default async function BilancioPage() {
         </div>
       </Card>
 
-      {/* Spesa per missione */}
+      {/* Spesa per missione: la treemap fa vedere le proporzioni a colpo
+          d'occhio; l'elenco resta come lettura alternativa. */}
       <Card>
-        <h2 className="text-base font-semibold">Spesa per missione</h2>
+        <h2 className="text-base font-semibold">Dove vanno i {milioni} milioni</h2>
         <p className="text-sm text-muted">
-          Come si distribuiscono i {milioni} milioni di euro.
+          Ogni riquadro è una missione di spesa: più è grande, più risorse riceve.
         </p>
-        <ul className="mt-5 space-y-4">
-          {by.categories.map((c, i) => (
-            <li key={c.id}>
-              <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
-                <span className="flex items-center gap-2 font-medium">
-                  <span
-                    className="size-2.5 rounded-full"
-                    style={{ backgroundColor: accent(c.color).fg }}
-                  />
-                  {c.label}
-                </span>
-                <span className="font-semibold tabular-nums">
-                  {formatEuroCompact(c.amount)}
-                </span>
-              </div>
-              <ProgressBar
-                value={(c.amount / maxCategory) * 100}
-                gradient={false}
-                color={c.color}
-                delay={i * 0.08}
-                height={8}
-              />
-            </li>
-          ))}
-        </ul>
+        <Treemap
+          className="mt-5"
+          ariaLabel={`Spesa 2026 per missione, ${milioni} milioni di euro in totale`}
+          data={by.categories.map((c) => ({
+            id: c.id,
+            label: c.label,
+            value: c.amount,
+            color: c.color,
+          }))}
+          format={formatEuroCompact}
+        />
+        <details className="group mt-4">
+          <summary className="cursor-pointer text-sm font-medium text-teal transition-colors hover:text-teal-strong">
+            <span className="group-open:hidden">Vedi come elenco</span>
+            <span className="hidden group-open:inline">Nascondi l&apos;elenco</span>
+          </summary>
+          <ul className="mt-4 space-y-4">
+            {by.categories.map((c, i) => (
+              <li key={c.id}>
+                <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
+                  <span className="flex items-center gap-2 font-medium">
+                    <span
+                      className="size-2.5 rounded-full"
+                      style={{ backgroundColor: accent(c.color).fg }}
+                    />
+                    {c.label}
+                  </span>
+                  <span className="font-semibold tabular-nums">
+                    {formatEuroCompact(c.amount)}
+                  </span>
+                </div>
+                <ProgressBar
+                  value={(c.amount / maxCategory) * 100}
+                  gradient={false}
+                  color={c.color}
+                  delay={i * 0.08}
+                  height={8}
+                />
+              </li>
+            ))}
+          </ul>
+        </details>
       </Card>
 
       <SourceBadge source={sourceInfo("bilancio", by)} />

@@ -9,9 +9,11 @@
   the red of the city's checkered crest. Soft, gentle, rounded.
 */
 :root {
+  color-scheme: light;
   --bg: #fbfbfd;
   --bg-tint-teal: 20 184 166; /* rgb channels for layered glows */
   --bg-tint-viola: 138 123 240;
+  --glow-alpha: 0.1; /* intensità dei bagliori d'angolo (più alta di sera) */
   --surface: #ffffff;
   --surface-2: #f4f5f9;
   --surface-3: #eceef4;
@@ -44,9 +46,12 @@
 }
 
 .dark {
+  color-scheme: dark;
   --bg: #0e1117;
   --bg-tint-teal: 20 184 166;
   --bg-tint-viola: 138 123 240;
+  /* Di sera le luci della città si vedono di più (DESIGN.md §9). */
+  --glow-alpha: 0.17;
   --surface: #161a23;
   --surface-2: #1c212c;
   --surface-3: #232938;
@@ -103,6 +108,11 @@
   --radius-pill: var(--radius-pill);
 
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  /* Voce display (DESIGN.md §3): solo titoli e numeri protagonisti, ≥20px. */
+  --font-display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
+
+  /* Easing di sistema: ease-out-quint per gli ingressi (DESIGN.md §6). */
+  --ease-out-civic: cubic-bezier(0.22, 1, 0.36, 1);
 
   --animate-shimmer: shimmer 2.2s linear infinite;
 
@@ -140,12 +150,12 @@
     background-image:
       radial-gradient(
         60rem 40rem at 110% -10%,
-        rgb(var(--bg-tint-teal) / 0.1),
+        rgb(var(--bg-tint-teal) / var(--glow-alpha)),
         transparent 60%
       ),
       radial-gradient(
         55rem 38rem at -10% 110%,
-        rgb(var(--bg-tint-viola) / 0.1),
+        rgb(var(--bg-tint-viola) / var(--glow-alpha)),
         transparent 60%
       );
     background-attachment: fixed;
@@ -232,6 +242,97 @@
     animation: var(--animate-shimmer);
     border-radius: var(--radius-sm);
   }
+
+  /*
+    Motivi identitari (DESIGN.md §2) — l'unico vocabolario decorativo ammesso.
+  */
+
+  /* Le fasce romaniche di San Giovanni Fuorcivitas: ritmo orizzontale tenue,
+     per hero, empty state e momenti editoriali. Mai zebra dura. */
+  .bande-romaniche {
+    background-image: repeating-linear-gradient(
+      180deg,
+      transparent 0,
+      transparent 0.625rem,
+      color-mix(in oklab, var(--foreground) 3.5%, transparent) 0.625rem,
+      color-mix(in oklab, var(--foreground) 3.5%, transparent) 1.25rem
+    );
+  }
+
+  /* La scacchiera dello stemma: micro-pattern bianco/rosso per i momenti di
+     brand (crest, Civic ID, tour). Da usare piccolo e con parsimonia. */
+  .scacchiera {
+    background-image: conic-gradient(
+      var(--red) 25%,
+      transparent 0 50%,
+      var(--red) 0 75%,
+      transparent 0
+    );
+    background-size: 0.75rem 0.75rem;
+  }
+
+  /* Separatore di sezione a fasce: alternativa decorativa alla linea. */
+  .divider-bande {
+    height: 4px;
+    border: 0;
+    background-image: repeating-linear-gradient(
+      90deg,
+      var(--border-strong) 0,
+      var(--border-strong) 1.5rem,
+      transparent 1.5rem,
+      transparent 3rem
+    );
+  }
+
+  /*
+    Motion di sistema (DESIGN.md §6): un'unica orchestrazione d'ingresso.
+  */
+
+  /* Ingresso pagina: applicato dal template di rotta, si ripete a ogni
+     navigazione. */
+  .page-enter {
+    animation: rise-in 0.45s var(--ease-out-civic) both;
+  }
+
+  /* Orchestrazione hero: titolo → contenuto → dettagli, stagger 50ms.
+     Da applicare a UN solo contenitore per pagina. */
+  .stagger > * {
+    animation: rise-in 0.5s var(--ease-out-civic) both;
+  }
+  .stagger > :nth-child(1) { animation-delay: 0ms; }
+  .stagger > :nth-child(2) { animation-delay: 50ms; }
+  .stagger > :nth-child(3) { animation-delay: 100ms; }
+  .stagger > :nth-child(4) { animation-delay: 150ms; }
+  .stagger > :nth-child(5) { animation-delay: 200ms; }
+  .stagger > :nth-child(n + 6) { animation-delay: 250ms; }
+
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Festa misurata per le azioni civiche andate a buon fine (invio
+     segnalazione, firma proposta): un solo battito, niente coriandoli. */
+  .pulse-civico {
+    animation: pulse-civico 0.5s var(--ease-out-civic);
+  }
+  @keyframes pulse-civico {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.06); }
+    100% { transform: scale(1); }
+  }
+}
+
+/* Transizioni di rotta (View Transitions): cross-fade rapido e sobrio. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
 }
 
 @media (prefers-reduced-motion: reduce) {

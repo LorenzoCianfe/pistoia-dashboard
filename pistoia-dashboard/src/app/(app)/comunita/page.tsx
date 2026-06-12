@@ -5,6 +5,7 @@ import { getCommunityFeed } from "@/lib/data/comunita";
 import { getServiceReviews } from "@/lib/data/sondaggi";
 import { getNeighborhoods } from "@/lib/data/neighborhoods";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { SectionHeader } from "@/components/ui/section-header";
 import { StarRating } from "@/components/ui/star-rating";
 import { Composer } from "@/components/comunita/composer";
@@ -40,9 +41,11 @@ export default async function ComunitaPage() {
       />
 
       {feed.length === 0 ? (
-        <Card className="text-center text-sm text-muted">
-          Ancora nessuna conversazione. Apri tu la prima domanda al Comune.
-        </Card>
+        <EmptyState
+          accent="viola"
+          title="Ancora nessuna conversazione"
+          description="Questo è lo spazio del dialogo con il Comune. Apri tu la prima domanda."
+        />
       ) : (
         <div className="space-y-4">
           {feed.map((post) => (

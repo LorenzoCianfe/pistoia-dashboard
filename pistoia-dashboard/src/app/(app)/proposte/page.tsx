@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth/dal";
 import { getProposals } from "@/lib/data/proposals";
 import { getNeighborhoods } from "@/lib/data/neighborhoods";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Alert } from "@/components/ui/alert";
 import { ProposalCard } from "@/components/community/proposal-card";
@@ -84,9 +85,11 @@ export default async function PropostePage({
       </div>
 
       {sorted.length === 0 ? (
-        <Card className="text-center text-sm text-muted">
-          Ancora nessuna proposta. Lancia tu la prima idea per la città.
-        </Card>
+        <EmptyState
+          accent="viola"
+          title="Ancora nessuna proposta"
+          description="Le idee dei cittadini nascono qui. Lancia tu la prima per la città."
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {sorted.map((p) => (

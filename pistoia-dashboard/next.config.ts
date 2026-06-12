@@ -36,6 +36,9 @@ const nextConfig: NextConfig = {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
   experimental: {
+    // Transizioni di rotta native (DESIGN.md §6): React <ViewTransition>
+    // attivato dalle navigazioni dell'App Router.
+    viewTransition: true,
     // Keep server action payloads small; we only pass tiny form data.
     serverActions: {
       bodySizeLimit: "1mb",

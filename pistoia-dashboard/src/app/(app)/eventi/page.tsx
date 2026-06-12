@@ -6,6 +6,7 @@ import { getPublishedEvents, getPendingEvents, type EventItem } from "@/lib/data
 import { getNeighborhoods } from "@/lib/data/neighborhoods";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { SectionHeader } from "@/components/ui/section-header";
 import { FollowButton } from "@/components/community/follow-button";
 import { EventComposer } from "@/components/eventi/event-composer";
@@ -96,12 +97,11 @@ export default async function EventiPage() {
 
       {/* Calendar */}
       {groups.length === 0 ? (
-        <Card>
-          <p className="text-sm text-muted-2">
-            Nessun evento in programma. Torna presto: il calendario si aggiorna con le iniziative del
-            Comune e delle associazioni.
-          </p>
-        </Card>
+        <EmptyState
+          accent="amber"
+          title="Nessun evento in programma"
+          description="Il calendario si aggiorna con le iniziative del Comune e delle associazioni. Torna presto."
+        />
       ) : (
         groups.map((g) => (
           <div key={g.label}>

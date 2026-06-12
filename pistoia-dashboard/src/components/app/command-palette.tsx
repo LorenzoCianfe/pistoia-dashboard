@@ -3,6 +3,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import {
   Search,
   Megaphone,
@@ -12,6 +13,9 @@ import {
   Vote,
   MapPinned,
   FileQuestion,
+  Moon,
+  Sun,
+  Play,
   type LucideIcon,
 } from "lucide-react";
 import { NAV_ITEMS, SECONDARY_NAV, GUIDED_ACTIONS } from "./nav-items";
@@ -27,7 +31,10 @@ type Item = {
   key: string;
   title: string;
   subtitle?: string | null;
-  href: string;
+  /** Destinazione di navigazione… */
+  href?: string;
+  /** …oppure comando da eseguire (palette 2.0: azioni, non solo ricerca). */
+  run?: () => void;
   group: string;
   icon: LucideIcon;
   color: AccentColor;
@@ -69,8 +76,12 @@ function norm(s: string) {
     .replace(/\p{Diacritic}/gu, "");
 }
 
+/** Evento con cui la palette avvia il tour demo (ascoltato da DemoTour). */
+export const TOUR_START_EVENT = "pst:tour:start";
+
 export function CommandPalette() {
   const router = useRouter();
+  const { resolvedTheme, setTheme } = useTheme();
   const listboxId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
@@ -125,12 +136,38 @@ export function CommandPalette() {
     }
   }
 
+  // Comandi (palette 2.0): eseguono qualcosa invece di navigare. Dipendono
+  // dal tema corrente, quindi vivono nel componente.
+  const commands = useMemo<Item[]>(
+    () => [
+      {
+        key: "cmd:theme",
+        title: resolvedTheme === "dark" ? "Attiva il tema chiaro" : "Attiva il tema scuro",
+        subtitle: "Cambia subito l'aspetto della piattaforma",
+        run: () => setTheme(resolvedTheme === "dark" ? "light" : "dark"),
+        group: "Comandi",
+        icon: resolvedTheme === "dark" ? Sun : Moon,
+        color: "viola",
+      },
+      {
+        key: "cmd:tour",
+        title: "Avvia la presentazione guidata",
+        subtitle: "La piattaforma si racconta da sola, passo passo",
+        run: () => window.dispatchEvent(new CustomEvent(TOUR_START_EVENT)),
+        group: "Comandi",
+        icon: Play,
+        color: "amber",
+      },
+    ],
+    [resolvedTheme, setTheme],
+  );
+
   // Lista piatta nell'ordine visivo: azioni e pagine che combaciano, poi i
   // contenuti, raggruppati per tipo.
   const items = useMemo<Item[]>(() => {
-    if (q.length === 0) return ACTIONS;
+    if (q.length === 0) return [...ACTIONS, ...commands];
     const nq = norm(q);
-    const staticMatches = [...ACTIONS, ...PAGES].filter((i) =>
+    const staticMatches = [...ACTIONS, ...commands, ...PAGES].filter((i) =>
       norm(i.title).includes(nq),
     );
     const dynamic = results.map<Item>((r) => ({
@@ -143,7 +180,7 @@ export function CommandPalette() {
       color: TYPE_META[r.type].color,
     }));
     return [...staticMatches, ...dynamic];
-  }, [q, results]);
+  }, [q, results, commands]);
 
   // L'indice attivo viene clampato in render: se la lista si accorcia mentre
   // arrivano i risultati non serve un effect per riportarlo in range.
@@ -190,9 +227,10 @@ export function CommandPalette() {
     setFailed(false);
   }
 
-  function go(href: string) {
+  function go(item: Item) {
     close();
-    router.push(href);
+    if (item.run) item.run();
+    else if (item.href) router.push(item.href);
   }
 
   function onInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -205,7 +243,7 @@ export function CommandPalette() {
     } else if (e.key === "Enter") {
       e.preventDefault();
       const item = items[safeActive];
-      if (item) go(item.href);
+      if (item) go(item);
     } else if (e.key === "Escape") {
       e.preventDefault();
       close();
@@ -311,7 +349,7 @@ export function CommandPalette() {
                     aria-selected={isActive}
                     tabIndex={-1}
                     onMouseMove={() => setActive(index)}
-                    onClick={() => go(item.href)}
+                    onClick={() => go(item)}
                     className={cn(
                       "flex cursor-pointer items-center gap-3 rounded-[var(--radius-sm)] px-3 py-2.5 transition-colors",
                       isActive ? "bg-surface-2" : "hover:bg-surface-2/60",
