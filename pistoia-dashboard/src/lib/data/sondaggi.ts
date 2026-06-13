@@ -27,6 +27,8 @@ export type PollResult = {
     color: string;
     votesElected: number;
   } | null;
+  /** Consultazione con documento (A2 §23, O4): null quando non c'è un documento. */
+  doc: { title: string; summary: string; url: string | null } | null;
   options: PollOptionResult[];
 };
 
@@ -69,6 +71,9 @@ export async function getPolls(userId: string): Promise<PollResult[]> {
             color: p.assessore.color,
             votesElected: p.assessore.votesElected,
           }
+        : null,
+      doc: p.docTitle
+        ? { title: p.docTitle, summary: p.docSummary ?? "", url: p.docUrl }
         : null,
       options: opts.map((o, i) => ({
         ...o,

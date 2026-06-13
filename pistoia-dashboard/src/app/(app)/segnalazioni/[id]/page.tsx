@@ -4,8 +4,11 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, Building2, Clock } from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
 import { getReport, getCategoryAvgDays } from "@/lib/data/reports";
+import { getProjectOfReport } from "@/lib/data/territorio";
+import { projectStatus } from "@/lib/territorio";
 import { isFollowing } from "@/lib/data/follow";
 import { getAnswerFeedback } from "@/lib/data/feedback";
+import { FolderKanban, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmButton } from "@/components/community/confirm-button";
@@ -37,6 +40,7 @@ export default async function ReportDetailPage({
   if (!report) notFound();
 
   const following = await isFollowing(user.id, "report", report.id);
+  const project = await getProjectOfReport(report.id);
   const cat = reportCategory(report.category);
   const urgency = reportUrgency(report.urgency);
   const avg = await getCategoryAvgDays(report.category);
@@ -134,6 +138,26 @@ export default async function ReportDetailPage({
           <FollowButton targetType="report" targetId={report.id} following={following} />
         </div>
       </Card>
+
+      {/* "Da segnalazione a progetto" (A2 §8, O4): se questa segnalazione fa
+          parte di un cluster diventato progetto, lo dichiariamo e ci si collega. */}
+      {project ? (
+        <Link href="/progetti">
+          <Card hover className="flex items-center gap-3 border-teal/30 bg-teal-soft/20">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-teal-soft text-teal" aria-hidden>
+              <FolderKanban size={19} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium text-muted-2">Parte di un progetto pubblico</p>
+              <p className="truncate text-sm font-semibold">{project.title}</p>
+            </div>
+            <Badge color={projectStatus(project.status).color}>
+              {projectStatus(project.status).label}
+            </Badge>
+            <ArrowRight size={16} className="shrink-0 text-muted-2" aria-hidden />
+          </Card>
+        </Link>
+      ) : null}
 
       {/* Foto per fase (A1 §4): prima dal cittadino, durante/dopo dal Comune */}
       {report.photoData || report.photos.length > 0 ? (

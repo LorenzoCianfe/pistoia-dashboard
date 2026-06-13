@@ -17,11 +17,14 @@ export function Composer({
   color,
   neighborhoods,
   defaultNeighborhoodId,
+  topic,
 }: {
   name: string;
   color: string;
   neighborhoods: NeighborhoodOption[];
   defaultNeighborhoodId?: string | null;
+  /** Stanza tematica (O4): il post nasce già nel tema della stanza. */
+  topic?: string;
 }) {
   const [state, action] = useActionState<FeedActionState, FormData>(
     createPostAction,
@@ -36,6 +39,7 @@ export function Composer({
   return (
     <Card>
       <form ref={formRef} action={action}>
+        {topic ? <input type="hidden" name="topic" value={topic} /> : null}
         <div className="flex gap-3">
           <Avatar name={name} color={color} />
           <div className="flex-1">

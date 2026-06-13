@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { MessagesSquare } from "lucide-react";
+import Link from "next/link";
+import { MessagesSquare, DoorOpen } from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
 import { getCommunityFeed } from "@/lib/data/comunita";
 import { getServiceReviews } from "@/lib/data/sondaggi";
@@ -11,6 +12,7 @@ import { StarRating } from "@/components/ui/star-rating";
 import { Composer } from "@/components/comunita/composer";
 import { PostCard } from "@/components/comunita/post-card";
 import { canModerate } from "@/lib/community";
+import { CIVIC_TOPICS, CIVIC_TOPIC_KEYS } from "@/lib/civic-topics";
 import { formatNumber } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Comunità" };
@@ -32,6 +34,27 @@ export default async function ComunitaPage() {
         description="Domande pubbliche dei cittadini e risposte ufficiali del Comune, visibili a tutti."
         icon={<MessagesSquare size={22} />}
       />
+
+      {/* Stanze tematiche (A1 §17, O4): l'ingresso per tema. */}
+      <nav aria-label="Stanze tematiche" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+        <Link
+          href="/comunita/stanze"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-pill border border-border-strong px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-teal hover:text-teal"
+        >
+          <DoorOpen size={13} aria-hidden />
+          Tutte le stanze
+        </Link>
+        {CIVIC_TOPIC_KEYS.slice(0, 6).map((key) => (
+          <Link
+            key={key}
+            href={`/comunita/stanze/${key}`}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-pill border border-border px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:border-teal hover:text-teal"
+          >
+            <span aria-hidden>{CIVIC_TOPICS[key].emoji}</span>
+            {CIVIC_TOPICS[key].label}
+          </Link>
+        ))}
+      </nav>
 
       <Composer
         name={user.name}

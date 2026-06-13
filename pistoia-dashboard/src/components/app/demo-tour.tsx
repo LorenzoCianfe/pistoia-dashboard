@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { TOUR_START_EVENT } from "./command-palette";
+import { completeTourAction } from "@/app/actions/onboarding";
 import { cn } from "@/lib/utils";
 
 /*
@@ -61,9 +62,14 @@ const STEPS: Step[] = [
     body: "Ogni proposta arriva a una decisione con il suo motivo — anche quando è un no. Promesse, avvisi urgenti e report mensile chiudono il cerchio della trasparenza.",
   },
   {
+    route: "/question-time",
+    title: "Il dialogo si fa strutturato",
+    body: "Question time con domande votate, «Vota la priorità» sugli interventi, volontariato e patti di quartiere: gli strumenti per decidere e fare insieme.",
+  },
+  {
     route: "/quartieri",
     title: "Il tuo quartiere",
-    body: "Ogni zona ha la sua pagina: segnalazioni, eventi e novità di chi ci vive.",
+    body: "Ogni zona ha la sua pagina con il diario della settimana: segnalazioni risolte, cantieri e novità di chi ci vive.",
   },
   {
     route: "/impostazioni",
@@ -103,6 +109,13 @@ export function DemoTour() {
     setStep(null);
     restoreFocusRef.current?.focus();
   }, []);
+
+  // L'ultimo passo conclude davvero il tour: lo ricordiamo sul profilo, così
+  // l'onboarding spunta il passo e l'invito non viene più riproposto.
+  const finish = useCallback(() => {
+    void completeTourAction();
+    close();
+  }, [close]);
 
   // Il focus va sulla scheda quando il tour parte; Esc chiude da ovunque.
   useEffect(() => {
@@ -187,7 +200,7 @@ export function DemoTour() {
             ) : null}
             <button
               type="button"
-              onClick={last ? close : () => goTo(step + 1)}
+              onClick={last ? finish : () => goTo(step + 1)}
               className="gradient-teal-viola inline-flex h-9 items-center gap-1.5 rounded-pill px-4 text-sm font-semibold text-white transition-[filter] hover:brightness-105"
             >
               {last ? "Concludi" : "Avanti"}

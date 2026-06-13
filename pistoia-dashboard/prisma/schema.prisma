@@ -34,6 +34,10 @@ model User {
   civicInterests String? // JSON array of civic-topic keys (A2 §3); null = preferences never chosen
   suspendedUntil DateTime? // temporary suspension end set by moderation (§14)
   banned        Boolean  @default(false) // permanent ban set by moderation (§14)
+  // Onboarding "primi passi in città" (O4): quando l'utente conclude il tour
+  // guidato e quando nasconde la checklist dei primi passi.
+  tourCompletedAt       DateTime?
+  onboardingDismissedAt DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -58,6 +62,10 @@ model User {
   operaComments       OperaComment[]
   commentReports      CommentReport[]
   answerFeedback      AnswerFeedback[]
+  qtQuestions         QtQuestion[]
+  qtVotes             QtVote[]
+  priorityVotes       PriorityVote[]
+  initiativeJoins     InitiativeJoin[]
 
   @@index([neighborhoodId])
 }
@@ -82,6 +90,10 @@ model Neighborhood {
   polls     Poll[]
   opere     Opera[]
   events    Event[]
+  initiatives   Initiative[]
+  adoptedPlaces AdoptedPlace[]
+  pacts         NeighborhoodPact[]
+  civicProjects CivicProject[]
 }
 
 // A request to verify a profile. In this mock phase verification is granted by
@@ -167,12 +179,18 @@ model Report {
   resolutionFeedback   String?
   resolutionFeedbackAt DateTime?
 
+  // "Da segnalazione a progetto" (A2 §8, O4): un cluster di segnalazioni
+  // diventa un progetto pubblico tracciato.
+  civicProjectId String?
+  civicProject   CivicProject? @relation(fields: [civicProjectId], references: [id], onDelete: SetNull)
+
   confirmations ReportConfirmation[]
   updates       ReportStatusHistory[]
   photos        ReportPhoto[]
 
   @@index([status])
   @@index([neighborhoodId])
+  @@index([civicProjectId])
 }
 
 // Foto per fase dell'intervento (A1 §4): "prima" dal cittadino (oltre alla
@@ -488,6 +506,11 @@ model Poll {
   active           Boolean       @default(true)
   kind             String        @default("sondaggio") // sondaggio | consultazione | territoriale
   requiresVerified Boolean       @default(false) // official consultations: verified citizens only
+  // Consultazioni strutturate con documenti (A2 §23, O4): il documento di
+  // riferimento e la sua sintesi in linguaggio semplice accompagnano il voto.
+  docTitle         String?
+  docSummary       String?
+  docUrl           String?
   neighborhoodId   String? // territorial poll scoped to an area
   neighborhood     Neighborhood? @relation(fields: [neighborhoodId], references: [id], onDelete: SetNull)
   assessoreId      String?
@@ -569,6 +592,9 @@ model CommunityPost {
   content        String
   imageSeed      String? // drives the decorative gradient
   category       String? // verde | mobilita | servizi | cultura
+  // Stanze tematiche (A1 §17, O4): la community si organizza anche per tema
+  // civico, non solo per quartiere. Chiave di CIVIC_TOPICS.
+  topic          String?
   neighborhoodId String?
   neighborhood   Neighborhood?   @relation(fields: [neighborhoodId], references: [id], onDelete: SetNull)
   hidden         Boolean         @default(false) // soft-hidden by moderation
@@ -792,4 +818,213 @@ model BlockedWord {
   word        String   @unique // stored lowercased
   createdById String? // reviewer id (display only, no relation)
   createdAt   DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Ondata 4 — Territorio & partecipazione
+// ---------------------------------------------------------------------------
+
+// Question time digitale (A2 §22): il Comune apre un tema, i cittadini fanno
+// domande e le votano; le più votate ricevono risposta ufficiale archiviata.
+model QuestionTime {
+  id          String    @id @default(cuid())
+  title       String
+  topic       String // chiave di CIVIC_TOPICS
+  description String
+  department  String? // chi risponde, es. "Assessorato alla Mobilità"
+  status      String    @default("aperto") // aperto | in_risposta | concluso
+  opensAt     DateTime  @default(now())
+  closesAt    DateTime?
+  createdAt   DateTime  @default(now())
+
+  questions QtQuestion[]
+
+  @@index([status])
+}
+
+model QtQuestion {
+  id             String    @id @default(cuid())
+  sessionId      String
+  session        QuestionTime @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  authorId       String?
+  author         User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorName     String
+  body           String
+  baseVotes      Int       @default(0) // mock baseline dei voti
+  officialAnswer String?
+  answeredAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  votes QtVote[]
+
+  @@index([sessionId])
+}
+
+model QtVote {
+  id         String     @id @default(cuid())
+  questionId String
+  question   QtQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime   @default(now())
+
+  @@unique([questionId, userId])
+  @@index([questionId])
+}
+
+// "Vota la priorità" (A2 §9): tornate di voto dei cittadini verificati su
+// interventi già validati dal Comune. Un voto per tornata.
+model PriorityRound {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  status      String    @default("aperta") // aperta | chiusa
+  closesAt    DateTime?
+  resultNote  String? // cosa ha fatto il Comune con l'esito
+  createdAt   DateTime  @default(now())
+
+  items PriorityItem[]
+  votes PriorityVote[]
+
+  @@index([status])
+}
+
+model PriorityItem {
+  id                String @id @default(cuid())
+  roundId           String
+  round             PriorityRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  title             String
+  description       String
+  category          String // categoria segnalazione (REPORT_CATEGORY)
+  neighborhoodLabel String? // zona interessata, etichetta libera
+  baseVotes         Int    @default(0)
+
+  votes PriorityVote[]
+
+  @@index([roundId])
+}
+
+model PriorityVote {
+  id        String        @id @default(cuid())
+  roundId   String
+  round     PriorityRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  itemId    String
+  item      PriorityItem  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+
+  @@unique([roundId, userId]) // un voto per tornata
+  @@index([itemId])
+}
+
+// Volontariato e iniziative (A2 §14): bacheca di Comune e associazioni,
+// con adesione dei cittadini.
+model Initiative {
+  id             String        @id @default(cuid())
+  title          String
+  description    String
+  category       String // pulizia | piantumazione | raccolta | sociale | formazione | cultura
+  organizerName  String // snapshot: "Comune di Pistoia", nome associazione…
+  official       Boolean       @default(false) // true = organizzata dal Comune
+  neighborhoodId String?
+  neighborhood   Neighborhood? @relation(fields: [neighborhoodId], references: [id], onDelete: SetNull)
+  location       String?
+  latitude       Float?
+  longitude      Float?
+  startAt        DateTime?
+  spots          Int? // posti disponibili; null = senza limite
+  baseJoins      Int           @default(0) // adesioni baseline mock
+  status         String        @default("aperta") // aperta | completa | conclusa
+  createdAt      DateTime      @default(now())
+
+  joins InitiativeJoin[]
+
+  @@index([status])
+  @@index([neighborhoodId])
+}
+
+model InitiativeJoin {
+  id           String     @id @default(cuid())
+  initiativeId String
+  initiative   Initiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@unique([initiativeId, userId])
+  @@index([initiativeId])
+}
+
+// "Adotta un luogo" (A2 §16, merge con i Patti di collaborazione): cittadini,
+// scuole e associazioni si prendono cura di un luogo pubblico.
+model AdoptedPlace {
+  id             String        @id @default(cuid())
+  name           String
+  kind           String // parco | aiuola | piazza | fontana | giardino | sentiero
+  description    String
+  adopterName    String // snapshot del custode
+  adopterType    String        @default("cittadini") // cittadini | associazione | scuola | attivita
+  neighborhoodId String?
+  neighborhood   Neighborhood? @relation(fields: [neighborhoodId], references: [id], onDelete: SetNull)
+  location       String?
+  latitude       Float?
+  longitude      Float?
+  status         String        @default("attiva") // proposta | attiva | conclusa
+  since          DateTime      @default(now())
+  lastUpdate     String? // ultima nota di cura, redazionale
+  lastUpdateAt   DateTime?
+
+  @@index([status])
+  @@index([neighborhoodId])
+}
+
+// Patti digitali di quartiere (A2 §31): obiettivi condivisi tra cittadini e
+// Comune, con avanzamento e aggiornamenti pubblici.
+model NeighborhoodPact {
+  id             String       @id @default(cuid())
+  neighborhoodId String
+  neighborhood   Neighborhood @relation(fields: [neighborhoodId], references: [id], onDelete: Cascade)
+  title          String
+  goal           String // l'obiettivo condiviso, in una frase
+  description    String
+  signedBy       String // chi lo firma: "Comitato genitori + Comune"…
+  status         String       @default("attivo") // proposto | attivo | completato
+  progress       Int          @default(0) // 0..100
+  startedAt      DateTime     @default(now())
+
+  updates PactUpdate[]
+
+  @@index([neighborhoodId])
+}
+
+model PactUpdate {
+  id        String           @id @default(cuid())
+  pactId    String
+  pact      NeighborhoodPact @relation(fields: [pactId], references: [id], onDelete: Cascade)
+  note      String
+  official  Boolean          @default(false) // true quando scrive il Comune
+  createdAt DateTime         @default(now())
+
+  @@index([pactId])
+}
+
+// "Da segnalazione a progetto" (A2 §8): un cluster di segnalazioni ricorrenti
+// diventa un progetto pubblico con stato tracciato.
+model CivicProject {
+  id             String        @id @default(cuid())
+  title          String
+  summary        String
+  status         String        @default("proposto") // proposto | approvato | in_corso | completato
+  category       String // categoria segnalazione (REPORT_CATEGORY)
+  department     String? // ufficio responsabile
+  neighborhoodId String?
+  neighborhood   Neighborhood? @relation(fields: [neighborhoodId], references: [id], onDelete: SetNull)
+  baseReports    Int           @default(0) // segnalazioni storiche oltre a quelle collegate
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  reports Report[]
+
+  @@index([status])
 }

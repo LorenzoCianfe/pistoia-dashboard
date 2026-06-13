@@ -100,6 +100,7 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 | **Ondata 0 — Fondamenta visive & design system** | 2026-06-12 | [DESIGN.md](DESIGN.md) (direzione estetica istituzionale), token estesi (font display Fraunces, easing civico, color-scheme, glow serali), motivi identitari CSS (fasce romaniche, scacchiera), motion system (View Transitions + stagger + pulse civico), EmptyState illustrato, centro notifiche 2.0 (filtri, bucket temporali, azione inline), command palette 2.0 (comandi: tema, tour), treemap squarified del bilancio, tour demo guidato in 9 passi |
 | **Ondata 1 — Segnalazioni 2.0** | 2026-06-12 | Timeline pubblica, conferma del cittadino con riapertura, foto prima/durante/dopo (upload staff dal triage), ufficio competente + tempi medi per categoria, urgenza con validazione moderatore, anti-duplicati con "Anche io" inline, "Segnala in 30 secondi" mobile-first, mock "vivo" (seed deterministico giornaliero). Schema: `urgency`, `resolutionFeedback`, `ReportPhoto` |
 | **Ondata 3 — Trasparenza che chiude il cerchio** | 2026-06-12 | Archivio decisioni con motivo in linguaggio semplice, "Perché non si può fare?" sulle proposte respinte, tracker "Promesse e risultati", bacheca avvisi urgenti (+ layer mappa e banner in home) con "Cosa cambia per me?", impatto cantieri sul dettaglio opera, FAQ della città con badge risposta ufficiale, report civico mensile con export PDF (print stylesheet), "Spiegamelo semplice" redazionale, glossario + tooltip nel bilancio, hero "Stato della città" con sparkline in home, sezione Trasparenza in nav/ricerca/palette/tour. Schema: `Decision`, `Commitment`, `Notice`, `CityFaq`, `Opera.impactNotes/simpleText`, `Proposal.rejectionReasons` |
+| **Ondata 4 — Territorio & partecipazione** | 2026-06-13 | Question time digitale con domande votate e risposta ufficiale, "Vota la priorità" (verificati, un voto per tornata) con esito raccontato, volontariato e iniziative con adesione, patti digitali di quartiere + "adotta un luogo", "da segnalazione a progetto" con cluster e radar dei problemi ricorrenti, stanze tematiche nella community, diario del quartiere (7 giorni computati), mappa del disagio (heatmap), consultazioni con documento + sintesi semplice. **Onboarding "primi passi in città"** (checklist progressiva) + tour demo persistito con invito ai nuovi account. **Tipografia a voce unica Montserrat**. Sezione Partecipazione in nav/ricerca/palette/tour. Schema: `QuestionTime`/`QtQuestion`/`QtVote`, `PriorityRound`/`PriorityItem`/`PriorityVote`, `Initiative`/`InitiativeJoin`, `AdoptedPlace`, `NeighborhoodPact`/`PactUpdate`, `CivicProject`, `CommunityPost.topic`, `Poll.doc*`, `User.tourCompletedAt/onboardingDismissedAt`, `Report.civicProjectId` |
 
 > Già coperte dagli addenda e **fatte**: sistema fonti con freschezza (`A1 §25` → provenance + SourceBadge), modalità demo/ufficiale (`A1 §26` → DEMO_MODE), partecipazione aggregata senza esporre dati personali (`A1 §10` → contatori aggregati, ora regola di prodotto in [§7](#7-regole-di-prodotto)).
 
@@ -123,25 +124,25 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 
 **Obiettivo (→ OB-1, OB-3):** mostrare cosa succede *dopo* la partecipazione: decisioni, motivazioni, impegni, linguaggio semplice. Tutte le dieci voci consegnate; dettaglio in [§3](#3-completato). La versione AI di "Spiegamelo semplice" resta un'idea 💡 (per ora il testo è redazionale dal seed).
 
-### Ondata 4 — Territorio & partecipazione 🔜
+### Ondata 4 — Territorio & partecipazione ✅ *(completata 2026-06-13)*
 
-**Obiettivo (→ OB-1, OB-3):** vita di quartiere e strumenti di dialogo strutturato tra cittadini e Comune.
+**Obiettivo (→ OB-1, OB-3):** vita di quartiere e strumenti di dialogo strutturato tra cittadini e Comune. Tutte le voci consegnate; dettaglio in [§3](#3-completato). In più, fuori lista: **onboarding "primi passi in città"** (checklist progressiva, dal backlog), **tour demo persistito** con invito ai nuovi account, e la **tipografia** portata a voce unica **Montserrat**.
 
-| Voce | Livello | Fonte |
-|---|---|---|
-| Diario del quartiere: riepilogo periodico per zona | `FE` `BE` | `A1 §9` |
-| Stanze tematiche (mobilità, ambiente, scuole…) | `FE` `BE` `UX` | `A1 §17` |
-| Question time digitale con domande votate | `FE` `BE` | `A2 §22` |
-| "Vota la priorità" su problemi validati | `FE` `BE` | `A2 §9` |
-| Heatmap civica / mappa del disagio — estende la mappa Leaflet (merge con "Pistoia Pulse") | `FE` `DES` | `A2 §6` |
-| Problemi ricorrenti: evidenza dei pattern per zona/categoria | `FE` `BE` | `A2 §7` |
-| "Da segnalazione a progetto": cluster di segnalazioni → progetto pubblico | `FE` `BE` | `A2 §8` |
-| Volontariato e iniziative | `FE` `BE` | `A2 §14` |
-| "Adotta un luogo" (merge con "Patti di collaborazione civica") | `FE` `BE` | `A2 §16` |
-| Patti digitali di quartiere: obiettivi condivisi | `FE` `BE` | `A2 §31` |
-| Consultazioni strutturate con documenti allegati | `FE` `BE` | `A2 §23` |
+| Voce | Livello | Fonte | Stato |
+|---|---|---|---|
+| Diario del quartiere: riepilogo periodico per zona | `FE` `BE` | `A1 §9` | ✅ |
+| Stanze tematiche (mobilità, ambiente, scuole…) | `FE` `BE` `UX` | `A1 §17` | ✅ |
+| Question time digitale con domande votate | `FE` `BE` | `A2 §22` | ✅ |
+| "Vota la priorità" su problemi validati | `FE` `BE` | `A2 §9` | ✅ |
+| Heatmap civica / mappa del disagio — estende la mappa Leaflet (merge con "Pistoia Pulse") | `FE` `DES` | `A2 §6` | ✅ |
+| Problemi ricorrenti: evidenza dei pattern per zona/categoria | `FE` `BE` | `A2 §7` | ✅ |
+| "Da segnalazione a progetto": cluster di segnalazioni → progetto pubblico | `FE` `BE` | `A2 §8` | ✅ |
+| Volontariato e iniziative | `FE` `BE` | `A2 §14` | ✅ |
+| "Adotta un luogo" (merge con "Patti di collaborazione civica") | `FE` `BE` | `A2 §16` | ✅ |
+| Patti digitali di quartiere: obiettivi condivisi | `FE` `BE` | `A2 §31` | ✅ |
+| Consultazioni strutturate con documenti allegati | `FE` `BE` | `A2 §23` | ✅ |
 
-### Ondata 5 — Admin intelligence & nuovi pubblici 🔜
+### Ondata 5 — Admin intelligence & nuovi pubblici 🔜 *(prossima)*
 
 **Obiettivo (→ OB-1, OB-4):** strumenti decisionali per il Comune e apertura a turisti, commercianti, scuole.
 
@@ -193,7 +194,7 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 | **Lighthouse CI + performance budget** | `ENG` | La percezione di qualità passa anche dalla velocità; il budget la difende | ♾️ qualità continua |
 | **Audit dipendenze in CI** | `SEC` | Sicurezza della supply chain a costo quasi zero | ♾️ qualità continua |
 | **Vetrina aziende & sponsorizzazioni** | `FE` `BE` | Le aziende di Pistoia si fanno conoscere e sostengono la piattaforma; `OrganizationProfile` esiste già. Sponsor sempre dichiarati (regola n. 9) | 🔜 O5 |
-| **Onboarding "primi passi in città" (checklist progressiva)** | `UX` | Accompagna il nuovo utente alle prime tre azioni utili | 📋 |
+| **Onboarding "primi passi in città" (checklist progressiva)** | `UX` | Accompagna il nuovo utente alle prime azioni utili | ✅ O4 (2026-06-13) |
 | **Scorciatoie da tastiera + pannello "?"** | `UX` `A11Y` | Produttività per utenti esperti, scopribilità per tutti | 📋 |
 | **Open Graph image dinamiche** (condivisione di segnalazioni/proposte) | `FE` | Anche un link condiviso deve essere bello | 📋 |
 
@@ -262,23 +263,23 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 
 | Idea | Cosa fa | Livello | Fonte | Stato |
 |---|---|---|---|---|
-| Diario del quartiere | "Questa settimana nel quartiere": risolte, cantieri, eventi | `FE` `BE` | `A1 §9` | 🔜 O4 |
-| Heatmap civica / Pistoia Pulse | Layer mappa con densità segnalazioni + temi trending | `FE` `DES` | `A2 §6` + idea §22 | 🔜 O4 |
-| Problemi ricorrenti | "12 segnalazioni illuminazione in zona X: problema strutturale?" | `FE` `BE` | `A2 §7` | 🔜 O4 |
-| Da segnalazione a progetto | Cluster di segnalazioni → progetto pubblico tracciato | `FE` `BE` | `A2 §8` | 🔜 O4 |
-| Adotta un luogo | Cittadini/associazioni si prendono cura di parchi, aiuole… | `FE` `BE` | `A2 §16` + Patti collaborazione | 🔜 O4 |
-| Patti digitali di quartiere | Obiettivi condivisi per quartiere con aggiornamenti | `FE` `BE` | `A2 §31` | 🔜 O4 |
+| Diario del quartiere | "Questa settimana nel quartiere": risolte, cantieri, eventi | `FE` `BE` | `A1 §9` | ✅ O4 (2026-06-13) |
+| Heatmap civica / Pistoia Pulse | Layer mappa con densità segnalazioni + temi trending | `FE` `DES` | `A2 §6` + idea §22 | ✅ O4 (2026-06-13) |
+| Problemi ricorrenti | "12 segnalazioni illuminazione in zona X: problema strutturale?" | `FE` `BE` | `A2 §7` | ✅ O4 (2026-06-13) |
+| Da segnalazione a progetto | Cluster di segnalazioni → progetto pubblico tracciato | `FE` `BE` | `A2 §8` | ✅ O4 (2026-06-13) |
+| Adotta un luogo | Cittadini/associazioni si prendono cura di parchi, aiuole… | `FE` `BE` | `A2 §16` + Patti collaborazione | ✅ O4 (2026-06-13) |
+| Patti digitali di quartiere | Obiettivi condivisi per quartiere con aggiornamenti | `FE` `BE` | `A2 §31` | ✅ O4 (2026-06-13) |
 | QR territoriali | QR su cantieri/bacheche → scheda con CTA follow; modalità totem | `FE` | idea 2026-06-11 | 📋 |
 
 ### 🗳️ Partecipazione & dialogo
 
 | Idea | Cosa fa | Livello | Fonte | Stato |
 |---|---|---|---|---|
-| Question time digitale | Il Comune apre un tema, domande votate, risposte archiviate | `FE` `BE` | `A2 §22` | 🔜 O4 |
-| Vota la priorità | Voto dei verificati su interventi già validati | `FE` `BE` | `A2 §9` | 🔜 O4 |
-| Consultazioni con documenti | Documento + sintesi + domande guidate + risultati | `FE` `BE` | `A2 §23` | 🔜 O4 |
-| Volontariato e iniziative | Bacheca iniziative di Comune e associazioni, adesioni | `FE` `BE` | `A2 §14` | 🔜 O4 |
-| Stanze tematiche | Community organizzata anche per tema, non solo per quartiere | `FE` `BE` `UX` | `A1 §17` | 🔜 O4 |
+| Question time digitale | Il Comune apre un tema, domande votate, risposte archiviate | `FE` `BE` | `A2 §22` | ✅ O4 (2026-06-13) |
+| Vota la priorità | Voto dei verificati su interventi già validati | `FE` `BE` | `A2 §9` | ✅ O4 (2026-06-13) |
+| Consultazioni con documenti | Documento + sintesi + domande guidate + risultati | `FE` `BE` | `A2 §23` | ✅ O4 (2026-06-13) |
+| Volontariato e iniziative | Bacheca iniziative di Comune e associazioni, adesioni | `FE` `BE` | `A2 §14` | ✅ O4 (2026-06-13) |
+| Stanze tematiche | Community organizzata anche per tema, non solo per quartiere | `FE` `BE` `UX` | `A1 §17` | ✅ O4 (2026-06-13) |
 | Bilancio partecipativo simulato | "Come spenderesti 100.000 €": slider per categoria | `FE` `UX` | idea §19 | 📋 (mock possibile) |
 | Banca del tempo civica | Offro/cerco tempo e competenze; richiede moderazione forte | `FE` `BE` | `A2 §15` | 💡 |
 | Partecipazione aggregata, zero esposizione | Contatori aggregati, mai profili in vetrina | `BE` | `A1 §10` | ✅ regola di prodotto |
@@ -300,9 +301,9 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 | Ricerca globale (Cmd+K) | Full-text su opere, segnalazioni, proposte, eventi | `FE` `UX` | idea esistente | ✅ O2 (2026-06-11) |
 | Command palette 2.0 | Azioni dirette oltre la ricerca | `FE` `UX` | 🆕 | ✅ O0 (2026-06-12) |
 | Centro notifiche 2.0 | Raggruppamento per tema/quartiere, azioni inline | `FE` `UX` | 🆕 | ✅ O0 (2026-06-12) |
-| Tour demo guidato | La piattaforma si presenta da sola, passo passo | `UX` | 🆕 | ✅ O0 (2026-06-12) |
+| Tour demo guidato | La piattaforma si presenta da sola, passo passo | `UX` | 🆕 | ✅ O0 (2026-06-12), persistito O4 |
 | Modalità semplice / anziani | Menu ridotto, pulsanti grandi, flussi guidati | `FE` `UX` `A11Y` | `A1 §19` | ✅ O2 (2026-06-11) |
-| Onboarding "primi passi in città" | Checklist progressiva delle prime azioni utili | `UX` | 🆕 | 📋 |
+| Onboarding "primi passi in città" | Checklist progressiva delle prime azioni utili | `UX` | 🆕 | ✅ O4 (2026-06-13) |
 | Scorciatoie da tastiera + pannello "?" | Navigazione esperta scopribile | `UX` `A11Y` | 🆕 | 📋 |
 
 ### ♿ Accessibilità & inclusione

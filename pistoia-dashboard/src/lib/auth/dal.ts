@@ -24,6 +24,9 @@ export type CurrentUser = {
   civicInterests: CivicTopicKey[];
   /** True when the user has saved civic preferences at least once. */
   hasChosenInterests: boolean;
+  /** Onboarding "primi passi in città" (O4). */
+  tourCompletedAt: Date | null;
+  onboardingDismissedAt: Date | null;
   createdAt: Date;
 };
 
@@ -56,6 +59,8 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     geoConsent: u.geoConsent,
     civicInterests: parseCivicInterests(u.civicInterests),
     hasChosenInterests: u.civicInterests !== null,
+    tourCompletedAt: u.tourCompletedAt,
+    onboardingDismissedAt: u.onboardingDismissedAt,
     createdAt: u.createdAt,
   };
 });

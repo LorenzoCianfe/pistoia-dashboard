@@ -1,7 +1,7 @@
 "use client";
 
 import { useOptimistic, useState, useTransition } from "react";
-import { Check, Users } from "lucide-react";
+import { Check, Users, FileText, ExternalLink } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -72,6 +72,31 @@ export function PollCard({ poll }: { poll: PollResult }) {
           ) : null}
         </div>
       </div>
+
+      {/* Consultazione con documento (A2 §23, O4): il documento di riferimento
+          con la sua sintesi in linguaggio semplice, sopra le opzioni di voto. */}
+      {optimistic.doc ? (
+        <div className="mt-4 rounded-[var(--radius-sm)] border border-border bg-surface-2/50 p-4">
+          <div className="flex items-center gap-2">
+            <FileText size={15} className="shrink-0 text-viola" aria-hidden />
+            <p className="text-sm font-semibold">{optimistic.doc.title}</p>
+          </div>
+          {optimistic.doc.summary ? (
+            <p className="mt-1.5 text-sm leading-relaxed text-muted">{optimistic.doc.summary}</p>
+          ) : null}
+          {optimistic.doc.url ? (
+            <a
+              href={optimistic.doc.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-teal hover:underline"
+            >
+              Leggi il documento completo
+              <ExternalLink size={13} aria-hidden />
+            </a>
+          ) : null}
+        </div>
+      ) : null}
 
       <ul className="mt-4 space-y-2.5">
         {optimistic.options.map((o) => {

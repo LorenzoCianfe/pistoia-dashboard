@@ -1,16 +1,22 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Flame } from "lucide-react";
 import { MapCanvas } from "./map-canvas";
 import { MAP_LAYERS, ACCENT_HEX, type MapPoint, type MapLayerKey } from "@/lib/map";
+import type { HeatCell } from "@/lib/territorio";
 import { cn } from "@/lib/utils";
 
 export function MapExplorer({
   points,
+  heat = [],
   initialLayer,
+  initialHeat = false,
 }: {
   points: MapPoint[];
+  heat?: HeatCell[];
   initialLayer?: MapLayerKey | null;
+  initialHeat?: boolean;
 }) {
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
@@ -21,6 +27,9 @@ export function MapExplorer({
   const [active, setActive] = useState<Set<MapLayerKey>>(() =>
     initialLayer ? new Set([initialLayer]) : new Set(MAP_LAYERS.map((l) => l.key)),
   );
+  // Mappa del disagio (A2 §6): overlay separato, spento di default per non
+  // confondere la densità con i singoli punti.
+  const [showHeat, setShowHeat] = useState(initialHeat);
 
   const filtered = useMemo(
     () => points.filter((p) => active.has(p.layer)),
@@ -63,14 +72,35 @@ export function MapExplorer({
             </button>
           );
         })}
+        {heat.length > 0 ? (
+          <button
+            type="button"
+            onClick={() => setShowHeat((v) => !v)}
+            aria-pressed={showHeat}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-pill border px-3 py-1.5 text-xs font-semibold transition-colors",
+              showHeat ? "border-transparent text-white" : "border-border text-muted hover:text-foreground",
+            )}
+            style={showHeat ? { backgroundColor: ACCENT_HEX.red } : undefined}
+          >
+            <Flame size={13} style={showHeat ? undefined : { color: ACCENT_HEX.red }} aria-hidden />
+            Mappa del disagio
+          </button>
+        ) : null}
       </div>
 
       <div className="overflow-hidden rounded-[var(--radius)] border border-border shadow-sm">
-        <MapCanvas points={filtered} className="h-[65vh] min-h-[420px] w-full" />
+        <MapCanvas
+          points={filtered}
+          heat={showHeat ? heat : []}
+          className="h-[65vh] min-h-[420px] w-full"
+        />
       </div>
 
       <p className="text-xs text-muted-2">
-        Tocca un punto per i dettagli. Dati dimostrativi · tile mappa © OpenStreetMap.
+        Tocca un punto per i dettagli.
+        {showHeat ? " Le aree rosse mostrano dove le segnalazioni aperte si concentrano." : ""}{" "}
+        Dati dimostrativi · tile mappa © OpenStreetMap.
       </p>
     </div>
   );

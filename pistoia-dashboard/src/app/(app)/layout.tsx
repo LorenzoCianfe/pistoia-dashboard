@@ -4,6 +4,7 @@ import { TopBar } from "@/components/app/top-bar";
 import { SideNav } from "@/components/app/side-nav";
 import { BottomNav } from "@/components/app/bottom-nav";
 import { DemoTour } from "@/components/app/demo-tour";
+import { TourOffer } from "@/components/app/tour-offer";
 import { Footer } from "@/components/app/footer";
 
 export default async function AppLayout({
@@ -40,6 +41,9 @@ export default async function AppLayout({
       {/* Modalità presentazione (O0): vive nel layout così sopravvive alle
           navigazioni tra i passi del tour. */}
       <DemoTour />
+      {/* Invito al tour per chi non l'ha mai concluso (O4): sparisce per
+          sempre col tour finito o con la checklist dei primi passi nascosta. */}
+      {!user.tourCompletedAt && !user.onboardingDismissedAt ? <TourOffer /> : null}
     </div>
   );
 }

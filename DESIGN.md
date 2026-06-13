@@ -35,14 +35,14 @@ Il design attinge a tre simboli reali di Pistoia. Sono il vocabolario decorativo
 
 | Ruolo | Font | Uso |
 |---|---|---|
-| **Display / titoli** | **Fraunces** (variabile, serif) | H1–H2, numeri grandi delle statistiche, momenti editoriali ("Storie della città"). Dà il carattere istituzionale-umanistico: un serif toscano contemporaneo, mai freddo |
-| **Interfaccia / testo** | **Plus Jakarta Sans** | Tutto il resto: body, label, navigazione, form. Già in uso, resta la voce funzionale |
-| **Dati tabellari** | Plus Jakarta Sans con `font-variant-numeric: tabular-nums` | Tabelle, importi, confronti: le cifre si allineano sempre |
+| **Voce unica** | **Montserrat** (variabile, sans geometrico) | Tutta la piattaforma: titoli, body, label, navigazione, form. Moderna e minimale; revisione 2026-06-12, sostituisce la coppia Fraunces + Plus Jakarta Sans |
+| **Display / titoli** | Montserrat con peso ≥600 e tracking stretto | H1–H2 e numeri grandi delle statistiche si distinguono per **peso e tracking**, non per famiglia |
+| **Dati tabellari** | Montserrat con `font-variant-numeric: tabular-nums` | Tabelle, importi, confronti: le cifre si allineano sempre |
 
 Regole:
-- Fraunces **solo** dove c'è gerarchia da affermare (titolo di pagina, numero protagonista). Mai nei paragrafi, mai sotto i 20px.
+- Il registro display (`--font-display`, classe `font-display`) **solo** dove c'è gerarchia da affermare (titolo di pagina, numero protagonista): stessa famiglia, peso semibold+ e `tracking-tight`.
 - Scala tipografica modulare definita nei token (`--text-*`); niente font-size arbitrari nelle pagine.
-- I numeri importanti si presentano grandi e in Fraunces: il dato è il protagonista della piattaforma.
+- I numeri importanti si presentano grandi e pesanti: il dato è il protagonista della piattaforma.
 - Lingua: italiano, registro del "tu" civico — diretto ma mai confidenziale ("Segnala un problema", non "Dicci cosa non va!").
 
 ---
@@ -141,7 +141,7 @@ Il tema scuro è una **seconda lettura dello stesso luogo, di sera** — non un'
 |---|---|
 | Un momento memorabile per pagina (un hero, un numero, una visualizzazione) | Dieci effetti che competono |
 | Ornamento derivato dai tre motivi identitari | Pattern decorativi generici, gradienti viola su bianco da template |
-| Fraunces per affermare, Jakarta per funzionare | Titoli in font "di sistema" o display usato per i paragrafi |
+| Montserrat pesante per affermare, regolare per funzionare | Titoli in font "di sistema" o registro display usato per i paragrafi |
 | Stati vuoti/errore/caricamento disegnati | `<p>Nessun risultato</p>` |
 | Motion sobrio con un'unica orchestrazione d'ingresso | Animazioni su ogni elemento, bounce, parallax |
 | Il rosso dello stemma per brand e urgenza | Rosso decorativo |

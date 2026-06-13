@@ -20,6 +20,8 @@ import { getMyCity, getForYou, type ForYouItem } from "@/lib/data/mycity";
 import { getUnreadCount } from "@/lib/data/notifiche";
 import { getCityState } from "@/lib/data/citystate";
 import { getActiveNotices } from "@/lib/data/transparency";
+import { getOnboardingState } from "@/lib/data/onboarding";
+import { OnboardingChecklist } from "@/components/app/onboarding-checklist";
 import { CityStateHero } from "@/components/trasparenza/city-state-hero";
 import { NoticeBanner } from "@/components/trasparenza/notice-banner";
 import { Card } from "@/components/ui/card";
@@ -52,11 +54,12 @@ export default async function MyCityPage() {
   const simple = (await cookies()).get(SIMPLE_MODE_COOKIE)?.value === "1";
   if (simple) return <SimpleHome user={user} />;
 
-  const [city, forYou, cityState, activeNotices] = await Promise.all([
+  const [city, forYou, cityState, activeNotices, onboarding] = await Promise.all([
     getMyCity(user),
     user.civicInterests.length > 0 ? getForYou(user.civicInterests) : Promise.resolve([]),
     getCityState(),
     getActiveNotices(),
+    getOnboardingState(user),
   ]);
   const firstName = (user.publicName ?? user.name).split(" ")[0];
 
@@ -80,6 +83,9 @@ export default async function MyCityPage() {
 
       {/* Avvisi urgenti attivi (A1 §21, O3): prima di tutto il resto. */}
       <NoticeBanner notices={activeNotices} />
+
+      {/* Onboarding "primi passi in città" (O4): solo finché serve. */}
+      {!onboarding.hidden ? <OnboardingChecklist steps={onboarding.steps} /> : null}
 
       {/* "Stato della città" (O3): il colpo d'occhio sugli indicatori. */}
       <CityStateHero state={cityState} />

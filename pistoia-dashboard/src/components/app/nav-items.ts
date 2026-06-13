@@ -20,6 +20,11 @@ import {
   HelpCircle,
   Newspaper,
   BookOpenText,
+  MessageCircleQuestion,
+  ListOrdered,
+  HeartHandshake,
+  Handshake,
+  FolderKanban,
   type LucideIcon,
 } from "lucide-react";
 
@@ -43,6 +48,16 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/eventi", label: "Eventi", icon: CalendarDays, core: false },
   { href: "/quartieri", label: "Quartieri", icon: MapPinned, core: false },
   { href: "/organigramma", label: "Organigramma", icon: Network, core: false },
+];
+
+// Sezione "Partecipazione" (O4): gli strumenti di dialogo strutturato e di
+// cura del territorio. Gruppo separato nella side-nav.
+export const PARTICIPATION_NAV: NavItem[] = [
+  { href: "/question-time", label: "Question time", icon: MessageCircleQuestion, core: false },
+  { href: "/priorita", label: "Vota la priorità", icon: ListOrdered, core: false },
+  { href: "/iniziative", label: "Volontariato", icon: HeartHandshake, core: false },
+  { href: "/patti", label: "Patti e luoghi", icon: Handshake, core: false },
+  { href: "/progetti", label: "Progetti civici", icon: FolderKanban, core: false },
 ];
 
 // Sezione "Trasparenza" (O3): le pagine che chiudono il cerchio della

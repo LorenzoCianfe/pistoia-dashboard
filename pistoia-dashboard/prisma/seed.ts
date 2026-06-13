@@ -41,6 +41,19 @@ const photoSvg = (label: string, c1: string, c2: string) =>
 
 async function wipe() {
   // Child-first deletion to satisfy foreign keys.
+  // O4 — Territorio & partecipazione
+  await prisma.qtVote.deleteMany();
+  await prisma.qtQuestion.deleteMany();
+  await prisma.questionTime.deleteMany();
+  await prisma.priorityVote.deleteMany();
+  await prisma.priorityItem.deleteMany();
+  await prisma.priorityRound.deleteMany();
+  await prisma.initiativeJoin.deleteMany();
+  await prisma.initiative.deleteMany();
+  await prisma.adoptedPlace.deleteMany();
+  await prisma.pactUpdate.deleteMany();
+  await prisma.neighborhoodPact.deleteMany();
+  await prisma.civicProject.deleteMany();
   await prisma.decision.deleteMany();
   await prisma.commitment.deleteMany();
   await prisma.notice.deleteMany();
@@ -1593,6 +1606,487 @@ async function main() {
       { question: "Posso occupare il suolo pubblico per un trasloco?", answer: "Sì: serve l'autorizzazione temporanea, da richiedere almeno 5 giorni prima allo sportello SUAP o online. Per un trasloco di un giorno il costo è fisso e include la segnaletica di divieto di sosta.", category: "casa", order: 7 },
       { question: "A chi segnalo una buca o un lampione spento?", answer: "Dalla sezione Segnalazioni di questa piattaforma: la segnalazione arriva all'ufficio competente e puoi seguirne lo stato passo passo, fino alla conferma di risoluzione.", category: "servizi", order: 8 },
     ],
+  });
+
+  // --- Ondata 4: Territorio & partecipazione -------------------------------
+
+  // Question time digitale (A2 §22): un tema aperto e uno già archiviato.
+  await prisma.questionTime.create({
+    data: {
+      title: "Nuovo piano della sosta in centro",
+      topic: "mobilita",
+      description:
+        "L'Assessorato alla Mobilità raccoglie le domande dei cittadini sul nuovo piano della sosta. Le tre domande più votate ricevono risposta ufficiale, pubblica e archiviata.",
+      department: "Assessorato alla Mobilità",
+      status: "aperto",
+      opensAt: daysAgo(4),
+      closesAt: daysAhead(10),
+      questions: {
+        create: [
+          {
+            authorName: "Franca B.",
+            body: "I residenti della ZTL avranno posti riservati anche durante i mercati straordinari?",
+            baseVotes: vary(38, 6),
+            createdAt: daysAgo(3),
+          },
+          {
+            authorId: citizen.id,
+            authorName: "Giulia V.",
+            body: "È previsto un abbonamento agevolato nei parcheggi di scambio per chi lavora in centro?",
+            baseVotes: vary(29, 5),
+            createdAt: daysAgo(3),
+          },
+          {
+            authorName: "Paolo M.",
+            body: "Le strisce blu davanti agli ambulatori resteranno gratuite per i primi 30 minuti?",
+            baseVotes: vary(21, 4),
+            createdAt: daysAgo(2),
+          },
+          {
+            authorName: "Sara T.",
+            body: "Quando verranno pubblicati i dati di occupazione dei parcheggi usati per disegnare il piano?",
+            baseVotes: vary(12, 4),
+            createdAt: hoursAgo(20),
+          },
+        ],
+      },
+    },
+  });
+  await prisma.questionTime.create({
+    data: {
+      title: "Mense e tempo pieno nelle scuole comunali",
+      topic: "scuole",
+      description:
+        "Sessione conclusa: le domande più votate sul servizio mensa e sull'estensione del tempo pieno hanno ricevuto risposta ufficiale.",
+      department: "Assessorato all'Istruzione",
+      status: "concluso",
+      opensAt: daysAgo(40),
+      closesAt: daysAgo(18),
+      questions: {
+        create: [
+          {
+            authorName: "Comitato genitori Scuola Cino",
+            body: "Il menù della mensa può includere più prodotti del territorio?",
+            baseVotes: 64,
+            officialAnswer:
+              "Sì: dal prossimo anno scolastico il capitolato della ristorazione prevede almeno il 40% di prodotti a filiera corta toscana, con un menù stagionale pubblicato ogni mese.",
+            answeredAt: daysAgo(15),
+            createdAt: daysAgo(35),
+          },
+          {
+            authorName: "Elena R.",
+            body: "Quali plessi avranno il tempo pieno nel 2026/27?",
+            baseVotes: 51,
+            officialAnswer:
+              "Il tempo pieno si estende a due nuovi plessi (Bottegone e Le Fornaci), scelti in base alle liste d'attesa. Le altre richieste entrano nella programmazione 2027/28.",
+            answeredAt: daysAgo(15),
+            createdAt: daysAgo(33),
+          },
+          {
+            authorName: "Davide P.",
+            body: "È possibile rateizzare la quota mensa per le famiglie numerose?",
+            baseVotes: 36,
+            officialAnswer:
+              "Sì, già oggi: la quota si può rateizzare in 4 tranche senza interessi, e con ISEE sotto i 12.000 € la terza mensilità per figli successivi al secondo è gratuita.",
+            answeredAt: daysAgo(14),
+            createdAt: daysAgo(30),
+          },
+        ],
+      },
+    },
+  });
+
+  // "Vota la priorità" (A2 §9): una tornata aperta e una chiusa con esito.
+  await prisma.priorityRound.create({
+    data: {
+      title: "Manutenzioni d'autunno: quale intervento facciamo prima?",
+      description:
+        "Quattro interventi già validati dagli uffici tecnici, un solo cantiere alla volta: i cittadini verificati indicano la priorità. Il voto orienta il calendario, non sostituisce le valutazioni tecniche.",
+      status: "aperta",
+      closesAt: daysAhead(12),
+      createdAt: daysAgo(5),
+      items: {
+        create: [
+          {
+            title: "Illuminazione del sottopasso di Viale Adua",
+            description: "Sostituzione completa dei corpi illuminanti e ritinteggiatura delle pareti.",
+            category: "illuminazione",
+            neighborhoodLabel: "Sant'Agostino",
+            baseVotes: vary(84, 10),
+          },
+          {
+            title: "Rifacimento dei marciapiedi di Via Dalmazia",
+            description: "200 metri di marciapiede con radici affioranti, tratto scuola–farmacia.",
+            category: "buche",
+            neighborhoodLabel: "Le Fornaci",
+            baseVotes: vary(67, 8),
+          },
+          {
+            title: "Attraversamento rialzato sulla provinciale al Bottegone",
+            description: "Messa in sicurezza dell'attraversamento davanti al circolo, con illuminazione dedicata.",
+            category: "sicurezza",
+            neighborhoodLabel: "Bottegone",
+            baseVotes: vary(58, 8),
+          },
+          {
+            title: "Messa in sicurezza dei pini di Viale Petrocchi",
+            description: "Potatura straordinaria e sostituzione delle alberature ammalorate.",
+            category: "verde",
+            neighborhoodLabel: "Centro",
+            baseVotes: vary(41, 6),
+          },
+        ],
+      },
+    },
+  });
+  await prisma.priorityRound.create({
+    data: {
+      title: "Estate 2026: il primo cantiere nelle scuole",
+      description: "Tornata conclusa a maggio: i lavori partono dall'intervento più votato.",
+      status: "chiusa",
+      closesAt: daysAgo(25),
+      createdAt: daysAgo(60),
+      resultNote:
+        "Ha vinto il rifacimento della palestra della Scuola Cino da Pistoia (312 voti): il cantiere apre a luglio, gli altri interventi seguono in graduatoria.",
+      items: {
+        create: [
+          { title: "Palestra della Scuola Cino da Pistoia", description: "Rifacimento fondo e impianto di aerazione.", category: "scuole", neighborhoodLabel: "Centro", baseVotes: 312 },
+          { title: "Tetto della primaria di Bonelle", description: "Impermeabilizzazione e coibentazione.", category: "scuole", neighborhoodLabel: "Bonelle", baseVotes: 244 },
+          { title: "Giardino della materna di Pontenuovo", description: "Nuovi giochi e ombreggiatura.", category: "parchi", neighborhoodLabel: "Pontenuovo", baseVotes: 188 },
+        ],
+      },
+    },
+  });
+
+  // Volontariato e iniziative (A2 §14).
+  await prisma.initiative.create({
+    data: {
+      title: "Puliamo l'Ombrone",
+      description:
+        "Mattinata di pulizia del parco fluviale con guanti e sacchi forniti dall'associazione. Ritrovo al ponte di Sant'Agostino alle 9:00, chiusura con merenda condivisa.",
+      category: "pulizia",
+      organizerName: "Amici del Parco di Monteoliveto",
+      neighborhoodId: nb["sant-agostino"],
+      location: "Parco fluviale dell'Ombrone",
+      latitude: 43.9219,
+      longitude: 10.9408,
+      startAt: daysAhead(6),
+      spots: 40,
+      baseJoins: vary(23, 5),
+      status: "aperta",
+      createdAt: daysAgo(9),
+    },
+  });
+  await prisma.initiative.create({
+    data: {
+      title: "Una pianta per ogni nuovo nato",
+      description:
+        "Il Comune mette a dimora un albero per ogni bambino nato nel 2026: le famiglie possono partecipare alla piantumazione collettiva al parco della Rana.",
+      category: "piantumazione",
+      organizerName: "Comune di Pistoia",
+      official: true,
+      neighborhoodId: nb["vergine"],
+      location: "Parco della Rana",
+      startAt: daysAhead(15),
+      baseJoins: vary(48, 8),
+      status: "aperta",
+      createdAt: daysAgo(12),
+    },
+  });
+  await prisma.initiative.create({
+    data: {
+      title: "Raccolta alimentare di quartiere",
+      description:
+        "Sabato di raccolta davanti ai supermercati del Bottegone a sostegno dell'Emporio solidale. Servono volontari per i turni di mattina e pomeriggio.",
+      category: "raccolta",
+      organizerName: "Caritas Pistoia",
+      neighborhoodId: nb["bottegone"],
+      location: "Bottegone, punti vendita aderenti",
+      startAt: daysAhead(9),
+      spots: 24,
+      baseJoins: vary(15, 4),
+      status: "aperta",
+      createdAt: daysAgo(6),
+    },
+  });
+  await prisma.initiative.create({
+    data: {
+      title: "Digitale facile per over 65",
+      description:
+        "Quattro incontri gratuiti in biblioteca San Giorgio: SPID, prenotazioni sanitarie e servizi del Comune, con tutor uno-a-uno. Posti esauriti: riapre in autunno.",
+      category: "formazione",
+      organizerName: "Comune di Pistoia",
+      official: true,
+      neighborhoodId: nb["centro"],
+      location: "Biblioteca San Giorgio",
+      startAt: daysAhead(20),
+      spots: 20,
+      baseJoins: 20,
+      status: "completa",
+      createdAt: daysAgo(15),
+    },
+  });
+  await prisma.initiative.create({
+    data: {
+      title: "Letture sotto il portico",
+      description:
+        "Pomeriggio di letture ad alta voce per bambini in piazza dello Spirito Santo, a cura dei volontari Nati per Leggere. Grazie ai 18 volontari che hanno partecipato!",
+      category: "cultura",
+      organizerName: "Nati per Leggere Pistoia",
+      neighborhoodId: nb["centro"],
+      location: "Piazza dello Spirito Santo",
+      startAt: daysAgo(7),
+      baseJoins: 18,
+      status: "conclusa",
+      createdAt: daysAgo(25),
+    },
+  });
+
+  // "Adotta un luogo" (A2 §16).
+  await prisma.adoptedPlace.create({
+    data: {
+      name: "Aiuole di Piazza San Francesco",
+      kind: "aiuola",
+      description: "Cura stagionale delle quattro aiuole lato chiesa: fioriture, pulizia e piccola manutenzione.",
+      adopterName: "Bottega del Corso",
+      adopterType: "attivita",
+      neighborhoodId: nb["centro"],
+      location: "Piazza San Francesco",
+      latitude: 43.9352,
+      longitude: 10.9148,
+      status: "attiva",
+      since: daysAgo(120),
+      lastUpdate: "Messe a dimora le viole d'inverno; sostituito l'irrigatore rotto dell'aiuola nord.",
+      lastUpdateAt: daysAgo(11),
+    },
+  });
+  await prisma.adoptedPlace.create({
+    data: {
+      name: "Giardino di Via Pacini",
+      kind: "giardino",
+      description: "Apertura e chiusura quotidiana, segnalazione guasti e cura dell'area giochi.",
+      adopterName: "Comitato genitori Scuola Cino",
+      adopterType: "cittadini",
+      neighborhoodId: nb["centro"],
+      location: "Via Pacini",
+      latitude: 43.9329,
+      longitude: 10.9202,
+      status: "attiva",
+      since: daysAgo(75),
+      lastUpdate: "Riparata la recinzione lato strada insieme all'Ufficio Verde.",
+      lastUpdateAt: daysAgo(5),
+    },
+  });
+  await prisma.adoptedPlace.create({
+    data: {
+      name: "Fontana del Globo",
+      kind: "fontana",
+      description: "Pulizia settimanale della vasca e segnalazione tempestiva dei danneggiamenti.",
+      adopterName: "Amici del Parco di Monteoliveto",
+      adopterType: "associazione",
+      neighborhoodId: nb["le-fornaci"],
+      location: "Parco di Monteoliveto",
+      status: "attiva",
+      since: daysAgo(200),
+      lastUpdate: "Rimossi i depositi calcarei e riattivato il getto centrale.",
+      lastUpdateAt: daysAgo(18),
+    },
+  });
+  await prisma.adoptedPlace.create({
+    data: {
+      name: "Sentiero collinare di Candeglia",
+      kind: "sentiero",
+      description: "Proposta di adozione del tratto Candeglia–Santomoro: sfalcio, segnaletica e piccoli ripristini.",
+      adopterName: "Gruppo camminatori di Candeglia",
+      adopterType: "cittadini",
+      neighborhoodId: nb["candeglia"],
+      location: "Sentiero Candeglia–Santomoro",
+      status: "proposta",
+      since: daysAgo(8),
+    },
+  });
+
+  // Patti digitali di quartiere (A2 §31).
+  await prisma.neighborhoodPact.create({
+    data: {
+      neighborhoodId: nb["le-fornaci"],
+      title: "Patto per il Parco di Monteoliveto",
+      goal: "Un parco curato e vissuto tutto l'anno, gestito insieme.",
+      description:
+        "Il Comune garantisce due sfalci al mese e la manutenzione dei giochi; cittadini e associazioni si occupano di aperture, eventi e segnalazioni. Verifica pubblica ogni tre mesi.",
+      signedBy: "Amici del Parco di Monteoliveto, Comitato Le Fornaci + Comune di Pistoia",
+      status: "attivo",
+      progress: 65,
+      startedAt: daysAgo(140),
+      updates: {
+        create: [
+          { note: "Installate le nuove rastrelliere e la bacheca degli eventi.", official: true, createdAt: daysAgo(30) },
+          { note: "Organizzata la festa di primavera: oltre 300 partecipanti.", official: false, createdAt: daysAgo(55) },
+        ],
+      },
+    },
+  });
+  await prisma.neighborhoodPact.create({
+    data: {
+      neighborhoodId: nb["bottegone"],
+      title: "Strade scolastiche sicure al Bottegone",
+      goal: "Ingressi a scuola senza auto negli orari di entrata e uscita.",
+      description:
+        "Sperimentazione di chiusura temporanea della viabilità davanti alla primaria, con presidio dei genitori volontari e nuova segnaletica del Comune.",
+      signedBy: "Comitato genitori Bottegone + Comune di Pistoia",
+      status: "attivo",
+      progress: 40,
+      startedAt: daysAgo(80),
+      updates: {
+        create: [
+          { note: "Partita la sperimentazione del martedì e giovedì: primi riscontri positivi.", official: true, createdAt: daysAgo(14) },
+        ],
+      },
+    },
+  });
+  await prisma.neighborhoodPact.create({
+    data: {
+      neighborhoodId: nb["centro"],
+      title: "Centro storico accessibile",
+      goal: "Itinerari senza barriere tra le piazze principali entro il 2027.",
+      description:
+        "Mappatura partecipata delle barriere con le associazioni, poi interventi del Comune in ordine di priorità condivisa.",
+      signedBy: "Consulta disabilità, commercianti del centro + Comune di Pistoia",
+      status: "attivo",
+      progress: 25,
+      startedAt: daysAgo(50),
+      updates: {
+        create: [
+          { note: "Completata la mappatura di Piazza del Duomo e Via degli Orafi: 23 punti critici censiti.", official: false, createdAt: daysAgo(10) },
+        ],
+      },
+    },
+  });
+
+  // "Da segnalazione a progetto" (A2 §8): cluster → progetto pubblico.
+  const projLuce = await prisma.civicProject.create({
+    data: {
+      title: "Piano illuminazione Sant'Agostino",
+      summary:
+        "Le segnalazioni ripetute sui lampioni spenti tra Viale Adua e il parco fluviale hanno fatto emergere un impianto obsoleto: nasce un progetto unico di sostituzione con LED e telecontrollo, invece di riparazioni spot.",
+      status: "in_corso",
+      category: "illuminazione",
+      department: "Ufficio Strade e Manutenzioni",
+      neighborhoodId: nb["sant-agostino"],
+      baseReports: 9,
+      createdAt: daysAgo(45),
+    },
+  });
+  const projMarciapiedi = await prisma.civicProject.create({
+    data: {
+      title: "Marciapiedi senza barriere — asse sud",
+      summary:
+        "Buche e barriere segnalate lungo l'asse Bottegone–Le Fornaci diventano un progetto organico: rifacimento dei tratti peggiori con scivoli a norma e percorsi tattili agli incroci principali.",
+      status: "approvato",
+      category: "buche",
+      department: "Ufficio Strade e Manutenzioni",
+      neighborhoodId: nb["bottegone"],
+      baseReports: 14,
+      createdAt: daysAgo(20),
+    },
+  });
+  const lumReports = await prisma.report.findMany({
+    where: { category: "illuminazione" },
+    select: { id: true },
+    take: 3,
+  });
+  await prisma.report.updateMany({
+    where: { id: { in: lumReports.map((r) => r.id) } },
+    data: { civicProjectId: projLuce.id },
+  });
+  const bucheReports = await prisma.report.findMany({
+    where: { category: { in: ["buche", "barriere"] } },
+    select: { id: true },
+    take: 3,
+  });
+  await prisma.report.updateMany({
+    where: { id: { in: bucheReports.map((r) => r.id) } },
+    data: { civicProjectId: projMarciapiedi.id },
+  });
+
+  // Consultazione con documento (A2 §23): la consultazione ufficiale guadagna
+  // il documento di riferimento con sintesi in linguaggio semplice.
+  await prisma.poll.updateMany({
+    where: { kind: "consultazione" },
+    data: {
+      docTitle: "Linee di indirizzo del Piano della mobilità 2026–2030",
+      docSummary:
+        "In breve: il documento propone di allargare gradualmente l'area pedonale del centro, costruire due parcheggi di scambio (nord e sud) collegati con navette ogni 10 minuti, e rivedere gli abbonamenti della sosta per i residenti. Il voto indica quale dei tre assi considerate prioritario.",
+      docUrl: "https://www.comune.pistoia.it/partecipazione/piano-mobilita-2026",
+    },
+  });
+
+  // Stanze tematiche (A1 §17): i post esistenti entrano nelle stanze per tema…
+  await prisma.communityPost.updateMany({ where: { category: "verde" }, data: { topic: "ambiente" } });
+  await prisma.communityPost.updateMany({ where: { category: "mobilita" }, data: { topic: "mobilita" } });
+  await prisma.communityPost.updateMany({ where: { category: "cultura" }, data: { topic: "cultura" } });
+  // …e due conversazioni fresche popolano stanze nuove.
+  await prisma.communityPost.create({
+    data: {
+      authorName: "Comitato genitori Scuola Cino",
+      authorInitials: "CG",
+      authorColor: "teal",
+      kind: "domanda",
+      topic: "scuole",
+      category: "servizi",
+      neighborhoodId: nb["centro"],
+      content:
+        "Qualcuno ha già provato il nuovo modulo online per la rateizzazione della mensa? Vale anche per chi ha presentato l'ISEE a gennaio?",
+      baseLikes: vary(6, 3),
+      createdAt: hoursAgo(30),
+    },
+  });
+  await prisma.communityPost.create({
+    data: {
+      authorName: "Luca F.",
+      authorInitials: "LF",
+      authorColor: "amber",
+      kind: "discussione",
+      topic: "sicurezza",
+      category: "servizi",
+      neighborhoodId: nb["sant-agostino"],
+      content:
+        "Con i lavori al sottopasso di Viale Adua in arrivo, si potrebbe chiedere un presidio luminoso provvisorio? La scorciatoia di sera è davvero buia.",
+      baseLikes: vary(9, 3),
+      createdAt: hoursAgo(50),
+    },
+  });
+
+  // Onboarding (O4): gli account demo "storici" hanno già fatto il tour e
+  // archiviato la checklist — i primi passi restano per gli account nuovi
+  // (es. marco@, non verificato, che può fare da demo dell'onboarding).
+  await prisma.user.updateMany({
+    where: {
+      email: {
+        in: [
+          "cittadino@pistoia.it",
+          "comune@pistoia.it",
+          "lorenzo@pistoia.it",
+          "moderatore@pistoia.it",
+          "associazione@pistoia.it",
+          "attivita@pistoia.it",
+        ],
+      },
+    },
+    data: { tourCompletedAt: daysAgo(30), onboardingDismissedAt: daysAgo(30) },
+  });
+
+  // Question time aperto → notifica al cittadino demo interessata alla mobilità.
+  await prisma.notification.create({
+    data: {
+      userId: citizen.id,
+      type: "poll",
+      title: "Question time: nuovo piano della sosta",
+      body: "L'Assessorato alla Mobilità risponde alle domande più votate. Hai tempo fino a fine mese.",
+      href: "/question-time",
+      read: false,
+      createdAt: daysAgo(3),
+    },
   });
 
   // Avviso critico → notifica al cittadino demo (il canale «urgente» esiste già).

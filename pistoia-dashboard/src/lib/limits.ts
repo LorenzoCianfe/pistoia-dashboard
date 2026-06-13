@@ -24,6 +24,8 @@ export const WRITE_LIMITS = {
   event: { limit: 5, windowMs: DAY },
   profile: { limit: 20, windowMs: HOUR },
   privacy: { limit: 5, windowMs: HOUR }, // export dati
+  question: { limit: 6, windowMs: HOUR }, // question time (O4)
+  join: { limit: 30, windowMs: HOUR }, // adesione iniziative (O4)
 } as const;
 
 export type WriteKind = keyof typeof WRITE_LIMITS;

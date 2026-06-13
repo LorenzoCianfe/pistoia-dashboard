@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth/dal";
 import { initialsOf } from "@/lib/colors";
 import { POST_KIND, publicNameOf } from "@/lib/community";
+import { CIVIC_TOPICS } from "@/lib/civic-topics";
 import { awardBadge } from "@/lib/badges";
 import { checkContribution } from "@/lib/moderation";
 import { limitWrite } from "@/lib/limits";
@@ -45,6 +46,8 @@ const postSchema = z.object({
   kind: z.string().refine((k) => k in POST_KIND, "Tipo non valido.").optional(),
   category: z.string().trim().max(30).optional(),
   neighborhoodId: z.string().optional(),
+  // Stanza tematica (A1 §17, O4): chiave di CIVIC_TOPICS.
+  topic: z.string().refine((t) => t in CIVIC_TOPICS, "Tema non valido.").optional(),
 });
 
 export type FeedActionState = { ok?: boolean; error?: string } | undefined;
@@ -60,6 +63,7 @@ export async function createPostAction(
     kind: formData.get("kind") || undefined,
     category: formData.get("category") || undefined,
     neighborhoodId: formData.get("neighborhoodId") || undefined,
+    topic: formData.get("topic") || undefined,
   });
 
   if (!parsed.success) {
@@ -85,12 +89,14 @@ export async function createPostAction(
       kind: parsed.data.kind ?? "domanda",
       content: parsed.data.content,
       category: parsed.data.category ?? null,
+      topic: parsed.data.topic ?? null,
       neighborhoodId: parsed.data.neighborhoodId || user.neighborhoodId || null,
     },
   });
 
   await awardBadge(user.id, "first_contribution");
   revalidatePath("/comunita");
+  if (parsed.data.topic) revalidatePath(`/comunita/stanze/${parsed.data.topic}`);
   return { ok: true };
 }
 

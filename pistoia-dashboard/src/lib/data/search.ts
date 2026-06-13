@@ -8,6 +8,11 @@ import {
   noticeKind,
   faqCategory,
 } from "@/lib/transparency";
+import {
+  qtStatus,
+  initiativeCategory,
+  projectStatus,
+} from "@/lib/territorio";
 import { operaStatus } from "@/lib/labels";
 import { formatDate } from "@/lib/format";
 import type { SearchResult } from "@/lib/search-types";
@@ -23,7 +28,21 @@ export async function globalSearch(raw: string): Promise<SearchResult[]> {
   if (q.length < 2 || q.length > 80) return [];
   const like = { contains: q };
 
-  const [reports, proposals, opere, events, polls, neighborhoods, decisions, commitments, notices, faqs] = await Promise.all([
+  const [
+    reports,
+    proposals,
+    opere,
+    events,
+    polls,
+    neighborhoods,
+    decisions,
+    commitments,
+    notices,
+    faqs,
+    questionTimes,
+    initiatives,
+    projects,
+  ] = await Promise.all([
     prisma.report.findMany({
       where: { OR: [{ title: like }, { description: like }, { location: like }] },
       select: { id: true, title: true, category: true, status: true },
@@ -84,6 +103,25 @@ export async function globalSearch(raw: string): Promise<SearchResult[]> {
     prisma.cityFaq.findMany({
       where: { OR: [{ question: like }, { answer: like }] },
       select: { id: true, question: true, category: true },
+      take: PER_TYPE,
+    }),
+    // Territorio & partecipazione (O4): question time, iniziative, progetti.
+    prisma.questionTime.findMany({
+      where: { OR: [{ title: like }, { description: like }] },
+      select: { id: true, title: true, status: true },
+      orderBy: { opensAt: "desc" },
+      take: PER_TYPE,
+    }),
+    prisma.initiative.findMany({
+      where: { OR: [{ title: like }, { description: like }, { location: like }] },
+      select: { id: true, title: true, category: true },
+      orderBy: { createdAt: "desc" },
+      take: PER_TYPE,
+    }),
+    prisma.civicProject.findMany({
+      where: { OR: [{ title: like }, { summary: like }] },
+      select: { id: true, title: true, status: true },
+      orderBy: { createdAt: "desc" },
       take: PER_TYPE,
     }),
   ]);
@@ -158,6 +196,27 @@ export async function globalSearch(raw: string): Promise<SearchResult[]> {
       title: f.question,
       subtitle: faqCategory(f.category),
       href: "/faq",
+    })),
+    ...questionTimes.map<SearchResult>((q) => ({
+      type: "questiontime",
+      id: q.id,
+      title: q.title,
+      subtitle: qtStatus(q.status).label,
+      href: "/question-time",
+    })),
+    ...initiatives.map<SearchResult>((i) => ({
+      type: "initiative",
+      id: i.id,
+      title: i.title,
+      subtitle: initiativeCategory(i.category).label,
+      href: "/iniziative",
+    })),
+    ...projects.map<SearchResult>((p) => ({
+      type: "project",
+      id: p.id,
+      title: p.title,
+      subtitle: projectStatus(p.status).label,
+      href: "/progetti",
     })),
   ];
 }

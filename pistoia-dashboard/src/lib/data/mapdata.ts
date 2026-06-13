@@ -4,6 +4,7 @@ import { CIVIC_POIS } from "@/lib/poi";
 import { reportCategory } from "@/lib/community";
 import { noticeKind } from "@/lib/transparency";
 import { operaStatus } from "@/lib/labels";
+import { bucketHeat, type HeatCell } from "@/lib/territorio";
 import { formatDateShort } from "@/lib/format";
 import type { MapPoint } from "@/lib/map";
 
@@ -87,4 +88,23 @@ export async function getMapPoints(): Promise<MapPoint[]> {
 
   points.push(...CIVIC_POIS);
   return points;
+}
+
+/**
+ * Heatmap civica / mappa del disagio (A2 §6, O4): densità delle segnalazioni
+ * aperte, bucketizzata su una griglia. Il calcolo è puro (bucketHeat); qui
+ * leggiamo solo i punti geolocalizzati delle segnalazioni ancora aperte.
+ */
+export async function getCivicHeat(): Promise<HeatCell[]> {
+  const reports = await prisma.report.findMany({
+    where: {
+      latitude: { not: null },
+      longitude: { not: null },
+      status: { notIn: ["risolta", "chiusa", "duplicata", "non_di_competenza"] },
+    },
+    select: { latitude: true, longitude: true },
+  });
+  return bucketHeat(
+    reports.map((r) => ({ latitude: r.latitude!, longitude: r.longitude! })),
+  );
 }

@@ -11,7 +11,10 @@ export type SearchResultType =
   | "decision"
   | "commitment"
   | "notice"
-  | "faq";
+  | "faq"
+  | "questiontime"
+  | "initiative"
+  | "project";
 
 export type SearchResult = {
   type: SearchResultType;
@@ -33,4 +36,7 @@ export const SEARCH_GROUP_LABEL: Record<SearchResultType, string> = {
   commitment: "Promesse e risultati",
   notice: "Avvisi urgenti",
   faq: "FAQ della città",
+  questiontime: "Question time",
+  initiative: "Volontariato e iniziative",
+  project: "Progetti civici",
 };

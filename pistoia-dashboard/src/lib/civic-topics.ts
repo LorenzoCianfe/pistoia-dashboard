@@ -3,6 +3,7 @@
 // (A1 §15 + A2 §10). Pure data only (no React imports), like community.ts.
 
 import { REPORT_CATEGORY, EVENT_CATEGORY } from "@/lib/community";
+import type { AccentColor } from "@/lib/colors";
 
 // ---------------------------------------------------------------------------
 // Temi civici — scelti dall'utente, pilotano il feed "Per te" e le notifiche
@@ -25,7 +26,7 @@ export type CivicTopicKey =
 export type CivicTopic = {
   label: string;
   emoji: string;
-  color: string;
+  color: AccentColor;
   /** REPORT_CATEGORY keys that belong to this topic. */
   reportCats: string[];
   /** Proposal "Ambito" labels that belong to this topic. */

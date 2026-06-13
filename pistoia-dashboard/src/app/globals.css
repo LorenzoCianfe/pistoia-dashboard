@@ -107,9 +107,10 @@
   --radius-lg: var(--radius-lg);
   --radius-pill: var(--radius-pill);
 
-  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  /* Voce display (DESIGN.md §3): solo titoli e numeri protagonisti, ≥20px. */
-  --font-display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
+  --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  /* Voce display (DESIGN.md §3): stessa famiglia, i titoli si distinguono per
+     peso e tracking — una sola voce, moderna e minimale. */
+  --font-display: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
 
   /* Easing di sistema: ease-out-quint per gli ingressi (DESIGN.md §6). */
   --ease-out-civic: cubic-bezier(0.22, 1, 0.36, 1);

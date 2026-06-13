@@ -20,10 +20,14 @@ import {
   Target,
   Siren,
   HelpCircle,
+  MessageCircleQuestion,
+  HeartHandshake,
+  FolderKanban,
   type LucideIcon,
 } from "lucide-react";
 import {
   NAV_ITEMS,
+  PARTICIPATION_NAV,
   TRANSPARENCY_NAV,
   SECONDARY_NAV,
   GUIDED_ACTIONS,
@@ -60,9 +64,17 @@ const TYPE_META: Record<SearchResultType, { icon: LucideIcon; color: AccentColor
   commitment: { icon: Target, color: "green" },
   notice: { icon: Siren, color: "red" },
   faq: { icon: HelpCircle, color: "teal" },
+  questiontime: { icon: MessageCircleQuestion, color: "teal" },
+  initiative: { icon: HeartHandshake, color: "green" },
+  project: { icon: FolderKanban, color: "amber" },
 };
 
-const PAGES: Item[] = [...NAV_ITEMS, ...TRANSPARENCY_NAV, ...SECONDARY_NAV].map((n) => ({
+const PAGES: Item[] = [
+  ...NAV_ITEMS,
+  ...PARTICIPATION_NAV,
+  ...TRANSPARENCY_NAV,
+  ...SECONDARY_NAV,
+].map((n) => ({
   key: `page:${n.href}`,
   title: n.label,
   href: n.href,

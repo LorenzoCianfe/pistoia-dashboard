@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
 import { getNeighborhoodDetail, getNeighborhoodBySlug } from "@/lib/data/neighborhoods";
+import { getNeighborhoodDiary } from "@/lib/data/territorio";
+import { pactStatus } from "@/lib/territorio";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Stat } from "@/components/ui/stat";
@@ -44,6 +46,7 @@ export default async function NeighborhoodDetailPage({
   const user = await requireUser();
   const data = await getNeighborhoodDetail(slug, user.id);
   if (!data) notFound();
+  const diary = await getNeighborhoodDiary(data.neighborhood.id);
 
   const { neighborhood: n, reports, posts, proposals, opere, events, following, followerCount, counts } =
     data;
@@ -81,6 +84,55 @@ export default async function NeighborhoodDetailPage({
         <div className="border-t border-border pt-4">
           <FollowButton targetType="neighborhood" targetId={n.id} following={following} />
         </div>
+      </Card>
+
+      {/* Diario del quartiere (A1 §9, O4): la settimana raccontata dai dati. */}
+      <Card>
+        <h2 className="text-base font-semibold">Questa settimana a {n.name}</h2>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-pill bg-green-soft px-3 py-1.5 text-xs font-semibold text-green">
+            ✓ {diary.resolvedReports} {diary.resolvedReports === 1 ? "segnalazione risolta" : "segnalazioni risolte"}
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-pill bg-amber-soft px-3 py-1.5 text-xs font-semibold text-amber">
+            + {diary.newReports} {diary.newReports === 1 ? "nuova segnalazione" : "nuove segnalazioni"}
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-pill bg-viola-soft px-3 py-1.5 text-xs font-semibold text-viola">
+            💬 {diary.newPosts} {diary.newPosts === 1 ? "nuova conversazione" : "nuove conversazioni"}
+          </span>
+        </div>
+        {diary.operaUpdates.length > 0 ? (
+          <ul className="mt-3 space-y-2 border-t border-border pt-3">
+            {diary.operaUpdates.map((u, i) => (
+              <li key={`${u.operaId}-${i}`} className="text-sm">
+                <Link href={`/opere/${u.operaId}`} className="font-semibold hover:text-teal">
+                  {u.operaName}
+                </Link>
+                <span className="text-muted"> — {u.note}</span>
+                <span className="ml-1.5 text-xs tabular-nums text-muted-2">({u.progress}%)</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {diary.pacts.length > 0 ? (
+          <ul className="mt-3 space-y-2 border-t border-border pt-3">
+            {diary.pacts.map((p) => (
+              <li key={p.id} className="flex items-center justify-between gap-3 text-sm">
+                <Link href="/patti" className="min-w-0 truncate font-medium hover:text-teal">
+                  🤝 {p.title}
+                </Link>
+                <span className="flex shrink-0 items-center gap-2">
+                  <Badge color={pactStatus(p.status).color} className="px-2 py-0.5 text-[11px]">
+                    {pactStatus(p.status).label}
+                  </Badge>
+                  <span className="text-xs tabular-nums text-muted-2">{p.progress}%</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <p className="mt-3 text-xs text-muted-2">
+          Riepilogo degli ultimi 7 giorni, calcolato dai dati della piattaforma.
+        </p>
       </Card>
 
       {/* Events */}

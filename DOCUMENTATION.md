@@ -359,8 +359,10 @@ In sintesi: istituzionale toscano contemporaneo, mobile-first. Sfondo quasi bian
 **teal (verde acqua)** e **viola** agli angoli (più intensi nel tema scuro); badge **ambra**; il
 rosso dello **stemma a scacchi** riservato a brand e urgenza. Tre motivi identitari come unico
 vocabolario decorativo: **scacchiera** dello stemma, **fasce romaniche** (San Giovanni Fuorcivitas),
-**città verde** (vivai). Tipografia a due voci: **Fraunces** (serif display, solo titoli e numeri
-protagonisti) + **Plus Jakarta Sans** (interfaccia). Motion sobrio: View Transitions sulle rotte,
+**città verde** (vivai). Tipografia a voce unica (revisione Ondata 4, 2026-06-13): **Montserrat**
+(sans geometrico) per tutto; i titoli si distinguono per **peso e tracking**, non per famiglia
+(sostituisce la coppia Fraunces + Plus Jakarta Sans; `--font-display` resta come registro display).
+Motion sobrio: View Transitions sulle rotte,
 ingresso di pagina con scivolamento, utility `.stagger`/`.pulse-civico`, easing
 `--ease-out-civic`. Rispetta `prefers-reduced-motion`.
 
@@ -588,6 +590,36 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   pulito, eslint 0 problemi, Vitest **69/69** (13 nuovi), Playwright **8/8** (3 nuovi), `next build`
   pulito. Versione **0.9.0**. Tutto ancora **dati mockup**.
 
+- **2026-06-13 (Ondata 4 — Territorio & partecipazione)** — Vita di quartiere e dialogo strutturato
+  (ROADMAP OB-1, OB-3). **Schema** (migrazione `ondata4_territorio`): `QuestionTime`/`QtQuestion`/
+  `QtVote`, `PriorityRound`/`PriorityItem`/`PriorityVote`, `Initiative`/`InitiativeJoin`,
+  `AdoptedPlace`, `NeighborhoodPact`/`PactUpdate`, `CivicProject` (+ `Report.civicProjectId`),
+  `CommunityPost.topic`, `Poll.docTitle/docSummary/docUrl`, `User.tourCompletedAt`/
+  `onboardingDismissedAt`. **Question time** (`A2 §22`, `/question-time`): tema aperto, domande votate
+  (voto/nuova domanda con stato ottimistico, `askQuestionAction`/`toggleQtVoteAction`), risposte
+  ufficiali archiviate. **Vota la priorità** (`A2 §9`, `/priorita`): `requireVerified`, un voto per
+  tornata spostabile (`votePriorityAction`), classifica live con `toPercents`, esito raccontato.
+  **Volontariato** (`A2 §14`, `/iniziative`): bacheca con adesione ottimistica e posti contati
+  (`toggleInitiativeJoinAction`, limiti `join`/`question` in `lib/limits.ts`). **Patti e luoghi**
+  (`A2 §31` + `A2 §16`, `/patti`): patti di quartiere con avanzamento + adozioni con ultima nota.
+  **Da segnalazione a progetto** (`A2 §8` + `A2 §7`, `/progetti`): cluster → progetto, segnalazioni
+  collegate, banner reciproco sul dettaglio segnalazione, "radar" dei problemi ricorrenti (helper puro
+  `groupRecurring`). **Stanze tematiche** (`A1 §17`, `/comunita/stanze[/topic]`): feed per tema
+  civico, composer che eredita il `topic`. **Diario del quartiere** (`A1 §9`): "Questa settimana a …"
+  computato (7 giorni) sul dettaglio quartiere. **Mappa del disagio** (`A2 §6`): heatmap overlay su
+  `/mappa` (helper puro `bucketHeat` + `L.circle` per cella; deep-link `?layer=disagio`).
+  **Consultazioni con documento** (`A2 §23`): documento + sintesi semplice sul poll-card. **Onboarding
+  "primi passi in città"** (`/la-mia-citta`): checklist progressiva di 5 passi che si spuntano dai dati
+  reali (`getOnboardingState`, helper puro `buildOnboardingSteps`), `OnboardingChecklist` + invito al
+  tour `TourOffer` per i nuovi account; il **tour demo** persiste il completamento (`completeTourAction`
+  sull'ultimo passo). **Tipografia**: **Montserrat** voce unica (sostituisce Fraunces + Jakarta).
+  **Integrazioni**: sezione "Partecipazione" in side-nav (5 voci), 3 nuovi tipi in ricerca/palette
+  (questiontime/initiative/project), nuovo passo del tour. Tassonomie pure in `lib/territorio.ts`,
+  dati in `lib/data/territorio.ts`. Seed: 2 question time, 2 tornate priorità, 5 iniziative, 4 luoghi,
+  3 patti, 2 progetti con segnalazioni collegate, consultazione con documento, account demo con
+  onboarding già concluso. Verificato: `tsc` pulito, eslint 0 problemi, Vitest **80/80** (11 nuovi),
+  Playwright **11/11** (3 nuovi), `next build` pulito. Versione **0.10.0**. Tutto ancora **dati mockup**.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.
@@ -603,8 +635,8 @@ di livello (FE·DES·UX·BE·ENG·SEC·A11Y·AI) su ogni idea e 18 proposte nuov
 - **§0 Come leggere** — legende di stato e di livello
 - **§1 Visione** — north star, "cosa è / cosa non è", tre direttrici, decisione mock
 - **§2 Obiettivi** — OB-1…OB-5 verificabili (ciclo civico chiuso, design distintivo, semplicità radicale, demo autoesplicativa, qualità continua)
-- **§3 Completato** — …, **Ondata 2 Semplicità & profilo (2026-06-11)**, **Ondata 0 Fondamenta visive (2026-06-12)**, **Ondata 1 Segnalazioni 2.0 (2026-06-12)**, **Ondata 3 Trasparenza (2026-06-12)**
-- **§4 Piano a ondate** — ~~O0 Fondamenta visive~~ ✅ → ~~O1 Segnalazioni 2.0~~ ✅ → ~~O3 Trasparenza~~ ✅ → O4 Territorio & partecipazione (prossima) → O5 Admin & nuovi pubblici (con **Vetrina aziende & sponsor**) + traccia "Qualità continua"
+- **§3 Completato** — …, **Ondata 2 Semplicità & profilo (2026-06-11)**, **Ondata 0 Fondamenta visive (2026-06-12)**, **Ondata 1 Segnalazioni 2.0 (2026-06-12)**, **Ondata 3 Trasparenza (2026-06-12)**, **Ondata 4 Territorio & partecipazione (2026-06-13)**
+- **§4 Piano a ondate** — ~~O0 Fondamenta visive~~ ✅ → ~~O1 Segnalazioni 2.0~~ ✅ → ~~O3 Trasparenza~~ ✅ → ~~O4 Territorio & partecipazione~~ ✅ → O5 Admin & nuovi pubblici (prossima, con **Vetrina aziende & sponsor**) + traccia "Qualità continua"
 - **§5 Nuove proposte (revisione 2026-06-11)** — le 🆕 con motivazione e destinazione
 - **§6 Catalogo delle idee per tema** — tutte le idee deduplicate con livello, fonte e stato (✅/🔜/📋/💡/🧊)
 - **§7 Regole di prodotto** — 9 vincoli trasversali (…, n. 8 "il design è progettato, non generato" → `DESIGN.md`, n. 9 "gli sponsor sono ospiti, non padroni")

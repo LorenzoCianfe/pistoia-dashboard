@@ -3,12 +3,13 @@ import { prisma } from "@/lib/db";
 import { demoBaseline } from "@/lib/demo";
 import type { Prisma } from "@/generated/prisma/client";
 
-export type FeedFilter = { kind?: string; neighborhoodId?: string };
+export type FeedFilter = { kind?: string; neighborhoodId?: string; topic?: string };
 
 export async function getCommunityFeed(userId: string, filter?: FeedFilter) {
   const where: Prisma.CommunityPostWhereInput = { hidden: false };
   if (filter?.kind) where.kind = filter.kind;
   if (filter?.neighborhoodId) where.neighborhoodId = filter.neighborhoodId;
+  if (filter?.topic) where.topic = filter.topic;
 
   const posts = await prisma.communityPost.findMany({
     where,
@@ -70,3 +71,15 @@ export async function getCommunityFeed(userId: string, filter?: FeedFilter) {
 }
 
 export type FeedPost = Awaited<ReturnType<typeof getCommunityFeed>>[number];
+
+/** Stanze tematiche (A1 §17, O4): quante conversazioni vive per tema. */
+export async function getTopicCounts(): Promise<Map<string, number>> {
+  const groups = await prisma.communityPost.groupBy({
+    by: ["topic"],
+    where: { hidden: false, topic: { not: null } },
+    _count: true,
+  });
+  return new Map(
+    groups.filter((g) => g.topic !== null).map((g) => [g.topic as string, g._count]),
+  );
+}
