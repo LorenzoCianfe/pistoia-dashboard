@@ -25,7 +25,7 @@ riflesse in `DESIGN.md`, `ARCHITECTURE.md` e `REFERENCES.md`.
 | J1 | Intensità del motion | **Livello 4** — con i componenti-firma |
 | D2 | Accento | Teal Pistoia `#0E9F92` come `--color-accent`; lime `#D9F312` come `--highlight` decorativo, **mai testo** |
 | F1 | Tipografia | **Schibsted Grotesk** + **JetBrains Mono** |
-| H-primitive | Le 16 primitive | **Ricostruirle come componenti Pistoia su Astryx** — rimandato all'ondata 6, fondamenta provate |
+| H-primitive | Le 16 primitive | **Restano Pistoia.** Alla prova dei fatti non conviene migrarle ai componenti Astryx: la motivazione è per singola primitiva in `ROADMAP.md` ondata 5 e in testa a ciascun file. Da rivalutare quando Astryx esce dalla Beta ed emette le classi stabili `.astryx-*` |
 | J-firma | Componenti-firma | **Tutti e quattro**: matrice di punti, mesh, timeline a punti, sezione narrata |
 
 ### Decisioni dell'ondata 6 (2026-07-25) — applicazione alle pagine
