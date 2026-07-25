@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { TOUR_START_EVENT } from "./command-palette";
 import { completeTourAction } from "@/app/actions/onboarding";
+import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /*
@@ -201,7 +202,7 @@ export function DemoTour() {
             <button
               type="button"
               onClick={last ? finish : () => goTo(step + 1)}
-              className="gradient-teal-viola inline-flex h-9 items-center gap-1.5 rounded-pill px-4 text-sm font-semibold text-white transition-[filter] hover:brightness-105"
+              className={buttonClasses("primary", "sm")}
             >
               {last ? "Concludi" : "Avanti"}
               {last ? null : <ArrowRight size={15} />}

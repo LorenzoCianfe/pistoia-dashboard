@@ -12,6 +12,7 @@ import {
   removeBlockedWordAction,
   mergeReportsAction,
 } from "@/app/actions/moderation";
+import { buttonClasses } from "@/components/ui/button";
 import { formatDate } from "@/lib/format";
 
 type FlaggedComment = {
@@ -173,7 +174,7 @@ export function ModerationPanel({
                 },
               )
             }
-            className="inline-flex items-center gap-1 rounded-pill gradient-teal-viola px-3.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+            className={buttonClasses("primary", "sm", "gap-1 px-3.5 text-xs")}
           >
             <Merge size={13} /> Unisci
           </button>

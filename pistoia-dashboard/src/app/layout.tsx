@@ -1,15 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Montserrat } from "next/font/google";
+import { JetBrains_Mono, Schibsted_Grotesk } from "next/font/google";
 import { cookies, headers } from "next/headers";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { SIMPLE_MODE_COOKIE } from "@/lib/ui-prefs";
 
-// Voce unica della piattaforma (DESIGN.md §3): Montserrat, geometrico e
-// minimale — i titoli si distinguono per peso e tracking, non per famiglia.
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
-  subsets: ["latin"],
+// Voce della piattaforma (DESIGN.md §3): Schibsted Grotesk, grottesco di
+// matrice editoriale — disegnato per la lettura di interesse pubblico. Regge
+// sia la label da 11px sia la cifra display da 80px, e ha una copertura piena
+// dei diacritici italiani. Sostituisce Montserrat (revisione 2026-07-25).
+const schibsted = Schibsted_Grotesk({
+  variable: "--font-schibsted",
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+});
+
+// Voce tecnica: numeri di protocollo, coordinate, timestamp, importi tabellari.
+const jetbrains = JetBrains_Mono({
+  variable: "--font-jetbrains",
+  subsets: ["latin", "latin-ext"],
   display: "swap",
 });
 
@@ -26,9 +35,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  // Allineati alla tela (DESIGN.md §5): la cornice del browser continua la
+  // superficie invece di interromperla.
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fbfbfd" },
-    { media: "(prefers-color-scheme: dark)", color: "#0e1117" },
+    { media: "(prefers-color-scheme: light)", color: "#e8e7e4" },
+    { media: "(prefers-color-scheme: dark)", color: "#131211" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -51,11 +62,18 @@ export default async function RootLayout({
     <html
       lang="it"
       suppressHydrationWarning
-      className={`${montserrat.variable} h-full antialiased${simpleMode ? " simple-mode" : ""}`}
+      // `data-astryx-theme` è statico e scritto qui, lato server: i token del
+      // tema vivono in un blocco @scope agganciato a questo attributo, quindi
+      // senza di esso lo sfondo del <body> non avrebbe i token già al primo
+      // paint. Astryx lo sincronizzerebbe da solo, ma solo dopo l'hydration.
+      data-astryx-theme="pistoia"
+      className={`${schibsted.variable} ${jetbrains.variable} h-full antialiased${simpleMode ? " simple-mode" : ""}`}
     >
       <body className="min-h-full">
         <ThemeProvider
-          attribute="class"
+          // Due attributi: `class` per le variant `dark:` di Tailwind usate
+          // dalle rotte esistenti, `data-theme` per il light-dark() di Astryx.
+          attribute={["class", "data-theme"]}
           defaultTheme="light"
           enableSystem
           disableTransitionOnChange

@@ -9,4 +9,10 @@ Thumbs.db
 # Generated knowledge graph (regenerable with `graphify update .`)
 graphify-out/
 
+# Riferimenti visivi: lavoro di design pubblicato da terzi (Ron Design Lab),
+# tenuto in locale come direzione. Questo repository è PUBBLICO e la LICENSE è
+# proprietaria: ripubblicare qui opere altrui sarebbe scorretto. L'analisi che
+# ne abbiamo tratto vive in REFERENCES.md, che è la parte che serve davvero.
+refs/
+
 # App-level ignores live in pistoia-dashboard/.gitignore

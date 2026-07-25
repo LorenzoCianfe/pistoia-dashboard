@@ -1,148 +1,308 @@
 # Design — Dashboard di Pistoia
 
-> Direzione estetica e linguaggio visivo della piattaforma. Questo documento è la fonte di verità per ogni decisione di design: se una scelta visiva non è coerente con quanto scritto qui, o si corregge la scelta o si aggiorna (consapevolmente) questo documento.
-> **Ultimo aggiornamento:** 2026-06-11 · I token implementati vivono in `pistoia-dashboard/src/app/globals.css`.
+> Direzione estetica e linguaggio visivo della piattaforma. Questo documento è
+> la fonte di verità per ogni decisione di design: se una scelta visiva non è
+> coerente con quanto scritto qui, o si corregge la scelta o si aggiorna
+> (consapevolmente) questo documento.
+>
+> **Revisione 2026-07-25 — direzione ibrida.** Struttura visiva dai riferimenti
+> in `refs/`, significato dall'identità civica di Pistoia. Le decisioni sono
+> tracciate in `DISCOVERY.md`; le fonti in `REFERENCES.md`.
+>
+> I token vivono in `pistoia-dashboard/src/themes/pistoia.ts` (sistema) e in
+> `src/app/globals.css` (estensioni Pistoia).
 
 ---
 
 ## 1. Carattere: civica, toscana, contemporanea
 
-La Dashboard di Pistoia rappresenta un'istituzione. Il suo design deve trasmettere tre cose, in quest'ordine:
+La Dashboard di Pistoia rappresenta un'istituzione. Il suo design deve
+trasmettere tre cose, in quest'ordine:
 
-1. **Affidabilità** — è il Comune che parla: ordine, gerarchia chiara, niente effetti gratuiti.
-2. **Vicinanza** — è al servizio dei cittadini, non sopra di loro: toni caldi, linguaggio umano, forme morbide.
-3. **Cura** — una piattaforma curata comunica che la città è curata: ogni dettaglio (stati vuoti, caricamenti, errori) è disegnato, mai lasciato al caso.
+1. **Affidabilità** — è il Comune che parla: ordine, gerarchia chiara, niente
+   effetti gratuiti.
+2. **Vicinanza** — è al servizio dei cittadini, non sopra di loro: toni caldi,
+   linguaggio umano, forme morbide.
+3. **Cura** — una piattaforma curata comunica che la città è curata: ogni
+   dettaglio (stati vuoti, caricamenti, errori) è disegnato, mai lasciato al caso.
 
-**In una frase:** *l'eleganza sobria di un palazzo comunale toscano, con la leggibilità di un prodotto digitale moderno.*
+**In una frase:** *l'eleganza sobria di un palazzo comunale toscano, con la
+leggibilità di un prodotto digitale moderno.*
 
-Non è: un social network, una startup SaaS, un sito vetrina turistico, un template Tailwind. Quando un pattern sembra "già visto su dieci dashboard", è il segnale per ridisegnarlo.
+Non è: un social network, una startup SaaS, un sito vetrina turistico, un
+template Tailwind. Quando un pattern sembra "già visto su dieci dashboard", è il
+segnale per ridisegnarlo.
 
 ---
 
-## 2. I tre motivi identitari
+## 2. La direzione ibrida
 
-Il design attinge a tre simboli reali di Pistoia. Sono il vocabolario decorativo della piattaforma: ogni ornamento deve derivare da uno di questi, mai da pattern generici.
+Due sistemi convivono, con ruoli separati e non intercambiabili.
+
+| | Da `refs/` | Da Pistoia |
+|---|---|---|
+| **Porta** | la forma | il significato |
+| Tela grigio-calda | ✅ | |
+| Superfici chiare a squircle | ✅ | rese a vetro, non a pannello |
+| Un solo accento, usato pochissimo | ✅ | |
+| Cifre display sovradimensionate | ✅ | |
+| Gradienti mesh con grana | ✅ | la tinta codifica un dato |
+| Rosso dello stemma | | ✅ brand e urgenza |
+| Semantica dei colori di stato | | ✅ |
+| Scacchiera, fasce romaniche, verde dei vivai | | ✅ |
+| Lingua e registro civico | | ✅ |
+
+**Perché ibrida e non pura.** La sola forma dei riferimenti darebbe
+un'interfaccia bella e anonima: potrebbe essere di qualunque città, o di
+nessuna. La sola identità precedente darebbe una piattaforma riconoscibile ma
+datata. La regola operativa: **i riferimenti decidono come appare, Pistoia
+decide cosa significa.**
+
+---
+
+## 3. I tre motivi identitari
+
+Il design attinge a tre simboli reali di Pistoia. Sono il vocabolario decorativo
+della piattaforma: ogni ornamento deve derivare da uno di questi, mai da pattern
+generici.
 
 | Motivo | Origine | Uso nella UI |
 |---|---|---|
-| **La scacchiera** | Lo stemma comunale, bianco e rosso scaccato | Momenti di brand: crest, favicon, dettagli del tour demo, bordo decorativo della Civic ID Card. Il rosso `--red` è *il* rosso dello stemma: riservato a brand e stati di errore/urgenza, mai decorativo casuale |
-| **Le fasce romaniche** | Il marmo a fasce alternate di San Giovanni Fuorcivitas e del Duomo | Ritmo orizzontale: separatori di sezione, pattern sottili negli hero e negli empty state, righe alternate delle tabelle. Sempre a contrasto tenue (mai zebra dura) |
-| **La città verde** | Pistoia capitale europea dei vivai | Il verde-acqua `--teal` è il colore "vivo" della piattaforma: azioni primarie, progressi, dati che crescono. Il viola `--viola` è il suo complemento istituzionale per la partecipazione |
-
----
-
-## 3. Tipografia
-
-| Ruolo | Font | Uso |
-|---|---|---|
-| **Voce unica** | **Montserrat** (variabile, sans geometrico) | Tutta la piattaforma: titoli, body, label, navigazione, form. Moderna e minimale; revisione 2026-06-12, sostituisce la coppia Fraunces + Plus Jakarta Sans |
-| **Display / titoli** | Montserrat con peso ≥600 e tracking stretto | H1–H2 e numeri grandi delle statistiche si distinguono per **peso e tracking**, non per famiglia |
-| **Dati tabellari** | Montserrat con `font-variant-numeric: tabular-nums` | Tabelle, importi, confronti: le cifre si allineano sempre |
-
-Regole:
-- Il registro display (`--font-display`, classe `font-display`) **solo** dove c'è gerarchia da affermare (titolo di pagina, numero protagonista): stessa famiglia, peso semibold+ e `tracking-tight`.
-- Scala tipografica modulare definita nei token (`--text-*`); niente font-size arbitrari nelle pagine.
-- I numeri importanti si presentano grandi e pesanti: il dato è il protagonista della piattaforma.
-- Lingua: italiano, registro del "tu" civico — diretto ma mai confidenziale ("Segnala un problema", non "Dicci cosa non va!").
+| **La scacchiera** | Lo stemma comunale, bianco e rosso scaccato | Momenti di brand: crest, favicon, Civic ID Card. Il rosso `--color-error` è *il* rosso dello stemma: riservato a brand ed errore/urgenza, mai decorativo |
+| **Le fasce romaniche** | Il marmo a fasce di San Giovanni Fuorcivitas | Ritmo orizzontale: separatori, pattern tenui negli hero e negli empty state. Sempre a contrasto minimo (`.bande-romaniche`) |
+| **La città verde** | Pistoia capitale europea dei vivai | Il verde-acqua `--color-accent` è il colore "vivo" della piattaforma: azioni, progressi, dati che crescono |
 
 ---
 
 ## 4. Colore
 
-La palette esistente è confermata e formalizzata. Il fondo è quasi-bianco con bagliori d'angolo teal/viola; le superfici sono bianche, morbide, leggermente smerigliate.
+La tela è **grigio-calda**, le superfici sono **bianche**. È l'inversione
+rispetto alla versione precedente (fondo quasi-bianco) ed è la scelta
+strutturale che porta tutto il resto: su un fondo grigio le card bianche si
+leggono come oggetti appoggiati, non come "il foglio".
 
-### Semantica (non negoziabile)
+### Ruoli (non negoziabili)
 
 | Token | Significato | Esempi |
 |---|---|---|
-| `--teal` | **Azione e vita**: il colore primario | CTA, link attivi, progressi, conferme |
+| `--color-accent` `#0E9F92` | **Azione e vita**: il colore primario | CTA, link, focus, progressi |
+| `--highlight` `#D9F312` | **Evidenza decorativa** | Chip, pallini "live", maniglie. **Mai testo, mai icone** |
+| `--color-error` `#D63A57` | **Brand e urgenza** (rosso dello stemma) | Crest, errori, segnalazioni urgenti |
+| `--color-success` | **Risolto / completato** | Esiti positivi, segnalazioni chiuse |
+| `--amber` | **Attenzione e attesa** | "In valutazione", avvisi non critici |
 | `--viola` | **Partecipazione e comunità** | Proposte, sondaggi, badge civici |
-| `--amber` | **Attenzione e attesa** | Stati "in valutazione", avvisi non critici, badge demo |
-| `--red` | **Brand e urgenza** (il rosso dello stemma) | Crest, errori, segnalazioni urgenti. Mai come decorazione |
-| `--green` | **Risolto / completato** | Esiti positivi, segnalazioni chiuse |
 
-Regole:
-- Un colore dominante per schermata: le pagine hanno una tinta d'accento prevalente in base alla sezione (es. proposte → viola), non un arcobaleno.
-- I colori `-soft` sono gli unici ammessi come sfondi di badge/chip; il colore pieno va su testo/icone/bordi.
-- Contrasto WCAG AA minimo ovunque, AAA per il testo body. Già verificato: non si regredisce.
-- Gradiente teal→viola: riservato a **un** momento per pagina al massimo (hero, numero chiave). È la firma, non la tappezzeria.
+### La regola del lime
+
+Il lime è l'elemento più riconoscibile dei riferimenti ed è anche il più facile
+da usare male. Su bianco fa **1,1:1**: come testo o icona è illeggibile.
+
+- ✅ sfondo di chip, con `--highlight-ink` sopra (15,8:1)
+- ✅ pallini di stato, maniglie di slider, punti in un grafico
+- ❌ testo, icone, bordi, link — in nessun tema
+
+Per costruzione esiste `bg-highlight` ma **non** `text-highlight`.
+
+### Altre regole
+
+- **Un colore dominante per schermata.** Le pagine non sono arcobaleni.
+- I colori `-soft` sono gli unici ammessi come sfondi di badge/chip; il colore
+  pieno va su testo/icone/bordi.
+- **Contrasto WCAG AA ovunque, AAA sul body.** Già verificato: non si regredisce.
+- Il gradiente teal→viola resta ammesso in **un** momento per pagina al massimo.
 
 ---
 
-## 5. Spazio, forma, elevazione
+## 5. Tipografia
 
-- **Raggio**: la piattaforma è morbida. `--radius-sm` (0.85rem) per input e chip, `--radius` (1.5rem) per le card, `--radius-lg` (2rem) per hero e modali, pill per bottoni e badge. Mai spigoli vivi, mai mix di raggi nella stessa gerarchia.
-- **Elevazione**: due sole ombre — quella di riposo (sottile, diffusa) e quella di hover (più alta, sempre con `translateY(-2px)`). Niente ombre dure, niente glow colorati salvo focus.
-- **Densità**: aria generosa di default; la densità aumenta solo nelle viste dati (tabelle bilancio, admin). La modalità semplice scala tutto al 115%: ogni layout deve sopravvivere a quel test.
-- **Bordi**: 1px `--border`; il bordo forte solo su hover/focus. Le fasce romaniche (sezione 2) sono il modo decorativo di separare, in alternativa alle linee.
+| Ruolo | Font | Uso |
+|---|---|---|
+| **Voce** | **Schibsted Grotesk** | Tutta la piattaforma. Grottesco di matrice editoriale, disegnato per la lettura di interesse pubblico |
+| **Dati tecnici** | **JetBrains Mono** | Protocolli, coordinate, timestamp, importi tabellari |
+| **Display** | Schibsted Grotesk, peso 300–400, tracking stretto | Numeri protagonisti e titoli di pagina |
+
+Sostituisce Montserrat (revisione 2026-07-25): le forme geometriche larghe di
+Montserrat erano il motivo principale per cui l'interfaccia si leggeva come un
+template.
+
+**La regola del contrasto.** La gerarchia si afferma con la **dimensione**, non
+con il peso: label 11px in `600` uppercase contro display 80px in `300`. È
+l'opposto della regola precedente ed è voluto.
+
+- Scala modulare nei token (`--text-*`, base 15px, ratio 1,25). Niente
+  `font-size` arbitrari nelle pagine.
+- `font-variant-numeric: tabular-nums` ovunque le cifre si confrontino.
+- Lingua: italiano, registro del "tu" civico — diretto ma mai confidenziale
+  ("Segnala un problema", non "Dicci cosa non va!").
 
 ---
 
-## 6. Motion
+## 6. Spazio, forma, elevazione
 
-Il movimento comunica che la città è viva — ma è un'istituzione che si muove: sobria, mai giocosa.
+- **Raggio.** Scala Astryx, base 6 × moltiplicatore 1,75:
+  `--radius-inner` 10,5px (campi interni) · `--radius-element` 21px ·
+  `--radius-container` **32px** (card) · `--radius-full` (bottoni, chip).
+  Mai spigoli vivi, mai raggi misti nella stessa gerarchia.
+- **Elevazione = vetro, non alone** (revisione 2026-07-25). Le card sono
+  **materiali in stile Apple**: superficie translucida (72% chiaro / 76% scuro),
+  `backdrop-filter: blur(24px) saturate(180%)`, filo di luce interno sul bordo
+  superiore, bordo capello. **Niente ombre diffuse**: l'elevazione si comunica
+  con la translucenza e col filo, non con un bagliore attorno alla card.
+
+  La *saturazione* non è un vezzo: sfocare rende il fondo indistinto ma lo
+  sbiadisce, e il boost restituisce il colore che la sfocatura toglie. È il
+  dettaglio che separa il vetro vero dal "bianco trasparente".
+
+  Il vetro ha bisogno di **materia da sfocare**: la tela porta una grana
+  finissima (`--canvas-grain-opacity: 0.045`) proprio per questo. Senza,
+  `backdrop-filter` non ha nulla su cui lavorare e la card translucida è
+  indistinguibile da un pannello opaco.
+
+  Contrasto verificato: **16,8:1 (chiaro) e 16,0:1 (scuro)** — AAA in entrambi.
+  Il vetro non costa leggibilità perché è denso e la tela è di tono vicino.
+- **Densità.** Aria generosa di default; **la densità aumenta solo nelle viste
+  dati** (bilancio, admin). I riferimenti sono ariosi perché mostrano ~10 dati
+  per schermata: il bilancio ne ha centinaia, e copiare l'ariosità lì sarebbe
+  copiare la forma ignorando il contenuto.
+- **Modalità semplice.** Tutto scala al 115%: ogni layout deve sopravvivere a
+  quel test.
+
+---
+
+## 7. Motion
+
+Il movimento comunica che la città è viva — ma è un'istituzione che si muove:
+sobria, mai giocosa. **Livello 3 su 5**: sicura e orchestrata, mai ambientale.
 
 | Principio | Regola |
 |---|---|
-| **Durate** | 150ms micro (hover, toggle) · 250ms standard (card, fade) · 400ms scena (page load, modali). Mai oltre 500ms |
-| **Easing** | `cubic-bezier(0.22, 1, 0.36, 1)` (ease-out-quint) per ingressi; ease semplice per i colori. Mai bounce, mai elastic |
-| **Ingresso pagina** | Una sola orchestrazione: titolo → contenuto principale → dettagli, stagger 40–60ms. Il resto appare e basta |
-| **Transizioni di rotta** | View Transitions: cross-fade rapido + continuità degli elementi condivisi dove naturale |
-| **Micro-interazioni** | Riservate alle azioni civiche che meritano festa misurata: invio segnalazione, conferma risoluzione, firma proposta |
-| **Dati** | I numeri contano da 0 (AnimatedNumber esistente), i grafici si disegnano una volta sola all'ingresso |
-| **Reduced motion** | `prefers-reduced-motion` annulla tutto (già attivo). Non negoziabile |
+| **Durate** | 150ms micro · 250ms standard · 400ms scena. Mai oltre 500ms |
+| **Easing** | `cubic-bezier(0.22, 1, 0.36, 1)` per gli ingressi. Mai bounce, mai elastic |
+| **Ingresso pagina** | Una sola orchestrazione: titolo → contenuto → dettagli, stagger 40–60ms |
+| **Transizioni di rotta** | Elemento condiviso (`layoutId`) per lista → dettaglio; cross-fade altrove |
+| **Scroll** | Rivelazione una tantum. **Una sola** sezione narrata per pagina. Nessun parallax |
+| **Micro-interazioni** | Tre soli momenti di festa: invio segnalazione, firma proposta, segnalazione risolta |
+| **Dati** | I numeri contano da 0 una volta; i grafici si disegnano una volta sola |
+| **Reduced motion** | `prefers-reduced-motion` annulla tutto. Non negoziabile |
+
+**Librerie.** Motion per tutto ciò che è React. Anime.js solo per lavoro
+nativamente SVG. Nessun GSAP, nessuno sfondo WebGL — vedi `REFERENCES.md` §6.
 
 ---
 
-## 7. Iconografia, illustrazione, empty state
+## 8. I quattro componenti-firma
 
-- **Icone**: Lucide, peso 1.5–2, sempre con etichetta testuale nelle azioni primarie. Mai icone-mistero.
-- **Empty state**: ogni lista vuota ha un'illustrazione custom della famiglia "Pistoia geometrica" — composizioni astratte costruite **solo** con i tre motivi identitari (scacchi, fasce, foglia/vivaio) nei colori soft della palette. SVG inline, leggeri, coerenti tra loro. Ogni empty state dice: cosa non c'è, perché, e qual è l'azione per riempirlo.
-- **Niente**: foto stock, illustrazioni 3D generiche, emoji come decorazione strutturale, clipart "people working".
+Vivono in `src/components/signature/`. Nessuna dipendenza aggiuntiva.
+
+### `DisplayNumber`
+Cifra display. **Una sola per schermata** — se ce ne sono due, nessuna è
+protagonista.
+
+Il principio: la memorabilità viene dalla **scala**, non da un espediente
+grafico. Label 11px in peso 600 contro cifra 88px in peso **300** — il peso va
+nella direzione opposta a quella istintiva, ed è ciò che impedisce alla cifra di
+sembrare uno slogan urlato e le dà il tono di un dato.
+
+Il numero è **testo vero**: selezionabile, cercabile, copiabile, leggibile da
+qualunque tecnologia assistiva, senza equivalenti nascosti da mantenere
+allineati.
+
+Corredo, tutto **opzionale** — va aggiunto solo quando dice qualcosa, perché un
+numero circondato da quattro decorazioni non è più leggibile di uno nudo:
+- **unità accanto**, non dentro ("129" è il dato, "mln €" è il contesto);
+- **scala a tacche**, dove cade il valore in un intervallo *reale* (una scala
+  inventata è peggio di nessuna scala). La tacca attiva è più alta e piena:
+  si trova senza bisogno di colore, quindi funziona in scala di grigi;
+- **delta** con freccia e periodo;
+- **micro-sparkline** accanto.
+
+Entra contando da zero (≤900ms, `tabular-nums` per non far ballare la
+larghezza). Taglia `md` per le card di stato e le superfici mesh.
+
+> *Sostituisce la cifra a matrice di punti (revisione 2026-07-25). La matrice
+> era l'elemento più riconoscibile dei riferimenti ma andava contro il
+> requisito primario di questa piattaforma: un importo di bilancio deve essere
+> leggibile prima che memorabile.*
+
+### `MeshSurface`
+Superficie a gradiente mesh con grana. **La tinta codifica un dato**: `good` /
+`warn` / `bad` derivano da una percentuale, `cool` è il neutro da usare quando la
+superficie non rappresenta una salute — così il verde non viene letto come "va
+tutto bene" per caso.
+
+### `DotScatterTimeline`
+Attività nel tempo: posizione = valore, diametro = intensità, colore = stato.
+Da preferire alla spezzata quando i dati sono eventi discreti, dove una linea
+suggerirebbe una continuità che non c'è. Attraversabile da tastiera con le
+frecce, con tabella equivalente sempre presente.
+
+### `ScrollTold` / `ScrollStep`
+Sezione narrata dallo scroll, **una per pagina**, solo dove c'è un ragionamento
+da accompagnare (il bilancio). Usa la ScrollTimeline nativa via Motion. Con
+`prefers-reduced-motion` diventa statica e tutti i passaggi restano visibili.
 
 ---
 
-## 8. Data-viz
+## 9. Data-viz
 
-I dati sono il cuore civico della piattaforma: la visualizzazione è informazione, non ornamento.
+I dati sono il cuore civico della piattaforma: la visualizzazione è
+informazione, non ornamento.
 
-- Palette dati derivata dai token (teal → viola → ambra, con i soft come riempimenti); il rosso solo per scostamenti negativi/urgenze.
-- Ogni grafico ha: titolo che dice la *conclusione* (non "Spesa per missione" ma "Dove vanno i soldi"), fonte + freschezza (SourceBadge), equivalente testuale accessibile.
-- Treemap del bilancio: le aree parlano (etichette dentro le celle quando c'è spazio), interazione = approfondimento progressivo (missione → programmi), transizioni dolci.
-- Mai: torte 3D, doppi assi non dichiarati, assi tagliati che drammatizzano, legende che richiedono memoria.
-
----
-
-## 9. Tema scuro
-
-Il tema scuro è una **seconda lettura dello stesso luogo, di sera** — non un'inversione.
-
-- Fondo blu-notte (`#0e1117` esistente), superfici che salgono per gradini chiari, bagliori d'angolo più presenti (la sera le luci si vedono di più).
-- I colori d'accento si schiariscono di un grado (già nei token) ma la semantica resta identica.
-- Le ombre quasi spariscono: nel buio l'elevazione si comunica con i gradini di superficie e i bordi.
-- Ogni componente nuovo nasce nei due temi insieme: non esiste "poi lo adattiamo al dark".
+- Palette dati dai token `--color-data-*`, ritinti sulla palette civica: il teal
+  porta le quantità, il rosso dello stemma solo gli scostamenti negativi.
+- Ogni grafico ha: un titolo che dice la **conclusione** (non "Spesa per
+  missione" ma "Dove vanno i soldi"), fonte e freschezza (`SourceBadge`), e un
+  **equivalente testuale** accessibile.
+- Interazione: tooltip e approfondimento progressivo. Niente brush (ostile al
+  tocco).
+- Mai: torte 3D, doppi assi non dichiarati, assi tagliati che drammatizzano,
+  legende che richiedono memoria.
 
 ---
 
-## 10. Accessibilità (vincoli, non preferenze)
+## 10. Tema scuro
+
+Il tema scuro è una **seconda lettura dello stesso luogo, di sera** — non
+un'inversione.
+
+- Tela near-black calda `#131211`, superfici che salgono per gradini `#1C1B1A`.
+- Gli accenti si schiariscono di un grado; la semantica resta identica.
+- Le ombre quasi spariscono: l'elevazione si comunica con i gradini di superficie.
+- **Ogni componente nasce nei due temi insieme**: non esiste "poi lo adattiamo
+  al dark". Il meccanismo è `light-dark()` guidato da `html[data-theme]` —
+  attenzione a non impostare `color-scheme` su elementi intermedi
+  (vedi `AGENTS.md` §3).
+
+---
+
+## 11. Accessibilità (vincoli, non preferenze)
 
 1. Contrasto AA ovunque, AAA sul body.
-2. Tutto è raggiungibile e usabile da tastiera; focus visibile sempre (`--ring`).
+2. Tutto raggiungibile e usabile da tastiera; focus sempre visibile (`--ring`).
 3. Stati comunicati anche senza colore (icona + testo, mai solo rosso/verde).
-4. Live region per i cambi di stato asincroni (già in essere con ActionError/toast).
-5. La modalità semplice è un cittadino di prima classe: ogni feature nuova si verifica anche lì.
+4. Live region per i cambi di stato asincroni.
+5. La modalità semplice è un cittadino di prima classe: ogni feature nuova si
+   verifica anche lì.
 6. Target touch ≥ 44px.
+7. **Ogni grafico ha un equivalente testuale** e, dove possibile, è
+   attraversabile da tastiera.
+8. Nessun contenuto può restare invisibile perché un'animazione non è partita
+   (vedi la regola `@media print` in `globals.css`).
 
 ---
 
-## 11. Sì / No
+## 12. Sì / No
 
 | ✅ Sì | ❌ No |
 |---|---|
-| Un momento memorabile per pagina (un hero, un numero, una visualizzazione) | Dieci effetti che competono |
-| Ornamento derivato dai tre motivi identitari | Pattern decorativi generici, gradienti viola su bianco da template |
-| Montserrat pesante per affermare, regolare per funzionare | Titoli in font "di sistema" o registro display usato per i paragrafi |
+| Un momento memorabile per pagina | Dieci effetti che competono |
+| Ornamento derivato dai tre motivi | Gradienti generici da template |
+| Lime come sfondo di un chip | Lime come testo o icona |
+| Mesh la cui tinta codifica un dato | Mesh scelto perché "sta bene" |
+| Una cifra display per schermata, in peso leggero | Due numeri che si contendono il ruolo di protagonista |
+| Corredo aggiunto solo quando dice qualcosa | Unità + scala + delta + sparkline "perché ci stanno" |
+| Elevazione per translucenza e filo di luce | Aloni e ombre diffuse attorno alle card |
+| Densità che cresce solo nelle viste dati | Tutto arioso indistintamente |
 | Stati vuoti/errore/caricamento disegnati | `<p>Nessun risultato</p>` |
-| Motion sobrio con un'unica orchestrazione d'ingresso | Animazioni su ogni elemento, bounce, parallax |
+| Motion con un'unica orchestrazione | Animazioni ovunque, bounce, parallax |
 | Il rosso dello stemma per brand e urgenza | Rosso decorativo |
-| Densità che cresce solo nelle viste dati | Tutto compresso o tutto arioso indistintamente |

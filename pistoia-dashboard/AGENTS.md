@@ -1,3 +1,12 @@
+# Regole per gli agenti — applicazione
+
+> ⚠️ **Le regole operative complete stanno in [`../AGENTS.md`](../AGENTS.md)
+> (radice del repository). Leggile per prime.** Qui restano solo le note
+> specifiche del framework.
+>
+> In particolare, prima di toccare stili o tema, leggi `../AGENTS.md` §3: ci
+> sono tre trappole del design system che costano ore se ignorate.
+
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 

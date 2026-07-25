@@ -72,7 +72,7 @@ export default async function PattiPage() {
                     </div>
                     <div className="mt-1.5 h-2 overflow-hidden rounded-pill bg-surface-2" aria-hidden>
                       <div
-                        className="h-full rounded-pill gradient-teal-viola"
+                        className="h-full rounded-pill bg-[var(--color-accent)]"
                         style={{ width: `${p.progress}%` }}
                       />
                     </div>

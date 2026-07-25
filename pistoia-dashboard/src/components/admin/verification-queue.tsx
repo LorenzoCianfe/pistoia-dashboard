@@ -9,6 +9,7 @@ import {
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
+import { buttonClasses } from "@/components/ui/button";
 import { VERIFICATION, ACCOUNT_TYPE } from "@/lib/community";
 
 type Item = {
@@ -73,7 +74,7 @@ function QueueItem({ item }: { item: Item }) {
             type="submit"
             name="decision"
             value="APPROVED"
-            className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-pill gradient-teal-viola text-sm font-semibold text-white active:scale-[0.98]"
+            className={buttonClasses("primary", "sm", "flex-1")}
           >
             <Check size={15} strokeWidth={2.5} />
             Approva

@@ -142,7 +142,62 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 | Patti digitali di quartiere: obiettivi condivisi | `FE` `BE` | `A2 §31` | ✅ |
 | Consultazioni strutturate con documenti allegati | `FE` `BE` | `A2 §23` | ✅ |
 
-### Ondata 5 — Admin intelligence & nuovi pubblici 🔜 *(prossima)*
+### Ondata 5 — Fondamenta Astryx & direzione ibrida ✅ *(completata 2026-07-25)*
+
+**Obiettivo (→ OB-5):** rifondare il design system su una base solida e
+riorientare il linguaggio visivo. Processo guidato dalla scoperta: ~90 domande
+in [`DISCOVERY.md`](DISCOVERY.md), otto decisioni bloccanti prese prima di
+scrivere codice. Fonti e regole d'uso in [`REFERENCES.md`](REFERENCES.md).
+
+| Voce | Livello | Stato |
+|---|---|---|
+| Analisi delle 8 fonti di riferimento, con regola d'uso per ciascuna | `DES` | ✅ |
+| Adozione di **Astryx** come strato di primitive e sorgente dei token | `FE` | ✅ |
+| Tema Pistoia via `defineTheme` (112 token, 6 override di componente) | `DES` `FE` | ✅ |
+| Build del tema in CSS statico — obbligatorio sotto CSP con nonce | `FE` | ✅ |
+| Direzione ibrida: forma dai riferimenti, significato da Pistoia | `DES` | ✅ |
+| Tela grigio-calda, superfici bianche squircle senza bordo | `DES` | ✅ |
+| Tipografia Schibsted Grotesk + JetBrains Mono (sostituisce Montserrat) | `DES` | ✅ |
+| Accento teal + lime decorativo vincolato ai soli ruoli non testuali | `DES` | ✅ |
+| Ponte di retrocompatibilità: ~1050 utility adottano i nuovi token, zero rotte toccate | `FE` | ✅ |
+| `DotMatrixNumber` · `MeshSurface` · `DotScatterTimeline` · `ScrollTold` | `FE` `DES` | ✅ |
+| Vetrina `/design-system` | `FE` | ✅ |
+| `npm run shots` — revisione visiva nei due temi | `QA` | ✅ |
+| Documentazione: AGENTS · ARCHITECTURE · SECURITY · FEATURES · DESIGN · REFERENCES | `DOC` | ✅ |
+
+**Lezioni pagate** (ora in `AGENTS.md` §3, per non ripagarle):
+il provider `<Theme>` di Astryx rompe il tema scuro applicando `color-scheme` su
+un wrapper discendente; il ponte Tailwind ufficiale collide con la semantica di
+`--color-muted` dell'app; Turbopack va in panic dopo un cambio di dipendenze
+finché non si cancella `.next`.
+
+**Le primitive: esito diverso da quello previsto.** L'ondata prevedeva di
+riscrivere le 16 primitive *sopra i componenti* Astryx. Alla prova dei fatti
+**non conviene**, e la decisione è documentata invece che nascosta:
+
+| Primitiva | Componente Astryx | Perché non si adotta |
+|---|---|---|
+| `Input` | `TextInput` | Richiede `value`: è **controllato per contratto**. Qui i form sono nativi e si inviano con le Server Actions leggendo `name`. Adottarlo significherebbe rendere controllato ogni campo e spostare `"use client"` verso l'alto: smontare l'architettura RSC per nulla di visibile |
+| `Button` | `Button` | Serve un `<Link>` vestito da bottone (`buttonClasses`), e un componente React non può vestire un link. La 0.1.8 non emette il gancio stabile `.astryx-button` documentato: restano solo classi atomiche StyleX, instabili |
+| `Alert` | `Banner` | `Banner` è una card con intestazione colorata; qui serve un feedback **inline e compatto** dentro i form. Sarebbe un peso visivo sbagliato |
+| `ProgressBar` | `ProgressBar` | Quello di Astryx non espone ritardo né animazione d'ingresso: perderemmo lo stagger `delay={index * 0.12}` negli elenchi di cantieri |
+
+**Cosa è stato fatto invece** — le primitive restano Pistoia, ma allineate al
+nuovo sistema:
+
+| Voce | Stato |
+|---|---|
+| Bottoni riscritti come classi su token, condivise fra `Button` e `buttonClasses` | ✅ |
+| Rimossi gradiente teal→viola e **ombra colorata** dal bottone primario (ultimo bagliore rimasto) | ✅ |
+| Tre bottoni fatti a mano nell'admin e nel tour ricondotti alle classi condivise | ✅ |
+| Gradiente teal→viola non più default nelle barre di avanzamento (DESIGN.md §4 lo riserva a un momento per pagina; era su ogni cantiere in elenco) | ✅ |
+| Motivazioni scritte nel codice, accanto a ogni scelta | ✅ |
+
+Astryx resta la sorgente dei **token** e la libreria di riferimento per i
+componenti nuovi; non diventa lo strato di primitive. È una correzione di rotta
+basata sull'evidenza, non un ripensamento estetico.
+
+### Ondata 6 — Admin intelligence & nuovi pubblici 🔜 *(prossima)*
 
 **Obiettivo (→ OB-1, OB-4):** strumenti decisionali per il Comune e apertura a turisti, commercianti, scuole.
 

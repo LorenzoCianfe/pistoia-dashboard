@@ -1,6 +1,18 @@
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
+/**
+ * Campo di testo.
+ *
+ * Resta un `<input>` nativo NON controllato, e non `TextInput` di Astryx.
+ * Motivo: `TextInput` richiede `value` — è controllato per contratto. Tutti i
+ * form di questa app sono nativi e si inviano con le Server Actions leggendo
+ * `name`. Passare ad Astryx significherebbe rendere controllato ogni campo,
+ * spostare `"use client"` verso l'alto e smontare l'architettura RSC: un costo
+ * grosso in cambio di nulla di visibile.
+ *
+ * Lo stile è già sui token nuovi tramite il ponte in `globals.css`.
+ */
 export function Input({
   className,
   invalid,

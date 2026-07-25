@@ -5,10 +5,22 @@ import { motion, useInView, useReducedMotion } from "motion/react";
 import { accent } from "@/lib/colors";
 import { cn, clamp } from "@/lib/utils";
 
+/**
+ * Barra di avanzamento.
+ *
+ * Non usa `ProgressBar` di Astryx per una ragione precisa: qui l'ingresso è
+ * animato con uno stagger legato all'indice (`delay={index * 0.12}` negli
+ * elenchi di cantieri), e il componente Astryx non espone né ritardo né
+ * animazione d'ingresso. Perderemmo l'orchestrazione per guadagnare nulla.
+ *
+ * Revisione 2026-07-25: il gradiente teal→viola NON è più il default.
+ * DESIGN.md §4 lo riserva a un solo momento per pagina, e con il default
+ * attivo ogni cantiere in elenco ne aveva uno — la firma diventava tappezzeria.
+ */
 export function ProgressBar({
   value,
   color,
-  gradient = true,
+  gradient = false,
   delay = 0,
   height = 10,
   className,

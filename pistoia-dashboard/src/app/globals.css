@@ -1,81 +1,145 @@
-@import "tailwindcss";
+/* =============================================================================
+ * Dashboard di Pistoia — foglio di stile globale
+ *
+ * Architettura (vedi ARCHITECTURE.md §Design system):
+ *   1. Astryx possiede i token di sistema (colore, spazio, raggio, tipo, moto).
+ *      Sorgente: src/themes/pistoia.ts → build: src/themes/generated/pistoia.css
+ *   2. Questo file possiede i token di ESTENSIONE Pistoia — ciò che Astryx non
+ *      modella (lime decorativo, gradienti mesh, vetro) — e il
+ *      ponte di retrocompatibilità verso i nomi storici.
+ *   3. Tailwind genera le utility a partire dal ponte in @theme inline.
+ *
+ * NON importiamo `@astryxdesign/core/tailwind-theme.css`.
+ * Motivo: il ponte ufficiale mappa `--color-muted` su uno SFONDO
+ * (`--color-background-muted`), mentre in questa app `text-muted` significa da
+ * sempre un COLORE DI TESTO ed è usato in ~200 punti. Importarlo cambierebbe
+ * silenziosamente il colore di quelle occorrenze. Adottiamo quindi il ponte in
+ * modo selettivo qui sotto: raggi, tipo e durate arrivano da Astryx, mentre
+ * resta la nomenclatura cromatica storica dell'app.
+ * ========================================================================== */
 
-/* Class-based dark mode (driven by next-themes setting .dark on <html>). */
+@layer reset, theme, base, astryx-base, astryx-theme, pistoia, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "@astryxdesign/core/reset.css";
+@import "@astryxdesign/core/astryx.css";
+@import "../themes/generated/pistoia.css";
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* La variante `dark:` resta guidata dalla classe .dark di next-themes: è ciò
+   che usano le ~30 rotte esistenti. In parallelo next-themes scrive anche
+   html[data-theme], che è ciò che serve a light-dark() di Astryx. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/*
-  Pistoia Dashboard — design tokens.
-  Light theme: near-white, soft teal (verde acqua) + viola accents, amber badges,
-  the red of the city's checkered crest. Soft, gentle, rounded.
-*/
-:root {
-  color-scheme: light;
-  --bg: #fbfbfd;
-  --bg-tint-teal: 20 184 166; /* rgb channels for layered glows */
-  --bg-tint-viola: 138 123 240;
-  --glow-alpha: 0.1; /* intensità dei bagliori d'angolo (più alta di sera) */
-  --surface: #ffffff;
-  --surface-2: #f4f5f9;
-  --surface-3: #eceef4;
-  --foreground: #181b24;
-  --muted: #5c6373;
-  --muted-2: #6c7384;
-  --border: #e7e9f1;
-  --border-strong: #d7dae6;
+@layer pistoia {
+  /* ---------------------------------------------------------------------
+   * Ponte di retrocompatibilità.
+   * I nomi storici restano, ma i VALORI ora vengono da Astryx: un'unica fonte
+   * di verità. Le ~1050 utility esistenti (text-muted, bg-surface-2, text-teal…)
+   * continuano a funzionare e adottano il nuovo sistema senza toccare una sola
+   * rotta.
+   *
+   * light-dark() risolve già chiaro/scuro: non serve duplicare in .dark.
+   * ------------------------------------------------------------------ */
+  :root {
+    --bg: var(--color-background-body);
+    --surface: var(--color-background-surface);
+    --surface-2: var(--color-background-muted);
+    --surface-3: light-dark(#e9e8e5, #2a2826);
+    --foreground: var(--color-text-primary);
+    --muted: var(--color-text-secondary);
+    --muted-2: light-dark(#85888c, #8e8b87);
+    --border: var(--color-border);
+    --border-strong: var(--color-border-emphasized);
 
-  --teal: #10b3a3;
-  --teal-strong: #0c9488;
-  --teal-soft: #d6f4f0;
-  --viola: #8a7bf0;
-  --viola-strong: #6f5fe0;
-  --viola-soft: #e9e5fd;
-  --amber: #f5a623;
-  --amber-soft: #fdeccd;
-  --red: #d63a57; /* the checkered crest red */
-  --red-soft: #fbe0e5;
-  --green: #2bbd77;
-  --green-soft: #d6f4e5;
+    --teal: var(--color-accent);
+    --teal-strong: light-dark(#0a7f75, #5ce0d1);
+    --teal-soft: light-dark(#dff3f0, #0c2e2b);
+    --viola: light-dark(#8a7bf0, #a596f6);
+    --viola-strong: light-dark(#6f5fe0, #8a7bf0);
+    --viola-soft: light-dark(#eae7fd, #211e38);
+    --amber: light-dark(#d98324, #fbbf52);
+    --amber-soft: light-dark(#fbebd3, #33280f);
+    --red: var(--color-error);
+    --red-soft: light-dark(#fbe2e6, #341419);
+    --green: var(--color-success);
+    --green-soft: light-dark(#d9f2e5, #0d2519);
 
-  --ring: #10b3a3;
-  --shadow-color: 222 30% 38%;
+    --ring: var(--color-accent);
 
-  --radius: 1.5rem; /* cards */
-  --radius-sm: 0.85rem;
-  --radius-lg: 2rem;
-  --radius-pill: 999px;
-}
+    /* Raggi: ora derivati dalla scala Astryx (base 6 × 1.75). */
+    --radius-sm: var(--radius-inner);
+    --radius: var(--radius-container);
+    --radius-lg: var(--radius-page);
+    --radius-pill: var(--radius-full);
 
-.dark {
-  color-scheme: dark;
-  --bg: #0e1117;
-  --bg-tint-teal: 20 184 166;
-  --bg-tint-viola: 138 123 240;
-  /* Di sera le luci della città si vedono di più (DESIGN.md §9). */
-  --glow-alpha: 0.17;
-  --surface: #161a23;
-  --surface-2: #1c212c;
-  --surface-3: #232938;
-  --foreground: #e9ebf2;
-  --muted: #a3aabd;
-  --muted-2: #8a92a6;
-  --border: #262c3a;
-  --border-strong: #333a4b;
+    /* -------------------------------------------------------------------
+     * Token di ESTENSIONE Pistoia — non esistono in Astryx.
+     * ---------------------------------------------------------------- */
 
-  --teal: #2fd0bd;
-  --teal-strong: #15b8a6;
-  --teal-soft: #10312f;
-  --viola: #a596f6;
-  --viola-strong: #8a7bf0;
-  --viola-soft: #221f3b;
-  --amber: #fbbf52;
-  --amber-soft: #36290f;
-  --red: #f06a82;
-  --red-soft: #38161d;
-  --green: #45d089;
-  --green-soft: #102a1e;
+    /* Lime acido dei riferimenti. Ruolo NON testuale: chip, pallini di stato,
+       maniglie di slider. Su bianco fa 1.1:1 — come testo o icona è
+       inutilizzabile e la regola di design lo vieta (DESIGN.md §4). */
+    --highlight: #d9f312;
+    --highlight-ink: #16181a; /* 15.8:1 sul lime — il solo testo ammesso sopra */
 
-  --ring: #2fd0bd;
-  --shadow-color: 222 47% 4%;
+    /* Stop dei gradienti mesh. La tinta CODIFICA un dato (salute di bilancio,
+       avanzamento), non decora: verde = sano, ambra = attenzione, rosso =
+       critico (DESIGN.md §8). */
+    --mesh-good-a: #7fd8cf;
+    --mesh-good-b: #2fa36a;
+    --mesh-warn-a: #f3c969;
+    --mesh-warn-b: #e08a2b;
+    --mesh-bad-a: #f0a0ae;
+    --mesh-bad-b: #c2334f;
+    --mesh-cool-a: #a8c0e0;
+    --mesh-cool-b: #6e7fb5;
+
+    /* Grana pellicola sopra i mesh. Turbolenza SVG inline: nessuna richiesta di
+       rete, nessun asset binario, si ridimensiona senza perdita. */
+    --grain-opacity: 0.16;
+    /* Sulla tela va tenuta bassissima: deve dare materia al vetro, non
+       diventare visibile come texture. */
+    --canvas-grain-opacity: 0.045;
+    --grain-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+
+    /* -------------------------------------------------------------------
+     * Vetro (materiali in stile Apple).
+     * L'elevazione NON è più un alone: è translucenza + filo di luce.
+     * ---------------------------------------------------------------- */
+    --glass-opacity: 72%;
+    --glass-opacity-hover: 84%;
+    --glass-blur: 24px;
+    --glass-saturate: 180%;
+    --glass-edge: rgb(255 255 255 / 0.55);
+    --glass-edge-strong: rgb(255 255 255 / 0.85);
+    --glass-sheen: rgb(255 255 255 / 0.9);
+
+    /* Ombra ridotta al minimo + filo di luce interno sul bordo superiore.
+       Il filo è `inset 0 1px 0`: segue il raggio da solo, senza pseudo-elementi
+       né maschere. Un tentativo precedente con ::before e mask-composite
+       lavava l'intera card invece del solo bordo. */
+    --elev-rest:
+      inset 0 1px 0 var(--glass-sheen),
+      0 1px 1px color-mix(in srgb, var(--color-shadow) 30%, transparent);
+    --elev-hover:
+      inset 0 1px 0 var(--glass-sheen),
+      0 2px 4px color-mix(in srgb, var(--color-shadow) 35%, transparent);
+  }
+
+  .dark {
+    --grain-opacity: 0.22;
+
+    /* Di sera il vetro è più denso e il filo più tenue: un bordo bianco al 55%
+       su fondo scuro leggerebbe come un contorno disegnato, non come luce. */
+    --glass-opacity: 76%;
+    --glass-opacity-hover: 88%;
+    --glass-saturate: 160%;
+    --glass-edge: rgb(255 255 255 / 0.10);
+    --glass-edge-strong: rgb(255 255 255 / 0.18);
+    --glass-sheen: rgb(255 255 255 / 0.14);
+  }
 }
 
 @theme inline {
@@ -102,17 +166,21 @@
   --color-green: var(--green);
   --color-green-soft: var(--green-soft);
 
+  /* Lime: pensato come utility di SFONDO. Se serve testo sopra il lime, l'unico
+     colore ammesso è `text-highlight-ink`. */
+  --color-highlight: var(--highlight);
+  --color-highlight-ink: var(--highlight-ink);
+
   --radius-sm: var(--radius-sm);
   --radius-DEFAULT: var(--radius);
   --radius-lg: var(--radius-lg);
   --radius-pill: var(--radius-pill);
 
-  --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
-  /* Voce display (DESIGN.md §3): stessa famiglia, i titoli si distinguono per
-     peso e tracking — una sola voce, moderna e minimale. */
-  --font-display: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-family-body);
+  --font-display: var(--font-family-heading);
+  --font-mono: var(--font-family-code);
 
-  /* Easing di sistema: ease-out-quint per gli ingressi (DESIGN.md §6). */
+  /* Easing di sistema (DESIGN.md §6): ease-out-quint per gli ingressi. */
   --ease-out-civic: cubic-bezier(0.22, 1, 0.36, 1);
 
   --animate-shimmer: shimmer 2.2s linear infinite;
@@ -137,37 +205,44 @@
     text-rendering: optimizeLegibility;
   }
 
-  /* Modalità semplice (A1 §19): scala tutta la tipografia (unità rem) e dà
-     più aria ai bersagli touch. Attivata dalla classe sul root via cookie. */
+  /* Modalità semplice (A1 §19): scala tutta la tipografia (unità rem) e dà più
+     aria ai bersagli touch. Attivata dalla classe sul root via cookie. */
   html.simple-mode {
     font-size: 115%;
   }
 
+  /*
+    La tela è grigio-calda e SILENZIOSA. Niente bagliori d'angolo, niente
+    gradienti colorati: competerebbero con le card.
+
+    Porta però una grana finissima. Non è decorazione: è il substrato che dà
+    al vetro qualcosa da sfocare. Senza, `backdrop-filter` non ha materia su
+    cui lavorare e la card translucida è indistinguibile da un pannello opaco.
+    È il dettaglio che separa il vetro vero dal "bianco trasparente".
+  */
   body {
     background-color: var(--bg);
     color: var(--foreground);
-    font-family: var(--font-sans);
-    /* Soft corner glows of teal and viola, exactly as the concept describes. */
-    background-image:
-      radial-gradient(
-        60rem 40rem at 110% -10%,
-        rgb(var(--bg-tint-teal) / var(--glow-alpha)),
-        transparent 60%
-      ),
-      radial-gradient(
-        55rem 38rem at -10% 110%,
-        rgb(var(--bg-tint-viola) / var(--glow-alpha)),
-        transparent 60%
-      );
-    background-attachment: fixed;
+    font-family: var(--font-family-body);
     -webkit-font-smoothing: antialiased;
   }
 
-  ::selection {
-    background: color-mix(in oklab, var(--teal) 28%, transparent);
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: var(--canvas-grain-opacity);
+    background-image: var(--grain-url);
+    background-size: 180px 180px;
   }
 
-  /* Gentle, unobtrusive scrollbars. */
+  ::selection {
+    background: color-mix(in oklab, var(--color-accent) 26%, transparent);
+  }
+
+  /* Barre di scorrimento discrete. */
   * {
     scrollbar-width: thin;
     scrollbar-color: var(--border-strong) transparent;
@@ -191,47 +266,304 @@
 }
 
 @layer components {
-  /* Frosted, softly shadowed card — the core surface of the whole UI. */
+  /*
+    Superficie di base — vetro, non pannello (revisione 2026-07-25).
+    Il modello è quello dei materiali Apple: superficie translucida, sfocatura
+    del contenuto sottostante, saturazione spinta, filo di luce sul bordo
+    superiore. NIENTE ombre diffuse: l'elevazione si comunica con la
+    translucenza e col filo, non con un alone attorno alla card.
+
+    Perché la saturazione: sfocare basta a rendere il fondo indistinto, ma lo
+    sbiadisce. Il boost di saturazione restituisce il colore che la sfocatura
+    toglie — è il dettaglio che separa il vetro vero dal "bianco trasparente".
+  */
   .card {
-    background-color: color-mix(in oklab, var(--surface) 92%, transparent);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow:
-      0 1px 2px hsl(var(--shadow-color) / 0.04),
-      0 12px 28px -16px hsl(var(--shadow-color) / 0.18);
-    backdrop-filter: blur(10px);
+    position: relative;
+    background-color: color-mix(
+      in srgb,
+      var(--color-background-card) var(--glass-opacity),
+      transparent
+    );
+    /* NON aggiungere qui `-webkit-backdrop-filter` a mano: Lightning CSS
+       (il compilatore di Tailwind v4) mette i prefissi da solo, e un prefisso
+       manuale scritto dopo COLLASSA le due dichiarazioni tenendo solo la
+       -webkit-. Risultato: nessuna sfocatura in Firefox e nei browser moderni,
+       e il vetro diventa un pannello opaco senza che nulla segnali l'errore. */
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-edge);
+    border-radius: var(--radius-container);
+    box-shadow: var(--elev-rest);
+  }
+
+  /* Ripiego per chi non ha backdrop-filter (Firefox con il flag spento, browser
+     vecchi): superficie piena, così il testo resta leggibile comunque. */
+  @supports not (backdrop-filter: blur(1px)) {
+    .card {
+      background-color: var(--color-background-card);
+    }
   }
 
   .card-hover {
     transition:
-      transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 0.25s ease,
-      border-color 0.25s ease;
+      transform var(--duration-medium) var(--ease-out-civic),
+      background-color var(--duration-medium) ease,
+      border-color var(--duration-medium) ease;
   }
   .card-hover:hover {
     transform: translateY(-2px);
-    border-color: var(--border-strong);
-    box-shadow:
-      0 1px 2px hsl(var(--shadow-color) / 0.05),
-      0 22px 40px -22px hsl(var(--shadow-color) / 0.28);
+    /* Il vetro si fa più denso, non più luminoso. */
+    background-color: color-mix(
+      in srgb,
+      var(--color-background-card) var(--glass-opacity-hover),
+      transparent
+    );
+    border-color: var(--glass-edge-strong);
+  }
+
+  /*
+    Superficie mesh: la card-firma dei riferimenti.
+    Si pilota con --mesh-a / --mesh-b, impostati dal componente in base al DATO.
+  */
+  .mesh-surface {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: var(--radius-container);
+    background-color: var(--mesh-b);
+    background-image:
+      radial-gradient(70% 85% at 18% 12%, var(--mesh-a) 0%, transparent 62%),
+      radial-gradient(65% 75% at 88% 30%, var(--mesh-a) 0%, transparent 55%),
+      radial-gradient(90% 90% at 50% 105%, var(--mesh-b) 0%, transparent 70%);
+  }
+
+  /* Grana pellicola: toglie la "plasticosità" al gradiente ed è ciò che nei
+     riferimenti fa leggere la superficie come materiale, non come CSS. */
+  .mesh-surface::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: var(--grain-opacity);
+    pointer-events: none;
+    background-image: var(--grain-url);
+    background-size: 180px 180px;
+    mix-blend-mode: overlay;
+  }
+
+  /*
+    Cifra display (DESIGN.md §7).
+
+    La gerarchia si afferma con la SCALA: label 11px contro cifra 88px, otto
+    volte più grande. Il peso va nella direzione opposta a quella istintiva —
+    la cifra è LEGGERA (300) e la label è pesante (600). È ciò che le impedisce
+    di sembrare un titolo urlato e le dà il tono di un dato, non di uno slogan.
+  */
+  /*
+    Label e unità si derivano da `currentColor`, non da un grigio fisso.
+    Motivo: la cifra display vive sia su vetro chiaro sia sopra una superficie
+    mesh colorata con testo bianco. Un `--muted-2` fisso è leggibile sul primo
+    e invisibile sulla seconda; una percentuale di currentColor funziona su
+    entrambi e si adatta da sola anche ai temi futuri.
+  */
+  .display-number__label {
+    font-size: 0.6875rem; /* 11px */
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, currentColor 62%, transparent);
+    margin-bottom: 0.5rem;
+  }
+
+  .display-number__row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .display-number__value {
+    font-family: var(--font-family-heading);
+    font-size: clamp(3rem, 7vw, 5.5rem); /* 48 → 88px */
+    font-weight: 300;
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    /* Senza questo la larghezza balla durante il conteggio da zero. */
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Taglia intermedia: dentro una card di stato o sopra una mesh, dove la
+     scala hero schiaccerebbe tutto il resto. */
+  .display-number[data-size="md"] .display-number__value {
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    font-weight: 400;
+  }
+  .display-number[data-size="md"] .display-number__unit {
+    font-size: 1rem;
+  }
+
+  /* L'unità sta ACCANTO alla cifra, non dentro: "129" è il dato, "mln €" è il
+     contesto, e vanno letti come due cose diverse. */
+  .display-number__unit {
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: color-mix(in srgb, currentColor 78%, transparent);
+    letter-spacing: -0.01em;
+  }
+
+  .display-number__spark {
+    margin-left: 0.5rem;
+    align-self: center;
+  }
+
+  /* Scala a tacche: dove cade il valore in un intervallo reale. */
+  .display-number__scale {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 1.5rem;
+    margin-top: 0.75rem;
+  }
+  .display-number__tick {
+    display: block;
+    width: 1.5px;
+    height: 0.625rem;
+    border-radius: 1px;
+    background: var(--border-strong);
+    transform-origin: bottom;
+  }
+  /* La tacca attiva è più alta e piena: si trova a colpo d'occhio senza
+     bisogno di colore, quindi funziona anche in scala di grigi. */
+  .display-number__tick[data-active] {
+    height: 1.5rem;
+    width: 2px;
+    background: var(--foreground);
+  }
+
+  .display-number__delta {
+    margin-top: 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .display-number__delta[data-rising] {
+    color: var(--color-success);
+  }
+  .display-number__period {
+    color: var(--muted-2);
+  }
+
+  /* Modalità semplice: la cifra scende un po' e la label cresce. Il contrasto
+     estremo è una firma, ma chi ha chiesto più leggibilità viene prima. */
+  html.simple-mode .display-number__value {
+    font-size: clamp(2.5rem, 5.5vw, 4rem);
+    font-weight: 400;
+  }
+  html.simple-mode .display-number__label {
+    font-size: 0.8125rem;
+    letter-spacing: 0.08em;
+  }
+
+  /*
+    Bottoni.
+    Vivono come CLASSI CSS, non come componente, per una ragione concreta: in
+    più punti serve un <Link> vestito da bottone (`buttonClasses`), e un
+    componente React non può vestire un link. Astryx non offre una via d'uscita:
+    la 0.1.8 emette solo classi atomiche StyleX, senza il gancio stabile
+    `.astryx-button` che la documentazione promette. Tenendo il CSS qui, il
+    bottone e il link-bottone restano un'unica fonte di verità e non divergono.
+  */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    user-select: none;
+    border-radius: var(--radius-full);
+    font-weight: 500;
+    transition:
+      background-color var(--duration-fast) ease,
+      border-color var(--duration-fast) ease,
+      transform var(--duration-fast) var(--ease-out-civic);
+  }
+  .btn:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  /* Primario: tinta piena, nessun gradiente e NESSUN alone colorato. Il vecchio
+     bottone aveva un'ombra teal diffusa — esattamente il bagliore che il
+     sistema ha eliminato dalle superfici. */
+  .btn-primary {
+    background-color: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--color-accent) 88%, black);
+  }
+
+  .btn-secondary {
+    background-color: var(--surface);
+    border: 1px solid var(--border-strong);
+    color: var(--foreground);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background-color: var(--surface-2);
+  }
+
+  .btn-ghost {
+    color: var(--muted);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background-color: var(--surface-2);
+    color: var(--foreground);
+  }
+
+  .btn-danger {
+    background-color: var(--red-soft);
+    color: var(--red);
+    border: 1px solid color-mix(in srgb, var(--red) 25%, transparent);
+  }
+  .btn-danger:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--red-soft) 88%, var(--red));
+  }
+
+  .btn-sm {
+    height: 2.25rem;
+    padding-inline: 1rem;
+    font-size: 0.875rem;
+  }
+  .btn-md {
+    height: 2.75rem;
+    padding-inline: 1.25rem;
+    font-size: 0.875rem;
+  }
+  .btn-lg {
+    height: 3rem;
+    padding-inline: 1.5rem;
+    font-size: 0.9375rem;
   }
 
   .gradient-teal-viola {
-    background-image: linear-gradient(
-      100deg,
-      var(--teal) 0%,
-      var(--viola) 100%
-    );
+    background-image: linear-gradient(100deg, var(--teal) 0%, var(--viola) 100%);
   }
 
   .text-gradient {
-    background-image: linear-gradient(100deg, var(--teal-strong), var(--viola-strong));
+    background-image: linear-gradient(
+      100deg,
+      var(--teal-strong),
+      var(--viola-strong)
+    );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
 
-  /* Skeleton shimmer for loading states. */
+  /* Scheletri di caricamento: ricalcano il layout finale, mai uno spinner. */
   .skeleton {
     background: linear-gradient(
       90deg,
@@ -241,15 +573,17 @@
     );
     background-size: 200% 100%;
     animation: var(--animate-shimmer);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-inner);
   }
 
   /*
     Motivi identitari (DESIGN.md §2) — l'unico vocabolario decorativo ammesso.
+    Sopravvivono alla direzione ibrida: sono ciò che impedisce all'interfaccia
+    di essere un bel template qualunque.
   */
 
-  /* Le fasce romaniche di San Giovanni Fuorcivitas: ritmo orizzontale tenue,
-     per hero, empty state e momenti editoriali. Mai zebra dura. */
+  /* Le fasce romaniche di San Giovanni Fuorcivitas: ritmo orizzontale tenue.
+     Mai zebra dura. */
   .bande-romaniche {
     background-image: repeating-linear-gradient(
       180deg,
@@ -260,8 +594,8 @@
     );
   }
 
-  /* La scacchiera dello stemma: micro-pattern bianco/rosso per i momenti di
-     brand (crest, Civic ID, tour). Da usare piccolo e con parsimonia. */
+  /* La scacchiera dello stemma: micro-pattern per i momenti di brand.
+     Da usare piccolo e con parsimonia. */
   .scacchiera {
     background-image: conic-gradient(
       var(--red) 25%,
@@ -289,8 +623,6 @@
     Motion di sistema (DESIGN.md §6): un'unica orchestrazione d'ingresso.
   */
 
-  /* Ingresso pagina: applicato dal template di rotta, si ripete a ogni
-     navigazione. */
   .page-enter {
     animation: rise-in 0.45s var(--ease-out-civic) both;
   }
@@ -300,12 +632,24 @@
   .stagger > * {
     animation: rise-in 0.5s var(--ease-out-civic) both;
   }
-  .stagger > :nth-child(1) { animation-delay: 0ms; }
-  .stagger > :nth-child(2) { animation-delay: 50ms; }
-  .stagger > :nth-child(3) { animation-delay: 100ms; }
-  .stagger > :nth-child(4) { animation-delay: 150ms; }
-  .stagger > :nth-child(5) { animation-delay: 200ms; }
-  .stagger > :nth-child(n + 6) { animation-delay: 250ms; }
+  .stagger > :nth-child(1) {
+    animation-delay: 0ms;
+  }
+  .stagger > :nth-child(2) {
+    animation-delay: 50ms;
+  }
+  .stagger > :nth-child(3) {
+    animation-delay: 100ms;
+  }
+  .stagger > :nth-child(4) {
+    animation-delay: 150ms;
+  }
+  .stagger > :nth-child(5) {
+    animation-delay: 200ms;
+  }
+  .stagger > :nth-child(n + 6) {
+    animation-delay: 250ms;
+  }
 
   @keyframes rise-in {
     from {
@@ -318,15 +662,21 @@
     }
   }
 
-  /* Festa misurata per le azioni civiche andate a buon fine (invio
-     segnalazione, firma proposta): un solo battito, niente coriandoli. */
+  /* Festa misurata per le azioni civiche andate a buon fine: un solo battito,
+     niente coriandoli. Ammessa in tre soli momenti (DESIGN.md §6). */
   .pulse-civico {
     animation: pulse-civico 0.5s var(--ease-out-civic);
   }
   @keyframes pulse-civico {
-    0% { transform: scale(1); }
-    35% { transform: scale(1.06); }
-    100% { transform: scale(1); }
+    0% {
+      transform: scale(1);
+    }
+    35% {
+      transform: scale(1.06);
+    }
+    100% {
+      transform: scale(1);
+    }
   }
 }
 
@@ -343,5 +693,18 @@
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+}
+
+/*
+  In stampa non c'è scroll, quindi gli elementi rivelati allo scroll non si
+  rivelano mai: grafici e sezioni narrate finirebbero sul foglio vuoti.
+  Motion scrive l'opacità inline, perciò qui serve !important.
+*/
+@media print {
+  [data-motion-reveal],
+  [data-motion-reveal] * {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

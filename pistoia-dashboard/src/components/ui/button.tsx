@@ -1,27 +1,27 @@
 import type { ComponentProps } from "react";
+
 import { cn } from "@/lib/utils";
+
+/**
+ * Bottone Pistoia.
+ *
+ * Lo stile vive in `globals.css` come classi (`.btn`, `.btn-primary`, …), non
+ * qui. Motivo: in più punti serve un `<Link>` vestito da bottone, e un
+ * componente React non può vestire un link. Con le classi, `Button` e
+ * `buttonClasses` condividono un'unica fonte di verità e non divergono.
+ *
+ * Perché non `Button` di Astryx: la 0.1.8 espone solo classi atomiche StyleX,
+ * senza il gancio stabile `.astryx-button` che la documentazione promette —
+ * quindi non c'è modo di dare a un link lo stesso aspetto. Quando quelle classi
+ * arriveranno, questo file può diventare un wrapper sottile senza toccare le
+ * chiamate esistenti.
+ *
+ * Revisione 2026-07-25: rimossi gradiente teal→viola e ombra colorata. Erano
+ * l'ultimo residuo dei bagliori che il sistema ha eliminato dalle superfici.
+ */
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "sm" | "md" | "lg";
-
-const base =
-  "inline-flex items-center justify-center gap-2 rounded-pill font-semibold whitespace-nowrap transition-all duration-200 focus-visible:outline-none disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98] select-none";
-
-const variants: Record<Variant, string> = {
-  primary:
-    "gradient-teal-viola text-white shadow-[0_10px_24px_-12px_rgba(20,184,166,0.7)] hover:brightness-[1.05] hover:shadow-[0_14px_30px_-12px_rgba(20,184,166,0.8)]",
-  secondary:
-    "bg-surface border border-border-strong text-foreground hover:bg-surface-2",
-  ghost: "text-muted hover:text-foreground hover:bg-surface-2",
-  danger:
-    "bg-[var(--red-soft)] text-[var(--red)] hover:brightness-95 border border-[color-mix(in_oklab,var(--red)_25%,transparent)]",
-};
-
-const sizes: Record<Size, string> = {
-  sm: "h-9 px-4 text-sm",
-  md: "h-11 px-5 text-sm",
-  lg: "h-12 px-6 text-[15px]",
-};
 
 export function Button({
   className,
@@ -29,16 +29,12 @@ export function Button({
   size = "md",
   ...props
 }: ComponentProps<"button"> & { variant?: Variant; size?: Size }) {
-  return (
-    <button
-      className={cn(base, variants[variant], sizes[size], className)}
-      {...props}
-    />
-  );
+  return <button className={buttonClasses(variant, size, className)} {...props} />;
 }
 
+/** Per i `<Link>` e per qualunque elemento che debba sembrare un bottone. */
 export const buttonClasses = (
   variant: Variant = "primary",
   size: Size = "md",
   className?: string,
-) => cn(base, variants[variant], sizes[size], className);
+) => cn("btn", `btn-${variant}`, `btn-${size}`, className);
