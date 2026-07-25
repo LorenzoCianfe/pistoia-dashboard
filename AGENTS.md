@@ -6,7 +6,7 @@
 >
 > **Leggilo per intero all'inizio di ogni sessione, prima di toccare codice.**
 >
-> Aggiornato: 2026-07-25 (ondata 6)
+> Aggiornato: 2026-07-25 (ondata 7)
 
 ---
 
@@ -59,6 +59,9 @@ L'app vive in `pistoia-dashboard/`. La documentazione vive nella radice.
 ---
 
 ## 3. Design system — le regole che si sbagliano più spesso
+
+> §3 raccoglie **diciassette trappole già pagate**. Sono raggruppate per ondata
+> solo perché è così che sono emerse: leggile tutte, valgono tutte ancora.
 
 **Prima di tutto: Astryx è la sorgente dei TOKEN, non lo strato di primitive.**
 Le primitive in `components/ui/` restano Pistoia, e non è pigrizia: ogni caso è
@@ -136,6 +139,61 @@ reindirizza chi ha una sessione. La prima schermata di ogni dimostrazione non
 era mai stata rivista. Se cambi lo script, verifica che le pagine anonime
 restino anonime.
 
+### Sei trappole del secondo scaglione di pagine (ondata 7)
+
+Stessa famiglia delle precedenti: **nessuna produce un errore.**
+
+1. **Una prop-funzione su un componente client non è usabile da un Server
+   Component.** `DisplayNumber` accettava `format?: (n) => string`. Tutte le
+   pagine che gli danno la cifra protagonista sono Server Component, e React
+   rifiuta a runtime: «Functions cannot be passed directly to Client
+   Components». Typecheck verde, lint verde, pagina sull'error boundary. La
+   prop ora è `formatOptions?: Intl.NumberFormatOptions` — un oggetto, che
+   attraversa il confine. **Quando aggiungi una prop a un componente
+   `"use client"`, chiediti se è serializzabile.**
+2. **Non contare da una lista troncata.** `getNeighborhoodDetail` ricavava
+   `counts.openReports` da una `findMany({ take: 6 })`: il numero non poteva
+   superare 6, e restava plausibile. Un quartiere con quaranta segnalazioni
+   aperte ne dichiarava sei. Le liste servono a mostrare le ultime; i conteggi
+   si chiedono al database.
+3. **Una percentuale su un campione minuscolo, tinta a colori, è un'accusa.**
+   «0% risolte» su due segnalazioni è aritmetica esatta e informazione nulla —
+   ma una scheda rossa la fa leggere come una colpa di quel quartiere. Da qui
+   `CAMPIONE_MINIMO_PER_GIUDIZIO` in `lib/citystats.ts`: sotto la soglia il
+   tono resta `cool`. Vale ovunque un rapporto diventi colore.
+4. **Il cancello delle schermate certificava pagine che non aveva visto.** Il
+   traboccamento orizzontale si misura *dentro* il `try`: se la pagina non si
+   apriva, la misura non veniva presa e lo script usciva comunque 0 — cioè
+   dichiarava "nessuna pagina scorre di lato" proprio sulle rotte appena
+   cambiate. Ora una cattura fallita è un problema e fa uscire 1.
+5. **`sm:grid-cols-2` senza `grid-cols-1` fa scorrere la pagina di lato.**
+   Sotto la soglia `sm` non esiste nessun `grid-template-columns`, quindi la
+   traccia implicita è `auto` — e il minimo di `auto` è il **min-content**. Un
+   solo figlio con `white-space: nowrap` (qui `truncate` su «1,1 mln € · fine
+   prevista 22 lug 2026», 220px inscindibili) allarga la colonna oltre il
+   viewport: 33px di traboccamento a 360px in modalità semplice, invisibili a
+   1280. `grid-cols-1` compila in `repeat(1, minmax(0, 1fr))`, che si stringe.
+   **Metti sempre la variante di base accanto a quella con prefisso.**
+
+   Nota di contorno: `min-w-0` sull'elemento che trabocca **non** basta —
+   toglie il pavimento alla dimensione usata, non riduce il contributo di
+   min-content di un testo `nowrap`. La leva sta sulla traccia, non sul figlio.
+
+6. **`npm run shots -- --only=...` non funziona:** npm intercetta `--only` come
+   propria configurazione (`npm warn invalid config only=...`). In PowerShell
+   nemmeno `--simple` e `--width` arrivano, e il sintomo è muto: lo script gira
+   in modalità normale e scrive in `screenshots/wave` invece che in
+   `screenshots/wave-semplice`, così si crede di aver verificato la viewport
+   minima senza averla mai aperta. Chiama `node scripts/shots.mjs --simple
+   --width=360`.
+
+E una settima che non è una trappola ma una regola imparata: **due definizioni
+dello stesso indicatore sono peggio di nessun indicatore.** Il tasso di
+risoluzione vive ora in un posto solo (`lib/citystats.ts`, `tassoRisoluzione` e
+gli elenchi di stati) perché "Stato della città" e la pagina dei quartieri, a un
+clic di distanza, avrebbero potuto mostrare due percentuali diverse della stessa
+città.
+
 ---
 
 ## 4. Comandi
@@ -148,8 +206,23 @@ npm test               # vitest
 npm run test:e2e       # playwright
 npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
 npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
-npm run shots -- --simple --width=360   # modalità semplice, viewport minima
+node scripts/shots.mjs --simple --width=360   # modalità semplice, viewport minima
 npm run db:reset       # ricrea il DB e ripopola i dati dimostrativi
+```
+
+**Le opzioni dello script delle schermate vanno passate a `node`, non a `npm`.**
+In PowerShell `npm run shots -- --simple --width=360` non le fa arrivare (e
+`--only` viene proprio intercettato da npm come sua configurazione: `npm warn
+invalid config only=...`). Il sintomo è muto — lo script gira in modalità
+normale e scrive in `screenshots/wave` invece che in `screenshots/wave-semplice`
+— quindi si crede di aver verificato la viewport minima senza averla mai aperta.
+
+**Gli E2E contro un server già in ascolto:** Next rifiuta due dev server sulla
+stessa directory, quindi con un `npm run dev` aperto l'avvio automatico di
+Playwright fallisce sempre. Non spegnerlo, puntagli contro:
+
+```bash
+E2E_BASE_URL=http://localhost:3000 npx playwright test
 ```
 
 `npm run shots` **misura anche il traboccamento orizzontale** e esce con codice

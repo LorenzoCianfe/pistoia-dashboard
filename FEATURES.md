@@ -6,7 +6,7 @@
 >
 > Legenda: ✅ completa · 🚧 in corso · 🔒 richiede verifica · 👤 richiede login
 >
-> Aggiornato: 2026-07-25 (ondata 6)
+> Aggiornato: 2026-07-25 (ondata 7)
 
 ---
 
@@ -16,14 +16,14 @@
 |---|---|---|---|
 | **La mia città** | `/la-mia-citta` | ✅ | Home personalizzata: saluto, quartiere, KPI "vicino a te", segnalazioni vicine, proposte in evidenza, banner avvisi attivi. "Stato della città" **a bento**: cifra display del tasso di risoluzione e superficie `MeshSurface` la cui tinta deriva da quello stesso dato. Redirect post-login |
 | **Bilancio** | `/bilancio` | ✅ | Apertura a bento con la **cifra display** (142 mln) e i tre anelli; **sankey a due stadi** "dove scorrono i soldi" (entrate → spesa/avanzo → 6 missioni), preceduto dall'unica **sezione narrata** della piattaforma; andamento mensile, treemap e elenco come lettura alternativa, glossario contestuale |
-| **Opere** | `/opere` · `/opere/[id]` | ✅ | 318 cantieri, avanzamento, KPI, follow. Dettaglio: fonte di finanziamento, RUP, foto prima/durante/dopo, FAQ, commenti, mini-mappa, "Cosa cambia per me", "Spiegamelo semplice" |
+| **Opere** | `/opere` · `/opere/[id]` | ✅ | **Cifra display** sull'investimento nei cantieri aperti e `MeshSurface` la cui tinta è la quota di cantieri che rispettano il calendario. **Cronoprogramma**: per ogni cantiere il lavoro fatto contro il tempo passato, col marcatore di dove i tempi previsti direbbero di essere. Dettaglio: stessa lettura in una riga, fonte di finanziamento, RUP, foto prima/durante/dopo, FAQ, commenti, mini-mappa, "Cosa cambia per me", "Spiegamelo semplice". **Transizione a elemento condiviso** lista → dettaglio |
 | **Mappa** | `/mappa` | ✅ | Leaflet + tile OSM, layer attivabili (opere, segnalazioni, eventi, avvisi urgenti, uffici, scuole, verde, servizi) |
 | **Segnalazioni** | `/segnalazioni` · `/[id]` | ✅ 👤 | Filtri + KPI, **timeline a punti** dell'andamento (altezza = arrivate, diametro = chiuse, colore = settimana in pari), foto reale, geolocalizzazione, **invio anonimo**, workflow di stato, "Anche io", timeline ufficiale, follow. **Transizione a elemento condiviso** lista → dettaglio |
 | **Sondaggi** | `/sondaggi` | ✅ 👤🔒 | Voto ottimistico. Consultazioni ufficiali e voti territoriali riservati ai verificati |
-| **Proposte** | `/proposte` · `/[id]` | ✅ 👤🔒 | Soglie di sostegno (50/200/500), sostegno riservato ai verificati, risposta ufficiale, "Perché non si può fare?" sulle respinte |
-| **Comunità** | `/comunita` | ✅ 👤 | Composer con tipo post e quartiere, feed con badge autore, like/commenti ottimistici, risposte ufficiali con ufficio, "questa risposta è utile?", segnala commento |
+| **Proposte** | `/proposte` · `/[id]` | ✅ 👤🔒 | Cifra display sui sostegni raccolti in tutto. Dettaglio: **scala a tacche** sull'intervallo reale 0→500 e i tre gradini 50/200/500 con cosa scatta a ciascuno. Sostegno riservato ai verificati, risposta ufficiale, "Perché non si può fare?" sulle respinte. **Transizione a elemento condiviso** |
+| **Comunità** | `/comunita` | ✅ 👤 | Cifra display sulla quota di **domande con risposta ufficiale** (contata sulle sole domande). Stanze tematiche a griglia col numero di conversazioni. Composer con tipo post e quartiere, feed con badge autore, like/commenti ottimistici, risposte ufficiali con ufficio, "questa risposta è utile?", segnala commento |
 | **Eventi** | `/eventi` | ✅ | Calendario mensile, pubblicazione dal Comune, proposta dalle associazioni verificate con approvazione |
-| **Quartieri** | `/quartieri` · `/[slug]` | ✅ | Pagina per area che aggrega segnalazioni, opere, eventi, proposte, discussioni; follow |
+| **Quartieri** | `/quartieri` · `/[slug]` | ✅ | Ogni scheda porta una fascia `MeshSurface` la cui tinta è il **tasso di risoluzione di quell'area** — lo slot dove una fotografia entrerà (`DISCOVERY` D7). Sotto il campione minimo la scheda resta neutra e lo dichiara. Il dettaglio aggrega segnalazioni, opere, eventi, proposte, discussioni; follow. **Transizione a elemento condiviso** |
 | **Organigramma** | `/organigramma` | ✅ | Sindaco e giunta ad albero, follow degli assessori |
 
 ## 2. Trasparenza

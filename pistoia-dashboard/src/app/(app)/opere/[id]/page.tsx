@@ -24,6 +24,8 @@ import { SimpleExplainer } from "@/components/trasparenza/simple-explainer";
 import { canModerate } from "@/lib/community";
 import { parseStringArray } from "@/lib/transparency";
 import { operaStatus, operaCategory } from "@/lib/labels";
+import { cronoprogramma, scartoInParole, ANDAMENTO } from "@/lib/cronoprogramma";
+import { CONDIVISO, NOME_CONDIVISO } from "@/lib/view-transitions";
 import {
   formatEuroCompact,
   formatDate,
@@ -54,6 +56,8 @@ export default async function OperaDetailPage({
   const latest = opera.updates[0];
   const hasPhotos = opera.photos.length > 0;
   const impactNotes = parseStringArray(opera.impactNotes);
+  // `null` quando manca l'avvio o la fine prevista: si dichiara, non si finge.
+  const crono = cronoprogramma(opera);
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
@@ -65,8 +69,18 @@ export default async function OperaDetailPage({
         Tutte le opere
       </Link>
 
-      {/* Header */}
-      <Card className="space-y-4">
+      {/*
+        L'elemento gemello della transizione a elemento condiviso: la card della
+        lista morfa in questa. Il nome è fisso perché in questa pagina ce n'è una
+        sola, mentre nella lista viene assegnato al volo alla card cliccata —
+        vedi `OperaLink`. L'attributo è anche il segnale che dice alla
+        transizione "il dettaglio è nel DOM, puoi scattare la seconda foto".
+      */}
+      <Card
+        className="space-y-4"
+        style={{ viewTransitionName: NOME_CONDIVISO }}
+        {...{ [CONDIVISO.opera.attr]: "" }}
+      >
         <div className="flex flex-wrap items-center gap-2">
           <Badge color="teal" soft className="bg-surface-2">
             {operaCategory(opera.category)}
@@ -98,6 +112,32 @@ export default async function OperaDetailPage({
             <span className="text-lg font-bold tabular-nums">{opera.progress}%</span>
           </div>
           <ProgressBar value={opera.progress} height={10} />
+          {/*
+            La stessa lettura della lista, in una riga: la percentuale da sola
+            non dice se il cantiere sta rispettando i tempi. Qui basta il testo —
+            la pagina ha già il suo momento visivo nelle foto per fase, e un
+            secondo grafico se lo contenderebbe.
+          */}
+          {crono ? (
+            <p className="mt-2 text-xs">
+              <span
+                className="font-semibold"
+                style={{ color: accent(ANDAMENTO[crono.andamento].color).fg }}
+              >
+                {ANDAMENTO[crono.andamento].label}
+              </span>
+              <span className="tabular-nums text-muted-2">
+                {" "}
+                · {scartoInParole(crono)}
+              </span>
+            </p>
+          ) : (
+            <p className="mt-2 text-xs text-muted-2">
+              {opera.startedAt
+                ? "Senza una fine prevista non si può dire se il cantiere sia nei tempi."
+                : "I lavori non sono ancora partiti: non c'è un calendario da confrontare."}
+            </p>
+          )}
           {latest ? (
             <p className="mt-2 text-xs text-muted-2">
               Ultimo aggiornamento ({formatDateShort(latest.date)}): {latest.note}

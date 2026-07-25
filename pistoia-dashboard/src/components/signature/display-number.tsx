@@ -26,8 +26,17 @@ import { cn } from "@/lib/utils";
 export type DisplayNumberProps = {
   /** Il valore. Numerico, così può contare da zero. */
   value: number;
-  /** Formattazione del valore (default: it-IT senza decimali). */
-  format?: (n: number) => string;
+  /**
+   * Opzioni di formattazione del valore (default: it-IT, zero decimali).
+   *
+   * È un OGGETTO e non una funzione di proposito. Questo è un componente
+   * client, e le pagine che gli danno la cifra protagonista sono tutte Server
+   * Component: una funzione non attraversa quel confine, React la rifiuta a
+   * runtime con «Functions cannot be passed directly to Client Components».
+   * Il typecheck non lo vede e nemmeno il lint — si scopre aprendo la pagina,
+   * che va sull'error boundary. Un oggetto di opzioni è serializzabile e passa.
+   */
+  formatOptions?: Intl.NumberFormatOptions;
   /** Unità, resa piccola accanto alla cifra: "mln €", "%", "su 100". */
   unit?: string;
   /** Etichetta sopra, in maiuscoletto spaziato. */
@@ -51,10 +60,6 @@ export type DisplayNumberProps = {
   className?: string;
 };
 
-const defaultFormat = new Intl.NumberFormat("it-IT", {
-  maximumFractionDigits: 0,
-}).format;
-
 const deltaFormat = new Intl.NumberFormat("it-IT", {
   maximumFractionDigits: 1,
   signDisplay: "always",
@@ -64,7 +69,7 @@ const TICKS = 24;
 
 export function DisplayNumber({
   value,
-  format = defaultFormat,
+  formatOptions,
   unit,
   label,
   scale,
@@ -76,6 +81,10 @@ export function DisplayNumber({
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-10% 0px" });
   const reduce = useReducedMotion();
+  const format = new Intl.NumberFormat("it-IT", {
+    maximumFractionDigits: 0,
+    ...formatOptions,
+  }).format;
 
   // Posizione del valore nella scala, come indice di tacca.
   const activeTick =

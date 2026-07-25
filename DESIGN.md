@@ -208,6 +208,16 @@ derivano:
 1. **Un solo nome per volta.** Il `view-transition-name` si assegna alla card
    cliccata al momento del clic e si toglie a transizione finita. Nominare tutte
    le card della lista farebbe fotografare e animare venti elementi.
+
+   Da qui discende che il nome è **uno solo per tutta l'applicazione**
+   (`NOME_CONDIVISO`), non uno per entità: se non possono coesistere, non serve
+   distinguerli. E c'è un motivo pratico più forte — `::view-transition-*` vuole
+   il nome *letterale* e non accetta una variabile CSS, quindi un nome per
+   entità obbligherebbe a elencarle tutte in `globals.css`. La prima che si
+   dimenticasse di aggiungersi morferebbe con durata e curva di default: un
+   difetto silenzioso, che è la categoria che qui costa di più. Resta per
+   entità il solo **attributo del gemello**, perché è il segnale che dice alla
+   transizione che è arrivato il dettaglio *giusto*.
 2. **Saltare la transizione è normale.** L'oggetto `ViewTransition` rigetta
    *tutte e tre* le sue promesse (`ready`, `finished`, `updateCallbackDone`)
    quando il browser rinuncia: vanno gestite tutte, o diventano errori in
@@ -217,10 +227,12 @@ derivano:
    resta uno scambio istantaneo. Per questo la transizione non porta mai
    informazione.
 
-Implementazione in `components/community/report-link.tsx`, nomi condivisi in
-`lib/view-transitions.ts` — che è un modulo **neutro** di proposito: stando in
-un file `"use client"`, un Server Component che li importa riceve riferimenti
-client invece di stringhe, e l'aggancio sparisce dal DOM senza un errore.
+Il meccanismo sta in `components/app/shared-element-link.tsx`, parametrico
+sull'entità; i wrapper per segnalazioni, opere, proposte e quartieri aggiungono
+solo la forma dell'URL. I nomi stanno in `lib/view-transitions.ts` — un modulo
+**neutro** di proposito: in un file `"use client"`, un Server Component che li
+importa riceve riferimenti client invece di stringhe, e l'aggancio sparisce dal
+DOM senza un errore.
 
 ---
 
@@ -277,6 +289,22 @@ sparisce sugli stop chiari — su `--mesh-cool-a` fa 1,8:1. Con quell'inchiostro
 Regola operativa: sotto una superficie mesh il testo minuto non ci va, e la
 frase di spiegazione sta **fuori**, sulla tela. Vale anche per la cifra display,
 che infatti su queste pagine vive sul vetro (16,8:1 chiaro / 16,0:1 scuro).
+
+**La mesh è anche lo slot della fotografia** (risposta a DISCOVERY D7, ondata 7).
+Sui Quartieri ogni scheda porta una fascia mesh dove una foto del quartiere
+starebbe, con il solo nome sopra a 24px: la tinta è il tasso di risoluzione di
+quell'area. Molte superfici sulla stessa pagina non violano «un colore dominante
+per schermata» proprio perché lì il colore **è il dato** — è una mappa
+coropletica, non una decorazione ripetuta (§9). Quando arriveranno immagini
+reali e con licenza, entreranno in quella cornice senza rifare il resto; finché
+non arrivano, l'astratto è l'unica scelta onesta, perché oggi ogni immagine
+dell'app è un SVG generato dal seed.
+
+E una controregola: **la mesh non si mette dove il dato non è una salute.**
+L'avanzamento medio dei cantieri sembra una salute e non lo è — un cantiere al
+18% appena aperto è nuovo, non malato — perciò su Opere la tinta viene dalla
+quota di cantieri che rispettano il proprio calendario, che una salute lo è
+davvero. Dove nessun dato regge quel ruolo, si usa `cool` o non si usa la mesh.
 
 ⚠️ Il reset di Astryx dichiara `color` direttamente su `:where(h1…h6)` e
 `:where(p)`: specificità zero, ma una dichiarazione sull'elemento batte sempre

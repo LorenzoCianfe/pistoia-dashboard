@@ -25,7 +25,10 @@ import {
   eventCategory,
 } from "@/lib/community";
 import { operaStatus } from "@/lib/labels";
+import { MeshSurface, toneFromPercent } from "@/components/signature/mesh-surface";
+import { tassoGiudicabile } from "@/lib/citystats";
 import { formatNumber, formatDateShort } from "@/lib/format";
+import { CONDIVISO, NOME_CONDIVISO } from "@/lib/view-transitions";
 
 export async function generateMetadata({
   params,
@@ -48,8 +51,21 @@ export default async function NeighborhoodDetailPage({
   if (!data) notFound();
   const diary = await getNeighborhoodDiary(data.neighborhood.id);
 
-  const { neighborhood: n, reports, posts, proposals, opere, events, following, followerCount, counts } =
-    data;
+  const {
+    neighborhood: n,
+    reports,
+    posts,
+    proposals,
+    opere,
+    events,
+    following,
+    followerCount,
+    counts,
+    segnalazioni,
+  } = data;
+  const tasso = segnalazioni.tassoRisoluzione;
+  // Stessa soglia della lista: sotto il campione minimo il tasso non tinge.
+  const giudicabile = tassoGiudicabile(segnalazioni.conteggiabili);
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
@@ -61,28 +77,56 @@ export default async function NeighborhoodDetailPage({
         Tutti i quartieri
       </Link>
 
-      {/* Header */}
-      <Card className="space-y-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge color={n.kind === "frazione" ? "viola" : "teal"} soft className="bg-surface-2">
-            {n.kind === "frazione" ? "Frazione" : "Quartiere"}
-          </Badge>
-          <span className="flex items-center gap-1 text-xs text-muted-2">
-            <Users size={12} />
-            {formatNumber(followerCount)} cittadini lo seguono
-          </span>
-        </div>
-        <h1 className="text-2xl font-bold tracking-tight">{n.name}</h1>
+      {/* Il gemello della transizione: stessa anatomia della card della lista —
+          fascia mesh col nome, poi il vetro coi numeri — così il morph ha
+          qualcosa da interpolare invece di due forme estranee. */}
+      <Card
+        className="overflow-hidden p-0"
+        style={{ viewTransitionName: NOME_CONDIVISO }}
+        {...{ [CONDIVISO.quartiere.attr]: "" }}
+      >
+        <MeshSurface
+          tone={tasso === null || !giudicabile ? "cool" : toneFromPercent(tasso)}
+          className="flex min-h-[132px] items-end p-5 sm:p-6"
+        >
+          {/* Solo testo grande sul mesh (DESIGN.md §8): qui è il titolo. */}
+          <h1 className="text-[28px] font-semibold leading-tight tracking-tight sm:text-[32px]">
+            {n.name}
+          </h1>
+        </MeshSurface>
 
-        <div className="grid gap-3 sm:grid-cols-4">
-          <Stat label="Segnalazioni aperte" value={formatNumber(counts.openReports)} />
-          <Stat label="Opere" value={formatNumber(counts.opere)} />
-          <Stat label="Proposte" value={formatNumber(counts.proposals)} />
-          <Stat label="Eventi" value={formatNumber(counts.events)} />
-        </div>
+        <div className="space-y-4 p-5 sm:p-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge color={n.kind === "frazione" ? "viola" : "teal"} soft className="bg-surface-2">
+              {n.kind === "frazione" ? "Frazione" : "Quartiere"}
+            </Badge>
+            <span className="flex items-center gap-1 text-xs text-muted-2">
+              <Users size={12} />
+              {formatNumber(followerCount)} cittadini lo seguono
+            </span>
+          </div>
 
-        <div className="border-t border-border pt-4">
-          <FollowButton targetType="neighborhood" targetId={n.id} following={following} />
+          {/* La frase di spiegazione del mesh sta sulla tela, non sopra la
+              superficie: a questo corpo di testo servirebbe 4,5:1 e il tono
+              `bad` ne offre 3,3. */}
+          <p className="text-sm text-muted">
+            {tasso === null
+              ? "Nessuna segnalazione ancora da contare in quest'area: la scheda resta senza giudizio."
+              : giudicabile
+                ? `${tasso}% delle segnalazioni di quest'area è stato risolto — ${formatNumber(segnalazioni.risolte)} su ${formatNumber(segnalazioni.conteggiabili)}, esclusi duplicati e casi non di competenza del Comune.`
+                : `${formatNumber(segnalazioni.risolte)} segnalazioni risolte su ${formatNumber(segnalazioni.conteggiabili)}: troppo poche perché una percentuale dica qualcosa, quindi la scheda resta senza giudizio.`}
+          </p>
+
+          <div className="grid gap-3 sm:grid-cols-4">
+            <Stat label="Segnalazioni aperte" value={formatNumber(counts.openReports)} />
+            <Stat label="Opere" value={formatNumber(counts.opere)} />
+            <Stat label="Proposte" value={formatNumber(counts.proposals)} />
+            <Stat label="Eventi" value={formatNumber(counts.events)} />
+          </div>
+
+          <div className="border-t border-border pt-4">
+            <FollowButton targetType="neighborhood" targetId={n.id} following={following} />
+          </div>
         </div>
       </Card>
 

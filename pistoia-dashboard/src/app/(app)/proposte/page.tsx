@@ -10,6 +10,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Alert } from "@/components/ui/alert";
 import { ProposalCard } from "@/components/community/proposal-card";
 import { ProposalWizard } from "@/components/community/proposal-wizard";
+import { DisplayNumber } from "@/components/signature/display-number";
 import { PROPOSAL_THRESHOLDS } from "@/lib/community";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,10 @@ export default async function PropostePage({
     getNeighborhoods(),
   ]);
   const sorted = [...proposals].sort((a, b) => b.supports - a.supports);
+  const totaleSostegni = proposals.reduce((s, p) => s + p.supports, 0);
+  const conRisposta = proposals.filter(
+    (p) => p.supports >= PROPOSAL_THRESHOLDS.official,
+  ).length;
 
   return (
     <div className="space-y-5">
@@ -49,6 +54,36 @@ export default async function PropostePage({
           </Link>
           .
         </Alert>
+      ) : null}
+
+      {/*
+        L'apertura: quanta firma hanno raccolto in tutto le idee dei cittadini.
+        Nuda — senza scala a tacche — perché un totale non ha un massimo reale
+        a cui rapportarsi. La scala vive nel dettaglio, dove l'intervallo è la
+        scala delle soglie e quindi esiste davvero (DESIGN.md §8).
+      */}
+      {proposals.length > 0 ? (
+        <Card>
+          <DisplayNumber
+            value={totaleSostegni}
+            unit={totaleSostegni === 1 ? "sostegno" : "sostegni"}
+            label={mine ? "Raccolti dalle mie proposte" : "Raccolti dai cittadini"}
+          />
+          <p className="mt-4 border-t border-border pt-4 text-sm text-muted">
+            su {proposals.length}{" "}
+            {proposals.length === 1 ? "proposta" : "proposte"} ·{" "}
+            {conRisposta === 0 ? (
+              <>nessuna ha ancora raggiunto i {PROPOSAL_THRESHOLDS.official}{" "}
+              sostegni che obbligano il Comune a rispondere</>
+            ) : (
+              <>
+                <span className="font-semibold text-teal">{conRisposta}</span>{" "}
+                {conRisposta === 1 ? "ha superato" : "hanno superato"} i{" "}
+                {PROPOSAL_THRESHOLDS.official} sostegni della risposta ufficiale
+              </>
+            )}
+          </p>
+        </Card>
       ) : null}
 
       <Card className="p-0">
@@ -91,7 +126,7 @@ export default async function PropostePage({
           description="Le idee dei cittadini nascono qui. Lancia tu la prima per la città."
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {sorted.map((p) => (
             <ProposalCard key={p.id} proposal={p} canSupport={canSupport} />
           ))}

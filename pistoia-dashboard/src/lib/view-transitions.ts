@@ -10,12 +10,47 @@
  * il che è il modo peggiore per rompersi.
  */
 
-/** Assegnato al volo alla card cliccata, e fisso sul suo gemello nel dettaglio. */
-export const SHARED_NAME = "segnalazione-attiva";
-
 /**
- * Marca l'elemento gemello nel dettaglio. Serve a due cose: dare al lettore
- * dell'HTML un aggancio esplicito, e dire alla transizione "il dettaglio è nel
- * DOM, puoi scattare la seconda foto".
+ * Il `view-transition-name` è **uno solo per tutta l'applicazione**, non uno
+ * per entità.
+ *
+ * Non è una scorciatoia. Una transizione per volta è già la regola (DESIGN.md
+ * §7: il nome si assegna alla sola card cliccata e si toglie a volo finito),
+ * quindi due elementi con questo nome non possono mai coesistere in una
+ * fotografia. Un nome per entità obbligherebbe invece a elencarle tutte in
+ * `globals.css`, perché `::view-transition-*` vuole il nome letterale e non
+ * accetta una variabile: la quinta entità che morfa si dimenticherebbe di
+ * aggiungersi lì, e la transizione partirebbe senza durata né curva, cioè con
+ * i valori di default del browser. Un difetto che non dà errori.
  */
-export const SHARED_ATTR = "data-segnalazione-condivisa";
+export const NOME_CONDIVISO = "elemento-attivo";
+
+export type ElementoCondiviso = {
+  /**
+   * Marca l'elemento gemello nel dettaglio. È per entità — e non generico —
+   * perché è il segnale che la transizione aspetta per sapere che il dettaglio
+   * *giusto* è nel DOM: generico, si accontenterebbe di qualunque pagina.
+   */
+  attr: string;
+  /** Attributo con cui la card della lista si fa trovare dal link che contiene. */
+  card: string;
+};
+
+export const CONDIVISO = {
+  segnalazione: {
+    attr: "data-condiviso-segnalazione",
+    card: "data-report-card",
+  },
+  opera: {
+    attr: "data-condiviso-opera",
+    card: "data-opera-card",
+  },
+  proposta: {
+    attr: "data-condiviso-proposta",
+    card: "data-proposta-card",
+  },
+  quartiere: {
+    attr: "data-condiviso-quartiere",
+    card: "data-quartiere-card",
+  },
+} as const satisfies Record<string, ElementoCondiviso>;

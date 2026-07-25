@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { MapPin, Lightbulb } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { ProposalLink } from "@/components/community/proposal-link";
 import { Badge } from "@/components/ui/badge";
 import { SupportButton } from "@/components/community/support-button";
 import { ThresholdBar } from "@/components/community/threshold-bar";
@@ -19,7 +19,9 @@ export function ProposalCard({
 }) {
   const st = proposalStatus(proposal.status);
   return (
-    <Card hover className="flex flex-col gap-3">
+    // `data-proposta-card` è l'aggancio che `ProposalLink` risale per assegnare
+    // il `view-transition-name` alla sola card cliccata.
+    <Card hover data-proposta-card className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
         <Badge color="green">
           <Lightbulb size={12} />
@@ -35,12 +37,12 @@ export function ProposalCard({
       </div>
 
       <div>
-        <Link
-          href={`/proposte/${proposal.id}`}
+        <ProposalLink
+          id={proposal.id}
           className="block text-lg font-semibold leading-snug tracking-tight hover:text-teal"
         >
           {proposal.title}
-        </Link>
+        </ProposalLink>
         <p className="mt-1 line-clamp-2 text-sm text-muted">{proposal.description}</p>
       </div>
 

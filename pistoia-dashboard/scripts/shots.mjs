@@ -39,6 +39,8 @@ const SIMPLE_COOKIE = "pst-simple";
 
 /** Pagine che scorrono di lato. Fa uscire lo script con codice 1. */
 let problemi = 0;
+/** Pagine che non si sono nemmeno aperte: non verificate, quindi non promosse. */
+let falliti = 0;
 
 /** Pagine sotto revisione. `auth: false` = raggiungibile da disconnessi. */
 const PAGES = [
@@ -55,7 +57,27 @@ const PAGES = [
     attendiUrl: /\/segnalazioni\/[^/]+$/,
   },
   { name: "opere", url: "/opere" },
+  {
+    name: "opera-dettaglio",
+    url: "/opere",
+    apriPrima: "[data-opera-card] a",
+    attendiUrl: /\/opere\/[^/]+$/,
+  },
   { name: "proposte", url: "/proposte" },
+  {
+    name: "proposta-dettaglio",
+    url: "/proposte",
+    apriPrima: "[data-proposta-card] a",
+    attendiUrl: /\/proposte\/[^/]+$/,
+  },
+  { name: "quartieri", url: "/quartieri" },
+  {
+    name: "quartiere-dettaglio",
+    url: "/quartieri",
+    apriPrima: "[data-quartiere-card] a",
+    attendiUrl: /\/quartieri\/[^/]+$/,
+  },
+  { name: "comunita", url: "/comunita" },
 ];
 
 const CREDENTIALS = {
@@ -194,6 +216,16 @@ async function capture(ctx, theme, anonime) {
         console.log(`  ✓ ${file}`);
       }
     } catch (e) {
+      /*
+        Una cattura fallita conta come problema, non come riga di avviso.
+
+        Il traboccamento si misura DENTRO il `try`: se la pagina non si apre,
+        quella misura non viene mai presa e lo script usciva 0 lo stesso. Il
+        cancello dichiarava "nessuna pagina scorre di lato" su pagine che non
+        aveva neanche visto — cioè proprio quelle appena cambiate, che sono le
+        uniche che possono essersi rotte.
+      */
+      falliti += 1;
       console.warn(`  ✗ ${p.name}: ${e.message.split("\n")[0]}`);
     }
   }
@@ -232,6 +264,13 @@ if (problemi > 0) {
   console.error(
     `\n✗ ${problemi} schermate traboccano in orizzontale. Una pagina che scorre ` +
       `di lato non è "fatta" (AGENTS.md §5).`,
+  );
+  process.exitCode = 1;
+}
+if (falliti > 0) {
+  console.error(
+    `\n✗ ${falliti} pagine non si sono aperte: non sono state misurate, quindi ` +
+      `questa esecuzione non prova nulla su di loro.`,
   );
   process.exitCode = 1;
 }

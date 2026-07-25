@@ -220,7 +220,23 @@ most used" is **Bilancio, Segnalazioni (list + detail), La mia città, Opere**.
 app — `promesse`, `patti`, `priorita`, `decisioni`, `question-time`, `iniziative`,
 `progetti`, `proposte` may overlap in the user's mind.
 *Proposal:* worth an information-architecture pass; flag it, don't act unilaterally.
-→
+→ **La premessa non regge alla verifica** (ondata 7). Aperte tutte e otto: non
+condividono un modello dati. `promesse` è `CommitmentItem`, `patti` è
+`NeighborhoodPact` + `AdoptedPlace`, `progetti` è `CivicProject`, `proposte` è
+`Proposal`, e così via — ognuna con oggetto, ciclo di vita e funzione civica
+propri. **Non c'è niente da fondere** nel senso di cancellare una rotta.
+
+Si sovrappongono l'**etichetta nel menù** e la **filiera invisibile** che
+formano: `segnalazione → (ripetuta) → progetto → opera` e `proposta → priorità →
+decisione → promessa`. Quindi l'IA non è un lavoro di fusione ma di rinomina,
+raggruppamento e — la parte che vale di più — rendere visibile la filiera dentro
+le pagine. Molto meno invasivo di quanto la domanda lasciasse temere.
+
+Deciso in ondata 7: `progetti` **resta una rotta a sé**. Il suo valore è la
+provenienza («43 segnalazioni in Viale Adua sono diventate un piano
+illuminazione»), non l'oggetto costruito. Su `/opere` c'è solo un rimando di
+navigazione: `CivicProject` non ha una relazione con `Opera`, e dichiarare un
+legame che il modello non ha sarebbe inventare un dato.
 
 **C4.** Is the login/registration flow in scope? It's the first screen anyone sees in a demo.
 *Proposal:* yes, high priority — first impression.
@@ -290,7 +306,19 @@ glass reserved for overlays only.
 Pistoia (piazze, cantieri, quartieri), keep it fully abstract, or generated gradients only?
 *Proposal:* real photography for Quartieri and Opere only, where it carries information;
 gradients everywhere else.
-→
+→ **Astratto, ma non generico** (ondata 7). Nel repository non esiste nessuna
+immagine reale: ogni foto è un SVG a gradiente generato da `photoSvg` in
+`prisma/seed.ts`, etichetta di testo compresa, e `Neighborhood` non ha nemmeno
+un campo immagine. Attivare D7 significherebbe una modifica di schema più
+fotografie vere di Pistoia con una licenza — una decisione di materiali, non di
+codice.
+
+Quindi lo **slot** della fotografia si apre lo stesso: su Quartieri ogni scheda
+porta una fascia `MeshSurface` dove la foto starebbe, con il solo nome sopra, e
+la tinta è il tasso di risoluzione di quell'area. Il giorno che arrivano
+immagini con licenza entrano in quella cornice senza rifare il resto. Un finto
+scorcio di Pistoia generato, su una pagina istituzionale, sarebbe peggio di
+nessuno scorcio.
 
 **D8.** Do the three identity motifs (checkerboard, Romanesque banding, nursery green)
 survive? Which ones?
@@ -382,6 +410,16 @@ pagine renderebbe impossibile capire quale dei due cambi ha rotto cosa.
 → **Cinque gruppi resta la proposta**, ma è lavoro di architettura
 dell'informazione: rinviato insieme a G1. Nota che va deciso *con* C3 (rotte da
 fondere), altrimenti si raggruppano rotte che poi spariscono.
+
+**Rinviato una seconda volta in ondata 7**, con una ragione più precisa. Nessuna
+delle quattro pagine di quel giro (Opere, Proposte, Quartieri, Comunità) era
+candidata a muoversi: sono le destinazioni della filiera, tutte già di primo
+livello in `NAV_ITEMS`. Il rischio di ridisegnare una rotta che poi viene fusa
+era zero, mentre la ragione di G1 — la navigazione tocca 30+ rotte insieme e
+mescolarla al ridisegno rende impossibile attribuire una regressione — vale
+identica. Va aggiunto che `nav-items.ts` ha **già quattro gruppi** (principale ·
+Partecipazione · Trasparenza · secondario): i cinque di G2 sono in gran parte
+lì, e ciò che manca è soprattutto la rinomina delle voci ambigue.
 
 **G3.** Density: airy everywhere (`refs/`), or airy for citizens and dense for data views
 (current `DESIGN.md` §5)?

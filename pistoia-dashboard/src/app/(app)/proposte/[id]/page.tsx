@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, MapPin, Lightbulb, CircleSlash, ArrowRight } from "lucide-react";
+import { ArrowLeft, MapPin, Lightbulb, CircleSlash, ArrowRight, Check } from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
 import { getProposal } from "@/lib/data/proposals";
 import { isFollowing } from "@/lib/data/follow";
@@ -14,13 +14,34 @@ import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { SupportButton } from "@/components/community/support-button";
 import { FollowButton } from "@/components/community/follow-button";
 import { AnswerFeedback } from "@/components/community/answer-feedback";
-import { ThresholdBar } from "@/components/community/threshold-bar";
 import { ProposalAssessmentCard } from "@/components/community/proposal-assessment";
-import { proposalStatus } from "@/lib/community";
+import { DisplayNumber } from "@/components/signature/display-number";
+import { proposalStatus, PROPOSAL_THRESHOLDS } from "@/lib/community";
 import { AFFECTED_GROUPS } from "@/lib/civic-topics";
 import { formatDate, formatRelativeTime } from "@/lib/format";
+import { CONDIVISO, NOME_CONDIVISO } from "@/lib/view-transitions";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Proposta" };
+
+/** I tre gradini della scala del sostegno, con cosa scatta a ciascuno. */
+const GRADINI = [
+  {
+    soglia: PROPOSAL_THRESHOLDS.highlight,
+    cosa: "La proposta va in evidenza",
+    precedente: 0,
+  },
+  {
+    soglia: PROPOSAL_THRESHOLDS.official,
+    cosa: "Il Comune deve rispondere",
+    precedente: PROPOSAL_THRESHOLDS.highlight,
+  },
+  {
+    soglia: PROPOSAL_THRESHOLDS.consultation,
+    cosa: "Può diventare consultazione pubblica",
+    precedente: PROPOSAL_THRESHOLDS.official,
+  },
+] as const;
 
 export default async function ProposalDetailPage({
   params,
@@ -48,7 +69,13 @@ export default async function ProposalDetailPage({
         Tutte le proposte
       </Link>
 
-      <Card className="space-y-4">
+      {/* Il gemello della transizione a elemento condiviso: la card della lista
+          morfa in questa. Vedi `ProposalLink` e DESIGN.md §7. */}
+      <Card
+        className="space-y-4"
+        style={{ viewTransitionName: NOME_CONDIVISO }}
+        {...{ [CONDIVISO.proposta.attr]: "" }}
+      >
         <div className="flex flex-wrap items-center gap-2">
           <Badge color="green">
             <Lightbulb size={12} />
@@ -118,11 +145,79 @@ export default async function ProposalDetailPage({
           </p>
         ) : null}
 
-        <div className="rounded-[var(--radius-sm)] border border-border bg-surface-2/50 p-4">
-          <ThresholdBar supports={proposal.supports} />
-        </div>
+      </Card>
 
-        <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
+      {/*
+        Il sostegno, con la cifra display della schermata.
+
+        È l'unico posto della piattaforma dove la SCALA A TACCHE ha un intervallo
+        vero sotto (DESIGN.md §8): 0 e 500 non sono un minimo e un massimo scelti
+        per far stare bene il grafico, sono il nulla e la soglia oltre la quale
+        la proposta può diventare una consultazione pubblica. Le tre soglie sono
+        in `PROPOSAL_THRESHOLDS`, cioè nella stessa costante che decide il
+        comportamento — la scala non può scollarsi dalle regole che illustra.
+
+        La barra qui sotto resta perché risponde a un'altra domanda: la scala
+        dice a che punto della salita sei, la barra quanto manca al gradino
+        successivo.
+      */}
+      <Card>
+        <DisplayNumber
+          value={proposal.supports}
+          unit={proposal.supports === 1 ? "sostegno" : "sostegni"}
+          label="Sostegno raccolto"
+          scale={{
+            min: 0,
+            max: PROPOSAL_THRESHOLDS.consultation,
+            label: `${proposal.supports} sostegni su una scala da 0 a ${PROPOSAL_THRESHOLDS.consultation}: a ${PROPOSAL_THRESHOLDS.highlight} la proposta va in evidenza, a ${PROPOSAL_THRESHOLDS.official} il Comune deve rispondere, a ${PROPOSAL_THRESHOLDS.consultation} può diventare una consultazione pubblica.`,
+          }}
+        />
+
+        {/*
+          I tre gradini al posto della barra.
+
+          La barra `ThresholdBar` resta giusta sulle card della lista, dove è
+          l'unica cosa che parla di soglie. Qui no: mostrava «212 / 500», cioè
+          esattamente l'intervallo che la scala a tacche sopra già disegna — due
+          elementi che rispondono alla stessa domanda, e nessuno dei due che
+          dice quali gradini siano stati superati e cosa succede a ciascuno.
+        */}
+        <ul className="mt-6 grid grid-cols-1 gap-2 border-t border-border pt-5 sm:grid-cols-3">
+          {GRADINI.map((g) => {
+            const superato = proposal.supports >= g.soglia;
+            const prossimo = !superato && proposal.supports >= (g.precedente ?? 0);
+            return (
+              <li
+                key={g.soglia}
+                className={cn(
+                  "rounded-[var(--radius-inner)] border p-3",
+                  superato
+                    ? "border-transparent bg-teal-soft"
+                    : prossimo
+                      ? "border-border-strong bg-surface"
+                      : "border-border bg-surface opacity-60",
+                )}
+              >
+                <p className="flex items-center gap-1.5 text-sm font-semibold tabular-nums">
+                  {superato ? (
+                    <Check size={14} className="text-teal" aria-hidden />
+                  ) : (
+                    <span className="text-muted-2" aria-hidden>
+                      →
+                    </span>
+                  )}
+                  {g.soglia}
+                  <span className="sr-only">
+                    {superato ? "soglia superata" : "soglia non ancora raggiunta"}
+                  </span>
+                </p>
+                <p className="mt-0.5 text-xs leading-snug text-muted">{g.cosa}</p>
+              </li>
+            );
+          })}
+        </ul>
+
+        <div className="mt-5 flex flex-wrap items-center gap-3">
           <SupportButton
             proposalId={proposal.id}
             supported={proposal.supportedByMe}

@@ -6,12 +6,11 @@ import { SharedElementLink } from "@/components/app/shared-element-link";
 import { CONDIVISO } from "@/lib/view-transitions";
 
 /**
- * Link a una segnalazione con la transizione a elemento condiviso.
- *
- * Il meccanismo sta in `SharedElementLink` — qui resta solo ciò che è proprio
- * delle segnalazioni: la forma dell'URL e quale coppia di nomi usare.
+ * Link a un cantiere con la transizione a elemento condiviso lista → dettaglio.
+ * Il meccanismo sta in `SharedElementLink`; qui resta solo la forma dell'URL e
+ * la coppia di nomi delle opere.
  */
-export function ReportLink({
+export function OperaLink({
   id,
   className,
   children,
@@ -22,8 +21,8 @@ export function ReportLink({
 }) {
   return (
     <SharedElementLink
-      href={`/segnalazioni/${id}`}
-      target={CONDIVISO.segnalazione}
+      href={`/opere/${id}`}
+      target={CONDIVISO.opera}
       className={className}
     >
       {children}

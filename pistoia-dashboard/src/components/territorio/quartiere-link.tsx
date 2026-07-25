@@ -6,24 +6,23 @@ import { SharedElementLink } from "@/components/app/shared-element-link";
 import { CONDIVISO } from "@/lib/view-transitions";
 
 /**
- * Link a una segnalazione con la transizione a elemento condiviso.
- *
- * Il meccanismo sta in `SharedElementLink` — qui resta solo ciò che è proprio
- * delle segnalazioni: la forma dell'URL e quale coppia di nomi usare.
+ * Link a un quartiere con la transizione a elemento condiviso lista → dettaglio.
+ * Il meccanismo sta in `SharedElementLink`; qui resta la forma dell'URL — che
+ * per i quartieri usa lo slug, non l'id — e l'attributo gemello.
  */
-export function ReportLink({
-  id,
+export function QuartiereLink({
+  slug,
   className,
   children,
 }: {
-  id: string;
+  slug: string;
   className?: string;
   children: ReactNode;
 }) {
   return (
     <SharedElementLink
-      href={`/segnalazioni/${id}`}
-      target={CONDIVISO.segnalazione}
+      href={`/quartieri/${slug}`}
+      target={CONDIVISO.quartiere}
       className={className}
     >
       {children}

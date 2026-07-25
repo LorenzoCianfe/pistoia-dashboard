@@ -5,6 +5,33 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.12.0] — 2026-07-25 · Ondata 7 «Il secondo scaglione di pagine»
+
+### Aggiunto
+- **Cronoprogramma delle opere** (`lib/cronoprogramma.ts`, `components/opere/cronoprogramma-chart.tsx`): per ogni cantiere in corso, il lavoro realizzato contro la quota di calendario già consumata, con un marcatore che dice dove i tempi previsti direbbero di essere oggi. Derivato da `startedAt`, `expectedEnd` e `progress` — nessun campo nuovo, nessun dato inventato. Costruito in HTML e non in SVG per non incontrare lo scalamento non uniforme che aveva accorciato le linee del grafico d'andamento; l'equivalente testuale è **visibile** in ogni riga, non nascosto in una tabella da tenere allineata.
+- **Opere**: cifra display sull'investimento nei cantieri aperti e `MeshSurface` la cui tinta è la quota di cantieri che rispettano il proprio calendario. Rimando di navigazione a `/progetti` — di sola navigazione, perché `CivicProject` non ha una relazione con `Opera`.
+- **Proposte**: la **scala a tacche** di `DisplayNumber` sul suo unico intervallo davvero reale, 0 → 500 sostegni, dove gli estremi sono il nulla e la soglia della consultazione pubblica. Sul dettaglio i tre gradini 50/200/500 sostituiscono la barra, che ripeteva lo stesso intervallo della scala senza dire quali soglie fossero superate.
+- **Quartieri**: ogni scheda porta una fascia `MeshSurface` — lo slot che una fotografia occuperà (`DISCOVERY` D7) — con la tinta pari al tasso di risoluzione di quell'area. Il dettaglio ha la stessa anatomia, così la transizione ha qualcosa da interpolare.
+- **Comunità**: cifra display sulla quota di domande con risposta ufficiale (contata sulle sole domande: discussioni e idee non chiedono una risposta), e stanze tematiche a griglia con il numero di conversazioni, al posto della barra a scorrimento orizzontale.
+- **Transizione a elemento condiviso generalizzata**: `components/app/shared-element-link.tsx` è parametrico sull'entità e serve segnalazioni, opere, proposte e quartieri. Il `view-transition-name` è **uno solo per tutta l'app**, perché una transizione è in volo per volta e un nome per entità obbligherebbe a elencarle tutte in `globals.css` — dove la prima dimenticata morferebbe con i valori di default, senza errori.
+- `npm run shots` copre sei rotte nuove (dettaglio opera, proposte + dettaglio, quartieri + dettaglio, comunità); 13 test unitari su `cronoprogramma` e sul tasso di risoluzione.
+
+### Modificato
+- `DisplayNumber`: la prop `format` (una funzione) diventa `formatOptions` (`Intl.NumberFormatOptions`). Vedi *Corretto*.
+- Il **tasso di risoluzione** ha una definizione sola, in `lib/citystats.ts` (`STATI_RISOLTI`, `STATI_FUORI_CONTEGGIO`, `STATI_CHIUSI`, `tassoRisoluzione`): la usano "Stato della città", la lista quartieri e il dettaglio quartiere.
+- **Tolti due KPI inventati** dall'apertura di Opere: «318 cantieri censiti» e «+4 nuovi questo mese». Un numero inventato accanto a numeri veri li fa sembrare tutti inventati.
+- `DESIGN.md` §7 (nome condiviso unico, nuova posizione del meccanismo) e §8 (la mesh come slot della fotografia; la controregola: non tingere ciò che non è una salute).
+
+### Corretto
+- **`DisplayNumber` andava sull'error boundary da qualunque Server Component che passasse `format`.** Una funzione non attraversa il confine RSC — «Functions cannot be passed directly to Client Components» — e tutte le pagine che gli danno la cifra protagonista sono Server Component. Typecheck e lint restavano verdi: il difetto si vedeva solo aprendo la pagina.
+- **Il dettaglio quartiere contava da liste troncate.** `counts.openReports` veniva da una `findMany({ take: 6 })`, quindi non poteva superare 6 pur restando plausibile: un quartiere con quaranta segnalazioni aperte ne dichiarava sei. Ora i conteggi si chiedono al database; lo stesso valeva per opere, proposte, sondaggi ed eventi (`take: 5`).
+- **Un rapporto su un campione minuscolo non tinge più una scheda.** «0% risolte» su due segnalazioni è aritmeticamente esatto e informativamente nullo, ma una scheda rossa lo fa leggere come una colpa di quel quartiere. Introdotta `CAMPIONE_MINIMO_PER_GIUDIZIO`: sotto la soglia il tono resta `cool` e la scheda dichiara «troppo poche segnalazioni per una media».
+- **`npm run shots` usciva 0 sulle pagine che non riusciva ad aprire.** Il traboccamento orizzontale si misura dentro il `try`: una cattura fallita non veniva mai misurata e il cancello dichiarava "nessuna pagina scorre di lato" proprio sulle rotte appena cambiate. Ora una cattura fallita fa uscire 1.
+- Il nome delle schede quartiere passa da 24px a 26px: per WCAG il "testo grande" parte da 18,5pt ≈ 24,7px se non è in grassetto, e `font-semibold` non conta come grassetto — sul tono `bad` (3,3:1) 24px cadeva appena sotto la soglia.
+
+### Verificato
+- `tsc` pulito · eslint 0 problemi · Vitest 93/93 (13 nuovi) · 24 schermate nei due temi, zero traboccamenti orizzontali · nessun errore in console.
+
 ## [0.11.0] — 2026-07-25 · Ondata 6 «Il design system arriva sulle pagine»
 
 > L'ondata 5 (fondamenta Astryx e direzione ibrida, commit `132cdaf`) non ha una

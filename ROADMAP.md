@@ -232,7 +232,57 @@ componenti non sono entrati in una pagina vera:
 contrasti misurati sul mesh (4,55:1 il caso peggiore, AA) · zero traboccamenti
 orizzontali a 360/768/1280px in modalità semplice · nessun errore in console.
 
-### Ondata 7 — Admin intelligence & nuovi pubblici 🔜 *(prossima)*
+### Ondata 7 — Il secondo scaglione di pagine ✅ *(completata 2026-07-25)*
+
+**Obiettivo (→ OB-5):** l'ondata 6 aveva portato il sistema su quattro pagine di
+punta; restavano 26 rotte che avevano solo **ereditato** i token. Qui entrano
+davvero in Opere, Proposte, Quartieri e Comunità — le quattro destinazioni della
+filiera civica, tutte già di primo livello nel menù.
+
+**Sciolta prima di scrivere codice:** il passaggio di architettura
+dell'informazione (`G1`, `G2`, `C3`) **resta rinviato**, e la verifica ha
+cambiato la domanda. Aperte tutte e otto le rotte "sovrapposte", nessuna
+condivide un modello dati: non c'è niente da fondere. Ciò che si sovrappone è
+l'etichetta nel menù e la filiera invisibile fra le rotte. Vedi
+[`DISCOVERY.md`](DISCOVERY.md) C3, D7, G1, G2.
+
+| Voce | Livello | Stato |
+|---|---|---|
+| **Opere** — cifra display sull'investimento aperto, apertura a bento | `FE` `DES` | ✅ |
+| **Cronoprogramma**: lavoro fatto contro tempo passato, derivato da `startedAt`/`expectedEnd`/`progress` | `FE` `DES` | ✅ |
+| `MeshSurface` la cui tinta È la quota di cantieri che rispettano il calendario | `FE` `DES` | ✅ |
+| **Proposte** — la scala a tacche di `DisplayNumber` sul suo unico intervallo reale (0→500) | `FE` `DES` | ✅ |
+| I tre gradini 50/200/500 al posto della barra, sul dettaglio | `FE` `DES` | ✅ |
+| **Quartieri** — fascia mesh per scheda: la tinta è il tasso di risoluzione dell'area | `FE` `DES` | ✅ |
+| Soglia minima di campione prima di tingere un rapporto | `BE` `DES` `A11Y` | ✅ |
+| **Comunità** — cifra display sulle domande con risposta ufficiale, stanze a griglia | `FE` `DES` | ✅ |
+| Transizione a elemento condiviso **generalizzata** a quattro entità | `FE` `DES` | ✅ |
+| `npm run shots`: aggiunte le sei nuove rotte, cattura fallita = uscita 1 | `QA` | ✅ |
+| 13 test unitari nuovi su `cronoprogramma` e sul tasso di risoluzione | `ENG` | ✅ |
+
+**Due scelte controcorrente, entrambe per non mentire:**
+
+| Scelta | Perché |
+|---|---|
+| **Niente `DotScatterTimeline` sulle tappe dei cantieri**, benché fosse la richiesta | Nel seed ci sono **4 righe `OperaUpdate` in tutto** su 11 opere, e il componente distribuisce i punti a passo costante: quattro pallini non sono un grafico. Al suo posto il cronoprogramma, che usa campi già veri e risponde alla domanda che un cittadino si fa davvero — «è in pari?» |
+| **`MeshSurface` non tinta dall'avanzamento medio** | Sembra una salute e non lo è: un cantiere al 18% aperto il mese scorso è nuovo, non malato. La tinta viene dalla quota di cantieri in pari col proprio calendario, che una salute lo è |
+
+**Cinque difetti trovati portando il sistema su queste pagine** — e come i cinque
+dell'ondata 6, nessuno produceva un errore:
+
+| Difetto | Perché contava |
+|---|---|
+| `DisplayNumber.format` era una **funzione**, quindi inutilizzabile da un Server Component | Tutte le pagine che gli danno la cifra protagonista sono RSC. React rifiuta a runtime; typecheck e lint verdi, pagina sull'error boundary. Ora è `formatOptions`, un oggetto serializzabile |
+| Il dettaglio quartiere **contava da liste troncate** | `counts.openReports` veniva da una `findMany({ take: 6 })`: non poteva superare 6 e restava plausibile. Un quartiere con quaranta segnalazioni aperte ne dichiarava sei |
+| Un tasso su **due segnalazioni** tingeva una scheda di rosso | «0% risolte» su n=2 è esatto e non significa niente, ma il colore lo fa leggere come una colpa di quel quartiere. Da qui `CAMPIONE_MINIMO_PER_GIUDIZIO` |
+| `npm run shots` **usciva 0 sulle pagine che non riusciva ad aprire** | Il traboccamento si misura dentro il `try`: il cancello certificava "nessuna pagina scorre di lato" proprio sulle rotte appena cambiate |
+| Il tasso di risoluzione aveva **due definizioni** | Home e quartieri, a un clic di distanza, potevano mostrare due percentuali diverse della stessa città. Ora sta in `lib/citystats.ts` |
+
+**Tolti due KPI inventati** dall'apertura di Opere — «318 cantieri censiti» e
+«+4 nuovi questo mese»: un numero inventato accanto a numeri veri li fa sembrare
+tutti inventati.
+
+### Ondata 8 — Admin intelligence & nuovi pubblici 🔜 *(prossima)*
 
 **Obiettivo (→ OB-1, OB-4):** strumenti decisionali per il Comune e apertura a turisti, commercianti, scuole.
 

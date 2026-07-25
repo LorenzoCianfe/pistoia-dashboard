@@ -57,6 +57,7 @@ Pistoia - Dashboard/
       │  ├─ ui/                 # primitive
       │  ├─ signature/          # i quattro componenti-firma (DESIGN.md §8)
       │  ├─ charts/             # grafici SVG custom
+      │  ├─ app/                # guscio: navigazione, transizione condivisa
       │  └─ <sezione>/          # componenti per sezione
       └─ lib/                   # env, db, cache, auth/, data/, limits, …
 ```

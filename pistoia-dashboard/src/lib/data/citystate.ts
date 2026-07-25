@@ -1,6 +1,12 @@
 import "server-only";
 import { prisma } from "@/lib/db";
-import { weeklyBuckets } from "@/lib/citystats";
+import {
+  STATI_CHIUSI,
+  STATI_FUORI_CONTEGGIO,
+  STATI_RISOLTI,
+  tassoRisoluzione,
+  weeklyBuckets,
+} from "@/lib/citystats";
 
 // "Stato della città" (O3, 🆕): gli indicatori sintetici dell'hero in home.
 // Le serie settimanali alimentano le sparkline: 8 settimane, dalla più
@@ -33,17 +39,17 @@ export async function getCityState() {
         select: { createdAt: true },
       }),
       prisma.report.count({
-        where: { status: { notIn: ["risolta", "chiusa", "non_di_competenza", "duplicata"] } },
+        where: { status: { notIn: [...STATI_CHIUSI] } },
       }),
       // Il tasso di risoluzione è la cifra protagonista de "La mia città" e
       // pilota anche la tinta della superficie mesh: va calcolato sull'intero
       // storico, non sulle 8 settimane, altrimenti oscilla a ogni settimana
       // buona o cattiva e smette di dire "la città funziona?".
-      prisma.report.count({ where: { status: "risolta" } }),
+      prisma.report.count({ where: { status: { in: [...STATI_RISOLTI] } } }),
       // I duplicati e i "non di competenza" restano fuori dal denominatore:
       // non sono problemi che il Comune abbia mancato di risolvere.
       prisma.report.count({
-        where: { status: { notIn: ["duplicata", "non_di_competenza"] } },
+        where: { status: { notIn: [...STATI_FUORI_CONTEGGIO] } },
       }),
       prisma.opera.count({ where: { status: "in_corso" } }),
       prisma.opera.aggregate({
@@ -74,8 +80,7 @@ export async function getCityState() {
       resolvedTotal,
       total: allTotal,
       /** 0–100. Con zero segnalazioni non è "0%": è un dato che non esiste. */
-      resolvedRate:
-        allTotal > 0 ? Math.round((resolvedTotal / allTotal) * 100) : null,
+      resolvedRate: tassoRisoluzione(resolvedTotal, allTotal),
     },
     opere: {
       inCorso: opereInCorso,

@@ -741,19 +741,25 @@
   La soglia di supporto del progetto (browserslist: firefox 120, safari 17.5) è
   PIÙ BASSA di quella delle View Transitions same-document (Safari 18+,
   Firefox 144+). Dove mancano, `document.startViewTransition` non esiste,
-  `ReportLink` non intercetta il clic e la navigazione resta lo scambio
+  `SharedElementLink` non intercetta il clic e la navigazione resta lo scambio
   istantaneo di sempre. Il degrado è previsto, non subìto: la transizione non
   porta mai informazione, quindi chi non la vede non perde nulla.
+
+  Il nome è UNO per tutta l'app (`NOME_CONDIVISO` in `lib/view-transitions.ts`)
+  perché una transizione è in volo per volta. Con un nome per entità queste
+  regole andrebbero ripetute per ciascuna — `::view-transition-*` vuole il nome
+  letterale e non accetta una variabile — e la prima entità che si dimenticasse
+  di aggiungersi qui morferebbe con durata e curva di default, senza errori.
 */
-::view-transition-group(segnalazione-attiva) {
+::view-transition-group(elemento-attivo) {
   animation-duration: 320ms;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* La card della lista e quella del dettaglio hanno contenuti diversi: senza
    dissolvenza incrociata si vedrebbero i due testi sovrapposti a metà volo. */
-::view-transition-old(segnalazione-attiva),
-::view-transition-new(segnalazione-attiva) {
+::view-transition-old(elemento-attivo),
+::view-transition-new(elemento-attivo) {
   animation-duration: 320ms;
   height: 100%;
   object-fit: cover;
