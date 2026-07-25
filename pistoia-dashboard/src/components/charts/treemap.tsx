@@ -12,7 +12,15 @@ export type TreemapDatum = {
   id: string;
   label: string;
   value: number;
-  color: string;
+  /**
+   * Tinta semantica, da usare **solo** se le celle rappresentano categorie con
+   * un significato di colore proprio. Omessa — che è il caso normale — le celle
+   * seguono una rampa sequenziale dall'accento, ordinata per grandezza:
+   * `DESIGN.md` §9 vuole il teal per le quantità e i colori semantici per i
+   * soli stati. Sei tinte diverse per sei importi facevano leggere la pagina
+   * come un arcobaleno e suggerivano una semantica che non c'era.
+   */
+  color?: string;
 };
 
 type Rect = { x: number; y: number; w: number; h: number };
@@ -118,7 +126,12 @@ export function Treemap({
     >
       {sorted.map((d, i) => {
         const r = rects[i];
-        const tokens = accent(d.color);
+        // Rampa sequenziale: la cella più grande è la più densa, e la densità
+        // ripete l'informazione che l'area già dà. Mescolata sulla superficie
+        // invece che sul bianco, così funziona identica nei due temi.
+        const fill = d.color
+          ? accent(d.color).soft
+          : `color-mix(in oklab, var(--color-accent) ${Math.max(34 - i * 5, 8)}%, var(--surface))`;
         const pct = total > 0 ? Math.round((d.value / total) * 100) : 0;
         // Niente etichette dove non respirano: resta il tooltip nativo.
         const roomy = r.w >= 18 && r.h >= 12;
@@ -134,7 +147,7 @@ export function Treemap({
               top: `${(r.y / H) * 100}%`,
               width: `${(r.w / W) * 100}%`,
               height: `${(r.h / H) * 100}%`,
-              backgroundColor: tokens.soft,
+              backgroundColor: fill,
               boxShadow: "inset 0 0 0 1.5px var(--bg)",
               animation: `rise-in 0.5s var(--ease-out-civic) ${i * 45}ms both`,
             }}
@@ -145,10 +158,10 @@ export function Treemap({
                   {d.label}
                 </p>
                 <p className="leading-tight">
-                  <span
-                    className="block truncate text-sm font-bold tabular-nums"
-                    style={{ color: tokens.fg }}
-                  >
+                  {/* L'importo va in `--foreground`, non nell'accento: il teal
+                      su una sua stessa tinta chiara fa ~3,3:1, sotto l'AA per
+                      un testo di 14px. Il colore lo porta già lo sfondo. */}
+                  <span className="block truncate text-sm font-bold tabular-nums">
                     {format(d.value)}
                   </span>
                   <span className="text-[11px] font-medium text-muted-2 tabular-nums">

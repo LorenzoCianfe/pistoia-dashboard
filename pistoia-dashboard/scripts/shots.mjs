@@ -8,6 +8,13 @@
  *   npm run dev            # in un altro terminale
  *   npm run shots          # → screenshots/wave/
  *   npm run shots -- --out=/tmp/x --only=bilancio,opere
+ *   npm run shots -- --simple --width=360   # modalità semplice, viewport minima
+ *
+ * `--simple` attiva la modalità semplice (`html.simple-mode`, scala 115%), che
+ * `AGENTS.md` §5 elenca fra le condizioni perché una modifica sia "fatta".
+ * Finché la verifica si faceva a mano con script usa-e-getta non era
+ * ripetibile, ed è così che a 360px è passato inosservato un traboccamento
+ * orizzontale di 139px sul bilancio.
  */
 import { chromium } from "@playwright/test";
 import fs from "node:fs";
@@ -16,11 +23,22 @@ import path from "node:path";
 const BASE = process.env.SHOTS_BASE_URL ?? "http://localhost:3000";
 const arg = (n, d) =>
   process.argv.find((a) => a.startsWith(`--${n}=`))?.split("=")[1] ?? d;
+const flag = (n) => process.argv.includes(`--${n}`);
 
-const OUT = arg("out", "screenshots/wave");
+const SIMPLE = flag("simple");
+const OUT = arg("out", SIMPLE ? "screenshots/wave-semplice" : "screenshots/wave");
 const ONLY = arg("only", "")
   .split(",")
   .filter(Boolean);
+
+/** Ripristinato dopo ogni scatto: durante la cattura il viewport si allarga. */
+const VIEWPORT = { width: Number(arg("width", 1440)), height: 1000 };
+
+/** Cookie della modalità semplice — deve restare allineato a `lib/ui-prefs.ts`. */
+const SIMPLE_COOKIE = "pst-simple";
+
+/** Pagine che scorrono di lato. Fa uscire lo script con codice 1. */
+let problemi = 0;
 
 /** Pagine sotto revisione. `auth: false` = raggiungibile da disconnessi. */
 const PAGES = [
@@ -28,6 +46,14 @@ const PAGES = [
   { name: "la-mia-citta", url: "/la-mia-citta" },
   { name: "bilancio", url: "/bilancio" },
   { name: "segnalazioni", url: "/segnalazioni" },
+  // Il dettaglio non ha un URL fisso: si arriva cliccando la prima card, che è
+  // anche l'unico modo di esercitare la transizione a elemento condiviso.
+  {
+    name: "segnalazione-dettaglio",
+    url: "/segnalazioni",
+    apriPrima: "[data-report-card] a",
+    attendiUrl: /\/segnalazioni\/[^/]+$/,
+  },
   { name: "opere", url: "/opere" },
   { name: "proposte", url: "/proposte" },
 ];
@@ -47,7 +73,17 @@ async function login(page) {
   ]);
 }
 
-async function capture(ctx, theme) {
+/**
+ * `anonime = true` cattura SOLO le pagine raggiungibili da disconnessi, senza
+ * fare l'accesso; `false` fa l'accesso e cattura tutte le altre.
+ *
+ * Sono due passaggi separati perché non possono convivere: `/login` reindirizza
+ * chi ha già una sessione, quindi finché lo script faceva l'accesso in cima e
+ * poi visitava tutte le pagine in fila, la schermata "login" conteneva in
+ * realtà "La mia città". La prima schermata di ogni dimostrazione non era mai
+ * stata davvero fotografata.
+ */
+async function capture(ctx, theme, anonime) {
   const page = await ctx.newPage();
   // next-themes legge da localStorage: impostarlo prima di ogni navigazione
   // evita il flash e rende la cattura deterministica.
@@ -58,15 +94,24 @@ async function capture(ctx, theme) {
   }, theme);
 
   let authed = false;
-  try {
-    await login(page);
-    authed = true;
-  } catch (e) {
-    console.warn(`  ⚠ login non riuscito: ${e.message.split("\n")[0]}`);
+  if (!anonime) {
+    try {
+      await login(page);
+      authed = true;
+    } catch (e) {
+      console.warn(`  ⚠ login non riuscito: ${e.message.split("\n")[0]}`);
+    }
+  }
+
+  // Il cookie si mette DOPO l'accesso: prima non ci sarebbe un contesto a cui
+  // attaccarlo, e la home semplificata è un'altra pagina, non la stessa scalata.
+  if (SIMPLE) {
+    await ctx.addCookies([{ name: SIMPLE_COOKIE, value: "1", url: BASE }]);
   }
 
   for (const p of PAGES) {
     if (ONLY.length && !ONLY.includes(p.name)) continue;
+    if (anonime !== (p.auth === false)) continue;
     if (p.auth !== false && !authed) {
       console.warn(`  – salto ${p.name} (richiede sessione)`);
       continue;
@@ -76,26 +121,78 @@ async function capture(ctx, theme) {
         waitUntil: "domcontentloaded",
         timeout: 25_000,
       });
-      // Scorre tutta la pagina e torna su: i grafici e le sezioni narrate
-      // entrano allo scroll, quindi senza questo passaggio verrebbero
-      // fotografati vuoti (opacità 0) invece che animati.
-      await page.evaluate(async () => {
-        const step = window.innerHeight * 0.8;
-        for (let y = 0; y < document.body.scrollHeight; y += step) {
-          window.scrollTo(0, y);
-          await new Promise((r) => setTimeout(r, 120));
-        }
-        window.scrollTo(0, 0);
+      /*
+        Allarga il viewport all'altezza dell'intera pagina PRIMA di aspettare.
+
+        Prima si scorreva la pagina e si tornava su, poi si scattava con
+        `fullPage: true`. Non funzionava, e in modo insidioso: `fullPage`
+        ridimensiona il viewport per stitchare, e quel ridimensionamento è il
+        momento in cui i grafici entrano in vista per la PRIMA volta. Le
+        animazioni partivano quindi *durante* lo scatto e le linee finivano
+        fotografate all'~85% del tracciato. Misurato a riposo, il tratto arriva
+        a fondo scala (dashoffset 0): mentiva la schermata, non il grafico —
+        ed è esattamente la trappola descritta in AGENTS.md §5.
+
+        Con tutto già in vista, ogni IntersectionObserver ha già scattato quando
+        comincia l'attesa, e lo scatto è deterministico.
+      */
+      // La pagina va misurata a contenuto reso: con `domcontentloaded` React
+      // non ha ancora prodotto nulla e l'altezza sarebbe quella del viewport.
+      await page.waitForLoadState("networkidle").catch(() => {});
+      await page.waitForTimeout(400);
+
+      if (p.apriPrima) {
+        await page.locator(p.apriPrima).first().click();
+        await page.waitForURL(p.attendiUrl, { timeout: 15_000 });
+        await page.waitForLoadState("networkidle").catch(() => {});
+        await page.waitForTimeout(400);
+      }
+
+      // Il massimo fra le misure: a seconda del layout una sola di queste può
+      // restare ferma all'altezza del viewport.
+      const fullHeight = await page.evaluate(() =>
+        Math.max(
+          document.body.scrollHeight,
+          document.body.offsetHeight,
+          document.documentElement.scrollHeight,
+          document.documentElement.offsetHeight,
+        ),
+      );
+
+      /*
+        Traboccamento orizzontale: si misura qui, non a occhio.
+
+        Una pagina che scorre di lato è un difetto, e a differenza di quasi
+        tutto il resto NON si vede in una schermata a piena pagina — che si
+        allarga fino a contenerlo e lo fa sparire. Sono stati trovati così un
+        traboccamento di 160px causato dalle tabelle `sr-only` e uno di 139px
+        dagli anelli senza `flex-wrap` a 360px.
+      */
+      const overflow = await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth,
+      );
+      const { width } = page.viewportSize();
+      await page.setViewportSize({
+        width,
+        // Oltre gli 8000px Chromium fatica e la resa non migliora.
+        height: Math.min(Math.ceil(fullHeight), 8000),
       });
 
-      // Lascia concludere TUTTE le animazioni d'ingresso prima dello scatto.
-      // Il grafico ad andamento è il più lento: disegno del tratto 1,6s più
-      // 0,6s di ritardo sul riempimento dell'area = ~2,2s. Sotto questa soglia
-      // si fotografa il grafico a metà tracciato e sembra un bug di rendering.
-      await page.waitForTimeout(2600);
+      // Ingressi orchestrati fino a ~2,2s (DESIGN.md §7); il tratto del grafico
+      // ad andamento è il più lento con 1,6s più 0,3s di ritardo sull'ultima
+      // serie. Il margine è volutamente largo.
+      await page.waitForTimeout(3200);
       const file = path.join(OUT, `${p.name}-${theme}.png`);
-      await page.screenshot({ path: file, fullPage: true });
-      console.log(`  ✓ ${file}`);
+      await page.screenshot({ path: file });
+      await page.setViewportSize({ width, height: VIEWPORT.height });
+      if (overflow > 1) {
+        problemi += 1;
+        console.log(`  ✓ ${file}  ⚠ trabocca di ${overflow}px in orizzontale`);
+      } else {
+        console.log(`  ✓ ${file}`);
+      }
     } catch (e) {
       console.warn(`  ✗ ${p.name}: ${e.message.split("\n")[0]}`);
     }
@@ -109,14 +206,32 @@ fs.mkdirSync(OUT, { recursive: true });
 for (const theme of ["light", "dark"]) {
   console.log(`\n${theme}:`);
   const ctx = await browser.newContext({
-    viewport: { width: 1440, height: 1000 },
+    viewport: VIEWPORT,
     deviceScaleFactor: 2,
     locale: "it-IT",
     colorScheme: theme,
   });
-  await capture(ctx, theme);
+  // Contesti distinti: la sessione dell'uno renderebbe irraggiungibile il login
+  // dell'altro.
+  await capture(ctx, theme, true);
   await ctx.close();
+
+  const ctxAuth = await browser.newContext({
+    viewport: VIEWPORT,
+    deviceScaleFactor: 2,
+    locale: "it-IT",
+    colorScheme: theme,
+  });
+  await capture(ctxAuth, theme, false);
+  await ctxAuth.close();
 }
 
 await browser.close();
 console.log(`\nFatto → ${OUT}`);
+if (problemi > 0) {
+  console.error(
+    `\n✗ ${problemi} schermate traboccano in orizzontale. Una pagina che scorre ` +
+      `di lato non è "fatta" (AGENTS.md §5).`,
+  );
+  process.exitCode = 1;
+}

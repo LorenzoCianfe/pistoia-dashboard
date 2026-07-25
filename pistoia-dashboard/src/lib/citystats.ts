@@ -14,3 +14,14 @@ export function weeklyBuckets(dates: Date[], now: Date, weeks: number): number[]
   }
   return out;
 }
+
+/**
+ * Etichette dei bucket di `weeklyBuckets`, nello stesso ordine.
+ * Ogni etichetta è il giorno di INIZIO della settimana, es. "12 mag".
+ */
+export function weeklyLabels(now: Date, weeks: number): string[] {
+  const fmt = new Intl.DateTimeFormat("it-IT", { day: "numeric", month: "short" });
+  return Array.from({ length: weeks }, (_, i) =>
+    fmt.format(new Date(now.getTime() - (weeks - 1 - i) * WEEK_MS)),
+  );
+}

@@ -102,8 +102,11 @@ export function DotScatterTimeline({
 
   return (
     <div ref={ref} className={cn("w-full", className)}>
-      {/* Equivalente testuale: gli stessi dati, in tabella. */}
-      <table className="sr-only">
+      {/* Equivalente testuale: gli stessi dati, in tabella. `sr-only` sta sul
+          DIV perché su una `<table>` non stringe — vedi la nota estesa in
+          `charts/sankey-flow.tsx`. */}
+      <div className="sr-only">
+      <table>
         <caption>{title}</caption>
         <thead>
           <tr>
@@ -120,6 +123,7 @@ export function DotScatterTimeline({
           ))}
         </tbody>
       </table>
+      </div>
 
       <div
         role="application"

@@ -179,7 +179,7 @@ sobria, mai giocosa. **Livello 3 su 5**: sicura e orchestrata, mai ambientale.
 | **Durate** | 150ms micro · 250ms standard · 400ms scena. Mai oltre 500ms |
 | **Easing** | `cubic-bezier(0.22, 1, 0.36, 1)` per gli ingressi. Mai bounce, mai elastic |
 | **Ingresso pagina** | Una sola orchestrazione: titolo → contenuto → dettagli, stagger 40–60ms |
-| **Transizioni di rotta** | Elemento condiviso (`layoutId`) per lista → dettaglio; cross-fade altrove |
+| **Transizioni di rotta** | Elemento condiviso per lista → dettaglio; cross-fade altrove. **View Transitions native**, non `layoutId` — vedi sotto |
 | **Scroll** | Rivelazione una tantum. **Una sola** sezione narrata per pagina. Nessun parallax |
 | **Micro-interazioni** | Tre soli momenti di festa: invio segnalazione, firma proposta, segnalazione risolta |
 | **Dati** | I numeri contano da 0 una volta; i grafici si disegnano una volta sola |
@@ -187,6 +187,40 @@ sobria, mai giocosa. **Livello 3 su 5**: sicura e orchestrata, mai ambientale.
 
 **Librerie.** Motion per tutto ciò che è React. Anime.js solo per lavoro
 nativamente SVG. Nessun GSAP, nessuno sfondo WebGL — vedi `REFERENCES.md` §6.
+
+### L'elemento condiviso non si fa con `layoutId` (revisione 2026-07-25)
+
+Questo documento prescriveva `layoutId` di Motion. **Non funziona qui**, e la
+ragione è architetturale: nell'App Router la lista si smonta prima che il
+dettaglio monti, quindi i due elementi non stanno mai nello stesso albero React
+e `layoutId` non ha nulla da interpolare.
+
+La via ufficiale sarebbe `<ViewTransition>` di React, ma non è disponibile:
+in Next 16.2.7 il flag `experimental.viewTransition` **non** commuta React sul
+canale experimental (`needsExperimentalReact()` guarda solo `taint`,
+`transitionIndicator`, `gestureTransition`) e React 19.2 stabile non esporta
+quel componente.
+
+Si usa quindi **l'API nativa del browser, a mano** — `view-transition-name` più
+`document.startViewTransition()` attorno alla navigazione. Le tre regole che ne
+derivano:
+
+1. **Un solo nome per volta.** Il `view-transition-name` si assegna alla card
+   cliccata al momento del clic e si toglie a transizione finita. Nominare tutte
+   le card della lista farebbe fotografare e animare venti elementi.
+2. **Saltare la transizione è normale.** L'oggetto `ViewTransition` rigetta
+   *tutte e tre* le sue promesse (`ready`, `finished`, `updateCallbackDone`)
+   quando il browser rinuncia: vanno gestite tutte, o diventano errori in
+   console per un caso previsto.
+3. **Degrada, non si rompe.** Le View Transitions same-document stanno sopra la
+   soglia di `browserslist` (Safari 18+, Firefox 144+): sotto, la navigazione
+   resta uno scambio istantaneo. Per questo la transizione non porta mai
+   informazione.
+
+Implementazione in `components/community/report-link.tsx`, nomi condivisi in
+`lib/view-transitions.ts` — che è un modulo **neutro** di proposito: stando in
+un file `"use client"`, un Server Component che li importa riceve riferimenti
+client invece di stringhe, e l'aggancio sparisce dal DOM senza un errore.
 
 ---
 
@@ -229,6 +263,27 @@ Superficie a gradiente mesh con grana. **La tinta codifica un dato**: `good` /
 `warn` / `bad` derivano da una percentuale, `cool` è il neutro da usare quando la
 superficie non rappresenta una salute — così il verde non viene letto come "va
 tutto bene" per caso.
+
+**Che cosa può starci sopra** (misurato, non stimato). L'inchiostro è il nero
+caldo `--highlight-ink`, impostato dalla classe `.mesh-surface`: il bianco
+sparisce sugli stop chiari — su `--mesh-cool-a` fa 1,8:1. Con quell'inchiostro:
+
+| Tono | Contrasto (stop chiaro → scuro) | Cosa può ospitare |
+|---|---|---|
+| `cool` | 9,6:1 → 4,6:1 | anche testo corrente |
+| `good` · `warn` | ~11:1 → ~5,7:1 | anche testo corrente |
+| `bad` | 9,5:1 → **3,3:1** | **solo testo grande** (≥24px, o ≥18,7px in grassetto) |
+
+Regola operativa: sotto una superficie mesh il testo minuto non ci va, e la
+frase di spiegazione sta **fuori**, sulla tela. Vale anche per la cifra display,
+che infatti su queste pagine vive sul vetro (16,8:1 chiaro / 16,0:1 scuro).
+
+⚠️ Il reset di Astryx dichiara `color` direttamente su `:where(h1…h6)` e
+`:where(p)`: specificità zero, ma una dichiarazione sull'elemento batte sempre
+un valore *ereditato*. Senza la regola `.mesh-surface :is(h1…h6, p) { color:
+inherit }` in `globals.css`, un titolo dentro una mesh prende il colore del tema
+— e nel tema scuro diventa bianco su azzurro chiaro. Il guasto non si vede nel
+tema chiaro.
 
 ### `DotScatterTimeline`
 Attività nel tempo: posizione = valore, diametro = intensità, colore = stato.

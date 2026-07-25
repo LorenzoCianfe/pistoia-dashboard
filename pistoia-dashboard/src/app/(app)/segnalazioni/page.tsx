@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Megaphone, Plus } from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
-import { getReports, getReportStats } from "@/lib/data/reports";
+import { getReports, getReportStats, getReportActivity } from "@/lib/data/reports";
 import { getNeighborhoods } from "@/lib/data/neighborhoods";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SectionHeader } from "@/components/ui/section-header";
-import { Stat } from "@/components/ui/stat";
+import { DotScatterTimeline } from "@/components/signature/dot-scatter-timeline";
 import { ReportCard } from "@/components/community/report-card";
 import { ReportComposer } from "@/components/community/report-composer";
 import { QuickReport } from "@/components/community/quick-report";
@@ -25,11 +25,44 @@ export default async function SegnalazioniPage({
   const user = await requireUser();
   const mine = filtro === "mie";
 
-  const [reports, stats, neighborhoods] = await Promise.all([
+  const [reports, stats, neighborhoods, attivita] = await Promise.all([
     getReports(user.id, { category: categoria, mine }),
     getReportStats(),
     getNeighborhoods(),
+    // Dodici settimane e non otto: a otto la finestra tagliava fuori quasi
+    // tutto lo storico e il grafico si presentava piatto, che è il modo più
+    // rapido per far sembrare rotto un componente che funziona.
+    getReportActivity(12),
   ]);
+
+  /*
+    La timeline a punti codifica tre grandezze insieme (DESIGN.md §8):
+    altezza = quante ne sono arrivate, diametro = quante ne sono state chiuse,
+    colore = se la settimana è andata in pari. Si preferisce alla spezzata
+    perché le segnalazioni sono eventi discreti: una linea suggerirebbe una
+    continuità che nei dati non c'è.
+  */
+  const maxRisolte = Math.max(...attivita.risolte, 1);
+  const punti = attivita.labels.map((label, i) => ({
+    label,
+    value: attivita.ricevute[i],
+    weight: attivita.risolte[i] / maxRisolte,
+    status:
+      attivita.risolte[i] >= attivita.ricevute[i] && attivita.ricevute[i] > 0
+        ? ("good" as const)
+        : ("neutral" as const),
+  }));
+  const settimaneInPari = punti.filter((p) => p.status === "good").length;
+  const settimaneAttive = punti.filter((p) => p.value > 0).length;
+  // Il titolo dice la conclusione (DESIGN.md §9) — ma solo se i dati ne
+  // reggono una. Con una o due settimane di attività qualunque tendenza
+  // sarebbe inventata, e su una piattaforma pubblica non si afferma per riempire.
+  const conclusione =
+    settimaneAttive < 2
+      ? "Poche segnalazioni in queste settimane"
+      : settimaneInPari * 2 >= settimaneAttive
+        ? "La città sta stando al passo"
+        : "Arrivano più segnalazioni di quante se ne chiudano";
 
   const chips = [
     { label: "Tutte", href: "/segnalazioni", active: !categoria && !mine },
@@ -45,11 +78,49 @@ export default async function SegnalazioniPage({
         icon={<Megaphone size={22} />}
       />
 
-      <div className="grid grid-cols-3 gap-4">
-        <Stat label="Aperte" value={stats.open} />
-        <Stat label="Risolte" value={stats.resolved} />
-        <Stat label="Totale" value={stats.total} />
-      </div>
+      <Card>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-base font-semibold">{conclusione}</h2>
+            <p className="mt-1 text-sm text-muted">
+              Ogni punto è una settimana: più in alto sta, più segnalazioni sono
+              arrivate; più è grande, più ne sono state chiuse. I punti verdi
+              sono le settimane chiuse in pari.
+            </p>
+          </div>
+          <div className="flex gap-4 text-xs">
+            <span>
+              <span className="block font-display text-2xl font-semibold tabular-nums leading-none">
+                {stats.open}
+              </span>
+              <span className="mt-1 block text-muted-2">aperte</span>
+            </span>
+            <span>
+              <span className="block font-display text-2xl font-semibold tabular-nums leading-none">
+                {stats.resolved}
+              </span>
+              <span className="mt-1 block text-muted-2">risolte</span>
+            </span>
+            <span>
+              <span className="block font-display text-2xl font-semibold tabular-nums leading-none">
+                {stats.total}
+              </span>
+              <span className="mt-1 block text-muted-2">in tutto</span>
+            </span>
+          </div>
+        </div>
+
+        <DotScatterTimeline
+          className="mt-4"
+          points={punti}
+          title={`Segnalazioni ricevute per settimana nelle ultime ${punti.length} settimane, con quante ne sono state chiuse`}
+          caption={
+            settimaneAttive === 0
+              ? "Nessuna segnalazione ricevuta nelle ultime 12 settimane."
+              : `${settimaneInPari} ${settimaneInPari === 1 ? "settimana" : "settimane"} su ${settimaneAttive} con segnalazioni chiuse in pari o in attivo.`
+          }
+        />
+      </Card>
 
       {/* Flusso rapido mobile-first (A2 §4) */}
       <QuickReport

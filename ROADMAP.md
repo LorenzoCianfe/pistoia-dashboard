@@ -197,7 +197,42 @@ Astryx resta la sorgente dei **token** e la libreria di riferimento per i
 componenti nuovi; non diventa lo strato di primitive. È una correzione di rotta
 basata sull'evidenza, non un ripensamento estetico.
 
-### Ondata 6 — Admin intelligence & nuovi pubblici 🔜 *(prossima)*
+### Ondata 6 — Il design system arriva sulle pagine ✅ *(completata 2026-07-25)*
+
+**Obiettivo (→ OB-5):** l'ondata 5 aveva rifondato token e componenti-firma, ma
+le 30+ rotte avevano **ereditato** il nuovo sistema tramite il ponte di
+retrocompatibilità, non erano state ridisegnate. Qui il sistema entra davvero
+nelle quattro pagine di punta. Quattro biforcazioni sciolte prima di scrivere
+codice, in [`DISCOVERY.md`](DISCOVERY.md).
+
+| Voce | Livello | Stato |
+|---|---|---|
+| **Bilancio** — `DisplayNumber` come cifra protagonista, apertura a bento | `FE` `DES` | ✅ |
+| Sankey "dove scorrono i soldi" a **due stadi**, scritto a mano sui token | `FE` `DES` | ✅ |
+| Prima sezione narrata della piattaforma (`ScrollTold`), tre passaggi | `FE` `DES` | ✅ |
+| Treemap e anelli tolti dall'arcobaleno: rampa sequenziale dall'accento | `DES` | ✅ |
+| **La mia città** — bento con `MeshSurface` la cui tinta È il tasso di risoluzione | `FE` `DES` | ✅ |
+| **Segnalazioni** — transizione a elemento condiviso lista → dettaglio | `FE` `DES` | ✅ |
+| `DotScatterTimeline` sull'andamento: altezza = arrivate, diametro = chiuse, colore = settimana in pari | `FE` `DES` | ✅ |
+| **Login** — pannello di marca a `MeshSurface` + scacchiera; via gradiente e aloni | `FE` `DES` | ✅ |
+| `npm run shots`: cattura deterministica, login davvero fotografato, dettaglio segnalazione aggiunto | `QA` | ✅ |
+
+**Cinque difetti trovati usando il sistema** — non erano visibili finché i
+componenti non sono entrati in una pagina vera:
+
+| Difetto | Perché contava |
+|---|---|
+| `LineChart` disegnava **solo ~80% di ogni linea** | `pathLength="1"` normalizza in spazio utente, `vector-effect: non-scaling-stroke` calcola i trattini in spazio schermo: con viewBox 640 reso su 802px il tratto copriva 640/802 = 79,8%. Su una pagina di bilancio **mancavano gli ultimi due mesi**, in silenzio. Ora la rivelazione è una tendina |
+| Le tabelle `sr-only` **spingevano la pagina di lato** | Su una `<table>` `width: 1px` vale come minimo, non come larghezza: la tabella restava larga 1095px. `sr-only` è passata sul `<div>` che la avvolge, in tutti e tre i grafici |
+| Titoli **bianchi** sopra il mesh nel tema scuro | Il reset di Astryx dichiara `color` su `:where(h1…h6)`, e una dichiarazione sull'elemento batte l'ereditarietà. Invisibile nel tema chiaro |
+| `ScrollStep` partiva da **opacità 0** | Chi apriva la pagina senza scorrere — o la stampava — trovava un buco al posto di un paragrafo. Ora il pavimento è 0,3 |
+| `npm run shots` **non fotografava il login** | Lo script faceva l'accesso prima di visitarlo, e `/login` reindirizza chi ha una sessione: la prima schermata di ogni dimostrazione non era mai stata rivista |
+
+**Verificato:** typecheck · lint · 80 unit · 11 E2E · schermate nei due temi ·
+contrasti misurati sul mesh (4,55:1 il caso peggiore, AA) · zero traboccamenti
+orizzontali a 360/768/1280px in modalità semplice · nessun errore in console.
+
+### Ondata 7 — Admin intelligence & nuovi pubblici 🔜 *(prossima)*
 
 **Obiettivo (→ OB-1, OB-4):** strumenti decisionali per il Comune e apertura a turisti, commercianti, scuole.
 

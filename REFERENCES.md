@@ -171,9 +171,16 @@ come strato di primitive; montarci sopra shadcn significherebbe due sistemi di
 token e due convenzioni di styling sullo stesso schermo.
 
 **Resta la fonte di riferimento per il *repertorio*.** In particolare il
-**sankey** è il candidato naturale per "dove scorrono i soldi" (entrate →
-missioni → programmi), che un treemap non racconta. Se un giorno servirà, la
-strada è portarlo a mano sui token Pistoia, non importare il registry.
+**sankey** è il candidato naturale per "dove scorrono i soldi", che un treemap
+non racconta.
+
+> **Fatto (ondata 6).** Il sankey è stato portato a mano sui token Pistoia in
+> `components/charts/sankey-flow.tsx`, senza importare il registry: la strada
+> indicata qui ha retto. Con una correzione di rotta imposta dai dati — non tre
+> stadi (entrate → missioni → programmi) ma **due**, perché il modello non ha la
+> scomposizione delle entrate per fonte né il livello "programmi". Scegliere il
+> grafico dal catalogo va bene; scegliere *quanti stadi* lo deve dire il
+> modello dati, non il catalogo.
 
 > **Quando usarla:** come catalogo, quando devi scegliere *quale* grafico
 > risponde a una domanda. Per l'implementazione, guarda prima Astryx e i

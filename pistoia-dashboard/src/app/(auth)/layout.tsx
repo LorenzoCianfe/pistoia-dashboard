@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Crest } from "@/components/brand/crest";
 import { PreviewBadge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { MeshSurface } from "@/components/signature/mesh-surface";
 
 const highlights = [
   "Il bilancio della città, leggibile in 30 secondi",
@@ -16,38 +17,67 @@ export default function AuthLayout({
 }) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
-      {/* Brand panel */}
-      <aside className="relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div className="absolute inset-0 gradient-teal-viola opacity-[0.92]" />
-        <div className="absolute -right-24 -top-24 size-96 rounded-full bg-white/15 blur-3xl" />
-        <div className="absolute -bottom-32 -left-16 size-96 rounded-full bg-white/10 blur-3xl" />
+      {/*
+        Pannello di marca — rifatto nell'ondata 6.
 
-        <div className="relative flex items-center gap-3 text-white">
-          <Crest className="h-11 w-auto drop-shadow" />
-          <span className="text-lg font-bold tracking-tight">
-            Comune di Pistoia
-          </span>
-        </div>
+        Prima portava il gradiente teal→viola più due aloni bianchi sfocati agli
+        angoli. Erano tre violazioni in una schermata sola: `DESIGN.md` §4
+        concede il gradiente a UN momento per pagina e questo se lo mangiava
+        all'ingresso, §6 stabilisce che l'elevazione è translucenza e filo di
+        luce e non alone, e gli aloni erano esattamente aloni.
 
-        <div className="relative max-w-md text-white">
-          <h2 className="text-3xl font-bold leading-tight tracking-tight">
-            I dati della tua città, finalmente leggibili.
-          </h2>
-          <ul className="mt-8 space-y-3.5">
-            {highlights.map((h) => (
-              <li key={h} className="flex items-center gap-3 text-white/90">
-                <span className="grid size-6 shrink-0 place-items-center rounded-full bg-white/20">
-                  <span className="size-2 rounded-full bg-white" />
-                </span>
-                <span className="text-[15px]">{h}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        Al loro posto la superficie-firma `MeshSurface` in tono `cool`. `cool` è
+        il neutro ed è la scelta giusta qui: la schermata di accesso non
+        rappresenta una salute, e usare `good` farebbe dire al verde una cosa
+        che non c'è (DESIGN.md §8). Sopra, la scacchiera dello stemma come
+        momento di marca.
+      */}
+      <aside className="relative hidden overflow-hidden lg:block">
+        <MeshSurface
+          tone="cool"
+          className="flex h-full flex-col justify-between rounded-none p-12"
+        >
+          {/*
+            L'inchiostro non si dichiara qui: `.mesh-surface` lo imposta a
+            `--highlight-ink` e i titoli lo ereditano (vedi la regola in
+            globals.css sul reset di Astryx). Sugli stop di `cool` quel nero
+            caldo sta fra 4,6:1 e 9,6:1 — AA anche sul testo corrente. È il
+            motivo per cui `cool` regge il testo piccolo mentre `bad` no
+            (vedi `city-state-hero.tsx`).
+          */}
+          <div>
+            <div className="flex items-center gap-3">
+              <Crest className="h-11 w-auto" />
+              <span className="text-lg font-bold tracking-tight">
+                Comune di Pistoia
+              </span>
+            </div>
+            {/* Alta 12px quanto il passo del motivo: sotto si vede una sola
+                fila di quadretti e la scacchiera si legge come un tratteggio. */}
+            <div className="scacchiera mt-6 h-3 w-28 opacity-80" aria-hidden />
+          </div>
 
-        <p className="relative text-sm text-white/70">
-          Un progetto civico · dati dimostrativi
-        </p>
+          <div className="max-w-md">
+            <h2 className="font-display text-[34px] font-light leading-tight tracking-tight">
+              I dati della tua città, finalmente leggibili.
+            </h2>
+            <ul className="mt-8 space-y-3.5">
+              {highlights.map((h) => (
+                <li key={h} className="flex items-center gap-3">
+                  <span
+                    className="mt-px size-1.5 shrink-0 rounded-full bg-current"
+                    aria-hidden
+                  />
+                  <span className="text-base font-medium">{h}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <p className="text-sm font-medium opacity-80">
+            Un progetto civico · dati dimostrativi
+          </p>
+        </MeshSurface>
       </aside>
 
       {/* Form side */}

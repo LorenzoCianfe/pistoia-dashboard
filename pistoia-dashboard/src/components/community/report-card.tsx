@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   Construction,
   Lightbulb,
@@ -17,6 +16,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmButton } from "@/components/community/confirm-button";
+import { ReportLink } from "@/components/community/report-link";
 import { reportCategory, reportStatus, reportUrgency } from "@/lib/community";
 import { accent } from "@/lib/colors";
 import { formatRelativeTime } from "@/lib/format";
@@ -46,7 +46,9 @@ export function ReportCard({ report }: { report: ReportListItem }) {
   const a = accent(cat.color);
 
   return (
-    <Card hover className="flex flex-col gap-3">
+    // `data-report-card` è l'aggancio che `ReportLink` risale per assegnare il
+    // `view-transition-name` alla card cliccata (e solo a quella).
+    <Card hover data-report-card className="flex flex-col gap-3">
       <div className="flex items-start gap-3">
         {report.photoData ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -69,12 +71,12 @@ export function ReportCard({ report }: { report: ReportListItem }) {
             <Badge color={st.color}>{st.label}</Badge>
             {urgency ? <Badge color={urgency.color}>{urgency.label}</Badge> : null}
           </div>
-          <Link
-            href={`/segnalazioni/${report.id}`}
+          <ReportLink
+            id={report.id}
             className="mt-1.5 block font-semibold leading-snug hover:text-teal"
           >
             {report.title}
-          </Link>
+          </ReportLink>
           <p className="mt-1 line-clamp-2 text-sm text-muted">
             {report.description}
           </p>
@@ -96,12 +98,12 @@ export function ReportCard({ report }: { report: ReportListItem }) {
           confirmed={report.confirmedByMe}
           count={report.confirmations}
         />
-        <Link
-          href={`/segnalazioni/${report.id}`}
+        <ReportLink
+          id={report.id}
           className="text-sm font-semibold text-teal hover:underline"
         >
           Dettaglio →
-        </Link>
+        </ReportLink>
       </div>
     </Card>
   );

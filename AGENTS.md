@@ -6,7 +6,7 @@
 >
 > **Leggilo per intero all'inizio di ogni sessione, prima di toccare codice.**
 >
-> Aggiornato: 2026-07-25
+> Aggiornato: 2026-07-25 (ondata 6)
 
 ---
 
@@ -100,6 +100,42 @@ Altre due che costano ore se ignorate:
 - **Il tema DEVE essere compilato**, mai a runtime: la CSP con nonce del proxy
   bloccherebbe il `<style>` iniettato all'hydration.
 
+### Cinque trappole pagate portando il sistema sulle pagine (ondata 6)
+
+Hanno in comune una cosa: **nessuna produce un errore**. Il codice compila, i
+test passano, e il difetto si vede solo guardando o misurando.
+
+1. **`pathLength` e `non-scaling-stroke` insieme accorciano il tracciato.**
+   `pathLength="1"` normalizza le lunghezze in spazio *utente*,
+   `vector-effect: non-scaling-stroke` calcola i trattini in spazio *schermo*:
+   con un `preserveAspectRatio="none"` di mezzo il tratto disegnato copre
+   `larghezzaViewBox / larghezzaResa`. Nel grafico dell'andamento faceva 79,8% —
+   **mancavano due mesi su dodici**. Per rivelare una linea usa una tendina di
+   ritaglio, non il disegno del tratto.
+2. **`sr-only` non stringe una `<table>`.** Nel layout automatico delle tabelle
+   `width: 1px` vale come minimo: la tabella resta larga quanto il contenuto e,
+   essendo in posizione assoluta, spinge la pagina di lato. Metti `sr-only` sul
+   `<div>` che la avvolge. Non toccare il `display` della tabella: perderesti la
+   semantica, che è tutto il punto dell'equivalente testuale.
+3. **Il reset di Astryx batte l'ereditarietà del colore.** Dichiara `color` su
+   `:where(h1…h6)` e `:where(p)`: specificità zero, ma una dichiarazione che
+   colpisce l'elemento vince su un valore ereditato dal genitore. Un titolo
+   dentro una `MeshSurface` prendeva il colore del tema, cioè **bianco nel tema
+   scuro**. Invisibile nel tema chiaro.
+4. **Le View Transitions rigettano tre promesse, non una.** Saltare una
+   transizione è un esito normale; `ready`, `finished` e `updateCallbackDone`
+   rigettano tutte, e ognuna senza gestore diventa un errore in console.
+5. **Le costanti condivise non stanno in un file `"use client"`.** Un Server
+   Component che le importa riceve riferimenti client invece di stringhe:
+   l'attributo sparisce dal DOM in silenzio. Mettile in un modulo neutro
+   (`lib/view-transitions.ts` è l'esempio).
+
+E una sullo strumento di revisione, non sul prodotto: **`npm run shots` non
+fotografava il login**, perché faceva l'accesso prima di visitarlo e `/login`
+reindirizza chi ha una sessione. La prima schermata di ogni dimostrazione non
+era mai stata rivista. Se cambi lo script, verifica che le pagine anonime
+restino anonime.
+
 ---
 
 ## 4. Comandi
@@ -112,8 +148,14 @@ npm test               # vitest
 npm run test:e2e       # playwright
 npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
 npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
+npm run shots -- --simple --width=360   # modalità semplice, viewport minima
 npm run db:reset       # ricrea il DB e ripopola i dati dimostrativi
 ```
+
+`npm run shots` **misura anche il traboccamento orizzontale** e esce con codice
+1 se una pagina scorre di lato. È l'unico difetto di layout che una schermata a
+piena pagina non mostra: il viewport si allarga fino a contenerlo e lo fa
+sparire.
 
 Se il dev server si comporta in modo assurdo (moduli non trovati, panic di
 Turbopack, azioni server che falliscono in silenzio): **cancella `.next` e
@@ -131,7 +173,8 @@ Una modifica è finita quando **tutte** queste sono vere:
 - [ ] L'hai **guardata**: `npm run shots`, o il browser, in tema chiaro **e**
       scuro. Un typecheck verde non è una prova visiva.
 - [ ] Funziona da tastiera e il focus è visibile
-- [ ] Regge la **modalità semplice** (`html.simple-mode`, scala 115%)
+- [ ] Regge la **modalità semplice** — `npm run shots -- --simple --width=360`,
+      che è anche il controllo del traboccamento orizzontale alla viewport minima
 - [ ] `prefers-reduced-motion` non lascia contenuto invisibile o inaccessibile
 
 Sulle schermate: le animazioni d'ingresso durano fino a ~2,2s e i grafici si

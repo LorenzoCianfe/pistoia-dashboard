@@ -106,6 +106,24 @@ un big bang.
 
 Le motivazioni estese sono in `AGENTS.md` §3 e nei commenti dei file.
 
+### Un quarto vincolo, emerso usando il sistema (ondata 6)
+
+Il reset di Astryx dichiara `color` **direttamente** su `:where(h1…h6)` e
+`:where(p)`. La specificità è zero, ma non è quello il punto: una dichiarazione
+che colpisce l'elemento vince comunque su un valore *ereditato* dal genitore.
+
+Conseguenza pratica: **impostare `color` su un contenitore non basta** a colorare
+i titoli e i paragrafi che contiene. Dove serve (le superfici `MeshSurface`, che
+hanno un inchiostro proprio) va aggiunta la riga esplicita:
+
+```css
+.mesh-surface :is(h1, h2, h3, h4, h5, h6, p) { color: inherit; }
+```
+
+Vale per qualunque superficie futura con un inchiostro diverso da quello del
+tema. Il difetto non si vede nel tema chiaro, dove il colore del tema è già
+scuro e sembra tutto a posto.
+
 ### Flusso del tema
 
 ```
@@ -202,4 +220,8 @@ interessata.
 | SQLite vincola l'hosting | Aperto, da affrontare prima di un deploy reale |
 | Astryx è in Beta (0.1.8) | Le classi stabili `.astryx-*` sono documentate ma non ancora emesse |
 | Snapshot Playwright | Da rigenerare dopo il cambio di design system |
-| 30+ rotte, gerarchia piatta | Serve un passaggio di architettura dell'informazione |
+| 30+ rotte, gerarchia piatta | Serve un passaggio di architettura dell'informazione. Rimandato dall'ondata 6 di proposito: cambiare la navigazione insieme al ridisegno di quattro pagine renderebbe impossibile capire quale dei due ha rotto cosa |
+| **26 rotte ereditano ancora i token senza essere ridisegnate** | L'ondata 6 ha ridisegnato solo le quattro di punta. Le altre sono coerenti nei colori ma non nella composizione: nessuna usa i componenti-firma |
+| **`<ViewTransition>` di React non è disponibile** | Il flag `experimental.viewTransition` non commuta React sul canale experimental in Next 16.2.7. L'elemento condiviso usa l'API nativa a mano; da rivalutare quando il componente arriva in React stabile |
+| **Nessun dettaglio delle entrate di bilancio** | Il sankey si ferma a due stadi. Un terzo stadio richiede un modello `BudgetRevenue` con i titoli reali, oppure l'ETL della Fase 2 |
+| Nessun test automatico di accessibilità | `axe-core` negli E2E resta da impostare (traccia "Qualità continua"). I contrasti dell'ondata 6 sono stati misurati a mano |

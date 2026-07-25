@@ -12,6 +12,7 @@ import { FolderKanban, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmButton } from "@/components/community/confirm-button";
+import { SHARED_ATTR, SHARED_NAME } from "@/lib/view-transitions";
 import { FollowButton } from "@/components/community/follow-button";
 import { AnswerFeedback } from "@/components/community/answer-feedback";
 import { MapCanvas } from "@/components/mappa/map-canvas";
@@ -63,7 +64,18 @@ export default async function ReportDetailPage({
         Tutte le segnalazioni
       </Link>
 
-      <Card className="space-y-4">
+      {/*
+        L'elemento gemello della transizione a elemento condiviso: la card della
+        lista morfa in questa. Il nome è fisso perché in questa pagina ce n'è una
+        sola, mentre nella lista viene assegnato al volo alla card cliccata —
+        vedi `ReportLink`. `SHARED_ATTR` è anche il segnale che dice alla
+        transizione "il dettaglio è nel DOM, puoi scattare la seconda foto".
+      */}
+      <Card
+        className="space-y-4"
+        style={{ viewTransitionName: SHARED_NAME }}
+        {...{ [SHARED_ATTR]: "" }}
+      >
         <div className="flex flex-wrap items-center gap-2">
           <Badge color={cat.color}>{cat.label}</Badge>
           <Badge color={reportStatus(report.status).color}>

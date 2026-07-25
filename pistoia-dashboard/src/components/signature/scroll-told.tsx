@@ -83,7 +83,16 @@ export function ScrollStep({
     offset: ["start 0.85", "end 0.35"],
   });
 
-  const opacity = useTransform(scrollYProgress, [0, 0.25, 0.8, 1], [0, 1, 1, 0.35]);
+  /*
+    Il passaggio non scende MAI sotto 0.3, né prima di entrare né dopo essere
+    uscito. Partiva da 0, e alla prima pagina che ha usato davvero il componente
+    si è visto perché è sbagliato: chi apre la pagina e non scorre — o la
+    stampa, o la fotografa — trova un buco al posto di un paragrafo, e
+    `DESIGN.md` §11.8 vieta il contenuto invisibile perché un'animazione non è
+    partita. Il contrasto fra passaggio attivo e passaggi spenti resta ampio:
+    a fare la regia basta il rapporto 1 : 0,3.
+  */
+  const opacity = useTransform(scrollYProgress, [0, 0.25, 0.8, 1], [0.3, 1, 1, 0.45]);
   const y = useTransform(scrollYProgress, [0, 0.25], [24, 0]);
 
   if (reduce) {
@@ -91,7 +100,14 @@ export function ScrollStep({
   }
 
   return (
-    <motion.div ref={ref} style={{ opacity, y }} className={cn("py-10", className)}>
+    <motion.div
+      ref={ref}
+      style={{ opacity, y }}
+      // In stampa l'elemento non entra mai in vista: la regola su
+      // [data-motion-reveal] in globals.css lo riporta a piena opacità.
+      data-motion-reveal=""
+      className={cn("py-10", className)}
+    >
       {children}
     </motion.div>
   );

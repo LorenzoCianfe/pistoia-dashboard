@@ -329,11 +329,33 @@
     isolation: isolate;
     overflow: hidden;
     border-radius: var(--radius-container);
+    /*
+      Inchiostro predefinito della superficie. Gli stop dei mesh vanno dal
+      chiaro al medio in tutti e quattro i toni: il nero caldo del sistema è
+      l'unico inchiostro che li regge tutti, mentre il bianco sparisce sulle
+      tinte chiare (su `--mesh-cool-a` fa circa 1,8:1).
+    */
+    color: var(--highlight-ink);
     background-color: var(--mesh-b);
     background-image:
       radial-gradient(70% 85% at 18% 12%, var(--mesh-a) 0%, transparent 62%),
       radial-gradient(65% 75% at 88% 30%, var(--mesh-a) 0%, transparent 55%),
       radial-gradient(90% 90% at 50% 105%, var(--mesh-b) 0%, transparent 70%);
+  }
+
+  /*
+    Titoli e paragrafi DEVONO tornare a ereditare l'inchiostro qui sopra.
+
+    Il reset di Astryx dichiara `color` direttamente su `:where(h1…h6)` e
+    `:where(p)`. La specificità è zero, ma non c'entra: una dichiarazione che
+    colpisce l'elemento vince comunque su un valore *ereditato* dal genitore.
+    Senza questa riga un `<h2>` dentro una superficie mesh prende
+    `--color-text-primary` — nel tema scuro quasi bianco — e diventa un titolo
+    bianco su azzurro chiaro, circa 1,8:1. Il guasto è insidioso perché nel tema
+    chiaro non si vede: lì il testo del tema è già scuro e sembra tutto a posto.
+  */
+  .mesh-surface :is(h1, h2, h3, h4, h5, h6, p) {
+    color: inherit;
   }
 
   /* Grana pellicola: toglie la "plasticosità" al gradiente ed è ciò che nei
@@ -706,5 +728,49 @@
   [data-motion-reveal] * {
     opacity: 1 !important;
     transform: none !important;
+  }
+}
+
+/*
+  Transizione a elemento condiviso lista → dettaglio (DESIGN.md §7).
+
+  Sono pseudo-elementi del documento, non di un componente: vivono fuori dai
+  cascade layer di proposito, perché `::view-transition-*` è generato sul root e
+  metterlo in un layer lo renderebbe scavalcabile da regole di pagina.
+
+  La soglia di supporto del progetto (browserslist: firefox 120, safari 17.5) è
+  PIÙ BASSA di quella delle View Transitions same-document (Safari 18+,
+  Firefox 144+). Dove mancano, `document.startViewTransition` non esiste,
+  `ReportLink` non intercetta il clic e la navigazione resta lo scambio
+  istantaneo di sempre. Il degrado è previsto, non subìto: la transizione non
+  porta mai informazione, quindi chi non la vede non perde nulla.
+*/
+::view-transition-group(segnalazione-attiva) {
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* La card della lista e quella del dettaglio hanno contenuti diversi: senza
+   dissolvenza incrociata si vedrebbero i due testi sovrapposti a metà volo. */
+::view-transition-old(segnalazione-attiva),
+::view-transition-new(segnalazione-attiva) {
+  animation-duration: 320ms;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Il resto della pagina si limita a una dissolvenza breve: l'attenzione deve
+   restare sull'elemento che si muove. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0s !important;
   }
 }

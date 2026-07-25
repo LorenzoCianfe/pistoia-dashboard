@@ -73,8 +73,11 @@ export function LineChart({
 
   return (
     <div ref={ref} className="w-full">
-      {/* Alternativa testuale: gli stessi dati del grafico, in tabella. */}
-      <table className="sr-only">
+      {/* Alternativa testuale: gli stessi dati del grafico, in tabella.
+          `sr-only` sta sul DIV perché su una `<table>` non stringe — vedi la
+          nota estesa in `charts/sankey-flow.tsx`. */}
+      <div className="sr-only">
+      <table>
         <caption>{title}</caption>
         <thead>
           <tr>
@@ -99,6 +102,7 @@ export function LineChart({
           ))}
         </tbody>
       </table>
+      </div>
       <svg
         viewBox={`0 0 ${W} ${height}`}
         width="100%"
@@ -154,33 +158,71 @@ export function LineChart({
           const { fg } = accent(s.color);
           return (
             <g key={s.name}>
-              <motion.path
-                d={area}
-                fill={`url(#area-${uid}-${s.name})`}
-                initial={{ opacity: 0 }}
-                animate={inView ? { opacity: 1 } : {}}
-                transition={{ duration: 0.8, delay: 0.6 + si * 0.15 }}
-              />
-              <motion.path
-                d={line}
-                fill="none"
-                stroke={fg}
-                strokeWidth={2.5}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                vectorEffect="non-scaling-stroke"
-                initial={{ pathLength: 0 }}
-                animate={inView ? { pathLength: 1 } : {}}
-                transition={{
-                  duration: reduce ? 0 : 1.6,
-                  delay: si * 0.15,
-                  ease: "easeInOut",
-                }}
-              />
+              {/*
+                Il riempimento sotto la curva esiste solo con UNA serie. Con tre
+                sovrapposte, tre veli al 18% si sommano in una patina grigio-blu
+                che non appartiene a nessuna delle tre e nasconde gli incroci:
+                sembra un quarto dato, e non lo è. Con più serie parlano le sole
+                linee, che è anche la lettura più sobria (DESIGN.md §9).
+              */}
+              {series.length === 1 ? (
+                <motion.path
+                  d={area}
+                  fill={`url(#area-${uid}-${s.name})`}
+                  initial={{ opacity: 0 }}
+                  animate={inView ? { opacity: 1 } : {}}
+                  transition={{ duration: 0.8, delay: 0.6 + si * 0.15 }}
+                />
+              ) : null}
+              {/*
+                La rivelazione è una TENDINA da sinistra a destra (un rettangolo
+                di ritaglio che si allarga), non più il disegno del tratto via
+                `pathLength`.
+
+                Il motivo è un bug vero, non una preferenza. Il disegno del
+                tratto usa `stroke-dasharray` con `pathLength="1"`, che
+                normalizza le lunghezze nello spazio UTENTE; ma questo `<svg>`
+                ha `preserveAspectRatio="none"` e i tratti avevano
+                `vector-effect: non-scaling-stroke`, che calcola i trattini
+                nello spazio SCHERMO. Con il viewBox largo 640 reso su 802px, il
+                tratto "lungo 1" copriva 640/802 = 79,8% della curva: il grafico
+                ha disegnato per mesi solo i primi ~10 mesi su 12, a fine
+                animazione e in silenzio. Su una pagina di trasparenza è un dato
+                mancante, non un dettaglio estetico.
+
+                La tendina è immune allo scalamento non uniforme, e per una
+                serie storica è anche la metafora giusta: il tempo che avanza.
+              */}
+              <g clipPath={`url(#reveal-${uid})`}>
+                <path
+                  d={line}
+                  fill="none"
+                  stroke={fg}
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </g>
             </g>
           );
         })}
 
+        <defs>
+          <clipPath id={`reveal-${uid}`}>
+            <motion.rect
+              x={0}
+              y={0}
+              height={height}
+              initial={{ width: reduce ? W : 0 }}
+              animate={inView ? { width: W } : {}}
+              transition={{
+                duration: reduce ? 0 : 1.6,
+                ease: "easeInOut",
+              }}
+            />
+          </clipPath>
+        </defs>
       </svg>
       {/* x-axis labels rendered as HTML so they never stretch with the chart */}
       <div

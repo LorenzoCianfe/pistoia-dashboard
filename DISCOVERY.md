@@ -7,8 +7,8 @@
 > proposal, write `ok` — that is enough. Where you don't, overwrite it.
 > Proposals are *suggestions to react to*, never assumptions I will act on silently.
 >
-> **Status:** 8 decisioni bloccanti prese · il resto attende risposta
-> **Created:** 2026-07-25
+> **Status:** 8 decisioni dell'ondata 5 + 4 dell'ondata 6 · sezioni A B G I K M risposte
+> **Created:** 2026-07-25 · **Aggiornato:** 2026-07-25 (ondata 6)
 
 ---
 
@@ -27,6 +27,30 @@ riflesse in `DESIGN.md`, `ARCHITECTURE.md` e `REFERENCES.md`.
 | F1 | Tipografia | **Schibsted Grotesk** + **JetBrains Mono** |
 | H-primitive | Le 16 primitive | **Ricostruirle come componenti Pistoia su Astryx** — rimandato all'ondata 6, fondamenta provate |
 | J-firma | Componenti-firma | **Tutti e quattro**: matrice di punti, mesh, timeline a punti, sezione narrata |
+
+### Decisioni dell'ondata 6 (2026-07-25) — applicazione alle pagine
+
+Quattro biforcazioni sciolte prima di scrivere codice: in ciascuna, due letture
+avrebbero portato a lavori diversi.
+
+| # | Domanda | Decisione |
+|---|---|---|
+| I1b | Sankey del bilancio | **Due stadi, solo dati esistenti**: entrate → {spesa corrente, investimenti, avanzo} → 6 missioni. Niente migrazione, niente dati inventati |
+| J3b | Elemento condiviso lista→dettaglio | **View Transitions native scritte a mano**, non `layoutId` (vedi sotto) |
+| I8 | Cifra display de *La mia città* | **La percentuale di segnalazioni risolte**, che pilota anche il tono del `MeshSurface` sottostante |
+| D11 | Pannello brand del login | **`MeshSurface` tono `cool` + scacchiera dello stemma**; via il gradiente teal→viola e i due aloni sfocati |
+
+**Perché non `layoutId`, benché `DESIGN.md` §7 lo prescrivesse.** Nell'App Router
+la lista si smonta prima che il dettaglio monti: i due elementi non stanno mai
+nello stesso albero React, quindi il layout condiviso non parte. La via ufficiale
+sarebbe `<ViewTransition>` di React, ma **non è disponibile qui**: verificato che
+`needsExperimentalReact()` in Next 16.2.7 guarda solo `taint`,
+`transitionIndicator` e `gestureTransition` — il flag `experimental.viewTransition`
+(già attivo) *non* commuta React sul canale experimental, e React 19.2.4 stabile
+non esporta `ViewTransition`. Resta l'API nativa del browser usata a mano
+(`view-transition-name` + `document.startViewTransition()`): zero dipendenze, e
+sotto la soglia di supporto degrada allo scambio istantaneo. `DESIGN.md` §7 è
+stato aggiornato di conseguenza — documento e codice non restano in disaccordo.
 
 **Assunzioni dichiarate** (correggile se sbagliate):
 - **L5** — documentazione in **italiano**, per coerenza con il corpus esistente.
@@ -86,32 +110,46 @@ seriously means rewriting the 16 existing UI primitives. Section H resolves it.
 **A1.** Is this still a demo/portfolio piece with mock data, or is it heading toward a real
 pitch to the Comune di Pistoia (or another municipality)?
 *Proposal:* portfolio-grade demo built so it could survive a real pitch.
-→
+→ **Confermata.** Dimostrativo di livello portfolio, costruito perché regga un
+pitch vero. Conseguenza operativa: i dati restano dichiarati come dimostrativi
+(`SourceBadge`, banner "Anteprima") e l'autenticazione resta reale.
 
 **A2.** If it is a pitch: who is in the room? Elected officials, IT department, citizens'
 association, a hackathon jury? This changes how much the UI should "perform."
-→
+→ **Ipotesi di lavoro:** una sala mista — amministratori eletti e ufficio IT.
+Significa che la piattaforma deve *convincere* in pochi secondi (gli eletti) ma
+reggere una domanda tecnica sulla provenienza dei dati (l'IT). È la ragione per
+cui ogni grafico porta fonte e freschezza accanto, non in fondo alla pagina.
 
 **A3.** What is the single sentence you want someone to say after 60 seconds with it?
 *Proposal:* "I finally understand where my city's money goes."
-→
+→ **Confermata**, ed è il criterio di successo del Bilancio: *«finalmente
+capisco dove vanno i soldi della mia città»*. Se dopo 60 secondi su quella
+pagina la frase non viene naturale, la pagina non è finita.
 
 **A4.** What is the #1 reason you're redesigning now — the current UI looks dated, looks
 generic, doesn't photograph well for a portfolio, or doesn't hold attention?
-→
+→ **Genericità.** Non era brutta: era riconoscibile come *un* prodotto, non come
+*questo* prodotto. Da qui la direzione ibrida — la forma dei riferimenti dà il
+carattere, i tre motivi identitari impediscono che sia la dashboard di chiunque.
 
 **A5.** Is there a competitor or peer product you want to visibly beat?
-→
+→ **Nessuno nominato.** Il metro di paragone assunto è il portale di trasparenza
+di un comune italiano medio: la barra è bassa sul design e alta sull'obbligo di
+correttezza. Battere il primo senza tradire il secondo è tutto il progetto.
 
 **A6.** Is the visual ambition allowed to exceed what a real municipality would ship
 (i.e. is "too beautiful for a public body" an acceptable risk)?
 *Proposal:* yes — aim high, keep it defensible.
-→
+→ **Confermata.** Ambizione alta, ma ogni scelta deve avere una difesa civica:
+è il motivo per cui la tinta del mesh codifica un dato invece di decorare, e per
+cui il lime non tocca mai il testo.
 
 **A7.** Does the project need to survive being handed to another developer, or is it yours
 alone indefinitely?
 *Proposal:* must survive handover — that is what the documentation set is for.
-→
+→ **Confermata.** Il corredo documentale esiste per questo, e le motivazioni
+delle scelte strane stanno *nel codice*, accanto alla scelta.
 
 ---
 
@@ -119,32 +157,47 @@ alone indefinitely?
 
 **B1.** Rank the audiences by importance: ordinary citizens · civically-engaged citizens ·
 municipal staff/admins · journalists · associations · other.
-→
+→ **Ordine assunto:** 1) cittadini comuni · 2) cittadini già attivi civicamente ·
+3) personale del Comune · 4) associazioni · 5) giornalisti. Il primo posto ai
+cittadini comuni è ciò che decide la densità: se una vista è leggibile solo da
+chi già sa leggere un bilancio, è sbagliata.
 
 **B2.** Realistic age skew of the citizen audience? The existing "modalità semplice"
 (simple mode, 115% scale) suggests you're already designing for older users.
-→
+→ **Distribuzione ampia con coda anziana significativa.** La modalità semplice
+non è un ripiego per pochi: è il modo in cui una fetta reale userà il servizio.
+Ogni pagina di questa ondata si verifica anche in `html.simple-mode`.
 
 **B3.** Mobile vs desktop split you're designing for?
 *Proposal:* 65% mobile / 35% desktop, but desktop is the "wow" surface for demos.
-→
+→ **Confermata.** ~65% mobile nell'uso reale, ma il desktop è la superficie da
+demo. Conseguenza: le bento si progettano *prima* in colonna singola e poi si
+aprono, mai il contrario.
 
 **B4.** Is this used in short bursts (check a report status) or long sessions (explore the
 budget)? Different density answers.
-→
+→ **Entrambi, e sono pubblici diversi.** Raffiche brevi per segnalazioni e
+avvisi (l'80% delle visite); sessioni lunghe per bilancio e opere. È la
+giustificazione empirica della doppia densità di `DESIGN.md` §6.
 
 **B5.** Digital literacy floor — must a first-time, low-confidence user succeed unaided?
 *Proposal:* yes, for the 4 core tasks (report a problem, check budget, vote a poll,
 read an answer).
-→
+→ **Confermata**, per i quattro compiti fondamentali. Un utente al primo accesso
+e poco sicuro deve riuscirci da solo.
 
 **B6.** Should "modalità semplice" survive the redesign as-is, be strengthened, or be
 replaced by a design that needs no simple mode?
-→
+→ **Rafforzata, non sostituita.** L'idea che "un design abbastanza buono la
+renda inutile" è comoda e falsa: il 115% serve a chi ha bisogno di corpo più
+grande, e nessuna eleganza tipografica lo sostituisce. Il contrasto estremo
+della cifra display è già temperato lì (`html.simple-mode .display-number__value`).
 
 **B7.** Any accessibility obligation you're actually bound by (AgID / EU Directive
 2016/2102 / WCAG 2.1 AA as Italian public-sector law), or is AA a self-imposed standard?
-→
+→ **Trattata come obbligo, non come preferenza.** Una piattaforma per un ente
+pubblico italiano ricade sotto la Direttiva UE 2016/2102 e le linee guida AgID:
+AA è il pavimento legale, non l'ambizione. Vedi §K.
 
 ---
 
@@ -320,41 +373,53 @@ lowercase-everything treatment `refs/` uses for the wordmark?
 
 **G1.** Current navigation is `side-nav` (desktop) + `bottom-nav` (mobile) + `top-bar`.
 Keep this shape, or move toward the `refs/` model (persistent left filter rail + content)?
-→
+→ **Forma invariata in questa ondata.** Cambiare la navigazione è un lavoro a sé
+e toccherebbe tutte le 30+ rotte insieme: mescolarlo al ridisegno di quattro
+pagine renderebbe impossibile capire quale dei due cambi ha rotto cosa.
 
 **G2.** With 30+ routes, the sidebar must be grouped. How many top-level groups feel right?
 *Proposal:* 5 — Città · Soldi · Segnala · Partecipa · Tu.
-→
+→ **Cinque gruppi resta la proposta**, ma è lavoro di architettura
+dell'informazione: rinviato insieme a G1. Nota che va deciso *con* C3 (rotte da
+fondere), altrimenti si raggruppano rotte che poi spariscono.
 
 **G3.** Density: airy everywhere (`refs/`), or airy for citizens and dense for data views
 (current `DESIGN.md` §5)?
 *Proposal:* keep the two-density rule; `refs/` is airy because it has ~10 data points per
 screen, and Bilancio has hundreds.
-→
+→ **Confermata.** Aria per le viste civiche, densità per le viste dati.
 
 **G4.** Max content width on large screens?
 *Proposal:* 1440px, with the dashboard grid allowed to go full-bleed to 1680px.
-→
+→ **1440px.** Rinuncio al full-bleed a 1680: due larghezze massime diverse nella
+stessa app si notano quando si passa da una pagina all'altra, e il guadagno su
+una bento a tre colonne è nullo.
 
 **G5.** Is a bento/masonry dashboard grid wanted (`refs/` uses one), or a conventional
 12-column grid?
 *Proposal:* bento for La mia città and Bilancio overview; 12-col elsewhere.
-→
+→ **Confermata.** Bento per *La mia città* e per l'apertura del Bilancio,
+griglia convenzionale altrove. La bento è a celle esplicite, **non masonry**: il
+masonry sposta le celle quando cambia un contenuto e rende la pagina inaffidabile
+a memoria.
 
 **G6.** Should cards be user-rearrangeable (drag to reorder the dashboard)?
 *Proposal:* no — cost is high, value for a civic audience is low.
-→
+→ **Confermata: no.** Aggiungerebbe stato da persistere, un'interazione ostile
+al tocco e nessun beneficio civico.
 
 **G7.** Smallest supported viewport?
 *Proposal:* 360px.
-→
+→ **360px confermata.**
 
 **G8.** Tablet — a real target or just "large mobile"? `refs/7.jpg` is explicitly a tablet.
-→
+→ **"Mobile grande"**, non un bersaglio a sé. Le bento passano da 1 a 2 a 3
+colonne ai breakpoint standard; nessun layout disegnato apposta per il tablet.
 
 **G9.** Is there a TV/kiosk scenario (a screen in the Comune's lobby)? It would justify a
 dedicated large-display mode.
-→
+→ **Non previsto.** Se un giorno servisse, la strada è una rotta dedicata a sola
+lettura, non un breakpoint in più su queste pagine.
 
 ---
 
@@ -425,34 +490,57 @@ components in isolation?
 (flows: entrate → missioni → programmi), or bar ranking?
 *Proposal:* sankey as the hero for "where the money flows", treemap retained for drill-down.
 bklit has both.
-→
+→ **Sankey protagonista, treemap per l'approfondimento — ma a due stadi, non
+tre** (decisione I1b). Il modello dati non ha una scomposizione delle entrate per
+fonte (`BudgetYear` porta solo `totalEntrate`) né un livello "programmi" sotto le
+missioni: un sankey a tre stadi richiederebbe di inventare dati, che `AGENTS.md`
+§2 vieta. I due stadi che i dati reggono davvero:
+
+```
+Entrate 2026 ──┬─→ Spesa corrente ──→ 6 missioni
+               ├─→ Investimenti
+               └─→ Avanzo
+```
+
+Costruito a mano sui token Pistoia, senza registry shadcn: è esattamente la
+strada che `REFERENCES.md` §4 indica per bklit.
 
 **I2.** Should charts animate on entry, and should they re-animate on filter change?
 *Proposal:* animate once on entry; morph (not re-animate) on filter change.
-→
+→ **Confermata.** Una volta all'ingresso; sul cambio di filtro si trasforma, non
+si ridisegna da zero.
 
 **I3.** Is a text/table equivalent required for every chart (accessibility), or is a summary
 sentence enough?
 *Proposal:* summary sentence + expandable data table.
-→
+→ **Entrambi, e la tabella è obbligatoria.** Frase di sintesi visibile + tabella
+equivalente sempre presente nel DOM (`sr-only` o dentro un `<details>`). È già il
+contratto di `DotScatterTimeline` e vale anche per il sankey nuovo.
 
 **I4.** Interaction depth: static, tooltip-on-hover, or full drill-down with brush/zoom?
 *Proposal:* tooltip + drill-down; no brush (touch-hostile).
-→
+→ **Confermata.** Tooltip e approfondimento progressivo, nessun brush.
 
 **I5.** Do you want the `refs/` **dot-scatter timeline** as a real component? It's the
 distinctive chart in those images and would suit "activity over time" (segnalazioni per week,
 opere milestones).
 *Proposal:* yes — build it as a first-class custom chart. It's a signature piece.
-→
+→ **Fatto nell'ondata 5**, e in questa ondata entra finalmente in una pagina:
+l'andamento delle segnalazioni ricevute e risolte, settimana per settimana.
 
 **I6.** Chart color: single-hue sequential from the accent, or the five semantic colors?
 *Proposal:* sequential from accent for quantities, semantic colors only for status.
-→
+→ **Confermata.** Rampa sequenziale dall'accento per le quantità, colori
+semantici solo per gli stati. Nel sankey questo significa: i flussi portano
+gradazioni di teal, e il rosso dello stemma compare **solo** se l'avanzo è
+negativo — cioè quando è davvero uno scostamento negativo.
 
 **I7.** Are the mock numbers allowed to change to make charts look better, or must existing
 seed data be preserved?
-→
+→ **Il seed resta com'è.** Nessun numero cambiato per far stare meglio un
+grafico: è la ragione per cui il sankey è a due stadi invece che a tre. Se in
+futuro servisse il dettaglio delle entrate, si aggiunge un modello dichiarato e
+si etichetta come dimostrativo — non si gonfia il seed in silenzio.
 
 ---
 
@@ -514,27 +602,40 @@ can make a UI feel broken.
 
 **K1.** Target: WCAG 2.1 AA, 2.2 AA, or AAA on text as currently claimed?
 *Proposal:* 2.2 AA overall, AAA on body text.
-→
+→ **Confermata.** WCAG 2.2 AA ovunque, AAA sul testo di lettura. Già verificato
+sul vetro: 16,8:1 in chiaro e 16,0:1 in scuro.
 
 **K2.** Does the acid-lime accent get an exemption as a non-text color, or must everything
 pass contrast?
-→
+→ **Esente in quanto colore non testuale**, e l'esenzione è *strutturale*: per
+costruzione esiste `bg-highlight` e non esiste `text-highlight`. Dove il lime fa
+da sfondo, l'unico inchiostro ammesso è `--highlight-ink` (15,8:1). Un pallino
+lime non porta mai da solo un'informazione: accanto c'è sempre un testo.
 
 **K3.** Screen-reader testing — do you want me to actually verify with NVDA, or code to spec?
-→
+→ **Scrivo a specifica; NVDA non posso provarlo da qui.** Quello che verifico
+davvero e riporto: ordine di tabulazione, focus visibile, nomi accessibili,
+presenza dell'equivalente testuale, live region. Una verifica con NVDA resta da
+fare a mano ed è onesto dirlo invece di dichiararla fatta.
 
 **K4.** Keyboard: is full keyboard operability required for charts and the map too?
 *Proposal:* yes for charts (arrow-key data point traversal), best-effort for the Leaflet map.
-→
+→ **Sì per i grafici**, con attraversamento a frecce; per la mappa Leaflet il
+meglio possibile, con l'elenco testuale come via alternativa completa.
 
 **K5.** Should the dot-matrix numerals be exposed to assistive tech as plain numbers?
 *Proposal:* yes, mandatory — visual treatment in `aria-hidden`, real number in an
 `sr-only` span.
-→
+→ **Decaduta.** La cifra a matrice di punti è stata ritirata il 2026-07-25:
+`DisplayNumber` è **testo vero**, quindi non esiste più un equivalente nascosto
+da tenere allineato. È un vantaggio di accessibilità, non solo di leggibilità.
 
 **K6.** Any commitment to an accessibility statement page (`dichiarazione di accessibilità`),
 which is legally required for Italian public bodies?
-→
+→ **Dovuta, ma fuori da questa ondata.** È una rotta nuova sotto `(legal)`, con
+un contenuto che dipende da un audit reale: metterla adesso significherebbe
+pubblicare una dichiarazione non verificata, che è peggio che non averla.
+Segnata come voce di roadmap.
 
 ---
 
@@ -567,34 +668,54 @@ dimension ("Spesa per missione") — keep this rule?
 
 **M1.** Performance budget — is there a Lighthouse or Core Web Vitals target?
 *Proposal:* LCP < 2.0s on mid-tier mobile, CLS < 0.05, ≤200KB JS on first load.
-→
+→ **Confermata come bersaglio dichiarato**, non ancora come misura: Lighthouse CI
+non è impostato (è una voce della traccia "Qualità continua"). Finché non c'è, il
+budget si rispetta per costruzione — nessuna dipendenza nuova, niente WebGL,
+`"use client"` sulle foglie.
 
 **M2.** Browser support floor?
 *Proposal:* last 2 versions of evergreen browsers + iOS Safari 16. This matters — it decides
 whether I can use `@container`, `:has()`, View Transitions, and CSS `color-mix()`.
-→
+→ **Già decisa e scritta nel codice**, non più un'ipotesi: il `browserslist` di
+`package.json` è la fonte di verità e dice `chrome/edge ≥ 123`, `firefox ≥ 120`,
+`safari/ios_saf ≥ 17.5`. È la soglia che rende sicure `light-dark()` e
+`color-mix()`, su cui poggia tutto il tema.
+
+Una conseguenza da tenere presente: le **View Transitions native** stanno *sopra*
+questa soglia (Chrome 111+ sì, ma Safari 18+ e Firefox 144+). Su Safari 17.5 e
+Firefox 120–143 la transizione a elemento condiviso non parte e la navigazione
+resta uno scambio istantaneo. È degrado accettabile — nessun contenuto si perde —
+ed è la ragione per cui la transizione non porta mai informazione.
 
 **M3.** Is Server Components / streaming architecture something to preserve carefully, or is
 converting pages to client components acceptable for animation?
 *Proposal:* preserve RSC; `motion/react` supports it, and `"use client"` should stay at the
 leaf level.
-→
+→ **Confermata, ed è vincolante.** Le quattro pagine restano Server Components;
+`"use client"` scende sulle foglie che animano davvero. Nessuna pagina diventa
+client per comodità di animazione.
 
 **M4.** Any hosting target that constrains things (Vercel, self-hosted, static export)?
 Current setup is SQLite + Prisma, which rules out most serverless.
-→
+→ **Nodo Node.js persistente, auto-ospitato.** SQLite su disco e `better-sqlite3`
+(modulo nativo) escludono il serverless e l'export statico. Nessun vincolo nuovo
+per questa ondata: non introduco nulla che dipenda dall'edge runtime.
 
 **M5.** Is the existing test suite (Vitest + Playwright) to be maintained through the
 redesign? Playwright snapshots will all break.
 *Proposal:* yes, maintained; regenerate snapshots per wave.
-→
+→ **Confermata.** Suite mantenuta, snapshot rigenerati a fine ondata dopo averli
+*guardati* — uno snapshot rigenerato senza guardarlo certifica il bug invece di
+segnalarlo.
 
 **M6.** Bundle-size ceiling for animation libraries specifically?
-→
+→ **Nessuna libreria nuova, quindi il tetto è quello attuale**: Motion 12 e basta.
+Il sankey, la bento e le transizioni di rotta di questa ondata si fanno con CSS,
+SVG e Motion — zero KB aggiunti di dipendenze.
 
 **M7.** Should I run `graphify update .` after each wave, per `CLAUDE.md`?
 *Proposal:* yes.
-→
+→ **Confermata**, a fine ondata.
 
 ---
 

@@ -9,11 +9,12 @@ import { Stat } from "@/components/ui/stat";
 import { RingGauge } from "@/components/charts/ring-gauge";
 import { LineChart } from "@/components/charts/line-chart";
 import { Treemap } from "@/components/charts/treemap";
-import { AnimatedNumber } from "@/components/ui/animated-number";
+import { SankeyFlow, type SankeyNode } from "@/components/charts/sankey-flow";
+import { DisplayNumber } from "@/components/signature/display-number";
+import { ScrollTold, ScrollStep } from "@/components/signature/scroll-told";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { GlossaryTip } from "@/components/trasparenza/glossary-tip";
 import { formatEuro, formatEuroCompact, monthLabel } from "@/lib/format";
-import { accent } from "@/lib/colors";
 
 export const metadata: Metadata = { title: "Bilancio" };
 
@@ -37,6 +38,69 @@ export default async function BilancioPage() {
 
   const milioni = Math.round(by.totalSpesa / 1_000_000);
   const maxCategory = Math.max(...by.categories.map((c) => c.amount), 1);
+  const investimenti = by.months.reduce((s, m) => s + m.investimenti, 0);
+
+  /*
+    Il sankey si ferma a DUE stadi, e non è una semplificazione estetica: il
+    modello dati non ha la scomposizione delle entrate per fonte né il livello
+    "programmi" sotto le missioni. Un terzo stadio richiederebbe di inventare
+    numeri su una piattaforma pubblica. Questi due, invece, tornano esatti:
+    entrate = spesa + avanzo, e la somma delle missioni è la spesa.
+  */
+  const colonne: SankeyNode[][] = [
+    [
+      {
+        id: "entrate",
+        label: "Entrate previste",
+        value: by.totalEntrate,
+        display: formatEuroCompact(by.totalEntrate),
+      },
+    ],
+    [
+      {
+        id: "spesa",
+        label: "Spesa programmata",
+        value: by.totalSpesa,
+        display: formatEuroCompact(by.totalSpesa),
+      },
+      {
+        id: "avanzo",
+        label: by.avanzo >= 0 ? "Avanzo" : "Disavanzo",
+        value: Math.abs(by.avanzo),
+        display: formatEuroCompact(Math.abs(by.avanzo)),
+        // Il rosso dello stemma solo sugli scostamenti negativi (DESIGN.md §9):
+        // un avanzo positivo è una quantità, non un allarme e nemmeno un merito.
+        tone: by.avanzo >= 0 ? "flow" : "bad",
+      },
+    ],
+    by.categories.map((c) => ({
+      id: c.id,
+      label: c.label,
+      value: c.amount,
+      display: formatEuroCompact(c.amount),
+    })),
+  ];
+
+  const collegamenti = [
+    {
+      from: "entrate",
+      to: "spesa",
+      value: by.totalSpesa,
+      display: formatEuroCompact(by.totalSpesa),
+    },
+    {
+      from: "entrate",
+      to: "avanzo",
+      value: Math.abs(by.avanzo),
+      display: formatEuroCompact(Math.abs(by.avanzo)),
+    },
+    ...by.categories.map((c) => ({
+      from: "spesa",
+      to: c.id,
+      value: c.amount,
+      display: formatEuroCompact(c.amount),
+    })),
+  ];
 
   return (
     <div className="space-y-5">
@@ -47,36 +111,168 @@ export default async function BilancioPage() {
         icon={<Wallet size={22} />}
       />
 
-      {/* Hero: total + the three rings */}
-      <Card className="overflow-hidden">
-        <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_1.4fr]">
+      {/* Apertura a bento (DISCOVERY G5): la cifra protagonista da una parte,
+          gli indicatori di avanzamento dall'altra. */}
+      <div className="grid gap-4 lg:grid-cols-[1.15fr_1fr]">
+        <Card className="flex flex-col justify-between gap-5">
+          {/*
+            L'unica cifra display della schermata (DESIGN.md §8). Nuda di
+            proposito: la scala a tacche vorrebbe un intervallo reale — un
+            minimo e un massimo storici — che il modello dati non ha, e una
+            scala inventata è peggio di nessuna scala.
+          */}
+          <DisplayNumber
+            value={milioni}
+            unit="mln €"
+            label="Spesa programmata per il 2026"
+          />
           <div>
-            <p className="text-sm font-medium text-muted">
-              Spesa programmata per il 2026
+            <p className="text-sm text-muted-2 tabular-nums">
+              {formatEuro(by.totalSpesa)}
             </p>
-            <p className="font-display mt-2 flex items-baseline gap-2 text-5xl font-semibold tracking-tight sm:text-6xl">
-              <AnimatedNumber value={milioni} />
-              <span className="text-2xl font-medium text-muted">mln €</span>
+            {/* Glossario in linea (A2 §27, O3): i termini tecnici si spiegano
+                dove si incontrano, senza cambiare pagina. */}
+            <p className="mt-4 border-t border-border pt-4 text-sm text-muted">
+              Parole difficili?{" "}
+              <GlossaryTip slug="riscossione">Riscossione</GlossaryTip>,{" "}
+              <GlossaryTip slug="impegni">impegni</GlossaryTip>,{" "}
+              <GlossaryTip slug="pnrr">PNRR</GlossaryTip> e{" "}
+              <GlossaryTip slug="avanzo">avanzo</GlossaryTip> sono spiegate nel
+              glossario: tocca una parola sottolineata.
             </p>
-            <p className="mt-2 text-sm text-muted-2">{formatEuro(by.totalSpesa)}</p>
           </div>
+        </Card>
 
-          <div className="flex flex-wrap items-center justify-around gap-4">
-            <RingGauge value={by.riscossione} color="teal" label="Riscossione entrate" delay={0.1} />
-            <RingGauge value={by.impegni} color="viola" label="Impegni di spesa" delay={0.25} />
-            <RingGauge value={by.pnrr} color="amber" label="Avanzamento PNRR" delay={0.4} />
-          </div>
-        </div>
+        {/* `flex-wrap` non è decorativo: gli anelli sono larghi 132px fissi e a
+            360px — la viewport minima dichiarata — tre in fila spingerebbero la
+            pagina di lato. */}
+        <Card className="flex flex-wrap items-center justify-around gap-4">
+          {/* Tre anelli, una sola tinta (DESIGN.md §4): sono tre percentuali
+              dello stesso tipo, non tre categorie. A distinguerle è l'etichetta,
+              che sta lì sotto — non serve un colore diverso per ciascuna. */}
+          <RingGauge value={by.riscossione} label="Riscossione entrate" delay={0.1} />
+          <RingGauge value={by.impegni} label="Impegni di spesa" delay={0.25} />
+          <RingGauge value={by.pnrr} label="Avanzamento PNRR" delay={0.4} />
+        </Card>
+      </div>
 
-        {/* Glossario in linea (A2 §27, O3): i termini tecnici si spiegano
-            dove si incontrano, senza cambiare pagina. */}
-        <p className="mt-5 border-t border-border pt-4 text-sm text-muted">
-          Parole difficili? <GlossaryTip slug="riscossione">Riscossione</GlossaryTip>,{" "}
-          <GlossaryTip slug="impegni">impegni</GlossaryTip>,{" "}
-          <GlossaryTip slug="pnrr">PNRR</GlossaryTip> e{" "}
-          <GlossaryTip slug="avanzo">avanzo</GlossaryTip> sono spiegate nel
-          glossario: tocca una parola sottolineata.
+      {/* L'unica sezione narrata dell'intera piattaforma (DESIGN.md §8): il
+          bilancio è il solo posto dove c'è un ragionamento da accompagnare. */}
+      <Card>
+        <h2 className="font-display text-lg font-semibold tracking-tight">
+          Dove scorrono i soldi
+        </h2>
+        <p className="mt-1 text-sm text-muted">
+          Tre passaggi per capire il bilancio, poi il flusso completo.
         </p>
+
+        <ScrollTold className="mt-2">
+          <ScrollStep>
+            <Passo
+              eyebrow="Primo passaggio"
+              figura={formatEuroCompact(by.totalEntrate)}
+            >
+              Ogni anno il Comune scrive in anticipo quanto pensa di incassare e
+              quanto pensa di spendere. Per il 2026 le entrate previste sono
+              queste.
+            </Passo>
+          </ScrollStep>
+
+          <ScrollStep>
+            <Passo
+              eyebrow="Secondo passaggio"
+              figura={formatEuroCompact(by.totalSpesa)}
+            >
+              È la parte già destinata a missioni precise prima ancora che
+              l&apos;anno cominci. Di questa, {formatEuroCompact(investimenti)}{" "}
+              sono investimenti: opere che restano alla città, non spesa
+              corrente.
+            </Passo>
+          </ScrollStep>
+
+          <ScrollStep>
+            <Passo
+              eyebrow="Terzo passaggio"
+              figura={formatEuroCompact(Math.abs(by.avanzo))}
+            >
+              È l&apos;{by.avanzo >= 0 ? "avanzo" : "disavanzo"}: la differenza
+              fra ciò che entra e ciò che è stato programmato. Non è un
+              risparmio — è la parte ancora da destinare.
+            </Passo>
+          </ScrollStep>
+        </ScrollTold>
+
+        {/* Il diagramma sta FUORI dagli step: dentro sbiadirebbe al 35% appena
+            si continua a scorrere, e un grafico che si vuole leggere non può
+            dipendere da dove si è fermata la rotella. */}
+        <div className="mt-2 border-t border-border pt-6">
+          <h3 className="text-base font-semibold">
+            E i {milioni} milioni programmati si dividono così
+          </h3>
+          <p className="mt-1 text-sm text-muted">
+            Lo spessore di ogni nastro è l&apos;importo. Passa sopra una voce, o
+            usa le frecce da tastiera, per leggerne il valore.
+          </p>
+
+          <SankeyFlow
+            className="mt-4"
+            title={`Flusso del bilancio 2026: ${formatEuroCompact(by.totalEntrate)} di entrate si dividono fra spesa programmata e avanzo, e la spesa si distribuisce fra ${by.categories.length} missioni`}
+            captions={["Entrate", "Destinazione", "Missioni di spesa"]}
+            columns={colonne}
+            links={collegamenti}
+            height={440}
+          />
+
+          <details className="group mt-4">
+            <summary className="w-fit cursor-pointer list-none text-sm font-medium text-teal transition-colors hover:text-teal-strong">
+              <span className="group-open:hidden">
+                Vedi le proporzioni e l&apos;elenco
+              </span>
+              <span className="hidden group-open:inline">Nascondi</span>
+            </summary>
+
+            {/* Lettura alternativa, non concorrente: a riposo sullo schermo c'è
+                un grafico solo. Il treemap risponde a "quanto pesa una missione
+                rispetto alle altre", il sankey a "da dove viene e dove va". */}
+            <Treemap
+              className="mt-4"
+              ariaLabel={`Spesa 2026 per missione, ${milioni} milioni di euro in totale`}
+              data={by.categories.map((c) => ({
+                id: c.id,
+                label: c.label,
+                value: c.amount,
+              }))}
+              format={formatEuroCompact}
+            />
+
+            <ul className="mt-5 space-y-4">
+              {by.categories.map((c, i) => (
+                <li key={c.id}>
+                  <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
+                    <span className="flex items-center gap-2 font-medium">
+                      {/* Stessa rampa del treemap, resa con l'opacità: un
+                          pallino di 10px in una tinta smorta sparirebbe. */}
+                      <span
+                        className="size-2.5 rounded-full bg-[var(--color-accent)]"
+                        style={{ opacity: Math.max(0.9 - i * 0.12, 0.35) }}
+                      />
+                      {c.label}
+                    </span>
+                    <span className="font-semibold tabular-nums">
+                      {formatEuroCompact(c.amount)}
+                    </span>
+                  </div>
+                  <ProgressBar
+                    value={(c.amount / maxCategory) * 100}
+                    gradient={false}
+                    delay={i * 0.08}
+                    height={8}
+                  />
+                </li>
+              ))}
+            </ul>
+          </details>
+        </div>
       </Card>
 
       {/* Andamento annuale */}
@@ -89,9 +285,9 @@ export default async function BilancioPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-4 text-xs font-medium">
-            <Legend color="teal" label="Entrate" />
-            <Legend color="viola" label="Spese" />
-            <Legend color="green" label="Investimenti" />
+            <Legend color="var(--teal)" label="Entrate" />
+            <Legend color="var(--viola)" label="Spese" />
+            <Legend color="var(--green)" label="Investimenti" />
           </div>
         </div>
 
@@ -120,8 +316,10 @@ export default async function BilancioPage() {
           <Stat
             label="Avanzo"
             value={formatEuroCompact(by.avanzo)}
+            /* La freccia porta il segno, non di nuovo l'importo: ripetere
+               "6,0 mln €" a due centimetri da sé stesso non aggiunge nulla. */
             trend={{
-              value: formatEuroCompact(by.avanzo),
+              value: by.avanzo >= 0 ? "in attivo" : "in passivo",
               direction: by.avanzo >= 0 ? "up" : "down",
             }}
             hint="Differenza entrate / spese"
@@ -129,58 +327,35 @@ export default async function BilancioPage() {
         </div>
       </Card>
 
-      {/* Spesa per missione: la treemap fa vedere le proporzioni a colpo
-          d'occhio; l'elenco resta come lettura alternativa. */}
-      <Card>
-        <h2 className="text-base font-semibold">Dove vanno i {milioni} milioni</h2>
-        <p className="text-sm text-muted">
-          Ogni riquadro è una missione di spesa: più è grande, più risorse riceve.
-        </p>
-        <Treemap
-          className="mt-5"
-          ariaLabel={`Spesa 2026 per missione, ${milioni} milioni di euro in totale`}
-          data={by.categories.map((c) => ({
-            id: c.id,
-            label: c.label,
-            value: c.amount,
-            color: c.color,
-          }))}
-          format={formatEuroCompact}
-        />
-        <details className="group mt-4">
-          <summary className="cursor-pointer text-sm font-medium text-teal transition-colors hover:text-teal-strong">
-            <span className="group-open:hidden">Vedi come elenco</span>
-            <span className="hidden group-open:inline">Nascondi l&apos;elenco</span>
-          </summary>
-          <ul className="mt-4 space-y-4">
-            {by.categories.map((c, i) => (
-              <li key={c.id}>
-                <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
-                  <span className="flex items-center gap-2 font-medium">
-                    <span
-                      className="size-2.5 rounded-full"
-                      style={{ backgroundColor: accent(c.color).fg }}
-                    />
-                    {c.label}
-                  </span>
-                  <span className="font-semibold tabular-nums">
-                    {formatEuroCompact(c.amount)}
-                  </span>
-                </div>
-                <ProgressBar
-                  value={(c.amount / maxCategory) * 100}
-                  gradient={false}
-                  color={c.color}
-                  delay={i * 0.08}
-                  height={8}
-                />
-              </li>
-            ))}
-          </ul>
-        </details>
-      </Card>
-
       <SourceBadge source={sourceInfo("bilancio", by)} />
+    </div>
+  );
+}
+
+/** Un passaggio della narrazione: etichetta, cifra media, frase. */
+function Passo({
+  eyebrow,
+  figura,
+  children,
+}: {
+  eyebrow: string;
+  figura: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="max-w-xl">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-2">
+        {eyebrow}
+      </p>
+      {/*
+        Peso 300 come la cifra display, ma a un terzo della scala: eco della
+        firma, non un secondo protagonista. La regola "una sola cifra display
+        per schermata" resta intatta perché la protagonista è in cima.
+      */}
+      <p className="font-display mt-1.5 text-3xl font-light tracking-tight tabular-nums sm:text-4xl">
+        {figura}
+      </p>
+      <p className="mt-2 text-[15px] leading-relaxed text-muted">{children}</p>
     </div>
   );
 }
@@ -190,7 +365,7 @@ function Legend({ color, label }: { color: string; label: string }) {
     <span className="flex items-center gap-1.5 text-muted">
       <span
         className="size-2.5 rounded-full"
-        style={{ backgroundColor: accent(color).fg }}
+        style={{ backgroundColor: color }}
       />
       {label}
     </span>

@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db";
 import { demoBaseline } from "@/lib/demo";
+import { weeklyBuckets, weeklyLabels } from "@/lib/citystats";
 import type { Prisma } from "@/generated/prisma/client";
 
 export type ReportFilter = {
@@ -186,6 +187,44 @@ export async function findSimilarReports(
 export type SimilarReport = Awaited<ReturnType<typeof findSimilarReports>>[number];
 
 /** Aggregate counts by status for the admin triage view + KPIs. */
+/**
+ * Attività settimanale delle segnalazioni, per la timeline a punti.
+ *
+ * Restituisce tre grandezze allineate settimana per settimana, perché il
+ * grafico ne codifica tre insieme: quante ne sono ARRIVATE (altezza del punto),
+ * quante ne sono state CHIUSE (diametro), e se la settimana è andata in pari
+ * (colore). Con una sola serie il grafico direbbe molto meno.
+ */
+export async function getReportActivity(weeks = 8) {
+  const now = new Date();
+  const since = new Date(now.getTime() - weeks * 7 * 24 * 60 * 60 * 1000);
+
+  const [creati, risolti] = await Promise.all([
+    prisma.report.findMany({
+      where: { createdAt: { gte: since } },
+      select: { createdAt: true },
+    }),
+    prisma.report.findMany({
+      where: { resolvedAt: { gte: since } },
+      select: { resolvedAt: true },
+    }),
+  ]);
+
+  return {
+    labels: weeklyLabels(now, weeks),
+    ricevute: weeklyBuckets(
+      creati.map((r) => r.createdAt),
+      now,
+      weeks,
+    ),
+    risolte: weeklyBuckets(
+      risolti.flatMap((r) => (r.resolvedAt ? [r.resolvedAt] : [])),
+      now,
+      weeks,
+    ),
+  };
+}
+
 export async function getReportStats() {
   const grouped = await prisma.report.groupBy({
     by: ["status"],
