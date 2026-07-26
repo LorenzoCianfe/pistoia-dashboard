@@ -35,6 +35,14 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
+  async redirects() {
+    return [
+      // Consolidamento (Fase A): la rotta portava un nome che l'interfaccia
+      // non usava — il menu diceva "Volontariato" e l'indirizzo /iniziative.
+      // Il redirect serve ai link già condivisi, non alla navigazione interna.
+      { source: "/iniziative", destination: "/volontariato", permanent: true },
+    ];
+  },
   experimental: {
     // Transizioni di rotta native (DESIGN.md §6): React <ViewTransition>
     // attivato dalle navigazioni dell'App Router.

@@ -52,3 +52,9 @@ test-results/
 # schermate scelte per raccontare il progetto stanno nella `screenshots/` della
 # radice, e quelle sì sono versionate.
 /screenshots/
+
+# Tracce, snapshot e report degli E2E falliti: artefatti di diagnosi, pesanti
+# (una traccia è uno zip con l'intera timeline) e rigenerabili rieseguendo la
+# suite.
+/test-results/
+/playwright-report/

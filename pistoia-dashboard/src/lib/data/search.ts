@@ -209,7 +209,7 @@ export async function globalSearch(raw: string): Promise<SearchResult[]> {
       id: i.id,
       title: i.title,
       subtitle: initiativeCategory(i.category).label,
-      href: "/iniziative",
+      href: "/volontariato",
     })),
     ...projects.map<SearchResult>((p) => ({
       type: "project",

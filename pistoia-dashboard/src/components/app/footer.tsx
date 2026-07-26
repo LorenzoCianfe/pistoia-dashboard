@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { Crest } from "@/components/brand/crest";
+import { UTILITY_NAV } from "./nav-items";
 import { DEMO_MODE } from "@/lib/demo";
 
 const LINKS = [
   { href: "/privacy", label: "Privacy" },
   { href: "/cookie", label: "Cookie" },
   { href: "/note-comunita", label: "Regole community" },
-  { href: "/mappa", label: "Mappa" },
 ];
 
 export function Footer() {
@@ -29,13 +29,31 @@ export function Footer() {
             </p>
           </div>
         </div>
-        <nav aria-label="Link istituzionali" className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-          {LINKS.map((l) => (
-            <Link key={l.href} href={l.href} className="text-muted-2 transition-colors hover:text-foreground">
-              {l.label}
-            </Link>
-          ))}
-        </nav>
+        {/* Casa delle pagine di servizio uscite dal menu principale (Fase A,
+            A-3): aiuto e glossario non sono contenuto civico, ma devono
+            restare raggiungibili da ogni pagina — anche su telefono, dove il
+            footer è l'unico elemento sempre presente oltre alle cinque
+            destinazioni. */}
+        <div className="flex flex-col gap-2 sm:items-end">
+          <nav aria-label="Aiuto e servizio" className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            {UTILITY_NAV.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="font-medium text-muted transition-colors hover:text-foreground"
+              >
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+          <nav aria-label="Link istituzionali" className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            {LINKS.map((l) => (
+              <Link key={l.href} href={l.href} className="text-muted-2 transition-colors hover:text-foreground">
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
       </div>
     </footer>
   );

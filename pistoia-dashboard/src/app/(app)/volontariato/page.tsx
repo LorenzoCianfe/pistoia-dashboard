@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   Adesione con un clic, posti contati onestamente, archivio di ciò che è stato.
 */
 
-export default async function IniziativePage() {
+export default async function VolontariatoPage() {
   const user = await requireUser();
   const initiatives = await getInitiatives(user.id);
   const active = initiatives.filter((i) => i.status !== "conclusa");

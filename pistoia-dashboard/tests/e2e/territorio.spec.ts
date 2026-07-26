@@ -22,7 +22,7 @@ test("le pagine di partecipazione si aprono e mostrano i contenuti del seed", as
   await expect(page.getByText("voti totali", { exact: false }).first()).toBeVisible();
 
   // Volontariato: la bacheca delle iniziative.
-  await page.goto("/iniziative");
+  await page.goto("/volontariato");
   await expect(
     page.getByRole("heading", { name: "Volontariato e iniziative" }),
   ).toBeVisible();

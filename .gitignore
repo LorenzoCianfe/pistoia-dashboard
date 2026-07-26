@@ -16,3 +16,8 @@ graphify-out/
 refs/
 
 # App-level ignores live in pistoia-dashboard/.gitignore
+
+# Artefatti Playwright, se la suite viene lanciata dalla radice per errore:
+# la configurazione vive in pistoia-dashboard/ ed è da lì che va eseguita.
+/test-results/
+/playwright-report/

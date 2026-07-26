@@ -194,6 +194,51 @@ gli elenchi di stati) perché "Stato della città" e la pagina dei quartieri, a 
 clic di distanza, avrebbero potuto mostrare due percentuali diverse della stessa
 città.
 
+### Tre trappole del consolidamento (Fase A)
+
+Le prime due riguardano la **verifica**, non il prodotto: hanno prodotto
+diagnosi sbagliate con dati apparentemente solidi.
+
+1. **Una pagina non visibile non anima, e restituisce zeri plausibili.** In una
+   scheda o in un pannello browser mai visualizzato
+   (`document.visibilityState === "hidden"`) Chrome non chiama
+   `requestAnimationFrame` **e non consegna le callback di
+   `IntersectionObserver`**. Quindi `useInView` non scatta mai, e ogni
+   `DisplayNumber` resta sul suo valore iniziale: **0**. Un audit ha dichiarato
+   `AnimatedNumber` rotto in tutta la piattaforma sulla base di quella lettura —
+   `/bilancio` a «0 mln €» con «142.000.000 €» stampato sotto. Il componente
+   stava benissimo.
+
+   La regola: **ciò che dipende da IntersectionObserver, da rAF o da una
+   ScrollTimeline non si verifica leggendo il DOM.** La prova visiva di questo
+   progetto è `npm run shots`, che apre un browser vero e aspetta le
+   animazioni. `AGENTS.md` §5 dice già che un typecheck verde non è una prova
+   visiva; nemmeno una lettura del DOM lo è.
+
+2. **Un test che scrive senza disfare esaurisce il proprio scenario.** Gli E2E
+   giravano contro il database di sviluppo: ogni esecuzione votava una domanda
+   del question time e non la ritirava. Dopo quattro esecuzioni il cittadino di
+   test aveva votato **tutte e quattro** le domande della sessione aperta, e
+   `territorio.spec.ts` cercava un pulsante «vota questa domanda» che non
+   poteva più esistere. Non bastava che i test creassero dati con titoli
+   univoci: **le azioni si accumulano anche quando i dati no.** Da qui
+   `prisma/e2e.db`, ricreato da `tests/e2e/global-setup.ts` a ogni esecuzione.
+
+   Corollario, stessa famiglia: il **rate-limit dell'accesso è una `Map` in
+   memoria nel processo del server**. Contro un server di lunga durata
+   (`E2E_BASE_URL`) i tentativi di login si sommano fra esecuzioni finché
+   l'intera suite cade su «Troppi tentativi di accesso» — un sintomo che non
+   somiglia per niente alla sua causa, e che sembra un difetto dell'app.
+   L'avvio automatico di Playwright parte da un processo nuovo: contatore a
+   zero e database al seed.
+
+3. **Una voce di menu attiva insieme al suo genitore litiga sulla pastiglia.**
+   La barra laterale evidenzia con un solo elemento condiviso
+   (`layoutId="side-active"`). Su una sotto-rotta come `/comunita/stanze`
+   combaciano sia la sezione sia la destinazione, e due voci attive insieme se
+   lo contendono. `side-nav.tsx` calcola quindi **una sola** voce attiva in
+   tutta la barra.
+
 ---
 
 ## 4. Comandi

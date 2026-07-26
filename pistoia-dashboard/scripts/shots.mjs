@@ -46,6 +46,11 @@ let falliti = 0;
 const PAGES = [
   { name: "login", url: "/login", auth: false },
   { name: "la-mia-citta", url: "/la-mia-citta" },
+  // Le tre pagine-contenitore (Fase A): sono il primo livello della
+  // navigazione, quindi vanno riviste a ogni ondata come le pagine di punta.
+  { name: "partecipa", url: "/partecipa" },
+  { name: "trasparenza", url: "/trasparenza" },
+  { name: "territorio", url: "/territorio" },
   { name: "bilancio", url: "/bilancio" },
   { name: "segnalazioni", url: "/segnalazioni" },
   // Il dettaglio non ha un URL fisso: si arriva cliccando la prima card, che è

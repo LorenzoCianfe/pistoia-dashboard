@@ -1,11 +1,17 @@
 "use client";
 
 import { useOptimistic, useState, useTransition } from "react";
-import { Check, Plus } from "lucide-react";
 import { toggleFollowAction } from "@/app/actions/assessori";
-import { ActionError } from "@/components/ui/action-error";
-import { cn } from "@/lib/utils";
+import { FollowToggle } from "@/components/ui/follow-toggle";
 
+/**
+ * "Segui" per gli assessori.
+ *
+ * Resta separato dal pulsante generico perché lo è lo strato dati: gli
+ * assessori hanno `AssessoreFollow`, con una chiave esterna vera verso
+ * `Assessore`, mentre il resto passa dalla tabella polimorfica `Follow`.
+ * L'aspetto è condiviso in `FollowToggle`.
+ */
 export function FollowButton({
   assessoreId,
   following,
@@ -33,34 +39,12 @@ export function FollowButton({
   }
 
   return (
-    <>
-    <button
-      type="button"
+    <FollowToggle
+      following={optimistic}
+      pending={pending}
       onClick={toggle}
-      aria-disabled={pending}
-      aria-pressed={optimistic}
-      className={cn(
-        "inline-flex h-9 items-center gap-1.5 rounded-pill px-4 text-sm font-semibold transition-all active:scale-[0.98]",
-        pending && "opacity-60",
-        optimistic
-          ? "border border-border bg-surface-2 text-foreground"
-          : "gradient-teal-viola text-white",
-        className,
-      )}
-    >
-      {optimistic ? (
-        <>
-          <Check size={15} strokeWidth={2.5} />
-          Segui già
-        </>
-      ) : (
-        <>
-          <Plus size={15} strokeWidth={2.5} />
-          Segui
-        </>
-      )}
-    </button>
-    <ActionError error={error} />
-    </>
+      error={error}
+      className={className}
+    />
   );
 }

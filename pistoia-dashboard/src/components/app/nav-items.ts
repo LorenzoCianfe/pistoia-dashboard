@@ -1,5 +1,8 @@
 import {
   Sparkles,
+  Hand,
+  Eye,
+  Compass,
   Wallet,
   HardHat,
   Vote,
@@ -32,61 +35,153 @@ export type NavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
-  /** Shown in the mobile bottom navigation. */
-  core: boolean;
 };
 
-export const NAV_ITEMS: NavItem[] = [
-  { href: "/la-mia-citta", label: "La mia città", icon: Sparkles, core: true },
-  { href: "/bilancio", label: "Bilancio", icon: Wallet, core: true },
-  { href: "/opere", label: "Opere", icon: HardHat, core: true },
-  { href: "/mappa", label: "Mappa", icon: MapIcon, core: false },
-  { href: "/sondaggi", label: "Sondaggi", icon: Vote, core: false },
-  { href: "/comunita", label: "Comunità", icon: MessagesSquare, core: true },
-  { href: "/segnalazioni", label: "Segnalazioni", icon: Megaphone, core: true },
-  { href: "/proposte", label: "Proposte", icon: Lightbulb, core: false },
-  { href: "/eventi", label: "Eventi", icon: CalendarDays, core: false },
-  { href: "/quartieri", label: "Quartieri", icon: MapPinned, core: false },
-  { href: "/organigramma", label: "Organigramma", icon: Network, core: false },
+/**
+ * Una destinazione di primo livello, con le sezioni che contiene.
+ *
+ * **Cinque, perché cinque sono gli slot di una barra in basso.** La struttura
+ * non è stata scelta a tavolino e poi adattata al telefono: è derivata dal
+ * vincolo più stretto, così desktop e mobile mostrano le STESSE destinazioni.
+ *
+ * Prima del consolidamento (Fase A) qui c'erano quattro elenchi paralleli per
+ * 25 voci, e un campo `core` decideva quali cinque sopravvivessero su telefono:
+ * le altre 16 non avevano alcun percorso navigabile sotto i 1024px, dove la
+ * barra laterale non è collassata ma rimossa. Il campo `core` è sparito con la
+ * ragione che lo rendeva necessario.
+ *
+ * Ogni sezione resta una pagina propria, al suo indirizzo: cambia da dove ci
+ * si arriva, non cosa c'è.
+ */
+export type NavDestination = NavItem & {
+  sections: NavItem[];
+};
+
+export const DESTINATIONS: NavDestination[] = [
+  {
+    href: "/la-mia-citta",
+    label: "La mia città",
+    icon: Sparkles,
+    sections: [],
+  },
+  {
+    href: "/partecipa",
+    label: "Partecipa",
+    icon: Hand,
+    sections: [
+      { href: "/segnalazioni", label: "Segnalazioni", icon: Megaphone },
+      { href: "/proposte", label: "Proposte", icon: Lightbulb },
+      { href: "/sondaggi", label: "Sondaggi", icon: Vote },
+      { href: "/priorita", label: "Vota la priorità", icon: ListOrdered },
+      { href: "/question-time", label: "Question time", icon: MessageCircleQuestion },
+      { href: "/volontariato", label: "Volontariato", icon: HeartHandshake },
+      { href: "/patti", label: "Patti e luoghi", icon: Handshake },
+      { href: "/progetti", label: "Progetti civici", icon: FolderKanban },
+    ],
+  },
+  {
+    href: "/trasparenza",
+    label: "Trasparenza",
+    icon: Eye,
+    sections: [
+      { href: "/bilancio", label: "Bilancio", icon: Wallet },
+      { href: "/opere", label: "Opere", icon: HardHat },
+      { href: "/decisioni", label: "Decisioni", icon: Landmark },
+      { href: "/promesse", label: "Promesse", icon: Target },
+      { href: "/digest", label: "Report del mese", icon: Newspaper },
+    ],
+  },
+  {
+    href: "/territorio",
+    label: "Territorio",
+    icon: Compass,
+    sections: [
+      { href: "/mappa", label: "Mappa", icon: MapIcon },
+      { href: "/quartieri", label: "Quartieri", icon: MapPinned },
+      { href: "/eventi", label: "Eventi", icon: CalendarDays },
+    ],
+  },
+  {
+    href: "/comunita",
+    label: "Comunità",
+    icon: MessagesSquare,
+    sections: [
+      { href: "/comunita/stanze", label: "Stanze tematiche", icon: MessagesSquare },
+    ],
+  },
 ];
 
-// Sezione "Partecipazione" (O4): gli strumenti di dialogo strutturato e di
-// cura del territorio. Gruppo separato nella side-nav.
-export const PARTICIPATION_NAV: NavItem[] = [
-  { href: "/question-time", label: "Question time", icon: MessageCircleQuestion, core: false },
-  { href: "/priorita", label: "Vota la priorità", icon: ListOrdered, core: false },
-  { href: "/iniziative", label: "Volontariato", icon: HeartHandshake, core: false },
-  { href: "/patti", label: "Patti e luoghi", icon: Handshake, core: false },
-  { href: "/progetti", label: "Progetti civici", icon: FolderKanban, core: false },
+/**
+ * Aiuto e servizio: pagine che restano, fuori dal menu principale.
+ *
+ * Gli avvisi urgenti erano al 17° posto della barra laterale, sotto la piega,
+ * per contenuti di severità "Critico". Il loro canale vero è il banner in home;
+ * qui resta l'archivio.
+ */
+export const UTILITY_NAV: NavItem[] = [
+  { href: "/avvisi", label: "Avvisi urgenti", icon: Siren },
+  { href: "/organigramma", label: "Organigramma", icon: Network },
+  { href: "/faq", label: "FAQ della città", icon: HelpCircle },
+  { href: "/glossario", label: "Glossario", icon: BookOpenText },
 ];
 
-// Sezione "Trasparenza" (O3): le pagine che chiudono il cerchio della
-// partecipazione. Gruppo separato nella side-nav, sotto un'etichetta propria.
-export const TRANSPARENCY_NAV: NavItem[] = [
-  { href: "/avvisi", label: "Avvisi urgenti", icon: Siren, core: false },
-  { href: "/decisioni", label: "Decisioni", icon: Landmark, core: false },
-  { href: "/promesse", label: "Promesse", icon: Target, core: false },
-  { href: "/digest", label: "Report del mese", icon: Newspaper, core: false },
-  { href: "/faq", label: "FAQ della città", icon: HelpCircle, core: false },
-  { href: "/glossario", label: "Glossario", icon: BookOpenText, core: false },
-];
-
-export const SECONDARY_NAV: NavItem[] = [
-  { href: "/notifiche", label: "Notifiche", icon: Bell, core: false },
-  { href: "/profilo", label: "Profilo", icon: User, core: false },
-  { href: "/impostazioni", label: "Impostazioni", icon: Settings, core: false },
+/**
+ * Raggiungibili dalla barra in alto — campanella e menu avatar.
+ *
+ * Non stanno nel menu laterale: ci stavano, ed erano una seconda copia dello
+ * stesso collegamento, tre slot di primo livello per niente.
+ */
+export const ACCOUNT_NAV: NavItem[] = [
+  { href: "/notifiche", label: "Notifiche", icon: Bell },
+  { href: "/profilo", label: "Profilo", icon: User },
+  { href: "/impostazioni", label: "Impostazioni", icon: Settings },
 ];
 
 export const ADMIN_NAV: NavItem = {
   href: "/admin",
   label: "Area Comune",
   icon: Shield,
-  core: false,
 };
+
+/** Tutte le pagine navigabili, piatte: la palette di ricerca le vuole così. */
+export const ALL_PAGES: NavItem[] = [
+  ...DESTINATIONS.flatMap((d) => [
+    { href: d.href, label: d.label, icon: d.icon },
+    ...d.sections,
+  ]),
+  ...UTILITY_NAV,
+  ...ACCOUNT_NAV,
+];
+
+/** Vero se `pathname` è quella rotta o una sua sotto-rotta. */
+export function isPathActive(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(href + "/");
+}
+
+/**
+ * La destinazione a cui appartiene il percorso corrente.
+ *
+ * Le sezioni si controllano prima delle destinazioni: `/comunita/stanze` è una
+ * sezione di Comunità e deve risolvere a Comunità, non fermarsi al primo
+ * prefisso che combacia.
+ */
+export function findDestination(pathname: string): NavDestination | null {
+  return (
+    DESTINATIONS.find((d) =>
+      d.sections.some((s) => isPathActive(pathname, s.href)),
+    ) ??
+    DESTINATIONS.find((d) => isPathActive(pathname, d.href)) ??
+    null
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Percorsi guidati "Cosa vuoi fare?" (A1 §23) — condivisi tra la home e le
 // azioni rapide della palette di ricerca.
+//
+// PROTETTO (Fase A): è l'unica navigazione per obiettivi della piattaforma, e
+// l'unico punto che parla di cosa vuoi fare invece che di come si chiama la
+// sezione. Si promuove, non si scioglie.
 // ---------------------------------------------------------------------------
 
 export type GuidedAction = {

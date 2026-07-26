@@ -282,7 +282,13 @@ dell'ondata 6, nessuno produceva un errore:
 «+4 nuovi questo mese»: un numero inventato accanto a numeri veri li fa sembrare
 tutti inventati.
 
-### Ondata 8 — Admin intelligence & nuovi pubblici 🔜 *(prossima)*
+### Ondata 8 — Admin intelligence & nuovi pubblici 🧊 *(congelata — 2026-07-26)*
+
+> **Congelata, non cancellata.** Prima di aggiungere altro, la piattaforma
+> viene riorganizzata: 25 voci di menu erano diventate una gerarchia piatta, e
+> su telefono 16 destinazioni su 25 non avevano alcun percorso navigabile.
+> Il piano è in [`docs/roadmap-consolidamento.md`](docs/roadmap-consolidamento.md);
+> questa ondata riprende integralmente come **Fase C**, su fondamenta pulite.
 
 **Obiettivo (→ OB-1, OB-4):** strumenti decisionali per il Comune e apertura a turisti, commercianti, scuole.
 

@@ -87,10 +87,13 @@ export default async function MyCityPage() {
       {/* Onboarding "primi passi in città" (O4): solo finché serve. */}
       {!onboarding.hidden ? <OnboardingChecklist steps={onboarding.steps} /> : null}
 
-      {/* "Stato della città" (O3): il colpo d'occhio sugli indicatori. */}
-      <CityStateHero state={cityState} />
-
-      {/* Percorsi guidati (A1 §23): la home parte dagli obiettivi, non dai menu */}
+      {/* Percorsi guidati (A1 §23): la home parte dagli obiettivi, non dai menu.
+          Promossi sopra "Stato della città" nella Fase A: dei due compiti
+          primari — partecipare e vedere come va la città — il primo è l'unico
+          che chiede un'azione, e questo blocco è il solo punto della
+          piattaforma che parla di cosa vuoi FARE invece che di come si chiama
+          la sezione. Lo stato della città resta subito sotto: è il contesto di
+          quelle azioni, e si legge in un colpo d'occhio anche scorrendo. */}
       <section aria-labelledby="cosa-vuoi-fare">
         <h2 id="cosa-vuoi-fare" className="text-base font-semibold">
           Cosa vuoi fare?
@@ -122,6 +125,9 @@ export default async function MyCityPage() {
           })}
         </div>
       </section>
+
+      {/* "Stato della città" (O3): il colpo d'occhio sugli indicatori. */}
+      <CityStateHero state={cityState} />
 
       {/* Summary */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

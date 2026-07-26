@@ -1,0 +1,264 @@
+# Roadmap ristrutturata — Consolidamento prima di tutto
+
+> Sostituisce l'ordine di lavoro di `ROADMAP.md` §4 **senza cancellarne nulla**.
+> L'ondata 8 e l'intero catalogo delle idee non sono annullati: diventano la
+> **Fase C**, da costruire su una struttura pulita.
+>
+> Base: [`audit-consolidamento.md`](./audit-consolidamento.md)
+> Redatto: 2026-07-26
+
+---
+
+## 0. Il principio che regge tutto il piano
+
+**Cinque destinazioni, perché cinque sono gli slot di una barra in basso.**
+
+L'architettura dell'informazione non è stata scelta a tavolino e poi adattata
+al telefono: è **derivata dal vincolo più stretto**. Le 5 destinazioni della
+Fase A entrano esattamente in una barra di navigazione mobile, senza menu a
+panino, senza "altro", senza voci che spariscono.
+
+Da qui una conseguenza precisa: **il mobile smette di essere un desktop
+degradato**. Oggi il telefono vede 9 destinazioni su 25 e il desktop 25 su 25.
+Dopo la Fase A vedono **le stesse cinque**. La barra laterale non è più un
+elenco più lungo: è la stessa struttura con più respiro.
+
+Vincolo non negoziabile per tutta la Fase A: **zero funzioni perse, zero
+pagine cancellate, ogni indirizzo continua a rispondere.**
+
+---
+
+## Fase A — Consolidamento ✅ *(eseguita il 2026-07-26, salvo A-5.1)*
+
+*Struttura e navigazione. Nessuna funzionalità nuova, nessun ridisegno visivo.*
+
+> Consuntivo dettagliato in [`piano-esecuzione-fase-a.md`](./piano-esecuzione-fase-a.md) §Consuntivo.
+> Resta aperta **A-5.1** (rinomina di `components/community/`) e una esecuzione
+> E2E verde end-to-end, che richiede la directory libera da altri dev server.
+
+### A-0 · Igiene preliminare
+
+Una sola voce, e leggera. **Non c'è nessuna riparazione bloccante**: l'audit
+§5 documenta un falso allarme rientrato — le cifre display funzionano
+(`/bilancio` rende 142 mln € e gli anelli 92% / 86% / 71%, verificato con
+`npm run shots`).
+
+| # | Azione | Esito atteso |
+|---|---|---|
+| A-0.1 | Ripulire i residui E2E dal DB dimostrativo e isolare il DB dei test | Nessun «Lampione spento E2E 178…» in home |
+
+> **Regola di verifica per tutta la Fase A**, ereditata dall'audit §5: ciò che
+> dipende da `IntersectionObserver`, `requestAnimationFrame` o ScrollTimeline —
+> cioè i componenti-firma e ogni rivelazione allo scroll — **si verifica solo
+> con `npm run shots`**, mai leggendo il DOM da uno strumento che non compone
+> fotogrammi. Una pagina nascosta non anima, e restituisce zeri plausibili.
+
+### A-1 · Il modello di navigazione
+
+Il cuore della fase. Oggi `nav-items.ts` espone 4 array piatti (25 voci);
+diventa una struttura a due livelli con 5 destinazioni.
+
+| # | Azione | Cosa tocca |
+|---|---|---|
+| A-1.1 | Ridefinire `nav-items.ts`: 5 destinazioni, ciascuna con le proprie sezioni | `components/app/nav-items.ts` |
+| A-1.2 | **Costruire la navigazione mobile che oggi non esiste**: 5 schede = 5 destinazioni | `bottom-nav.tsx` |
+| A-1.3 | Riscrivere la barra laterale come le stesse 5 destinazioni + sezioni | `side-nav.tsx` |
+| A-1.4 | Etichettare **ogni** gruppo (oggi 2 su 4) | `side-nav.tsx` |
+| A-1.5 | Togliere notifiche/profilo/impostazioni dal menu: esistono già in alto | `nav-items.ts` (`SECONDARY_NAV`) |
+
+**Prima → dopo**
+
+```
+PRIMA (25 voci, 3 gruppi di cui 1 senza nome, sotto 1024px: sparisce)
+├── (senza etichetta) 11 voci
+├── PARTECIPAZIONE     5 voci
+├── TRASPARENZA        6 voci
+└── (filo)             3 voci  ← già presenti nella barra in alto
+
+DOPO (5 destinazioni, identiche su desktop e telefono)
+├── La mia città
+├── Partecipa          → segnalazioni · proposte · sondaggi · priorità
+│                        question time · patti · progetti · volontariato
+├── Come va la città   → bilancio · opere · decisioni · promesse · report
+├── Territorio         → mappa · quartieri · eventi
+└── Comunità           → stanze tematiche
+```
+
+### A-2 · Le pagine-contenitore
+
+Ogni destinazione nuova ha bisogno di una pagina propria: senza, "Partecipa"
+sarebbe solo un'etichetta che apre un sottomenu — cioè il problema di prima
+con un nome nuovo.
+
+| # | Azione | Nota |
+|---|---|---|
+| A-2.1 | `/partecipa` — hub degli 8 strumenti di partecipazione | Ogni strumento resta alla sua rotta |
+| A-2.2 | `/citta` — hub di bilancio, opere, decisioni, promesse, report | |
+| A-2.3 | `/territorio` — hub di mappa, quartieri, eventi | La mappa diventa una **vista** del territorio, non una voce di pari livello |
+| A-2.4 | Ogni hub apre sullo stato reale, non su un elenco di link | Un hub che elenca soltanto sposta il clic, non lo elimina |
+
+> **A-2.4 è la riga che distingue un consolidamento da un rinvio.** Se
+> `/partecipa` è una griglia di 8 tessere, l'utente fa due clic dove prima ne
+> faceva uno. L'hub deve mostrare *cosa sta succedendo adesso* — le proposte in
+> raccolta firme, i sondaggi aperti, le priorità in votazione — e da lì portare
+> al dettaglio.
+
+### A-3 · Progressive disclosure
+
+Le voci che escono dal menu principale, con la loro nuova casa dichiarata.
+
+| Rotta | Nuova collocazione |
+|---|---|
+| `/avvisi` | Banner in home (già presente) + archivio raggiungibile dal banner |
+| `/organigramma` | Utility — una sola esposizione al posto di tre |
+| `/faq`, `/glossario` | Utility + il glossario resta contestuale (`GlossaryTip`) |
+| `/notifiche`, `/profilo`, `/impostazioni` | Solo barra in alto (già ci sono) |
+| `/admin` | Invariato: menu profilo, solo ruolo ADMIN |
+
+### A-4 · Alleggerimento della home
+
+`/la-mia-citta` è 432 righe e impila 8 sezioni. Non è protetta, quindi si può
+intervenire sull'interno.
+
+| # | Azione |
+|---|---|
+| A-4.1 | Portare in alto i due lavori primari: partecipare e stato della città |
+| A-4.2 | **"Cosa vuoi fare?" promosso**, non sciolto — è protetto, ed è già la cosa migliore della navigazione |
+| A-4.3 | Sezioni secondarie ("Per te", "Vicino a te", proposte in evidenza) sotto la piega, invariate |
+| A-4.4 | Verificare la parità con la **modalità semplice** (protetta) |
+
+### A-5 · Debito che il consolidamento tocca comunque
+
+Solo ciò che il lavoro attraversa: nessuna rinomina di massa fuori contesto.
+
+| # | Azione |
+|---|---|
+| A-5.1 | `community/` → `segnalazioni/` + `proposte/` (18 file). Il nome inglese viola `AGENTS.md` §6 e collide con la sezione `comunita` |
+| A-5.2 | Fondere `assessori/follow-button` nel `FollowButton` generico |
+| A-5.3 | `/iniziative` → `/volontariato`, allineando rotta ed etichetta (con redirect) |
+
+### Cancello di uscita dalla Fase A
+
+- [ ] Le 26 rotte rispondono ancora 200
+- [ ] Ogni funzione dell'inventario §1 è raggiungibile, telefono **e** desktop
+- [ ] Desktop e mobile espongono le **stesse** 5 destinazioni
+- [ ] Nessuna cifra display mostra 0 dove il dato esiste
+- [ ] `npm run typecheck`, `lint`, `test`, `test:e2e` verdi
+- [ ] `node scripts/shots.mjs --simple --width=360` senza traboccamento
+- [ ] Modalità semplice e "Cosa vuoi fare?" invariate nel comportamento
+
+---
+
+## Fase B — Coerenza visiva
+
+*Nessuna nuova struttura: si porta Astryx dove non è ancora arrivato.*
+
+Confermato in scoperta: **Astryx resta**. La Fase B è copertura, non ridisegno.
+`FEATURES.md` §7 dichiara **26 rotte non ancora ridisegnate**, che hanno
+ereditato i token dal ponte di retrocompatibilità: coerenti nei colori, non
+nella composizione, e nessuna usa i componenti-firma.
+
+| # | Azione |
+|---|---|
+| B-1 | Applicare la composizione Astryx alle rotte assorbite dagli hub |
+| B-2 | Portare i componenti-firma dove aggiungono senso — non ovunque per simmetria |
+| B-3 | Gerarchia visiva coerente dentro ogni hub |
+| B-4 | Passata di contrasto su tema chiaro **e** scuro (`AGENTS.md` §2: non si regredisce) |
+| B-5 | Verifica in modalità semplice a 360px su tutta la struttura nuova |
+
+> Ordine deliberato: prima la struttura (A), poi la veste (B). Ridisegnare
+> pagine che stanno per cambiare posto significa pagare il lavoro due volte —
+> ed è precisamente ciò che è successo tra l'ondata 6 e la 7, dove il sistema è
+> arrivato su 4 pagine di punta mentre 26 restavano indietro.
+
+---
+
+## Fase C — Tutto ciò che era pianificato
+
+**Niente di quanto segue è cancellato.** Riprende dopo l'approvazione di A e B,
+su fondamenta pulite.
+
+### C-1 · Ondata 8 — Admin intelligence & nuovi pubblici
+
+Trascritta da `ROADMAP.md` §4, invariata:
+
+| Voce | Livello | Fonte |
+|---|---|---|
+| Dashboard admin con analytics operative (KPI per categoria/quartiere/ufficio, trend) | `FE` `BE` `DES` | `A1 §27` |
+| Alert trend anomalo (euristiche, niente AI) | `BE` | `A2 §21` |
+| Sentiment civico per tema (mock/euristiche) | `FE` `BE` | `A2 §20` |
+| Moderazione assistita (spam, duplicati, suggerimento categoria) | `BE` | `A1 §28` |
+| Modalità turista | `FE` `UX` | `A2 §28` |
+| Commercio locale (`OrganizationProfile` esiste già) | `FE` `BE` | `A2 §29` |
+| Vetrina aziende di Pistoia & sponsorizzazioni dichiarate | `FE` `BE` | richiesta 2026-06-11 |
+| Storie della città + "Pistoia racconta" | `FE` `DES` | `A2 §17–18` |
+| Servizi quotidiani / scorciatoie ai servizi comunali | `FE` `UX` | `A1 §22` |
+
+### C-2 · Qualità continua
+
+Traccia trasversale di `ROADMAP.md` §4, invariata: review "lenti mancanti"
+(sicurezza, cache, idiomi Next 16), test a11y automatici con axe-core,
+Lighthouse CI con performance budget, audit dipendenze in CI, estensione dei
+test a ogni ondata.
+
+> Il difetto §5 dell'audit è la prova che questa traccia serve prima di quanto
+> sembrasse: nessuno dei cancelli esistenti lo ha intercettato.
+
+### C-3 · Catalogo delle idee
+
+`ROADMAP.md` §5 e §6 restano la fonte, per intero e senza modifiche: design ed
+esperienza visiva, segnalazioni, proposte, trasparenza, quartieri,
+partecipazione, personalizzazione, UX e semplicità, accessibilità, contenuti,
+nuovi pubblici, admin, AI civica, piattaforma.
+
+Alcune voci saranno **già soddisfatte** dalla Fase A e vanno spuntate lì, non
+rifatte — in particolare in §6 «🧭 UX & semplicità».
+
+### C-4 · Fasi in pausa
+
+`ROADMAP.md` §8 (dati reali da fonti aperte) e §9 (fiducia istituzionale)
+restano in pausa alle condizioni già scritte. Il consolidamento non le tocca e
+non le sblocca.
+
+### C-5 · Nuovo, emerso dall'audit
+
+| Voce | Origine |
+|---|---|
+| Dichiarazione di accessibilità (dovuta per legge, richiede audit vero) | `FEATURES.md` §7 |
+| Verifica con screen reader (NVDA mai provato) | `FEATURES.md` §7 |
+| Terzo stadio del sankey (serve `BudgetRevenue` o l'ETL) | `FEATURES.md` §7 |
+| Riordino completo delle 20 cartelle di componenti | Audit §4 T4 |
+| Degrado onesto delle cifre display: l'HTML servito contiene `0` finché l'animazione non parte | Audit §5 |
+
+---
+
+## Ordine e dipendenze
+
+```
+A-1  modello di navigazione
+      └─→ A-2  pagine-contenitore
+            └─→ A-3 · A-4 · A-5   (parallelizzabili fra loro)
+                  └─→ cancello A
+                        └─→ Fase B
+                              └─→ Fase C
+
+A-0  igiene E2E   (indipendente, in qualunque momento)
+```
+
+**A-1 e A-2 sono il percorso critico.** A-3, A-4 e A-5 sono parallelizzabili
+una volta chiuso A-2. A-0 non blocca nulla.
+
+---
+
+## Cosa resta protetto per tutta A e B
+
+Dichiarato in scoperta, vincolante:
+
+- **"Cosa vuoi fare?"** (`GUIDED_ACTIONS`) — si promuove, non si scioglie
+- **Modalità semplice** — comportamento invariato, verificata a ogni passo
+- **Astryx: token e catena del tema** — `src/themes/pistoia.ts` e il CSS
+  compilato non si toccano; la Fase B estende la copertura, non ridisegna
+- **Autenticazione** — `AGENTS.md` §2
+
+Le quattro pagine di punta **non** sono state marcate come protette: i loro
+interni sono modificabili, ed è ciò che rende possibile A-4.

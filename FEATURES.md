@@ -10,6 +10,24 @@
 
 ---
 
+## 0. Navigazione (Fase A — consolidamento, 2026-07-26)
+
+Cinque destinazioni, **le stesse su desktop e su telefono**, perché cinque sono
+gli slot di una barra di navigazione mobile. Ogni sezione resta una pagina
+propria al suo indirizzo: è cambiato da dove ci si arriva, non cosa c'è.
+
+| Destinazione | Rotta | Contiene |
+|---|---|---|
+| **La mia città** | `/la-mia-citta` | Home personalizzata |
+| **Partecipa** | `/partecipa` | segnalazioni · proposte · sondaggi · priorità · question time · volontariato · patti · progetti |
+| **Trasparenza** | `/trasparenza` | bilancio · opere · decisioni · promesse · report del mese |
+| **Territorio** | `/territorio` | mappa · quartieri · eventi |
+| **Comunità** | `/comunita` | stanze tematiche |
+
+Fuori dal menu, con casa dichiarata: avvisi (banner in home + footer),
+organigramma, FAQ e glossario nel footer; notifiche, profilo e impostazioni
+nella barra in alto; area Comune nel menu avatar per i soli ADMIN.
+
 ## 1. Sezioni civiche
 
 | Sezione | Rotta | Stato | Cosa fa |
@@ -137,6 +155,7 @@ Nessuno dei quattro introduce dipendenze: niente GSAP, niente WebGL.
 
 | Elemento | Perché |
 |---|---|
+| ~~Architettura dell'informazione delle 30+ rotte~~ | ✅ **Fatto** — Fase A, 2026-07-26: 25 voci → 5 destinazioni, identiche su desktop e telefono. Vedi `docs/audit-consolidamento.md` |
 | Primitive sui *componenti* Astryx | **Valutato e scartato con motivo** (vedi `ROADMAP.md` ondata 5): `TextInput` è controllato per contratto, `Button` non offre un gancio per i link, `Banner` è troppo pesante inline, `ProgressBar` perde lo stagger. Astryx resta la sorgente dei token |
 | **26 rotte non ancora ridisegnate** | L'ondata 6 ha portato il sistema sulle quattro di punta. Le altre hanno *ereditato* i token dal ponte di retrocompatibilità: coerenti nei colori, non nella composizione. Nessuna usa i componenti-firma |
 | Terzo stadio del sankey (entrate per fonte) | Il modello dati non ha la scomposizione: servirebbe un `BudgetRevenue`, o l'ETL della Fase 2. Il sankey si ferma a due stadi invece di inventare |
@@ -145,4 +164,3 @@ Nessuno dei quattro introduce dipendenze: niente GSAP, niente WebGL.
 | Verifica con screen reader | NVDA non è mai stato provato: il codice è scritto a specifica |
 | Dati reali da fonti aperte | In pausa: vedi `ROADMAP.md` §8 |
 | Identità reale (SPID/CIE) | Fuori portata dichiarata: `SECURITY.md` §8 |
-| Architettura dell'informazione delle 30+ rotte | Gerarchia troppo piatta, serve un passaggio dedicato |

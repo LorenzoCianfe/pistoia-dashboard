@@ -5,6 +5,34 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.13.0] — 2026-07-26 · Fase A «Consolidamento»
+
+> Le ondate sono congelate: prima di aggiungere altro, la piattaforma viene
+> riorganizzata. Il piano sta in [`docs/roadmap-consolidamento.md`](docs/roadmap-consolidamento.md);
+> l'ondata 8 e l'intero catalogo delle idee non sono cancellati, diventano la Fase C.
+
+### Aggiunto
+- **Tre pagine-contenitore**: `/partecipa`, `/trasparenza`, `/territorio`. Non sono griglie di link — un hub che elenca soltanto sposta il clic invece di eliminarlo — ma aprono sullo stato reale: quante segnalazioni sono aperte, quante proposte in raccolta firme, quanti voti in corso. I conteggi vengono da `getCityState()`, la stessa sorgente de "La mia città", così due pagine non possono dire due numeri diversi della stessa città.
+- `components/app/hub.tsx` (`HubNow`, `HubSections`) e `components/ui/follow-toggle.tsx`.
+- `formatConteggio()` in `lib/format.ts`: numero e forma accordati. «1 tornate aperte» si legge come un errore del programma.
+
+### Modificato
+- **La barra laterale passa da 25 voci a 5 destinazioni**, con le sezioni della sola destinazione aperta. Misurava 1191px contro 656px visibili a 1280×720: il 45% stava sotto la piega, gruppo "Trasparenza" e avvisi urgenti compresi.
+- **La barra in basso passa da 5 voci su 25 a 5 su 5.** Sotto i 1024px la barra laterale non è collassata ma rimossa, e non c'era nulla a sostituirla: 16 destinazioni non avevano alcun percorso navigabile, fra cui **tutti e sette** gli strumenti di partecipazione strutturata — mentre "partecipare" è uno dei due compiti primari. Il campo `NavItem.core`, che decideva quali cinque sopravvivessero, è sparito con la ragione che lo rendeva necessario.
+- **Desktop e telefono espongono ora le stesse cinque destinazioni.** L'architettura non è stata scelta e poi adattata: è derivata dal vincolo più stretto, gli slot di una barra in basso.
+- `/la-mia-citta`: "Cosa vuoi fare?" sale sopra "Stato della città". Dei due compiti primari, è il solo che chiede un'azione, ed è l'unico punto della piattaforma che parla di cosa vuoi *fare* invece che di come si chiama la sezione.
+- Avvisi urgenti, organigramma, FAQ e glossario escono dal menu e vanno nel footer: presente su ogni pagina, telefono compreso. Notifiche, profilo e impostazioni escono e basta — erano una seconda copia di quello che la barra in alto offre già.
+- L'aspetto del pulsante "Segui" vive in `FollowToggle`. I due pulsanti restano due perché lo strato dati è diverso di proposito: gli assessori hanno una chiave esterna vera (`AssessoreFollow`), la tabella polimorfica `Follow` non può averla.
+
+### Corretto
+- **`/iniziative` → `/volontariato`**: la rotta portava un nome che l'interfaccia non usava. Il menu diceva "Volontariato" e l'indirizzo diceva altro, quindi non era indovinabile. Con redirect permanente.
+- **Gli E2E avevano un database dedicato** (`prisma/e2e.db`, ricreato a ogni esecuzione da `tests/e2e/global-setup.ts`). Prima scrivevano in quello di sviluppo senza ripulire, e la suite si era avvelenata da sola: sei segnalazioni su sedici erano residui «… E2E 17850…» visibili in home, e soprattutto il cittadino di test aveva votato **tutte e quattro** le domande della sessione aperta di question time — quindi `territorio.spec.ts` cercava un pulsante «vota questa domanda» che non poteva più esistere. Non basta creare dati con titoli univoci: le **azioni** si accumulano.
+- Nota sulla stessa riparazione: il rate-limit dell'accesso vive in una `Map` **in memoria**, cioè nel processo del server. Contro un server di lunga durata (`E2E_BASE_URL`) i tentativi di login si sommano fra esecuzioni finché l'intera suite cade su «Troppi tentativi di accesso» — un sintomo che non somiglia per niente alla sua causa. L'avvio automatico parte da un processo nuovo, quindi da contatore azzerato.
+
+### Verificato
+- `typecheck`, `lint`, 93 test unitari, `shots` in tema chiaro e scuro, e `shots --simple --width=360` senza traboccamento orizzontale.
+- **Il falso allarme sulle cifre display.** Una prima stesura dell'audit dichiarava `AnimatedNumber` rotto ovunque, con `/bilancio` a «0 mln €». Era l'ambiente di misura: l'ispezione girava in un pannello browser mai visualizzato, dove Chrome non consegna le callback di `IntersectionObserver` — quindi `useInView` non scattava e il DOM restava sul valore iniziale, uno zero perfettamente plausibile. `npm run shots` mostra 142 mln € e gli anelli a 92/86/71%. **Ciò che dipende da IntersectionObserver o rAF non si verifica leggendo il DOM.**
+
 ## [0.12.0] — 2026-07-25 · Ondata 7 «Il secondo scaglione di pagine»
 
 ### Aggiunto

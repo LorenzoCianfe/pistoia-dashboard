@@ -33,6 +33,17 @@ export function formatNumber(value: number) {
   return num0.format(value);
 }
 
+/**
+ * "1 tornata aperta" / "3 tornate aperte" — numero e forma accordati.
+ *
+ * L'italiano non perdona il plurale sbagliato come l'inglese: «1 tornate
+ * aperte» si legge come un errore del programma, e su un servizio pubblico
+ * costa credibilità più di quanto valga la riga che lo mostra.
+ */
+export function formatConteggio(value: number, singolare: string, plurale: string) {
+  return `${num0.format(value)} ${value === 1 ? singolare : plurale}`;
+}
+
 /** "+4", "−2", "0" with a unicode minus for nicer typography. */
 export function formatDelta(value: number) {
   if (value > 0) return `+${num0.format(value)}`;

@@ -145,7 +145,7 @@ export async function toggleInitiativeJoinAction(initiativeId: string) {
 
   if (existing) {
     await prisma.initiativeJoin.delete({ where: { id: existing.id } });
-    revalidatePath("/iniziative");
+    revalidatePath("/volontariato");
     return { ok: true as const, joined: false };
   }
 
@@ -158,6 +158,6 @@ export async function toggleInitiativeJoinAction(initiativeId: string) {
   }
 
   await prisma.initiativeJoin.create({ data: { initiativeId, userId: user.id } });
-  revalidatePath("/iniziative");
+  revalidatePath("/volontariato");
   return { ok: true as const, joined: true };
 }

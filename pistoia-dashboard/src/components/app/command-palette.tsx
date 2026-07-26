@@ -25,13 +25,7 @@ import {
   FolderKanban,
   type LucideIcon,
 } from "lucide-react";
-import {
-  NAV_ITEMS,
-  PARTICIPATION_NAV,
-  TRANSPARENCY_NAV,
-  SECONDARY_NAV,
-  GUIDED_ACTIONS,
-} from "./nav-items";
+import { ALL_PAGES, GUIDED_ACTIONS } from "./nav-items";
 import { SEARCH_GROUP_LABEL, type SearchResult, type SearchResultType } from "@/lib/search-types";
 import { accent, type AccentColor } from "@/lib/colors";
 import { cn } from "@/lib/utils";
@@ -69,12 +63,7 @@ const TYPE_META: Record<SearchResultType, { icon: LucideIcon; color: AccentColor
   project: { icon: FolderKanban, color: "amber" },
 };
 
-const PAGES: Item[] = [
-  ...NAV_ITEMS,
-  ...PARTICIPATION_NAV,
-  ...TRANSPARENCY_NAV,
-  ...SECONDARY_NAV,
-].map((n) => ({
+const PAGES: Item[] = ALL_PAGES.map((n) => ({
   key: `page:${n.href}`,
   title: n.label,
   href: n.href,
