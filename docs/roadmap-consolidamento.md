@@ -220,6 +220,30 @@ rifatte — in particolare in §6 «🧭 UX & semplicità».
 restano in pausa alle condizioni già scritte. Il consolidamento non le tocca e
 non le sblocca.
 
+### C-4-bis · Osservatorio civico *(richiesta 2026-07-26)*
+
+Cinque funzioni nuove: **Pagella mensile**, **Dossier persona**, **Audit
+cittadino** (PDF trimestrale), **Il costo dell'amministrazione**, **Rating dei
+servizi**. Definite per esteso in `ROADMAP.md` §6 «🔍 Osservatorio civico»,
+con i cinque prerequisiti.
+
+Sono in Fase C per due ragioni indipendenti, e la seconda è la più vincolante:
+
+1. Sono funzionalità nuove, e la Fase A/B viene prima per costruzione.
+2. **Sono inerti sui dati dimostrativi.** Una pagella calcolata su dati
+   inventati non è una pagella: è una messa in scena. Dipendono dalla ripresa
+   di `ROADMAP.md` §8 (dati reali), oggi in pausa.
+
+E una premessa che non è tecnica: **cambiano la natura del prodotto.** Oggi la
+piattaforma è un servizio al cittadino che si presenta *come* il Comune —
+stemma civico, «Comune di Pistoia» nella barra in alto. Queste cinque funzioni
+la rendono un osservatorio **sul** Comune. Le due cose non possono convivere
+sotto la stessa identità senza ingannare chi legge su chi stia parlando: una
+pagella sul sindaco pubblicata sotto lo stemma del sindaco si legge come
+autocritica dell'amministrazione, che non è. Prima riga di lavoro della C-4-bis,
+prima di qualunque funzione: **identità propria** — nome, marchio, dominio, e
+una dichiarazione di chi pubblica.
+
 ### C-5 · Nuovo, emerso dall'audit
 
 | Voce | Origine |

@@ -389,6 +389,59 @@ tutti inventati.
 | Co-firmatari | Cittadini, associazioni e attività firmano insieme | `FE` `BE` | `A2 §25` | 💡 |
 | Proposta collaborativa | Bozza pubblica → suggerimenti → versione finale | `FE` `BE` `UX` | `A2 §24` | 💡 |
 
+### 🔍 Osservatorio civico *(richiesta 2026-07-26 — Fase C)*
+
+> Cinque funzioni che spostano il prodotto da *piattaforma di servizio* a
+> **osservatorio che giudica l'amministrazione**. È lavoro di accountability
+> legittimo — la trasparenza amministrativa esiste per legge (D.Lgs 33/2013)
+> proprio perché i cittadini possano farlo — ma cambia natura al progetto, e
+> ha **cinque prerequisiti non negoziabili** elencati sotto la tabella.
+
+| Idea | Cosa fa | Livello | Fonte | Stato |
+|---|---|---|---|---|
+| **Pagella mensile** | Voti 1–10 a sindaco e giunta su 6 materie (sicurezza, decoro, trasparenza, spesa, ascolto, promesse), calcolati dai dati raccolti | `FE` `BE` `DES` | richiesta 2026-07-26 | 💡 Fase C |
+| **Dossier persona** | Scheda pubblica per assessore: curriculum dichiarato, indennità dal portale trasparenza, esperienza nel settore di delega, dichiarazioni vs azioni | `FE` `BE` | richiesta 2026-07-26 | 💡 Fase C |
+| **Audit cittadino** | PDF trimestrale di 5–6 pagine in forma di mini-audit: executive summary, 5 indicatori con trend, 3 promesse, 3 spese, 3 domande senza risposta | `FE` `BE` `DES` | richiesta 2026-07-26 | 💡 Fase C |
+| **Il costo dell'amministrazione** | Calcolatrice pubblica: costo annuo/giornaliero/orario di sindaco, giunta e staff politico, confrontato col reddito medio pistoiese | `FE` `BE` | richiesta 2026-07-26 | 💡 Fase C |
+| **Rating dei servizi — "Pistoia Index"** | Voto cittadino 1–5 stelle su pulizia, illuminazione, sicurezza, trasporti, verde; indice mensile pubblico | `FE` `BE` | richiesta 2026-07-26 | 💡 Fase C |
+
+**Prerequisiti — nessuna delle cinque parte senza questi.**
+
+1. **Identità separata dal Comune.** Oggi l'applicazione si presenta come
+   «Comune di Pistoia» con lo stemma civico. Un osservatorio che pubblica
+   pagelle sul sindaco **sotto lo stemma del Comune** fa credere al lettore
+   che sia il Comune a farlo: non è una sfumatura di stile, è il lettore
+   indotto in errore sulla fonte. Vale doppio per l'«Audit cittadino», il cui
+   scopo dichiarato è essere citato dai giornali come fonte. Serve nome,
+   stemma e dominio propri, e una riga che dichiari chi pubblica e con quali
+   dati. **Senza questo le altre quattro non si fanno.**
+2. **Dati reali, con fonte per ogni numero.** Tutte e cinque sono inerti sui
+   dati dimostrativi: dipendono dalla ripresa di [§8](#8--in-pausa--dati-reali-ex-fase-2).
+   `SourceBadge` esiste già; qui diventa obbligatorio, con link all'atto o
+   alla pagina di trasparenza da cui il numero proviene.
+3. **Metodologia pubblica e versionata.** «Non è la mia opinione, sono i
+   dati» è vero solo a metà: *quali* indicatori, con *quali* pesi e *quali*
+   soglie, è una scelta editoriale. Se la scelta è pubblicata e verificabile,
+   la pagella regge a una contestazione; se resta implicita, il numero è
+   un'opinione travestita da aritmetica ed è lì che si viene smontati.
+4. **La regola del campione minimo, estesa alle persone.** `lib/citystats.ts`
+   ha già stabilito che una percentuale su pochi casi, tinta di rosso, è
+   un'accusa e non un dato — e lo ha stabilito per un *quartiere*. Un voto
+   sintetico su una *persona con nome e cognome* è la stessa cosa con la posta
+   più alta. Sotto la soglia: nessun voto, e la scheda lo dichiara.
+5. **Diritto di replica tracciabile.** Ogni scheda persona e ogni pagella
+   ospita la risposta dell'interessato, allo stesso peso visivo del giudizio.
+   È la differenza fra un osservatorio e un tribunale senza difesa — e nella
+   pratica è anche la difesa migliore contro una richiesta di rettifica.
+
+**Una nota sul «Dossier persona».** Stipendi, indennità e curricula pubblicati
+sono dati pubblici e riportarli è legittimo. Il punto delicato non è il dato:
+è l'inferenza. «Zero esperienza in urbanistica» non è un dato — è una
+conclusione tratta da un curriculum che potrebbe semplicemente non elencarla.
+La forma difendibile è dichiarativa e verificabile: *«Nel curriculum
+depositato non compaiono incarichi in materia urbanistica»*, con il link al
+documento. Dice la stessa cosa a chi legge, e regge in tribunale.
+
 ### 🏛️ Trasparenza & accountability
 
 | Idea | Cosa fa | Livello | Fonte | Stato |
