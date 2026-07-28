@@ -15,7 +15,7 @@ import {
   VerificationBadge,
   BadgeList,
   AccountTypeBadge,
-} from "@/components/community/badges";
+} from "@/components/ui/civic-badges";
 import { buttonClasses } from "@/components/ui/button";
 import { CIVIC_TOPICS } from "@/lib/civic-topics";
 import { publicNameOf } from "@/lib/community";

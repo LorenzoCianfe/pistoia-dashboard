@@ -8,7 +8,7 @@ import { getCurrentUser } from "@/lib/auth/dal";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/ui/section-header";
-import { FollowButton } from "@/components/community/follow-button";
+import { FollowButton } from "@/components/app/follow-button";
 import { QuartiereLink } from "@/components/territorio/quartiere-link";
 import { MeshSurface, toneFromPercent } from "@/components/signature/mesh-surface";
 import { CAMPIONE_MINIMO_PER_GIUDIZIO, tassoGiudicabile } from "@/lib/citystats";

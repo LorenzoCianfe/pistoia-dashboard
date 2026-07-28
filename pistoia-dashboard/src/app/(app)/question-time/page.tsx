@@ -7,9 +7,11 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/ui/section-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DisplayNumber } from "@/components/signature/display-number";
 import { qtStatus } from "@/lib/territorio";
 import { civicTopic } from "@/lib/civic-topics";
-import { formatDate } from "@/lib/format";
+import { campioneSufficiente } from "@/lib/citystats";
+import { formatDate, formatNumber } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Question time",
@@ -26,6 +28,29 @@ export default async function QuestionTimePage() {
   const user = await requireUser();
   const sessions = await getQuestionTimes(user.id);
 
+  /*
+    Il conto si fa sulle domande di TUTTE le sessioni, aperte comprese, e
+    questo è il punto delicato: in una sessione ancora aperta le domande non
+    hanno ancora ricevuto risposta perché il termine non è scaduto, non perché
+    il Comune non risponda. Metterle al denominatore e mostrare il risultato
+    come un rapporto racconterebbe un'inadempienza che non c'è — lo stesso
+    errore che /comunita evita escludendo discussioni e idee dal proprio.
+
+    Per la stessa ragione non c'è scala a tacche: l'intervallo 0→domande poste
+    darebbe per traguardo «a ogni domanda una risposta ufficiale», mentre la
+    regola dichiarata di questa pagina è che rispondono alle **più votate**.
+    Una scala su un traguardo che nessuno ha promesso è una scala inventata,
+    e DESIGN.md §8 la considera peggio di nessuna scala.
+
+    Resta la regola del campione minimo (`lib/citystats.ts`), applicata a ciò
+    che la pagina dice del numero: sotto soglia il conteggio è esatto ma non
+    regge una lettura d'insieme, e va dichiarato.
+  */
+  const domande = sessions.flatMap((s) => s.questions);
+  const conRisposta = domande.filter((q) => q.officialAnswer).length;
+  const sessioniAperte = sessions.filter((s) => s.status === "aperto").length;
+  const campioneRegge = campioneSufficiente(domande.length);
+
   return (
     <div className="space-y-6 page-enter">
       <SectionHeader
@@ -34,6 +59,40 @@ export default async function QuestionTimePage() {
         description="Il Comune apre un tema, tu fai le domande e voti quelle degli altri: le più votate ricevono risposta ufficiale, che resta archiviata qui."
         icon={<MessageCircleQuestion size={26} />}
       />
+
+      {domande.length > 0 ? (
+        <Card>
+          <DisplayNumber
+            value={conRisposta}
+            unit={conRisposta === 1 ? "risposta" : "risposte"}
+            label="Ufficiali, dagli assessorati"
+          />
+          <p className="mt-4 border-t border-border pt-4 text-sm text-muted">
+            su {formatNumber(domande.length)}{" "}
+            {domande.length === 1 ? "domanda posta" : "domande poste"} dai
+            cittadini
+            {sessioniAperte > 0 ? (
+              <>
+                {" · "}
+                <span className="font-semibold text-teal">
+                  {formatNumber(sessioniAperte)}
+                </span>{" "}
+                {sessioniAperte === 1
+                  ? "sessione è ancora aperta, e le sue domande aspettano il termine"
+                  : "sessioni sono ancora aperte, e le loro domande aspettano il termine"}
+              </>
+            ) : null}
+            .
+            {!campioneRegge ? (
+              <>
+                {" "}
+                Le domande poste sono ancora poche: il conteggio è esatto, ma
+                non basta a dire quanto il Comune risponda.
+              </>
+            ) : null}
+          </p>
+        </Card>
+      ) : null}
 
       {sessions.length === 0 ? (
         <EmptyState

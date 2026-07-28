@@ -25,9 +25,13 @@ test("le pagine Trasparenza si aprono e raccontano il ciclo completo", async ({
   await expect(page.getByText("Perché non si può fare").first()).toBeVisible();
 
   // Promesse e risultati: il tracker raggruppato per stato.
+  // Asseriva sulla pastiglia «1 su 6 completati», tolta nella Fase B perché
+  // ripeteva a 12px il numero della cifra display. Il fatto è lo stesso e sta
+  // ancora in pagina, nella frase sotto la cifra.
   await page.goto("/promesse");
   await expect(page.getByRole("heading", { name: "Promesse e risultati" })).toBeVisible();
-  await expect(page.getByText("su 6 completati")).toBeVisible();
+  await expect(page.getByText("su 6 impegni tracciati")).toBeVisible();
+  await expect(page.getByText("Portati a termine")).toBeVisible();
 
   // Bacheca avvisi: severità + "cosa cambia per me".
   await page.goto("/avvisi");

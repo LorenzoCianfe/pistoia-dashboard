@@ -1,7 +1,7 @@
 # Piano di esecuzione — Fase A
 
-> **Stato: eseguito il 2026-07-26**, tranne A-5.1 (rinomina di
-> `components/community/`), rinviata. Riepilogo in fondo, §Consuntivo.
+> **Stato: eseguito e chiuso il 2026-07-26**, A-5.1 compresa.
+> Riepilogo in fondo, §Consuntivo.
 >
 > Per ogni azione: **cosa cambia**, **perché**, **cosa tocca**, **prima → dopo**.
 > Nessuna azione elimina una funzione. Nessuna cancella una pagina.
@@ -283,6 +283,29 @@ diversa. È una trappola per chiunque apra il progetto.
 
 **Cosa tocca** — 18 file + import. Meccanico, verificabile col typecheck.
 
+**Come è finita** — due cartelle non bastavano: **tre file su diciotto non sono
+né segnalazioni né proposte**, e infilarceli avrebbe spostato la bugia invece di
+toglierla. La destinazione finale:
+
+| Da `community/` | A | Quanti |
+|---|---|---|
+| `report-*`, `quick-report`, `confirm-button`, `resolution-confirm`, `similar-reports`, `phase-photos` | `segnalazioni/` | 9 |
+| `proposal-*`, `support-button`, `threshold-bar` | `proposte/` | 6 |
+| `follow-button`, `answer-feedback` | `app/` | 2 |
+| `badges` → `civic-badges` | `ui/` | 1 |
+
+I due che finiscono in `app/` sono **parametrici sull'entità** — `FollowTarget`
+copre quartieri, opere, segnalazioni, proposte, sondaggi ed eventi;
+`FeedbackTarget` copre comunità, segnalazioni e proposte — esattamente la forma
+di `app/shared-element-link.tsx`, che sta lì per la stessa ragione.
+`badges.tsx` è invece solo presentazionale (compone `ui/badge` e
+`ui/verified-badge`) e parla di *chi è l'autore*, non di una sezione civica: va
+in `ui/`, rinominato `civic-badges.tsx` perché `badges.tsx` accanto a `badge.tsx`
+si distingue per una lettera.
+
+Resta fuori portata `lib/community.ts`, che ha lo stesso problema di nome: è un
+file diverso e A-5.1 riguarda la cartella dei componenti.
+
 ### A-5.2 · Un solo `FollowButton`
 
 **Cosa cambia** — `assessori/follow-button.tsx` (66 righe) sparisce dentro
@@ -319,7 +342,7 @@ locale, quindi il costo del cambio è **ora al minimo storico**.
 Da `AGENTS.md` §5, senza sconti:
 
 - [ ] `npm run typecheck` · `npm run lint` · `npm test`
-- [ ] `E2E_BASE_URL=http://localhost:3000 npx playwright test` *(un dev server è già in ascolto)*
+- [ ] `npm run test:e2e` *(a dev server spento: la modalità isolata deve avviare il proprio processo)*
 - [ ] Guardata davvero, tema chiaro **e** scuro
 - [ ] `node scripts/shots.mjs --simple --width=360` — modalità semplice e traboccamento orizzontale
 - [ ] Tastiera e focus visibile
@@ -343,15 +366,23 @@ E il controllo specifico di questa fase, da rifare a ogni passo:
 | A-4 · alleggerimento della home | ✅ |
 | A-5.2 · `FollowToggle` condiviso | ✅ *(merge parziale — vedi sotto)* |
 | A-5.3 · `/iniziative` → `/volontariato` | ✅ |
-| **A-5.1 · rinomina di `components/community/`** | ⏸️ **rinviata** |
+| **A-5.1 · rinomina di `components/community/`** | ✅ *(18 file in 4 destinazioni — vedi sopra)* |
 
-**Verifiche passate:** `typecheck`, `lint`, 93 test unitari, `shots` in tema
-chiaro e scuro, `shots --simple --width=360` senza traboccamento orizzontale.
+**Verifiche passate:** `typecheck`, `lint`, 93 test unitari, **11/11 E2E**,
+`shots` in tema chiaro e scuro, `shots --simple --width=360` senza traboccamento
+orizzontale.
 
-**Verifica non completata:** una esecuzione E2E verde end-to-end. Richiede che
-nessun altro dev server tenga la directory — Next ne rifiuta due — perché la
-modalità isolata deve avviare il proprio processo. Da rifare con
-`npm run test:e2e` a server spento.
+**L'esecuzione E2E, chiusa.** Serviva la directory libera: Next rifiuta due dev
+server sullo stesso progetto, quindi finché uno era in ascolto l'avvio
+automatico di Playwright non poteva partire e il percorso isolato non veniva mai
+esercitato. A server spento, `npm run test:e2e` → **11 passed (50,3s)**, database
+`prisma/e2e.db` ricreato e riseminato da `tests/e2e/global-setup.ts`.
+
+Il dettaglio che conta: passa anche `territorio.spec.ts:55` — «votare una
+domanda del question time aggiorna il conteggio» — cioè proprio il test che
+contro il DB di sviluppo si esauriva da solo dopo quattro esecuzioni. È la prova
+che l'isolamento fa quello per cui è stato introdotto, e non solo che la suite
+è verde.
 
 ### Due correzioni al piano, emerse eseguendolo
 

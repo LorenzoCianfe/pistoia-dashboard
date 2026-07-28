@@ -8,9 +8,9 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SectionHeader } from "@/components/ui/section-header";
 import { DotScatterTimeline } from "@/components/signature/dot-scatter-timeline";
-import { ReportCard } from "@/components/community/report-card";
-import { ReportComposer } from "@/components/community/report-composer";
-import { QuickReport } from "@/components/community/quick-report";
+import { ReportCard } from "@/components/segnalazioni/report-card";
+import { ReportComposer } from "@/components/segnalazioni/report-composer";
+import { QuickReport } from "@/components/segnalazioni/quick-report";
 import { REPORT_CATEGORY, reportCategory } from "@/lib/community";
 import { cn } from "@/lib/utils";
 

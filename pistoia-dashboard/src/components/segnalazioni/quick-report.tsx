@@ -15,7 +15,7 @@ import {
   Send,
 } from "lucide-react";
 import { createReportAction } from "@/app/actions/reports";
-import { SimilarReports } from "@/components/community/similar-reports";
+import { SimilarReports } from "@/components/segnalazioni/similar-reports";
 import { REPORT_CATEGORY } from "@/lib/community";
 import { downscaleImage } from "@/lib/images";
 import { accent } from "@/lib/colors";

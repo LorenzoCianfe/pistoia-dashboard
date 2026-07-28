@@ -8,11 +8,12 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SectionHeader } from "@/components/ui/section-header";
-import { FollowButton } from "@/components/community/follow-button";
+import { DisplayNumber } from "@/components/signature/display-number";
+import { FollowButton } from "@/components/app/follow-button";
 import { EventComposer } from "@/components/eventi/event-composer";
 import { EventReview } from "@/components/eventi/event-review";
 import { isStaff, canModerate, eventCategory } from "@/lib/community";
-import { formatDateShort } from "@/lib/format";
+import { formatDateShort, formatNumber } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Eventi" };
 
@@ -55,6 +56,16 @@ export default async function EventiPage() {
   const pending = isMod ? await getPendingEvents() : [];
   const groups = groupByMonth(upcoming);
 
+  /*
+    `getPublishedEvents` separa passato e futuro sulla data di FINE, non di
+    inizio: un evento cominciato ieri e lungo tre giorni è ancora in corso, e
+    conta fra quelli a cui si può andare. La cifra eredita quella definizione
+    invece di rifarne una propria — è lo stesso conteggio che l'hub /territorio
+    mostra come «N in arrivo», e i due devono coincidere.
+  */
+  const daAssociazioni = upcoming.filter((e) => e.isOrganization).length;
+  const prossimo = upcoming[0] ?? null;
+
   return (
     <div className="space-y-5">
       <SectionHeader
@@ -63,6 +74,39 @@ export default async function EventiPage() {
         description="Iniziative del Comune e delle associazioni del territorio. Segui un evento per non perderlo."
         icon={<CalendarDays size={22} />}
       />
+
+      {upcoming.length > 0 ? (
+        <Card>
+          <DisplayNumber
+            value={upcoming.length}
+            unit={upcoming.length === 1 ? "evento" : "eventi"}
+            label="In arrivo o ancora in corso"
+          />
+          <p className="mt-4 border-t border-border pt-4 text-sm text-muted">
+            {prossimo ? (
+              <>
+                il prossimo è{" "}
+                <span className="font-semibold text-foreground">
+                  {prossimo.title}
+                </span>
+                , <span suppressHydrationWarning>{formatDateShort(prossimo.startAt)}</span>
+              </>
+            ) : null}
+            {daAssociazioni > 0 ? (
+              <>
+                {prossimo ? " · " : ""}
+                <span className="font-semibold text-teal">
+                  {formatNumber(daAssociazioni)}
+                </span>{" "}
+                {daAssociazioni === 1
+                  ? "è organizzato da un'associazione del territorio"
+                  : "sono organizzati da associazioni del territorio"}
+              </>
+            ) : null}
+            .
+          </p>
+        </Card>
+      ) : null}
 
       {canPropose ? (
         <Card>

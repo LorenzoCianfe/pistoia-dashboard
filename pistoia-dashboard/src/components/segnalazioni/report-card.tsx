@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ConfirmButton } from "@/components/community/confirm-button";
-import { ReportLink } from "@/components/community/report-link";
+import { ConfirmButton } from "@/components/segnalazioni/confirm-button";
+import { ReportLink } from "@/components/segnalazioni/report-link";
 import { reportCategory, reportStatus, reportUrgency } from "@/lib/community";
 import { accent } from "@/lib/colors";
 import { formatRelativeTime } from "@/lib/format";

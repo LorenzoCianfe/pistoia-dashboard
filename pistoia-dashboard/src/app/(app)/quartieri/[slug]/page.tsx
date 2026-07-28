@@ -17,7 +17,7 @@ import { pactStatus } from "@/lib/territorio";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Stat } from "@/components/ui/stat";
-import { FollowButton } from "@/components/community/follow-button";
+import { FollowButton } from "@/components/app/follow-button";
 import {
   reportCategory,
   reportStatus,

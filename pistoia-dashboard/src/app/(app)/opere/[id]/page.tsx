@@ -17,7 +17,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Stat } from "@/components/ui/stat";
 import { ProgressBar } from "@/components/ui/progress-bar";
-import { FollowButton } from "@/components/community/follow-button";
+import { FollowButton } from "@/components/app/follow-button";
 import { OperaComments } from "@/components/opere/opera-comments";
 import { MapCanvas } from "@/components/mappa/map-canvas";
 import { SimpleExplainer } from "@/components/trasparenza/simple-explainer";

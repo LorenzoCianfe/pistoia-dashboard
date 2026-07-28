@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/ui/section-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DisplayNumber } from "@/components/signature/display-number";
 import { priorityStatus } from "@/lib/territorio";
 import { formatDate, formatNumber } from "@/lib/format";
 
@@ -26,6 +27,22 @@ export default async function PrioritaPage() {
   const user = await requireUser();
   const rounds = await getPriorityRounds(user.id);
 
+  /*
+    La cifra conta gli INTERVENTI in votazione, non i voti raccolti.
+
+    Non è una preferenza di stile: `getPriorityRounds` somma ai voti veri il
+    `baseVotes` del seed, quindi `totalVotes` è un numero gonfiato — accettabile
+    in una riga di contorno a 12px, non a 88px, dove diventerebbe la cosa più
+    grande e più falsa della pagina. Gli interventi invece sono righe vere.
+
+    È anche la cifra giusta per il compito: chi arriva qui deve capire quante
+    cose può mettere in fila, non quanta gente ha già votato.
+  */
+  const aperte = rounds.filter((r) => r.status === "aperta");
+  const interventiInVoto = aperte.reduce((tot, r) => tot + r.items.length, 0);
+  const chiuse = rounds.filter((r) => r.status !== "aperta");
+  const chiuseConEsito = chiuse.filter((r) => r.resultNote).length;
+
   return (
     <div className="space-y-6 page-enter">
       <SectionHeader
@@ -34,6 +51,34 @@ export default async function PrioritaPage() {
         description="Interventi già validati dagli uffici tecnici: i cittadini verificati indicano quale fare prima. Il voto orienta il calendario dei lavori — e l'esito viene sempre raccontato."
         icon={<ListOrdered size={26} />}
       />
+
+      {interventiInVoto > 0 ? (
+        <Card>
+          <DisplayNumber
+            value={interventiInVoto}
+            unit={interventiInVoto === 1 ? "intervento" : "interventi"}
+            label="In votazione adesso"
+          />
+          <p className="mt-4 border-t border-border pt-4 text-sm text-muted">
+            già validati dagli uffici tecnici, in{" "}
+            {formatNumber(aperte.length)}{" "}
+            {aperte.length === 1 ? "tornata aperta" : "tornate aperte"}: il voto
+            decide l&apos;ordine, non se farli
+            {chiuse.length > 0 ? (
+              <>
+                {" · "}
+                <span className="font-semibold text-teal">
+                  {formatNumber(chiuseConEsito)}
+                </span>{" "}
+                {chiuse.length === 1
+                  ? "tornata chiusa racconta cosa ne è stato"
+                  : `tornate chiuse su ${formatNumber(chiuse.length)} raccontano cosa ne è stato`}
+              </>
+            ) : null}
+            .
+          </p>
+        </Card>
+      ) : null}
 
       {rounds.length === 0 ? (
         <EmptyState

@@ -5,8 +5,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/ui/section-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DisplayNumber } from "@/components/signature/display-number";
 import { pactStatus, placeKind, placeStatus, adopterType } from "@/lib/territorio";
-import { formatDate, formatRelativeTime } from "@/lib/format";
+import { formatDate, formatRelativeTime, formatNumber } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Patti e luoghi adottati",
@@ -23,6 +24,19 @@ export const metadata: Metadata = {
 export default async function PattiPage() {
   const [pacts, places] = await Promise.all([getPacts(), getAdoptedPlaces()]);
 
+  /*
+    Il numero protagonista è quanti patti sono attivi, e coincide con la riga di
+    stato che l'hub /partecipa mostra per questa sezione: è voluto — chi clicca
+    da lì deve ritrovare lo stesso numero, non scoprirne uno diverso.
+
+    Volutamente NON è l'avanzamento medio dei patti, che sembra la misura di
+    sintesi e non lo è: un patto firmato il mese scorso sta al 10% perché è
+    nuovo, non perché vada male. È la stessa ragione per cui su Opere la mesh
+    non prende l'avanzamento medio dei cantieri (DESIGN.md §8).
+  */
+  const attivi = pacts.filter((p) => p.status === "attivo").length;
+  const curati = places.filter((p) => p.status === "attiva").length;
+
   return (
     <div className="space-y-8 page-enter">
       <SectionHeader
@@ -31,6 +45,32 @@ export default async function PattiPage() {
         description="Obiettivi condivisi tra cittadini e Comune, quartiere per quartiere — e i luoghi pubblici di cui qualcuno si prende cura. Ogni patto dice chi firma e a che punto è."
         icon={<Handshake size={26} />}
       />
+
+      {pacts.length > 0 || places.length > 0 ? (
+        <Card>
+          <DisplayNumber
+            value={attivi}
+            unit={attivi === 1 ? "patto" : "patti"}
+            label="Di quartiere, attivi adesso"
+          />
+          <p className="mt-4 border-t border-border pt-4 text-sm text-muted">
+            su {formatNumber(pacts.length)}{" "}
+            {pacts.length === 1 ? "firmato" : "firmati"} con il Comune
+            {curati > 0 ? (
+              <>
+                {" · "}
+                <span className="font-semibold text-teal">
+                  {formatNumber(curati)}
+                </span>{" "}
+                {curati === 1
+                  ? "luogo pubblico ha qualcuno che se ne prende cura"
+                  : "luoghi pubblici hanno qualcuno che se ne prende cura"}
+              </>
+            ) : null}
+            .
+          </p>
+        </Card>
+      ) : null}
 
       {/* Patti digitali di quartiere */}
       <section aria-labelledby="patti-quartiere" className="space-y-4">

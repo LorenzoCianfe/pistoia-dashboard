@@ -1,10 +1,10 @@
 import { MapPin, Lightbulb } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { ProposalLink } from "@/components/community/proposal-link";
+import { ProposalLink } from "@/components/proposte/proposal-link";
 import { Badge } from "@/components/ui/badge";
-import { SupportButton } from "@/components/community/support-button";
-import { ThresholdBar } from "@/components/community/threshold-bar";
-import { AssessmentInline } from "@/components/community/proposal-assessment";
+import { SupportButton } from "@/components/proposte/support-button";
+import { ThresholdBar } from "@/components/proposte/threshold-bar";
+import { AssessmentInline } from "@/components/proposte/proposal-assessment";
 import { Avatar } from "@/components/ui/avatar";
 import { proposalStatus } from "@/lib/community";
 import { formatRelativeTime } from "@/lib/format";

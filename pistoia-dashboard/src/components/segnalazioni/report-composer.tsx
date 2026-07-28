@@ -10,7 +10,7 @@ import {
 import { Field, Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/alert";
-import { SimilarReports } from "@/components/community/similar-reports";
+import { SimilarReports } from "@/components/segnalazioni/similar-reports";
 import { REPORT_CATEGORY } from "@/lib/community";
 import { downscaleImage } from "@/lib/images";
 import type { NeighborhoodOption } from "@/lib/data/neighborhoods";

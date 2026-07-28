@@ -41,6 +41,17 @@ const SIMPLE_COOKIE = "pst-simple";
 let problemi = 0;
 /** Pagine che non si sono nemmeno aperte: non verificate, quindi non promosse. */
 let falliti = 0;
+/**
+ * Pagine saltate perché l'accesso non è riuscito.
+ *
+ * Stessa famiglia del difetto di `falliti` (AGENTS.md §3, ondata 7, trappola 4),
+ * ma da un'altra porta: lì la cattura falliva, qui non viene nemmeno tentata.
+ * Quando `login()` non va a buon fine — server ancora in compilazione,
+ * rate-limit, credenziali cambiate — TUTTE le pagine autenticate finiscono qui
+ * e lo script usciva **0**, cioè dichiarava verde una revisione visiva in cui
+ * aveva fotografato il solo `/login`. Visto succedere il 2026-07-26.
+ */
+let saltati = 0;
 
 /** Pagine sotto revisione. `auth: false` = raggiungibile da disconnessi. */
 const PAGES = [
@@ -83,6 +94,20 @@ const PAGES = [
     attendiUrl: /\/quartieri\/[^/]+$/,
   },
   { name: "comunita", url: "/comunita" },
+  // Fase B, primo scaglione: le rotte che gli hub mettono in vetrina e che
+  // fino a qui avevano solo ereditato i token. Entrano nella lista **insieme
+  // alla modifica**, non dopo: il cancello del traboccamento orizzontale
+  // misura solo le pagine che apre, quindi una rotta ridisegnata e non elencata
+  // qui risulterebbe "verificata" senza essere mai stata aperta (AGENTS.md §3,
+  // ondata 7, trappola 4).
+  { name: "promesse", url: "/promesse" },
+  { name: "decisioni", url: "/decisioni" },
+  { name: "question-time", url: "/question-time" },
+  { name: "priorita", url: "/priorita" },
+  { name: "patti", url: "/patti" },
+  { name: "volontariato", url: "/volontariato" },
+  { name: "progetti", url: "/progetti" },
+  { name: "eventi", url: "/eventi" },
 ];
 
 const CREDENTIALS = {
@@ -141,6 +166,7 @@ async function capture(ctx, theme, anonime) {
     if (anonime !== (p.auth === false)) continue;
     if (p.auth !== false && !authed) {
       console.warn(`  – salto ${p.name} (richiede sessione)`);
+      saltati += 1;
       continue;
     }
     try {
@@ -276,6 +302,15 @@ if (falliti > 0) {
   console.error(
     `\n✗ ${falliti} pagine non si sono aperte: non sono state misurate, quindi ` +
       `questa esecuzione non prova nulla su di loro.`,
+  );
+  process.exitCode = 1;
+}
+if (saltati > 0) {
+  console.error(
+    `\n✗ ${saltati} pagine saltate perché l'accesso non è riuscito. Non sono ` +
+      `state fotografate né misurate: questa esecuzione NON è una revisione ` +
+      `visiva. Controlla che il server risponda e che le credenziali in ` +
+      `SHOTS_EMAIL / SHOTS_PASSWORD siano valide.`,
   );
   process.exitCode = 1;
 }

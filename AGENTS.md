@@ -6,7 +6,7 @@
 >
 > **Leggilo per intero all'inizio di ogni sessione, prima di toccare codice.**
 >
-> Aggiornato: 2026-07-25 (ondata 7)
+> Aggiornato: 2026-07-26 (Fase B)
 
 ---
 
@@ -60,7 +60,7 @@ L'app vive in `pistoia-dashboard/`. La documentazione vive nella radice.
 
 ## 3. Design system — le regole che si sbagliano più spesso
 
-> §3 raccoglie **diciassette trappole già pagate**. Sono raggruppate per ondata
+> §3 raccoglie **diciotto trappole già pagate**. Sono raggruppate per ondata
 > solo perché è così che sono emerse: leggile tutte, valgono tutte ancora.
 
 **Prima di tutto: Astryx è la sorgente dei TOKEN, non lo strato di primitive.**
@@ -194,7 +194,7 @@ gli elenchi di stati) perché "Stato della città" e la pagina dei quartieri, a 
 clic di distanza, avrebbero potuto mostrare due percentuali diverse della stessa
 città.
 
-### Tre trappole del consolidamento (Fase A)
+### Quattro trappole del consolidamento (Fase A e B)
 
 Le prime due riguardano la **verifica**, non il prodotto: hanno prodotto
 diagnosi sbagliate con dati apparentemente solidi.
@@ -232,7 +232,21 @@ diagnosi sbagliate con dati apparentemente solidi.
    L'avvio automatico di Playwright parte da un processo nuovo: contatore a
    zero e database al seed.
 
-3. **Una voce di menu attiva insieme al suo genitore litiga sulla pastiglia.**
+3. **Il cancello delle schermate usciva 0 se l'accesso non riusciva.** È la
+   trappola 4 dell'ondata 7 da un'altra porta: lì la cattura *falliva* e non
+   veniva contata, qui non veniva **nemmeno tentata**. Se `login()` non va a
+   buon fine — server ancora in compilazione, rate-limit, credenziali cambiate
+   — ogni pagina autenticata veniva saltata con un avviso, nessun contatore si
+   muoveva, e lo script terminava con successo: una "revisione visiva" in cui
+   l'unica pagina fotografata era `/login`. Visto dal vivo mentre si portavano
+   tre rotte nuove: saltate tutte e tre, uscita 0.
+
+   La regola generale, che vale oltre questo script: **un cancello deve
+   distinguere "verificato e a posto" da "non verificato".** Se le due cose
+   escono con lo stesso codice, il cancello non è un cancello. Ora i salti
+   fanno uscire 1.
+
+4. **Una voce di menu attiva insieme al suo genitore litiga sulla pastiglia.**
    La barra laterale evidenzia con un solo elemento condiviso
    (`layoutId="side-active"`). Su una sotto-rotta come `/comunita/stanze`
    combaciano sia la sezione sia la destinazione, e due voci attive insieme se
@@ -262,13 +276,19 @@ invalid config only=...`). Il sintomo è muto — lo script gira in modalità
 normale e scrive in `screenshots/wave` invece che in `screenshots/wave-semplice`
 — quindi si crede di aver verificato la viewport minima senza averla mai aperta.
 
-**Gli E2E contro un server già in ascolto:** Next rifiuta due dev server sulla
-stessa directory, quindi con un `npm run dev` aperto l'avvio automatico di
-Playwright fallisce sempre. Non spegnerlo, puntagli contro:
+**Gli E2E vogliono la directory libera.** Next rifiuta due dev server sullo
+stesso progetto, quindi con un `npm run dev` aperto l'avvio automatico di
+Playwright fallisce sempre. **Spegni il dev server** e lancia `npm run test:e2e`:
+Playwright avvia il proprio processo contro `prisma/e2e.db`, ricreato e
+riseminato da `tests/e2e/global-setup.ts`. Riferimento: 11/11 in ~50s.
 
-```bash
-E2E_BASE_URL=http://localhost:3000 npx playwright test
-```
+`E2E_BASE_URL` esiste ancora ma **non è la scorciatoia che sembra**: punta la
+suite al server di sviluppo, quindi condivide il DB di sviluppo *e* il
+rate-limit dell'accesso, che è una `Map` in memoria in quel processo. Sono le
+due cause della trappola §3 (Fase A, 2): i voti si accumulano fino a esaurire lo
+scenario, e i tentativi di login si sommano finché l'intera suite cade su
+«Troppi tentativi di accesso». Usarlo per "aggirare" il conflitto di porta
+significa riaprire esattamente il difetto che l'isolamento ha chiuso.
 
 `npm run shots` **misura anche il traboccamento orizzontale** e esce con codice
 1 se una pagina scorre di lato. È l'unico difetto di layout che una schermata a

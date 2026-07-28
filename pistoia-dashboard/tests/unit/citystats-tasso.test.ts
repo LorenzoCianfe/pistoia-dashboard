@@ -1,8 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
+  CAMPIONE_MINIMO_PER_GIUDIZIO,
   STATI_CHIUSI,
   STATI_FUORI_CONTEGGIO,
   STATI_RISOLTI,
+  campioneSufficiente,
+  tassoGiudicabile,
   tassoRisoluzione,
 } from "@/lib/citystats";
 
@@ -33,6 +36,28 @@ describe("tasso di risoluzione — una definizione sola", () => {
     for (const s of STATI_RISOLTI) {
       expect(STATI_FUORI_CONTEGGIO).not.toContain(s);
       expect(STATI_CHIUSI).toContain(s);
+    }
+  });
+});
+
+describe("campione minimo — una soglia sola per ogni giudizio", () => {
+  it("taglia sotto la soglia e passa da lì in su", () => {
+    expect(campioneSufficiente(CAMPIONE_MINIMO_PER_GIUDIZIO - 1)).toBe(false);
+    expect(campioneSufficiente(CAMPIONE_MINIMO_PER_GIUDIZIO)).toBe(true);
+    expect(campioneSufficiente(CAMPIONE_MINIMO_PER_GIUDIZIO + 1)).toBe(true);
+  });
+
+  it("un campione vuoto o negativo non regge nessun giudizio", () => {
+    expect(campioneSufficiente(0)).toBe(false);
+    expect(campioneSufficiente(-3)).toBe(false);
+  });
+
+  it("`tassoGiudicabile` non è una seconda soglia, è la stessa", () => {
+    // Se un giorno divergessero, la stessa città avrebbe due idee di «quando un
+    // rapporto può essere presentato come un verdetto» — esattamente il difetto
+    // che il tasso di risoluzione unificato è nato per togliere (AGENTS.md §3).
+    for (let n = 0; n <= CAMPIONE_MINIMO_PER_GIUDIZIO + 3; n++) {
+      expect(tassoGiudicabile(n)).toBe(campioneSufficiente(n));
     }
   });
 });

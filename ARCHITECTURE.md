@@ -222,7 +222,7 @@ interessata.
 | Astryx è in Beta (0.1.8) | Le classi stabili `.astryx-*` sono documentate ma non ancora emesse |
 | Snapshot Playwright | Da rigenerare dopo il cambio di design system |
 | 30+ rotte, gerarchia piatta | Serve un passaggio di architettura dell'informazione. Rimandato dall'ondata 6 di proposito: cambiare la navigazione insieme al ridisegno di quattro pagine renderebbe impossibile capire quale dei due ha rotto cosa |
-| **26 rotte ereditano ancora i token senza essere ridisegnate** | L'ondata 6 ha ridisegnato solo le quattro di punta. Le altre sono coerenti nei colori ma non nella composizione: nessuna usa i componenti-firma |
+| **18 rotte ereditano ancora i token senza essere ridisegnate** *(erano 26)* | L'ondata 6 ha ridisegnato solo le quattro di punta. Le altre sono coerenti nei colori ma non nella composizione: nessuna usa i componenti-firma. La Fase B ne ha coperte 8 — tutte quelle che i tre hub mettono in vetrina — e prosegue |
 | **`<ViewTransition>` di React non è disponibile** | Il flag `experimental.viewTransition` non commuta React sul canale experimental in Next 16.2.7. L'elemento condiviso usa l'API nativa a mano; da rivalutare quando il componente arriva in React stabile |
 | **Nessun dettaglio delle entrate di bilancio** | Il sankey si ferma a due stadi. Un terzo stadio richiede un modello `BudgetRevenue` con i titoli reali, oppure l'ETL della Fase 2 |
 | Nessun test automatico di accessibilità | `axe-core` negli E2E resta da impostare (traccia "Qualità continua"). I contrasti dell'ondata 6 sono stati misurati a mano |

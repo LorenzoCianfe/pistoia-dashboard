@@ -28,13 +28,14 @@ pagine cancellate, ogni indirizzo continua a rispondere.**
 
 ---
 
-## Fase A — Consolidamento ✅ *(eseguita il 2026-07-26, salvo A-5.1)*
+## Fase A — Consolidamento ✅ *(chiusa il 2026-07-26)*
 
 *Struttura e navigazione. Nessuna funzionalità nuova, nessun ridisegno visivo.*
 
 > Consuntivo dettagliato in [`piano-esecuzione-fase-a.md`](./piano-esecuzione-fase-a.md) §Consuntivo.
-> Resta aperta **A-5.1** (rinomina di `components/community/`) e una esecuzione
-> E2E verde end-to-end, che richiede la directory libera da altri dev server.
+> Le due voci rimaste aperte sono chiuse: **A-5.1** (rinomina di
+> `components/community/`) e l'esecuzione E2E verde end-to-end — **11/11 in
+> 50,3s** sul database isolato, con Playwright che avvia il proprio server.
 
 ### A-0 · Igiene preliminare
 
@@ -133,19 +134,19 @@ Solo ciò che il lavoro attraversa: nessuna rinomina di massa fuori contesto.
 
 | # | Azione |
 |---|---|
-| A-5.1 | `community/` → `segnalazioni/` + `proposte/` (18 file). Il nome inglese viola `AGENTS.md` §6 e collide con la sezione `comunita` |
+| A-5.1 | `community/` → `segnalazioni/` (9) + `proposte/` (6) + 3 file trasversali. Il nome inglese viola `AGENTS.md` §6 e collide con la sezione `comunita` |
 | A-5.2 | Fondere `assessori/follow-button` nel `FollowButton` generico |
 | A-5.3 | `/iniziative` → `/volontariato`, allineando rotta ed etichetta (con redirect) |
 
-### Cancello di uscita dalla Fase A
+### Cancello di uscita dalla Fase A ✅ *(chiuso il 2026-07-26)*
 
-- [ ] Le 26 rotte rispondono ancora 200
-- [ ] Ogni funzione dell'inventario §1 è raggiungibile, telefono **e** desktop
-- [ ] Desktop e mobile espongono le **stesse** 5 destinazioni
-- [ ] Nessuna cifra display mostra 0 dove il dato esiste
-- [ ] `npm run typecheck`, `lint`, `test`, `test:e2e` verdi
-- [ ] `node scripts/shots.mjs --simple --width=360` senza traboccamento
-- [ ] Modalità semplice e "Cosa vuoi fare?" invariate nel comportamento
+- [x] Le 26 rotte rispondono ancora 200
+- [x] Ogni funzione dell'inventario §1 è raggiungibile, telefono **e** desktop
+- [x] Desktop e mobile espongono le **stesse** 5 destinazioni
+- [x] Nessuna cifra display mostra 0 dove il dato esiste
+- [x] `npm run typecheck`, `lint`, `test` (93), `test:e2e` (11/11) verdi
+- [x] `node scripts/shots.mjs --simple --width=360` senza traboccamento
+- [x] Modalità semplice e "Cosa vuoi fare?" invariate nel comportamento
 
 ---
 
@@ -154,17 +155,43 @@ Solo ciò che il lavoro attraversa: nessuna rinomina di massa fuori contesto.
 *Nessuna nuova struttura: si porta Astryx dove non è ancora arrivato.*
 
 Confermato in scoperta: **Astryx resta**. La Fase B è copertura, non ridisegno.
-`FEATURES.md` §7 dichiara **26 rotte non ancora ridisegnate**, che hanno
-ereditato i token dal ponte di retrocompatibilità: coerenti nei colori, non
-nella composizione, e nessuna usa i componenti-firma.
+Alla partenza `FEATURES.md` §7 dichiarava **26 rotte non ancora ridisegnate**,
+che avevano ereditato i token dal ponte di retrocompatibilità: coerenti nei
+colori, non nella composizione, e nessuna usava i componenti-firma.
+**Ne restano 18.**
 
-| # | Azione |
-|---|---|
-| B-1 | Applicare la composizione Astryx alle rotte assorbite dagli hub |
-| B-2 | Portare i componenti-firma dove aggiungono senso — non ovunque per simmetria |
-| B-3 | Gerarchia visiva coerente dentro ogni hub |
-| B-4 | Passata di contrasto su tema chiaro **e** scuro (`AGENTS.md` §2: non si regredisce) |
-| B-5 | Verifica in modalità semplice a 360px su tutta la struttura nuova |
+| # | Azione | Stato |
+|---|---|---|
+| B-1 | Applicare la composizione Astryx alle rotte assorbite dagli hub | 🚧 8 di 26 — **hub coperti per intero** |
+| B-2 | Portare i componenti-firma dove aggiungono senso — non ovunque per simmetria | 🚧 |
+| B-3 | Gerarchia visiva coerente dentro ogni hub | 🚧 |
+| B-4 | Passata di contrasto su tema chiaro **e** scuro (`AGENTS.md` §2: non si regredisce) | 📋 |
+| B-5 | Verifica in modalità semplice a 360px su tutta la struttura nuova | 🚧 per rotta |
+
+**Primo scaglione (2026-07-26), 8 rotte:** `/promesse`, `/decisioni`,
+`/question-time`, `/priorita`, `/patti`, `/volontariato`, `/progetti`,
+`/eventi`. Scelte come «le rotte che gli hub mettono più in vetrina», e
+condividevano tutte lo stesso difetto: intestazione, poi subito l'elenco delle
+schede, senza mai aprire su cosa dice l'insieme.
+
+**Con questo scaglione i tre hub della Fase A sono coperti per intero.** Le 18
+rotte che restano non sono in vetrina su nessun hub: il prossimo scaglione non
+ha più un criterio di priorità ovvio e va scelto con un altro (utilità, traffico
+atteso, o semplicemente la dimensione del difetto).
+
+Tre rotte in vetrina restano fuori, con motivo:
+
+- **`/sondaggi`** — `getPolls` somma `demoBaseline(baseVotes)` ai voti veri:
+  una cifra display su quel totale metterebbe un numero gonfiato a 88px. Avrà
+  la composizione, non la cifra, finché il totale non è di sole righe reali.
+- **`/mappa`** — 41 righe di contenitore attorno a Leaflet. Non ha una
+  composizione da portare: ha una vista.
+- **`/digest`** — è già composto (griglia di `Stat`, testata di stampa,
+  sezioni). Promuovere uno dei quattro numeri direbbe che quello è la notizia,
+  e in un riepilogo mensile nessuno lo è.
+
+E la regola uscita da questo scaglione, che vincola la Fase C: **la scala a
+tacche vuole un traguardo, non solo un intervallo.** Vedi `FEATURES.md` §5.
 
 > Ordine deliberato: prima la struttura (A), poi la veste (B). Ridisegnare
 > pagine che stanno per cambiare posto significa pagare il lavoro due volte —
@@ -243,6 +270,11 @@ pagella sul sindaco pubblicata sotto lo stemma del sindaco si legge come
 autocritica dell'amministrazione, che non è. Prima riga di lavoro della C-4-bis,
 prima di qualunque funzione: **identità propria** — nome, marchio, dominio, e
 una dichiarazione di chi pubblica.
+
+> Un primo tentativo (*Il Campanile*, 2026-07-26) è stato **ritirato**: il
+> marchio non convinceva. Resta da rifare, ed è ancora la prima riga. Il
+> dettaglio di cosa è stato provato e cosa se ne è imparato sta in
+> `ROADMAP.md` §6, prerequisito 1.
 
 ### C-5 · Nuovo, emerso dall'audit
 

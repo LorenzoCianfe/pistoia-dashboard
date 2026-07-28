@@ -61,6 +61,11 @@ export default async function PartecipaPage() {
   const sondaggiAperti = polls.filter((p) => p.active).length;
   const tornateAperte = rounds.filter((r) => r.status === "aperta").length;
   const iniziativeAperte = initiatives.filter((i) => i.status === "aperta").length;
+  // Contati per stato, non sul totale: la riga diceva «N patti attivi»
+  // includendo anche i proposti, e cliccandola la pagina — che i due stati li
+  // distingue — mostrava un numero più basso. Due definizioni dello stesso
+  // indicatore a un clic di distanza (AGENTS.md §3).
+  const pattiAttivi = pacts.filter((p) => p.status === "attivo").length;
 
   const sections: HubSection[] = [
     {
@@ -126,7 +131,7 @@ export default async function PartecipaPage() {
       description:
         "Cittadini e associazioni adottano uno spazio pubblico e se ne prendono cura nel tempo.",
       icon: Handshake,
-      status: formatConteggio(pacts.length, "patto attivo", "patti attivi"),
+      status: formatConteggio(pattiAttivi, "patto attivo", "patti attivi"),
     },
     {
       href: "/progetti",

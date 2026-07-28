@@ -415,24 +415,83 @@ tutti inventati.
    scopo dichiarato è essere citato dai giornali come fonte. Serve nome,
    stemma e dominio propri, e una riga che dichiari chi pubblica e con quali
    dati. **Senza questo le altre quattro non si fanno.**
-2. **Dati reali, con fonte per ogni numero.** Tutte e cinque sono inerti sui
-   dati dimostrativi: dipendono dalla ripresa di [§8](#8--in-pausa--dati-reali-ex-fase-2).
+
+   > **Tentativo del 2026-07-26, ritirato.** È stata provata l'ipotesi «marchio
+   > unico indipendente» col nome *Il Campanile* — marchio a silhouette dalle
+   > fasce romaniche, favicon, dichiarazione di chi pubblica nel footer,
+   > stemma retrocesso ad attribuire i soli contenuti del Comune. **Respinta da
+   > Lorenzo: il marchio non convinceva.** Tutto ripristinato.
+   >
+   > Due cose imparate che restano valide per il prossimo tentativo:
+   > - **Il difetto non dipende dall'osservatorio: c'è già oggi.** La barra in
+   >   alto rivendica il Comune con lo stemma vero, e `authors` nei metadata lo
+   >   attribuisce al Comune in forma leggibile da una macchina, mentre il
+   >   footer della stessa pagina dice «progetto dimostrativo».
+   > - **Il nome e il marchio sono la parte difficile, non il codice.** La
+   >   sostituzione tecnica è meccanica (una dozzina di file, mezz'ora); a non
+   >   reggere è stata la proposta d'identità. Il prossimo tentativo parta da lì
+   >   e non dall'implementazione.
+2. **Dati reali, con fonte per ogni numero.** Quattro su cinque sono inerti sui
+   dati dimostrativi e dipendono dalla ripresa di [§8](#8--in-pausa--dati-reali-ex-fase-2).
    `SourceBadge` esiste già; qui diventa obbligatorio, con link all'atto o
    alla pagina di trasparenza da cui il numero proviene.
+
+   **Il taglio minimo di dati reali è «Il costo dell'amministrazione»**, e non
+   la pagella: sono ~20 cifre (indennità di sindaco, giunta e staff politico)
+   che provengono tutte da una sola famiglia di fonti — *Amministrazione
+   trasparente*, la cui pubblicazione è **obbligatoria per legge** (D.Lgs
+   33/2013 §14) — più ISTAT per il confronto col reddito pistoiese. Non serve
+   nessun peso, nessuna soglia, nessuna scelta editoriale: è aritmetica su
+   numeri già pubblicati, ognuno con l'URL del documento. Ogni altra funzione
+   ha bisogno di una metodologia *prima* di aver bisogno dei dati. **Si parte
+   da lì.**
+
+   ⚠️ E una correzione a questo elenco: **il «Rating dei servizi» non dipende
+   dal §8 affatto.** Non gli servono dati aperti, gli servono *utenti veri* che
+   votino. È bloccato da un'altra cosa, e tenerlo in questa riga lo faceva
+   sembrare in attesa di un lavoro che non lo sbloccherebbe.
 3. **Metodologia pubblica e versionata.** «Non è la mia opinione, sono i
    dati» è vero solo a metà: *quali* indicatori, con *quali* pesi e *quali*
    soglie, è una scelta editoriale. Se la scelta è pubblicata e verificabile,
    la pagella regge a una contestazione; se resta implicita, il numero è
    un'opinione travestita da aritmetica ed è lì che si viene smontati.
-4. **La regola del campione minimo, estesa alle persone.** `lib/citystats.ts`
-   ha già stabilito che una percentuale su pochi casi, tinta di rosso, è
-   un'accusa e non un dato — e lo ha stabilito per un *quartiere*. Un voto
-   sintetico su una *persona con nome e cognome* è la stessa cosa con la posta
-   più alta. Sotto la soglia: nessun voto, e la scheda lo dichiara.
+
+   Forma proposta: un documento versionato nel repository, reso su
+   `/metodologia`, con per ogni indicatore **definizione, fonte, peso e
+   soglia** più un registro delle modifiche. E ogni pagella **timbrata con la
+   versione che l'ha calcolata** («metodologia v1.2»): senza il timbro, una
+   pagella vecchia diventa incontestabile perché nessuno sa più con quali
+   regole fu prodotta.
+4. **La regola del campione minimo, estesa alle persone** — e per le persone
+   non basta alzare la soglia. `lib/citystats.ts` ha stabilito che una
+   percentuale su pochi casi, tinta di rosso, è un'accusa e non un dato, e lo
+   ha stabilito per un *quartiere*; la soglia è ora generale
+   (`campioneSufficiente()`, 2026-07-26).
+
+   Ma su una persona il difetto non è la numerosità: è che **un voto sintetico
+   comprime un record incompleto in un numero che sembra completo**. Proposta:
+   **nessun voto numerico su un individuo, mai.** Il dossier porta solo
+   affermazioni puntuali con la loro fonte; il voto 1–10 vive al livello della
+   *giunta*, dove il campione è più grande e la responsabilità è davvero
+   collettiva. È anche ciò che rende il punto 6 verificabile invece che
+   auspicabile.
+
+   Precedente già in produzione: sulle rotte della Fase B la **scala a tacche**
+   è stata tolta da `/promesse` e `/question-time` perché l'intervallo 0→totale
+   è vero in aritmetica ma **non è un traguardo che qualcuno abbia fissato** —
+   la tacca a un sesto si leggeva «non avete fatto quasi niente» mentre due
+   impegni erano in corso. Vale identico per una pagella.
 5. **Diritto di replica tracciabile.** Ogni scheda persona e ogni pagella
    ospita la risposta dell'interessato, allo stesso peso visivo del giudizio.
    È la differenza fra un osservatorio e un tribunale senza difesa — e nella
    pratica è anche la difesa migliore contro una richiesta di rettifica.
+
+   «Stesso peso visivo» va preso alla lettera e reso non aggirabile: stessa
+   scala tipografica, dentro la stessa scheda, **mai** dietro un
+   `<details>` e mai a un corpo più piccolo. E quando la replica non c'è, lo
+   spazio non sparisce: dichiara *«replica richiesta il X, nessuna risposta al
+   Y»*. Un silenzio dichiarato è un'informazione; un silenzio nascosto sembra
+   assenso.
 
 **Una nota sul «Dossier persona».** Stipendi, indennità e curricula pubblicati
 sono dati pubblici e riportarli è legittimo. Il punto delicato non è il dato:

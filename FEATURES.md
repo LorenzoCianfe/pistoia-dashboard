@@ -128,9 +128,41 @@ Nessuno dei quattro introduce dipendenze: niente GSAP, niente WebGL.
 | `MeshSurface` con tinta che codifica un dato | ✅ | «Stato della città» (`toneFromPercent` del tasso di risoluzione) · pannello del login (tono `cool`, neutro) |
 | `ScrollTold` in uso | ✅ | Bilancio, tre passaggi — l'unica sezione narrata della piattaforma |
 | `DotScatterTimeline` in uso | ✅ | Segnalazioni: altezza = arrivate, diametro = chiuse, colore = settimana in pari |
-| **Transizione a elemento condiviso** | ✅ | `community/report-link.tsx` + `lib/view-transitions.ts` — View Transitions native, non `layoutId` (vedi `DESIGN.md` §7) |
+| **Transizione a elemento condiviso** | ✅ | `segnalazioni/report-link.tsx` + `lib/view-transitions.ts` — View Transitions native, non `layoutId` (vedi `DESIGN.md` §7) |
 | Inchiostro leggibile sopra il mesh | ✅ | `.mesh-surface` imposta `--highlight-ink`; contrasti misurati per tono in `DESIGN.md` §8 |
 | Revisione visiva in modalità semplice | ✅ | `npm run shots -- --simple --width=360`, con misura del traboccamento orizzontale |
+
+### La copertura oltre le pagine di punta
+
+> Fase B, primo scaglione — *le rotte che gli hub mettono in vetrina* (2026-07-26)
+
+| Rotta | Cifra display | Perché quella |
+|---|---|---|
+| `/promesse` | impegni **portati a termine** | La domanda di chi arriva è «di quello che avevate promesso, quanto avete fatto?». Conteggio e non percentuale: un tasso conterebbe come mancato anche un impegno assunto la settimana scorsa |
+| `/decisioni` | decisioni **pubblicate con la loro motivazione** | Non il tasso di approvazione, che dice quanto l'amministrazione asseconda; questa pagina esiste per quanto rende conto. Le respinte stanno nella frase, non nascoste |
+| `/question-time` | **risposte ufficiali** dagli assessorati | Contate su tutte le domande, con le sessioni ancora aperte dichiarate: le loro domande aspettano il termine, non sono senza risposta |
+| `/priorita` | **interventi in votazione** adesso | Non i voti raccolti: `totalVotes` somma il `baseVotes` del seed, e un numero gonfiato a 88px è la cosa più grande e più falsa della pagina. Gli interventi sono righe vere |
+| `/patti` | **patti di quartiere attivi** | Non l'avanzamento medio: un patto firmato il mese scorso sta al 10% perché è nuovo, non perché vada male — la stessa ragione per cui la mesh di Opere non prende l'avanzamento medio dei cantieri |
+| `/volontariato` | **iniziative con le adesioni aperte** | Non i volontari: `joins` somma il `baseJoins` del seed. E chi arriva vuole sapere a cosa può aderire *adesso*, non quanti hanno aderito prima |
+| `/progetti` | **progetti nati da segnalazioni ripetute** | È la tesi della pagina. Le segnalazioni dietro stanno nella frase e usano `reportCount`, lo stesso campo delle schede: sommare le righe vere darebbe un totale più basso di quello che il lettore vede sopra |
+| `/eventi` | **eventi in arrivo o ancora in corso** | Eredita la definizione di `getPublishedEvents`, che separa sulla data di **fine** — un evento iniziato ieri e lungo tre giorni è ancora in corso — così coincide con la riga dell'hub `/territorio` |
+
+**Tre esclusioni dichiarate**, per non far sembrare "dimenticate" delle scelte:
+
+| Rotta | Perché niente cifra display |
+|---|---|
+| `/sondaggi` | `getPolls` somma `demoBaseline(baseVotes)` ai voti veri: a 88px sarebbe il numero più grande e più gonfiato della pagina |
+| `/mappa` | 41 righe di contenitore attorno a Leaflet. Non ha una composizione da portare: ha una vista |
+| `/digest` | È già composto — griglia di `Stat`, testata di stampa, sezioni. Promuovere uno dei quattro numeri direbbe che quello è la notizia, e in un riepilogo mensile nessuno lo è |
+
+**Nessuna delle tre porta la scala a tacche**, e la regola che ne è uscita vale
+per la Fase C: l'intervallo 0→totale è aritmeticamente vero ma **non è un
+traguardo** — nessuno ha promesso che tutti gli impegni fossero chiusi oggi, né
+che ogni domanda ricevesse risposta. Una tacca a un sesto della scala si legge
+come «non avete fatto quasi niente», che è una conclusione, non il dato.
+La regola del campione minimo (`lib/citystats.ts`) resta e si generalizza in
+`campioneSufficiente()`: sotto soglia la pagina **dichiara** che il conteggio
+non regge una lettura d'insieme.
 
 ---
 
@@ -157,7 +189,7 @@ Nessuno dei quattro introduce dipendenze: niente GSAP, niente WebGL.
 |---|---|
 | ~~Architettura dell'informazione delle 30+ rotte~~ | ✅ **Fatto** — Fase A, 2026-07-26: 25 voci → 5 destinazioni, identiche su desktop e telefono. Vedi `docs/audit-consolidamento.md` |
 | Primitive sui *componenti* Astryx | **Valutato e scartato con motivo** (vedi `ROADMAP.md` ondata 5): `TextInput` è controllato per contratto, `Button` non offre un gancio per i link, `Banner` è troppo pesante inline, `ProgressBar` perde lo stagger. Astryx resta la sorgente dei token |
-| **26 rotte non ancora ridisegnate** | L'ondata 6 ha portato il sistema sulle quattro di punta. Le altre hanno *ereditato* i token dal ponte di retrocompatibilità: coerenti nei colori, non nella composizione. Nessuna usa i componenti-firma |
+| **18 rotte non ancora ridisegnate** *(erano 26)* | L'ondata 6 ha portato il sistema sulle quattro di punta. Le altre hanno *ereditato* i token dal ponte di retrocompatibilità: coerenti nei colori, non nella composizione. La Fase B ne ha coperte 8 e prosegue: con questo scaglione **i tre hub della Fase A sono coperti per intero**, salvo tre esclusioni dichiarate |
 | Terzo stadio del sankey (entrate per fonte) | Il modello dati non ha la scomposizione: servirebbe un `BudgetRevenue`, o l'ETL della Fase 2. Il sankey si ferma a due stadi invece di inventare |
 | Dichiarazione di accessibilità | Dovuta per legge a un ente pubblico italiano, ma il contenuto dipende da un audit vero: pubblicarla non verificata sarebbe peggio che non averla |
 | Test automatici di accessibilità | `axe-core` negli E2E resta da impostare. I contrasti dell'ondata 6 sono misurati a mano |

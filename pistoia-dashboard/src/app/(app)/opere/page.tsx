@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/ui/section-header";
 import { ProgressBar } from "@/components/ui/progress-bar";
-import { FollowButton } from "@/components/community/follow-button";
+import { FollowButton } from "@/components/app/follow-button";
 import { OperaLink } from "@/components/opere/opera-link";
 import {
   CronoprogrammaChart,

@@ -6,9 +6,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/ui/section-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DisplayNumber } from "@/components/signature/display-number";
 import { projectStatus } from "@/lib/territorio";
 import { reportCategory, reportStatus } from "@/lib/community";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatNumber } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Da segnalazione a progetto",
@@ -30,6 +31,19 @@ export default async function ProgettiPage() {
   // I pattern senza progetto: il "radar" di ciò che potrebbe diventarlo.
   const unaddressed = patterns.filter((p) => !p.projectId);
 
+  /*
+    La cifra è il numero di progetti, e la frase sotto porta le segnalazioni
+    che ci stanno dietro con `reportCount` — lo stesso campo che stampano le
+    schede. Sommare invece `p.reports.length`, che sono le righe vere, darebbe
+    un totale più basso di quello che il lettore vede sulle schede: due numeri
+    diversi della stessa cosa nella stessa schermata (`AGENTS.md` §3). Meglio
+    un solo conteggio, coerente, con il baseline dichiarato altrove.
+  */
+  const totaleSegnalazioni = projects.reduce((t, p) => t + p.reportCount, 0);
+  const inCorso = projects.filter(
+    (p) => p.status === "in_corso" || p.status === "approvato",
+  ).length;
+
   return (
     <div className="space-y-6 page-enter">
       <SectionHeader
@@ -38,6 +52,43 @@ export default async function ProgettiPage() {
         description="Quando le stesse segnalazioni si ripetono nella stessa zona, il problema è strutturale: il Comune apre un progetto unico e tracciato, e le segnalazioni d'origine restano collegate."
         icon={<FolderKanban size={26} />}
       />
+
+      {projects.length > 0 ? (
+        <Card>
+          <DisplayNumber
+            value={projects.length}
+            unit={projects.length === 1 ? "progetto" : "progetti"}
+            label="Nati da segnalazioni che si ripetevano"
+          />
+          <p className="mt-4 border-t border-border pt-4 text-sm text-muted">
+            dietro ci sono {formatNumber(totaleSegnalazioni)}{" "}
+            {totaleSegnalazioni === 1
+              ? "segnalazione di cittadini"
+              : "segnalazioni di cittadini"}
+            {inCorso > 0 ? (
+              <>
+                {" · "}
+                <span className="font-semibold text-teal">
+                  {formatNumber(inCorso)}
+                </span>{" "}
+                {inCorso === 1
+                  ? "è approvato o già in corso"
+                  : "sono approvati o già in corso"}
+              </>
+            ) : null}
+            {unaddressed.length > 0 ? (
+              <>
+                {" · "}
+                {formatNumber(unaddressed.length)}{" "}
+                {unaddressed.length === 1
+                  ? "problema ricorrente non ha ancora un progetto"
+                  : "problemi ricorrenti non hanno ancora un progetto"}
+              </>
+            ) : null}
+            .
+          </p>
+        </Card>
+      ) : null}
 
       {projects.length === 0 ? (
         <EmptyState

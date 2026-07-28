@@ -5,6 +5,44 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.14.0] — 2026-07-26 · Fase B, primo scaglione
+
+> Copertura, non ridisegno: si porta la composizione Astryx dove finora erano
+> arrivati solo i token. Si parte dalle rotte che i tre hub della Fase A mettono
+> in vetrina.
+
+### Aggiunto
+- **Apertura con cifra display su `/promesse`, `/decisioni` e `/question-time`.** Tutte e tre partivano da un elenco di schede: la prima cosa che si leggeva era un caso singolo, mai la risposta alla domanda che porta lì. Ora ognuna apre sul proprio numero protagonista, con sotto la frase che rende conto del resto.
+- `campioneSufficiente()` in `lib/citystats.ts`: la regola del campione minimo smette di essere legata al colore delle schede di quartiere e diventa generale. `tassoGiudicabile()` resta e vi delega — una soglia sola, non due. Tre test nuovi (96 unitari in totale).
+- Le tre rotte entrano in `scripts/shots.mjs` **insieme alla modifica**: il cancello del traboccamento orizzontale misura solo le pagine che apre, quindi una rotta ridisegnata e non elencata risulterebbe "verificata" senza essere mai stata aperta.
+- **`/priorita` e `/patti`** completano la copertura dell'hub Partecipa, che arriva a 5 sezioni su 8 (segnalazioni e proposte erano già coperte dall'ondata 6). La cifra di `/priorita` conta gli **interventi in votazione**, non i voti: `totalVotes` include il baseline del seed. Quella di `/patti` conta i **patti attivi**, non l'avanzamento medio, per la ragione già scritta su Opere — un patto nuovo sta al 10% perché è nuovo.
+- **`/volontariato`, `/progetti` e `/eventi`**: con queste **i tre hub della Fase A sono coperti per intero**, salvo tre esclusioni dichiarate (`/sondaggi`, `/mappa`, `/digest` — motivi in `FEATURES.md` §5). Otto rotte su 26, le 18 restanti non sono in vetrina su nessun hub.
+
+### Modificato
+- `/promesse`: sparisce la pastiglia «1 su 6 completati», che ora sarebbe un secondo protagonista dello stesso numero a 12px. Le pastiglie restano la ripartizione per stato, che è un'altra informazione. L'asserzione E2E che ci puntava è stata aggiornata alla frase sotto la cifra, dove il fatto continua a stare.
+
+### Corretto
+- **Nessuna delle tre pagine porta la scala a tacche, e il motivo vale più della scala.** Era stata messa e poi tolta guardando lo screenshot: su `/promesse` la tacca attiva cadeva a un sesto dell'intervallo 0→6 e si leggeva «non avete fatto quasi niente» — mentre due impegni sono in corso e uno è appena stato assunto. L'intervallo è aritmeticamente vero ma **non è un traguardo**: nessuno ha promesso che tutti e sei fossero chiusi oggi. Stessa cosa sul question time, dove la regola dichiarata è che rispondono alle domande **più votate**, non a tutte. È la distinzione del «Dossier persona» (`ROADMAP.md` §6) arrivata con tre mesi d'anticipo: si riporta il record, non se ne inferisce un voto.
+- **Il cancello delle schermate usciva 0 quando l'accesso non riusciva.** Se `login()` falliva — server ancora in compilazione, rate-limit, credenziali cambiate — *tutte* le pagine autenticate venivano saltate con un avviso, nessun contatore si muoveva e lo script terminava con successo: una «revisione visiva» in cui l'unica cosa fotografata era `/login`. È la trappola §3 (ondata 7, n.4) da un'altra porta — lì la cattura falliva, qui non veniva nemmeno tentata — e si è vista dal vivo il 2026-07-26, con tre rotte nuove saltate e uscita 0. Ora i salti sono un errore: con credenziali sbagliate lo script esce **1**, con quelle giuste **0** (verificato in entrambi i versi).
+- **Quattro contatori del territorio contavano il seed anche fuori da `DEMO_MODE`.** `lib/data/territorio.ts` era l'unico modulo dati che non importava `demoBaseline()`, e sommava `baseVotes`/`baseJoins`/`baseReports` direttamente: voti del question time, voti delle tornate di priorità, adesioni alle iniziative e segnalazioni dietro un progetto civico. Sono esattamente i campi che `lib/demo.ts` dichiara in testa non debbano **mai** contare in produzione. Nessun effetto in sviluppo, dove `DEMO_MODE` è acceso e i numeri restano identici; in produzione erano quattro numeri gonfiati su una piattaforma il cui punto è non inventare dati.
+- **L'hub `/partecipa` diceva «N patti attivi» contando anche i proposti**, mentre `/patti` i due stati li distingue: a un clic di distanza comparivano due numeri diversi dello stesso indicatore. Ora contano allo stesso modo.
+
+### Verificato
+- `typecheck`, `lint`, **96 test unitari**, `shots` in tema chiaro e scuro sulle cinque rotte nuove, `shots --simple --width=360` senza traboccamento orizzontale.
+
+## [0.13.1] — 2026-07-26 · Fase A, chiusura
+
+> Le due voci che la 0.13.0 aveva lasciato aperte. Nessuna funzionalità nuova.
+
+### Modificato
+- **`components/community/` non esiste più** (A-5.1). Conteneva segnalazioni e proposte — `report-card`, `proposal-card`, `report-composer` — mentre la Comunità vera sta in `comunita/`: un nome inglese che violava `AGENTS.md` §6 *e* rivendicava quello di una sezione diversa. I 18 file vanno in `segnalazioni/` (9) e `proposte/` (6); i **tre trasversali** no, perché infilarli in una delle due avrebbe spostato la bugia invece di toglierla. `follow-button` e `answer-feedback` sono parametrici sull'entità — `FollowTarget` copre sei tipi di bersaglio, `FeedbackTarget` tre — quindi vanno in `app/`, accanto a `shared-element-link.tsx` che sta lì per la stessa ragione. `badges.tsx` è solo presentazionale e parla di *chi è l'autore*: va in `ui/` come `civic-badges.tsx`, perché `badges.tsx` accanto a `badge.tsx` si distingue per una lettera.
+- `AGENTS.md` §4 non consiglia più `E2E_BASE_URL` per aggirare il conflitto di porta: era in contraddizione con la trappola §3 che quella variabile l'ha prodotta. Ora dice di spegnere il dev server.
+
+### Verificato
+- **Prima esecuzione E2E verde end-to-end: 11/11 in 50,3s**, sul percorso isolato. Non era mai riuscita perché richiede la directory libera — Next rifiuta due dev server sullo stesso progetto — quindi finché uno era in ascolto l'avvio automatico di Playwright non partiva e l'isolamento non veniva mai esercitato davvero.
+- Fra gli 11 passa `territorio.spec.ts:55`, «votare una domanda del question time aggiorna il conteggio»: è il test che contro il DB di sviluppo si esauriva da solo dopo quattro esecuzioni. Verde lì significa che l'isolamento fa quello per cui è stato introdotto, non solo che la suite è verde.
+- `typecheck`, `lint`, 93 test unitari dopo la rinomina.
+
 ## [0.13.0] — 2026-07-26 · Fase A «Consolidamento»
 
 > Le ondate sono congelate: prima di aggiungere altro, la piattaforma viene

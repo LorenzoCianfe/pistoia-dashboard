@@ -11,14 +11,14 @@ import { getAnswerFeedback } from "@/lib/data/feedback";
 import { FolderKanban, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ConfirmButton } from "@/components/community/confirm-button";
+import { ConfirmButton } from "@/components/segnalazioni/confirm-button";
 import { CONDIVISO, NOME_CONDIVISO } from "@/lib/view-transitions";
-import { FollowButton } from "@/components/community/follow-button";
-import { AnswerFeedback } from "@/components/community/answer-feedback";
+import { FollowButton } from "@/components/app/follow-button";
+import { AnswerFeedback } from "@/components/app/answer-feedback";
 import { MapCanvas } from "@/components/mappa/map-canvas";
-import { ReportStatusTrack } from "@/components/community/report-status-track";
-import { PhasePhotos } from "@/components/community/phase-photos";
-import { ResolutionConfirm } from "@/components/community/resolution-confirm";
+import { ReportStatusTrack } from "@/components/segnalazioni/report-status-track";
+import { PhasePhotos } from "@/components/segnalazioni/phase-photos";
+import { ResolutionConfirm } from "@/components/segnalazioni/resolution-confirm";
 import {
   reportCategory,
   reportStatus,

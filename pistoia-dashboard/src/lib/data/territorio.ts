@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db";
+import { demoBaseline } from "@/lib/demo";
 import { groupRecurring, type RecurringPattern } from "@/lib/territorio";
 
 // Data layer dell'Ondata 4 "Territorio & partecipazione". Le liste includono
@@ -63,7 +64,7 @@ export async function getQuestionTimes(userId: string): Promise<QuestionTimeItem
           id: q.id,
           authorName: q.authorName,
           body: q.body,
-          votes: q.baseVotes + q._count.votes,
+          votes: demoBaseline(q.baseVotes) + q._count.votes,
           voted: mine.has(q.id),
           officialAnswer: q.officialAnswer,
           answeredAt: q.answeredAt,
@@ -120,7 +121,7 @@ export async function getPriorityRounds(userId: string): Promise<PriorityRoundIt
         description: i.description,
         category: i.category,
         neighborhoodLabel: i.neighborhoodLabel,
-        votes: i.baseVotes + i._count.votes,
+        votes: demoBaseline(i.baseVotes) + i._count.votes,
       }))
       .sort((a, b) => b.votes - a.votes);
     return {
@@ -183,7 +184,7 @@ export async function getInitiatives(userId: string): Promise<InitiativeItem[]> 
       location: i.location,
       startAt: i.startAt,
       spots: i.spots,
-      joins: i.baseJoins + i._count.joins,
+      joins: demoBaseline(i.baseJoins) + i._count.joins,
       joined: mine.has(i.id),
       status: i.status,
     }))
@@ -304,7 +305,7 @@ export async function getCivicProjects(): Promise<CivicProjectItem[]> {
     category: p.category,
     department: p.department,
     neighborhoodName: p.neighborhood?.name ?? null,
-    reportCount: p.baseReports + p.reports.length,
+    reportCount: demoBaseline(p.baseReports) + p.reports.length,
     reports: p.reports,
     createdAt: p.createdAt,
   }));

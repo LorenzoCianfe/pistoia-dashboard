@@ -39,13 +39,13 @@ export function tassoRisoluzione(
 }
 
 /**
- * Sotto questo numero di segnalazioni un tasso non è una media, è rumore.
+ * Sotto questo numero di casi un rapporto non è una media, è rumore.
  *
- * Serve dove il tasso diventa un GIUDIZIO a colori — le schede dei quartieri.
- * Con due segnalazioni aperte un'area risulta "0% risolte" e si tinge di rosso:
- * la percentuale è aritmeticamente esatta e non significa niente, ma il colore
- * la fa leggere come un'accusa. Su una piattaforma del Comune quel colore
- * peserebbe su un quartiere reale.
+ * Serve dove il rapporto diventa un GIUDIZIO — le schede dei quartieri, dove
+ * la tinta lo codifica. Con due segnalazioni aperte un'area risulta "0%
+ * risolte" e si tinge di rosso: la percentuale è aritmeticamente esatta e non
+ * significa niente, ma il colore la fa leggere come un'accusa. Su una
+ * piattaforma del Comune quel colore peserebbe su un quartiere reale.
  *
  * Cinque è basso di proposito: alza la soglia quel tanto che basta a togliere i
  * casi da uno o due, senza pretendere una significatività statistica che una
@@ -53,9 +53,26 @@ export function tassoRisoluzione(
  */
 export const CAMPIONE_MINIMO_PER_GIUDIZIO = 5;
 
+/**
+ * Vero se un campione di questa numerosità regge un giudizio sintetico.
+ *
+ * Generale di proposito: la regola è nata per il colore delle schede di
+ * quartiere, ma **non è una regola sul colore** — è una regola su quando un
+ * rapporto può essere presentato come un verdetto. Vale identica per la scala
+ * a tacche di una cifra display, che senza usare un solo colore mette la tacca
+ * attiva all'estrema sinistra e dice «quasi niente di quello che era stato
+ * promesso è stato fatto» su un campione di tre.
+ *
+ * Tenerla in una funzione sola serve al motivo di sempre (`AGENTS.md` §3): due
+ * soglie diverse per lo stesso giudizio sono peggio di nessuna soglia.
+ */
+export function campioneSufficiente(casi: number): boolean {
+  return casi >= CAMPIONE_MINIMO_PER_GIUDIZIO;
+}
+
 /** Vero se il tasso di quell'area regge un giudizio a colori. */
 export function tassoGiudicabile(totaleConteggiabile: number): boolean {
-  return totaleConteggiabile >= CAMPIONE_MINIMO_PER_GIUDIZIO;
+  return campioneSufficiente(totaleConteggiabile);
 }
 
 /** Conta le date in bucket settimanali, dal più vecchio al più recente. */

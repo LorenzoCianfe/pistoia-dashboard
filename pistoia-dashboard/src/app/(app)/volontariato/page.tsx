@@ -7,8 +7,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/ui/section-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DisplayNumber } from "@/components/signature/display-number";
 import { initiativeCategory, initiativeStatus } from "@/lib/territorio";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatNumber } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Volontariato e iniziative",
@@ -27,6 +28,20 @@ export default async function VolontariatoPage() {
   const active = initiatives.filter((i) => i.status !== "conclusa");
   const past = initiatives.filter((i) => i.status === "conclusa");
 
+  /*
+    La cifra conta le iniziative con le adesioni ancora aperte, non i
+    partecipanti: `getInitiatives` somma ai `joins` veri il `baseJoins` del
+    seed, quindi un totale di volontari sarebbe gonfiato — accettabile nella
+    riga «N partecipanti» di una scheda, non a 88px. Le iniziative invece sono
+    righe vere.
+
+    È anche la cifra giusta per il compito di questa pagina: chi arriva vuole
+    sapere a cosa può aderire *adesso*, non quanta gente ha aderito prima.
+  */
+  const aperte = initiatives.filter((i) => i.status === "aperta").length;
+  const esaurite = initiatives.filter((i) => i.status === "completa").length;
+  const dalComune = active.filter((i) => i.official).length;
+
   return (
     <div className="space-y-6 page-enter">
       <SectionHeader
@@ -35,6 +50,48 @@ export default async function VolontariatoPage() {
         description="Pulizie di quartiere, piantumazioni, raccolte solidali: le iniziative di Comune e associazioni in un'unica bacheca. Aderisci con un clic — i posti contano davvero."
         icon={<HeartHandshake size={26} />}
       />
+
+      {initiatives.length > 0 ? (
+        <Card>
+          <DisplayNumber
+            value={aperte}
+            unit={aperte === 1 ? "iniziativa" : "iniziative"}
+            label="Con le adesioni aperte"
+          />
+          <p className="mt-4 border-t border-border pt-4 text-sm text-muted">
+            su {formatNumber(initiatives.length)} in bacheca
+            {esaurite > 0 ? (
+              <>
+                {" · "}
+                {formatNumber(esaurite)}{" "}
+                {esaurite === 1
+                  ? "ha i posti esauriti"
+                  : "hanno i posti esauriti"}
+              </>
+            ) : null}
+            {past.length > 0 ? (
+              <>
+                {" · "}
+                {formatNumber(past.length)} già{" "}
+                {past.length === 1 ? "svolta" : "svolte"}
+              </>
+            ) : null}
+            .
+            {dalComune > 0 ? (
+              <>
+                {" "}
+                <span className="font-semibold text-teal">
+                  {formatNumber(dalComune)}
+                </span>{" "}
+                {dalComune === 1
+                  ? "è organizzata dal Comune"
+                  : "sono organizzate dal Comune"}
+                , le altre da associazioni del territorio.
+              </>
+            ) : null}
+          </p>
+        </Card>
+      ) : null}
 
       {initiatives.length === 0 ? (
         <EmptyState

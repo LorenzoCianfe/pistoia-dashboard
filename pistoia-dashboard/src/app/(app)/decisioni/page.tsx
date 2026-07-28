@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/ui/section-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SimpleExplainer } from "@/components/trasparenza/simple-explainer";
+import { DisplayNumber } from "@/components/signature/display-number";
 import { decisionOutcome, decisionKind } from "@/lib/transparency";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatNumber } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Archivio decisioni",
@@ -24,6 +25,10 @@ export const metadata: Metadata = {
 
 export default async function DecisioniPage() {
   const decisions = await getDecisions();
+  const respinte = decisions.filter((d) => d.outcome === "respinta").length;
+  const daPartecipazione = decisions.filter(
+    (d) => d.kind === "proposta" || d.kind === "consultazione" || d.kind === "segnalazione",
+  ).length;
 
   return (
     <div className="space-y-6 page-enter">
@@ -33,6 +38,48 @@ export default async function DecisioniPage() {
         description="Cosa succede dopo la partecipazione: ogni proposta, consultazione o segnalazione importante arriva a una decisione — e la decisione ha sempre un motivo."
         icon={<Landmark size={26} />}
       />
+
+      {/*
+        L'apertura. La cifra è nuda — nessuna scala a tacche — per la ragione
+        già scritta su /proposte: un totale non ha un massimo reale a cui
+        rapportarsi, e una scala inventata è peggio di nessuna scala
+        (DESIGN.md §8).
+
+        Il numero protagonista è quanto è GRANDE l'archivio, non quante
+        decisioni sono state approvate. Il tasso di approvazione sembra la
+        misura ovvia e non lo è: dice quanto l'amministrazione asseconda, non
+        quanto rende conto — e questa pagina esiste per la seconda cosa. Le
+        respinte compaiono nella frase sotto perché sono la prova del contrario,
+        non l'eccezione da nascondere: ognuna porta il suo «perché non si può
+        fare».
+      */}
+      {decisions.length > 0 ? (
+        <Card>
+          <DisplayNumber
+            value={decisions.length}
+            unit={decisions.length === 1 ? "decisione" : "decisioni"}
+            label="Pubblicate con la loro motivazione"
+          />
+          <p className="mt-4 border-t border-border pt-4 text-sm text-muted">
+            {daPartecipazione > 0 ? (
+              <>
+                {formatNumber(daPartecipazione)}{" "}
+                {daPartecipazione === 1 ? "nasce" : "nascono"} da una proposta,
+                una consultazione o una segnalazione dei cittadini
+                {respinte > 0 ? " · " : ". "}
+              </>
+            ) : null}
+            {respinte > 0 ? (
+              <>
+                {formatNumber(respinte)}{" "}
+                {respinte === 1 ? "ha avuto esito negativo" : "hanno avuto esito negativo"},
+                e {respinte === 1 ? "spiega" : "spiegano"} perché non si poteva
+                fare.
+              </>
+            ) : null}
+          </p>
+        </Card>
+      ) : null}
 
       {decisions.length === 0 ? (
         <EmptyState
