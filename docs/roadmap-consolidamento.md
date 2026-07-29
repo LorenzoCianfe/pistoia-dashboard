@@ -150,7 +150,7 @@ Solo ciò che il lavoro attraversa: nessuna rinomina di massa fuori contesto.
 
 ---
 
-## Fase B — Coerenza visiva
+## Fase B — Coerenza visiva ✅ *(chiusa il 2026-07-29)*
 
 *Nessuna nuova struttura: si porta Astryx dove non è ancora arrivato.*
 
@@ -158,11 +158,11 @@ Confermato in scoperta: **Astryx resta**. La Fase B è copertura, non ridisegno.
 Alla partenza `FEATURES.md` §7 dichiarava **26 rotte non ancora ridisegnate**,
 che avevano ereditato i token dal ponte di retrocompatibilità: coerenti nei
 colori, non nella composizione, e nessuna usava i componenti-firma.
-**Ne restano 18.**
+**Sono state coperte tutte**, salvo tre esclusioni dichiarate.
 
 | # | Azione | Stato |
 |---|---|---|
-| B-1 | Applicare la composizione Astryx alle rotte assorbite dagli hub | 🚧 8 di 26 — **hub coperti per intero** |
+| B-1 | Applicare la composizione Astryx alle rotte assorbite dagli hub | ✅ 23 di 26 — le tre fuori sono dichiarate |
 | B-2 | Portare i componenti-firma dove aggiungono senso — non ovunque per simmetria | 🚧 |
 | B-3 | Gerarchia visiva coerente dentro ogni hub | 🚧 |
 | B-4 | Passata di contrasto su tema chiaro **e** scuro (`AGENTS.md` §2: non si regredisce) | 📋 |
@@ -174,10 +174,65 @@ colori, non nella composizione, e nessuna usava i componenti-firma.
 condividevano tutte lo stesso difetto: intestazione, poi subito l'elenco delle
 schede, senza mai aprire su cosa dice l'insieme.
 
-**Con questo scaglione i tre hub della Fase A sono coperti per intero.** Le 18
-rotte che restano non sono in vetrina su nessun hub: il prossimo scaglione non
-ha più un criterio di priorità ovvio e va scelto con un altro (utilità, traffico
-atteso, o semplicemente la dimensione del difetto).
+**Con questo scaglione i tre hub della Fase A sono coperti per intero.**
+
+**Secondo scaglione (2026-07-28), 4 rotte:** `/avvisi`, `/organigramma`, `/faq`,
+`/glossario` — cioè `UTILITY_NAV` per intero.
+
+Il criterio non è la dimensione del difetto ma **il punto d'ingresso**, che è
+poi lo stesso del primo scaglione portato avanti di un passo: la vetrina degli
+hub era una misura di raggiungibilità, e la raggiungibilità continua anche dopo
+che gli hub sono finiti. L'ordine è verificabile in `nav-items.ts` — banner in
+home (`/avvisi`, la sola rotta promossa da un *evento* invece che da una voce di
+menu), poi «Cosa vuoi fare?» che è protetto e promosso in A-4.2
+(`/organigramma`), poi l'elenco di servizio, poi il menu avatar.
+
+Il vantaggio sulla dimensione è che **chiude un livello intero**, che è la
+proprietà che rendeva difendibile il primo scaglione; ordinare per righe
+lascerebbe `/glossario` (63 righe) orfano molto più in basso.
+
+**Due delle quattro non prendono la cifra display**, e per il motivo opposto a
+quello atteso: le righe sono vere, ma il numero è o tautologico
+(`/organigramma`: le aree di delega coincidono col numero di schede) o
+un'accusa tratta da un buco del seed (1 contattabile su 7). Vedi `FEATURES.md`
+§5. Conferma che B-1 e B-2 sono due lavori distinti: la composizione va
+ovunque, i componenti-firma solo dove aggiungono senso.
+
+**`/admin` è escluso** con tre motivi indipendenti: è dietro `requireAdmin()` e
+quindi fuori dall'asse della raggiungibilità; la **C-1 lo riscrive per intero**,
+quindi comporlo ora è pagarlo due volte — la trappola che questo documento si
+chiude in fondo; ed è una console di lavoro, dove `DESIGN.md` §6 vuole densità e
+non un protagonista.
+
+**Terzo scaglione (2026-07-29), tutto il resto.** Le 14 rimaste erano tutte
+fuori dai canali di navigazione principali e nessun asse le distingueva più fra
+loro. La risposta a «serve un quarto criterio?» è stata **no: si finiscono** —
+richiesta esplicita di Lorenzo, con l'usabilità come vincolo dichiarato.
+
+Il vincolo ha cambiato il lavoro, non solo il tono: su pagine di servizio una
+cifra a 88px è decorazione, non informazione. Quindi il terzo scaglione porta
+**una sola** cifra display (`/sondaggi`) e per il resto composizione, indici e
+una correzione di leggibilità sulle legali. Dettaglio in `FEATURES.md` §5.
+
+**Il cancello ha fatto il suo mestiere.** Entrando nel cancello per la prima
+volta, `/impostazioni` e `/comunita/stanze` hanno rivelato due traboccamenti
+orizzontali che c'erano da sempre — 11px e 5px a 360px — più un bersaglio touch
+da 33px sul selettore del tema, sotto il minimo di `DESIGN.md` §11. È la
+conferma della regola già scritta: **il cancello misura solo le pagine che
+apre.** Dettaglio in `CHANGELOG.md` 0.16.0.
+
+Tre cose emerse strada facendo:
+
+- **Un'esclusione del primo scaglione era scritta male.** `/sondaggi` era stato
+  escluso in blocco perché `getPolls` gonfia i voti con `demoBaseline`; ma
+  quello escludeva una cifra *sui voti*, non qualunque cifra. I sondaggi aperti
+  sono righe vere. Ritirata.
+- **Due pagine non avevano nessun difetto** (`/notifiche`, `/profilo`) e una
+  terza nemmeno (`/comunita/stanze/[topic]`). Dichiararlo è parte del lavoro:
+  senza, sembrano dimenticate.
+
+**Restano fuori tre rotte**, tutte con motivo già scritto: `/mappa`, `/digest`,
+`/admin`.
 
 Tre rotte in vetrina restano fuori, con motivo:
 
@@ -271,10 +326,19 @@ autocritica dell'amministrazione, che non è. Prima riga di lavoro della C-4-bis
 prima di qualunque funzione: **identità propria** — nome, marchio, dominio, e
 una dichiarazione di chi pubblica.
 
-> Un primo tentativo (*Il Campanile*, 2026-07-26) è stato **ritirato**: il
-> marchio non convinceva. Resta da rifare, ed è ancora la prima riga. Il
-> dettaglio di cosa è stato provato e cosa se ne è imparato sta in
-> `ROADMAP.md` §6, prerequisito 1.
+> **Aggiornamento 2026-07-29 — il prerequisito 1 è risolto diversamente.**
+> Due tentativi di marchio separato sono stati respinti (*Il Campanile*, poi
+> quattro direzioni disegnate) e Lorenzo ha confermato: **lo stemma del Comune
+> resta.** La strada del marchio indipendente è chiusa, non riproporla.
+>
+> Al suo posto: una **dichiarazione esplicita di chi pubblica** in cima alle
+> pagine di giudizio. Da disegnare e approvare prima di scrivere codice.
+>
+> Ne discende che le cinque funzioni si dividono: «Il costo
+> dell'amministrazione» e «Rating dei servizi» stanno sotto lo stemma senza
+> problemi (la prima è trasparenza dovuta per legge, la seconda giudica
+> servizi e non persone); pagella, dossier e audit richiedono la
+> dichiarazione. Dettaglio in `ROADMAP.md` §6, prerequisito 1.
 
 ### C-5 · Nuovo, emerso dall'audit
 

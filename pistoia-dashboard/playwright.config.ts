@@ -34,6 +34,15 @@ export default defineConfig({
   ...(BASE_ESTERNA
     ? {}
     : {
+        /*
+          ⚠ Questo server è un processo separato ma usa la **stessa cartella
+          `.next`** del dev server di sviluppo, e la ricostruzione incrementale
+          di Turbopack rompe periodicamente le rotte annidate (AGENTS.md §3,
+          Fase A/B, trappola 4). Sintomo: tre test falliscono con «Errore 404 ·
+          Pagina non trovata» sul dettaglio segnalazione, su /comunita/stanze e
+          sul dettaglio proposta — e sembra una regressione appena introdotta.
+          Prima di cercare nel diff: cancella `.next` e rilancia.
+        */
         webServer: {
           command: "npm run dev",
           url: "http://localhost:3939/login",

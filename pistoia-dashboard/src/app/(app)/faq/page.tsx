@@ -5,7 +5,9 @@ import { getCityFaqs, type CityFaqItem } from "@/lib/data/transparency";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DisplayNumber } from "@/components/signature/display-number";
 import { faqCategory } from "@/lib/transparency";
+import { formatDateShort, formatNumber } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "FAQ della città",
@@ -47,6 +49,24 @@ export default async function FaqPage() {
     items,
   }));
 
+  /*
+    La cifra conta le risposte UFFICIALI, non le domande pubblicate.
+
+    Sono righe vere di `CityFaq` e non c'è nessun `demoBaseline` di mezzo. Sui
+    dati dimostrativi il numero coincide col totale perché `official` ha default
+    `true`, ma non è una tautologia: quello che dichiara è la tesi della pagina —
+    ogni risposta qui è del Comune, non un'ipotesi della community — ed è la
+    definizione che regge anche il giorno in cui una FAQ non lo sarà.
+
+    Nessuna scala a tacche: nessuno ha fissato quante FAQ debbano esistere, e
+    una tacca su 0→totale si leggerebbe come un obiettivo (FEATURES.md §5).
+  */
+  const ufficiali = faqs.filter((f) => f.official).length;
+  const aggiornataAl = faqs.reduce<Date | null>(
+    (max, f) => (max === null || f.updatedAt > max ? f.updatedAt : max),
+    null,
+  );
+
   return (
     <div className="space-y-6 page-enter">
       <SectionHeader
@@ -62,36 +82,60 @@ export default async function FaqPage() {
           description="Quando le domande ricorrenti dei cittadini riceveranno una risposta ufficiale, le troverai qui."
         />
       ) : (
-        <div className="space-y-5 stagger">
-          {groups.map((g) => (
-            <Card key={g.category ?? "altro"}>
-              <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-2">
-                {faqCategory(g.category)}
-              </h2>
-              <div className="mt-2 divide-y divide-border">
-                {g.items.map((f) => (
-                  <details key={f.id} className="group py-3">
-                    <summary className="cursor-pointer list-none marker:hidden">
-                      <span className="flex items-start justify-between gap-3">
-                        <span className="font-medium">{f.question}</span>
-                        <span
-                          className="mt-0.5 text-muted-2 transition-transform group-open:rotate-45"
-                          aria-hidden
-                        >
-                          +
+        <>
+          <Card>
+            <DisplayNumber
+              value={ufficiali}
+              unit={ufficiali === 1 ? "risposta" : "risposte"}
+              label="Ufficiali del Comune"
+            />
+            <p className="mt-4 border-t border-border pt-4 text-sm text-muted">
+              alle domande che i cittadini fanno più spesso, in{" "}
+              {formatNumber(groups.length)}{" "}
+              {groups.length === 1 ? "categoria" : "categorie"}
+              {aggiornataAl ? (
+                <span suppressHydrationWarning>
+                  {" · "}l&apos;ultima aggiornata il{" "}
+                  {formatDateShort(aggiornataAl)}
+                </span>
+              ) : null}
+              .
+            </p>
+          </Card>
+
+          <div className="space-y-5 stagger">
+            {groups.map((g) => (
+              <Card key={g.category ?? "altro"}>
+                <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-2">
+                  {faqCategory(g.category)}
+                </h2>
+                <div className="mt-2 divide-y divide-border">
+                  {g.items.map((f) => (
+                    <details key={f.id} className="group py-3">
+                      <summary className="cursor-pointer list-none marker:hidden">
+                        <span className="flex items-start justify-between gap-3">
+                          <span className="font-medium">{f.question}</span>
+                          <span
+                            className="mt-0.5 text-muted-2 transition-transform group-open:rotate-45"
+                            aria-hidden
+                          >
+                            +
+                          </span>
                         </span>
-                      </span>
-                    </summary>
-                    <div className="mt-2 space-y-2">
-                      {f.official ? <OfficialBadge /> : null}
-                      <p className="text-sm leading-relaxed text-muted">{f.answer}</p>
-                    </div>
-                  </details>
-                ))}
-              </div>
-            </Card>
-          ))}
-        </div>
+                      </summary>
+                      <div className="mt-2 space-y-2">
+                        {f.official ? <OfficialBadge /> : null}
+                        <p className="text-sm leading-relaxed text-muted">
+                          {f.answer}
+                        </p>
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </>
       )}
 
       <Card className="flex flex-wrap items-center gap-3 bg-surface-2/40">

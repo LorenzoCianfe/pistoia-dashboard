@@ -20,7 +20,13 @@ export default async function ProfiloPage() {
   ]);
 
   return (
-    <div className="space-y-5">
+    /*
+      Niente cifra display: la carta civica e «Il mio impatto civico» portano
+      già i numeri di questa persona, e sono suoi — quante segnalazioni ha
+      aperto, quante proposte ha firmato. Promuoverne uno a 88px trasformerebbe
+      una scheda personale in una classifica, che è l'opposto del suo scopo.
+    */
+    <div className="space-y-5 page-enter">
       <SectionHeader eyebrow="Il tuo account" title="Profilo" icon={<User size={22} />} />
 
       {/* Carta civica (A2 §2) */}

@@ -12,7 +12,16 @@ export default async function NotifichePage() {
   const notifications = await getNotifications(user.id);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
+    /*
+      Nessuna cifra display e nessun indice, ed è una scelta.
+
+      «5 non lette» sta già nell'intestazione della lista, alla misura giusta e
+      accanto al pulsante che le azzera: promuoverlo a 88px lo staccherebbe
+      dall'azione. E l'indice qui non serve — /impostazioni e /glossario sono
+      elenchi in cui si cerca UNA voce, questo è un flusso che si scorre, e ha
+      già i filtri per tema e il raggruppamento temporale nel componente.
+    */
+    <div className="mx-auto max-w-2xl space-y-5 page-enter">
       <SectionHeader
         eyebrow="Aggiornamenti"
         title="Notifiche"

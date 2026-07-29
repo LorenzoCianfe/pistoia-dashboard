@@ -5,6 +5,64 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.16.0] — 2026-07-29 · Fase B chiusa, terzo scaglione
+
+> Tutto il resto. Il criterio del punto d'ingresso era esaurito e non ne serve
+> un quarto: si finiscono. Vincolo dichiarato da Lorenzo — **usabilità prima di
+> tutto**, che su pagine di servizio significa una cosa precisa: una cifra a
+> 88px è decorazione, non informazione.
+
+### Aggiunto
+- **Indice delle sezioni su `/impostazioni`.** Sei riquadri di peso identico erano quattro schermate di scorrimento su telefono, senza un punto di riferimento — e chi arriva sa *cosa* cerca (la password, il tema, la geolocalizzazione) ma non ha modo di sapere dove sia. È lo stesso pattern di `/organigramma` e `/glossario` perché è la stessa situazione: un elenco in cui si cerca **una** voce, non un testo che si legge in ordine.
+- **Cifra display su `/sondaggi`**: i sondaggi **aperti adesso**, con sotto quanti hai già risposto. Chi arriva vuole sapere a cosa può rispondere ora.
+- **Data di entrata in vigore** su `/privacy`, `/cookie` e `/note-comunita`. Un'informativa senza data non si può leggere: chi la consulta non sa se vale ancora, e chi contesta un trattamento non sa quale testo fosse in vigore quel giorno. La data è quella dell'ultima modifica reale del documento (10 giugno 2026), non quella di oggi.
+- Sette rotte nuove in `scripts/shots.mjs`, incluso il dettaglio di una stanza tematica. Le tre legali sono marcate `auth: false`: stanno fuori dal layout autenticato e senza quel flag il primo passaggio le saltava.
+
+### Modificato
+- **Due riquadri di `/impostazioni` si chiamavano «Cambia password» e «Sicurezza dell'account»**: nell'indice sarebbero state due voci indistinguibili. Ora sono «Password» (l'azione) e «Accesso e dispositivi» (lo stato), che è anche la differenza vera fra le due.
+- **`/sondaggi` diceva «Eletta con N preferenze» al femminile fisso.** Su Davide Innocenti o Tommaso Vannini la frase era semplicemente sbagliata. Ora è «N preferenze alle elezioni»: vale per chiunque e non obbliga a portarsi un genere nel modello dati.
+
+### Corretto
+- **Ritirata un'esclusione del primo scaglione.** `/sondaggi` era stato escluso in blocco perché `getPolls` somma `demoBaseline(baseVotes)` ai voti veri — ma quello escludeva una cifra *sui voti*, non qualunque cifra. `active` e `userOptionId` sono righe di `Poll` e non passano da nessun baseline. È la stessa scelta già fatta su `/priorita`, dove per la stessa ragione si contano gli interventi in votazione e non i voti raccolti.
+- **Tre pagine non avevano alcun difetto** — `/notifiche`, `/profilo`, `/comunita/stanze/[topic]` — e sono dichiarate tali nel codice e in `FEATURES.md` §5. Senza dirlo sembrano dimenticate; con l'usabilità come vincolo, aggiungere composizione dove non serve è il difetto, non la cura. `/notifiche` in particolare ha già filtri per tema, raggruppamento temporale, aggiornamento ottimistico e `aria-live`: «5 non lette» sta nell'intestazione accanto al pulsante che le azzera, e a 88px si staccherebbe dall'azione.
+
+### Corretto (traboccamenti trovati dal cancello)
+- **Il selettore del tema sfondava di 11px a 360px.** Era un `inline-flex` con tre pastiglie a larghezza propria: non si stringeva, e in modalità semplice (scala 115%) misurava 328px contro i 276 disponibili. Ora è a larghezza piena con i segmenti che si dividono lo spazio — la forma giusta di un segmented control sul telefono — e le icone spariscono sotto `sm`: sono decorative, e i 21px che liberano sono ciò che fa entrare «Sistema» senza troncarlo. In più `min-h-11` porta il bersaglio touch a 44px: era ~33px, **sotto il minimo dichiarato in `DESIGN.md` §11**. Nessuno dei due difetti si era mai visto, perché `/impostazioni` è entrata nel cancello solo adesso.
+- **`/comunita/stanze` scorreva di lato da sempre** — 5px, mai misurati perché la rotta non era nel cancello. È la trappola `AGENTS.md` §3 (ondata 7, 5) da un terzo lato, ed è la parte nuova: la traccia `minmax(0, 1fr)` di `grid-cols-2` si stringe, ma l'*elemento* di griglia ha `min-width: auto` e si ferma al proprio min-content. Messo `min-w-0` sull'elemento, la scheda si stringe davvero — **e la pagina trabocca ancora**, perché «conversazioni» non si spezza e sporge dallo span ristretto finendo nello `scrollWidth`. **Restringere non è far entrare.** Risolto allargando la colonna (`grid-cols-1 sm:grid-cols-2`), che è l'unica delle tre uscite che non nasconde informazione: troncare il conteggio o spezzare la parola avrebbero sistemato la misura peggiorando la lettura. A 155px la scheda era comunque stretta — la misura segnalava un problema di leggibilità, non solo di layout.
+
+### Verificato
+- `typecheck`, `lint`, **96 test unitari**, **11/11 E2E** a dev server spento, **`rotte` 43/43**, `shots --simple --width=360` senza traboccamenti.
+
+## [0.15.0] — 2026-07-28 · Fase B, secondo scaglione
+
+> `UTILITY_NAV` per intero: `/avvisi`, `/organigramma`, `/faq`, `/glossario`.
+> Il criterio cambia asse — non più «cosa gli hub mettono in vetrina», che è
+> esaurito, ma **da dove ci si arriva**, che è la stessa misura di
+> raggiungibilità portata avanti di un passo.
+
+### Aggiunto
+- **Apertura con cifra display su `/avvisi` e `/faq`.** Su `/avvisi` la cifra conta gli avvisi **in corso adesso** — righe vere di `Notice`, nessun `demoBaseline` e nessun `take` a monte — perché è la domanda con cui si arriva lì; un totale storico direbbe solo da quanto esiste la bacheca. Su `/faq` conta le **risposte ufficiali**, che è la tesi della pagina: ogni risposta è del Comune, non un'ipotesi della community.
+- **Indice d'apertura su `/organigramma` e `/glossario`**, al posto della cifra. Sul primo sono le deleghe con il loro referente, sul secondo i termini: in entrambi i casi è la risposta alla domanda con cui si arriva sulla pagina («di questo chi si occupa?», «cosa vuol dire questa parola?»), che nessun totale poteva dare.
+- Le quattro rotte entrano in `scripts/shots.mjs` **insieme alla modifica**, per la ragione di sempre: il cancello misura solo le pagine che apre.
+
+### Modificato
+- `scroll-mt-20` sulle àncore dei termini del glossario e sulle schede degli assessori. Le àncore dei termini esistevano già — sono quelle che usa `GlossaryTip` dalle altre pagine — ma senza margine di scorrimento finivano **sotto la barra in alto**, che è appiccicata: si arrivava sul termine giusto senza vederlo.
+- `grid-cols-1` accanto a `sm:grid-cols-2 lg:grid-cols-3` sulla giunta (`AGENTS.md` §3, ondata 7, n.5). Le schede portano un'email in `truncate`: senza la variante di base la traccia implicita è `auto`, il cui minimo è il min-content, e a 360px la colonna sfonda il viewport.
+- L'asserzione E2E sul glossario cerca il termine **dentro la sua àncora** invece che a testo libero: con l'indice ogni termine compare due volte e `getByText` nudo violava lo strict mode. Aggiunta un'asserzione sul `href` del chip, perché è la stessa àncora da cui dipendono i tooltip contestuali.
+
+### Corretto
+- **Due delle quattro rotte non prendono la cifra, e per il motivo opposto a quello atteso: le righe sono vere ma il numero non regge.** Su `/organigramma` le aree di delega coincidono col numero di schede (un numero che si ottiene guardando), i «contattabili» sono 1 su 7 perché nel seed solo il sindaco ha un'email — a 88px si leggerebbe «il Comune non si fa contattare», cioè una conclusione tratta da un dato mancante, che è la trappola §3 (ondata 7, n.3) — e follower e preferenze sono numeri su una persona sola, che il prerequisito (d) della Fase C esclude. Su `/glossario` «13 termini spiegati» è vero e non è la ragione per cui qualcuno ci arriva.
+- **Su `/avvisi` lo stato vuoto sostituisce la cifra invece di affiancarla.** Zero avvisi attivi è la notizia migliore che la pagina possa dare, ma resa a 88px sarebbe uno «0» indistinguibile dal difetto §3 (Fase A, n.1), dove una pagina che non anima restituisce zeri plausibili: chi la vedesse non saprebbe se la città è tranquilla o se il conteggio è rotto.
+
+### Aggiunto (cancello nuovo)
+- **`npm run rotte`** — apre tutte e **43** le rotte dell'applicazione e controlla tre cose insieme: stato < 400, presenza di un `<h1>`, **assenza del testo d'errore in pagina**. Il terzo controllo non è pedanteria: una pagina finita sull'error boundary risponde 200, e la `not-found` di Next un `<h1>` ce l'ha comunque — un cancello che si ferma al 200 certifica come sana un'applicazione irraggiungibile. Il cancello di uscita della Fase A aveva «le 26 rotte rispondono ancora 200» come voce da spuntare a mano, e nessuno la rispuntava.
+- **Perché serviva, in concreto.** Il dev server ha risposto **404 su tutte le rotte annidate** — `/comunita/stanze` e i quattro dettagli — mentre le 38 a un solo segmento rispondevano. Causa: `.next` stantio, il caso già descritto in `AGENTS.md` §4; il codice non c'entrava. `shots` non poteva vederlo, perché apre 27 rotte su 43 e ai dettagli arriva *cliccando* dalla lista, mai per indirizzo. Registrato come diciannovesima trappola in `AGENTS.md` §3, con la regola che ne esce: quando un sintomo somiglia a «abbiamo perso una funzionalità», prima si misura l'inventario e poi si cerca nel codice.
+- **E si ripresenta a ogni ciclo di modifiche.** Cancellato `.next` le 43 rotte tornano verdi; si modificano otto file, nessuno annidato, e le annidate rimuoiono. Succede **anche agli E2E**: `playwright.config.ts` avvia `npm run dev` sulla 3939 — processo diverso, stessa cartella `.next` — quindi una suite può finire 8/11 con «Errore 404 · Pagina non trovata» su tre test annidati senza che nulla sia rotto. Avviso messo dove serve: in testa al `webServer` di `playwright.config.ts`.
+
+### Verificato
+- `typecheck`, `lint`, **96 test unitari**, **11/11 E2E** a dev server spento, `shots --simple --width=360`, **`rotte` 43/43**.
+- **Tre esecuzioni E2E, e la lettura onesta è che le prime due diagnosi erano sbagliate.** La prima suite ha dato 8/11: una sola era una regressione vera (strict mode sul glossario, corretta). Gli altri due fallimenti li avevo attribuiti alla compilazione a freddo contro timeout da 5s, sulla base della durata — 3,2 min contro 1,3 min della seconda esecuzione. Quando lo stesso schema è tornato una terza volta, i contesti d'errore hanno mostrato la causa reale: **«Errore 404 · Pagina non trovata»**, cioè la trappola delle rotte annidate, non un timeout. La prova è diretta: cancellato `.next`, stessa suite e stesso codice, **11/11**.
+
 ## [0.14.0] — 2026-07-26 · Fase B, primo scaglione
 
 > Copertura, non ridisegno: si porta la composizione Astryx dove finora erano

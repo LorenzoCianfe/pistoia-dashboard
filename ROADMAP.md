@@ -1,7 +1,7 @@
 # Roadmap — Dashboard di Pistoia
 
 > Documento strategico e operativo del progetto: visione, obiettivi, piano a ondate e catalogo completo delle idee.
-> **Ultimo aggiornamento:** 2026-06-12 (Ondata 3 completata) · Il dettaglio tecnico di quanto già costruito è in [DOCUMENTATION.md](DOCUMENTATION.md).
+> **Ultimo aggiornamento:** 2026-07-29 — **Fase A e Fase B chiuse**, il consolidamento è finito e la **Fase C è sbloccata**. Il piano delle due fasi è in [`docs/roadmap-consolidamento.md`](docs/roadmap-consolidamento.md); il dettaglio tecnico di quanto già costruito è in [DOCUMENTATION.md](DOCUMENTATION.md).
 
 ---
 
@@ -282,13 +282,22 @@ dell'ondata 6, nessuno produceva un errore:
 «+4 nuovi questo mese»: un numero inventato accanto a numeri veri li fa sembrare
 tutti inventati.
 
-### Ondata 8 — Admin intelligence & nuovi pubblici 🧊 *(congelata — 2026-07-26)*
+### Ondata 8 — Admin intelligence & nuovi pubblici ▶️ *(scongelata — 2026-07-29)*
 
-> **Congelata, non cancellata.** Prima di aggiungere altro, la piattaforma
-> viene riorganizzata: 25 voci di menu erano diventate una gerarchia piatta, e
-> su telefono 16 destinazioni su 25 non avevano alcun percorso navigabile.
-> Il piano è in [`docs/roadmap-consolidamento.md`](docs/roadmap-consolidamento.md);
-> questa ondata riprende integralmente come **Fase C**, su fondamenta pulite.
+> **Era congelata dal 2026-07-26**, perché prima di aggiungere altro la
+> piattaforma andava riorganizzata: 25 voci di menu erano diventate una
+> gerarchia piatta, e su telefono 16 destinazioni su 25 non avevano alcun
+> percorso navigabile.
+>
+> **Il consolidamento è finito.** Fase A chiusa il 2026-07-26 (5 destinazioni,
+> identiche su desktop e telefono), Fase B chiusa il 2026-07-29 (23 rotte su
+> 26, tre esclusioni dichiarate). Il consuntivo è in
+> [`docs/roadmap-consolidamento.md`](docs/roadmap-consolidamento.md).
+> Questa ondata riprende integralmente come **Fase C**, su fondamenta pulite.
+>
+> Nota di sequenza: la prima voce qui sotto — la dashboard admin con analytics
+> operative — è anche la ragione per cui `/admin` è stato **escluso** dalla
+> Fase B. Comporlo prima di riscriverlo sarebbe stato pagarlo due volte.
 
 **Obiettivo (→ OB-1, OB-4):** strumenti decisionali per il Comune e apertura a turisti, commercianti, scuole.
 
@@ -416,21 +425,47 @@ tutti inventati.
    stemma e dominio propri, e una riga che dichiari chi pubblica e con quali
    dati. **Senza questo le altre quattro non si fanno.**
 
-   > **Tentativo del 2026-07-26, ritirato.** È stata provata l'ipotesi «marchio
-   > unico indipendente» col nome *Il Campanile* — marchio a silhouette dalle
-   > fasce romaniche, favicon, dichiarazione di chi pubblica nel footer,
-   > stemma retrocesso ad attribuire i soli contenuti del Comune. **Respinta da
-   > Lorenzo: il marchio non convinceva.** Tutto ripristinato.
+   > **RISOLTO DIVERSAMENTE — decisione di Lorenzo, 2026-07-29.**
+   > **Lo stemma del Comune resta**, e la strada del marchio separato è chiusa
+   > dopo due tentativi. Non riproporla.
    >
-   > Due cose imparate che restano valide per il prossimo tentativo:
-   > - **Il difetto non dipende dall'osservatorio: c'è già oggi.** La barra in
-   >   alto rivendica il Comune con lo stemma vero, e `authors` nei metadata lo
-   >   attribuisce al Comune in forma leggibile da una macchina, mentre il
+   > - *Primo tentativo (2026-07-26), ritirato.* Ipotesi «marchio unico
+   >   indipendente» col nome **Il Campanile** — silhouette dalle fasce
+   >   romaniche, favicon, dichiarazione nel footer, stemma retrocesso ad
+   >   attribuire i soli contenuti del Comune. Respinto: il marchio non
+   >   convinceva. Tutto ripristinato.
+   > - *Secondo tentativo (2026-07-29), non scelto.* Quattro direzioni con
+   >   marchio disegnato — **La Misura** (fasce come scala), **Il Riscontro**
+   >   (scacchiera come matrice di verifica), **Annali** (anelli di
+   >   accrescimento, verde dei vivai), **Osservatorio Pistoia** (anti-marchio).
+   >   Lorenzo: «avevo scelto lo stemma del comune».
+   >
+   > **La forma che sostituisce il marchio separato: una dichiarazione
+   > esplicita di chi pubblica**, in cima alle pagine che esprimono un
+   > giudizio. Lo stemma resta dov'è; il problema di attribuzione si risolve
+   > dicendolo, non cambiando marca. Da disegnare e approvare **prima** delle
+   > tre funzioni di giudizio.
+   >
+   > **Conseguenza operativa: le cinque funzioni si dividono in due gruppi.**
+   >
+   > | Sotto lo stemma **ci stanno** | Perché |
+   > |---|---|
+   > | Il costo dell'amministrazione | ~20 cifre che il Comune è obbligato a pubblicare per legge (D.Lgs 33/2013 §14). Renderle leggibili è trasparenza, non autocritica |
+   > | Rating dei servizi | I cittadini votano *pulizia, illuminazione, trasporti* — servizi, non persone |
+   >
+   > | Sotto lo stemma **non ci stanno** senza la dichiarazione | Perché |
+   > |---|---|
+   > | Pagella mensile · Dossier persona · Audit cittadino | Danno un voto a chi governa: sotto lo stemma il lettore capisce che è il Comune a darselo |
+   >
+   > Due cose imparate che restano valide:
+   > - **Il difetto di attribuzione c'è già oggi, senza osservatorio.** La barra
+   >   in alto rivendica il Comune con lo stemma vero e `authors` nei metadata
+   >   lo attribuisce al Comune in forma leggibile da una macchina, mentre il
    >   footer della stessa pagina dice «progetto dimostrativo».
-   > - **Il nome e il marchio sono la parte difficile, non il codice.** La
+   > - **Il nome e il marchio erano la parte difficile, non il codice.** La
    >   sostituzione tecnica è meccanica (una dozzina di file, mezz'ora); a non
-   >   reggere è stata la proposta d'identità. Il prossimo tentativo parta da lì
-   >   e non dall'implementazione.
+   >   reggere è stata due volte la proposta d'identità. Ed è il motivo per cui
+   >   la terza strada non è un terzo marchio.
 2. **Dati reali, con fonte per ogni numero.** Quattro su cinque sono inerti sui
    dati dimostrativi e dipendono dalla ripresa di [§8](#8--in-pausa--dati-reali-ex-fase-2).
    `SourceBadge` esiste già; qui diventa obbligatorio, con link all'atto o

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Network, Users, Mail } from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
 import { getOrg, type OrgMember } from "@/lib/data/organigramma";
-import { Card } from "@/components/ui/card";
+import { Card, CardEyebrow } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Avatar } from "@/components/ui/avatar";
 import { FollowButton } from "@/components/assessori/follow-button";
@@ -10,18 +10,57 @@ import { formatNumber } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Organigramma" };
 
+/*
+  Questa pagina NON porta una cifra display, ed è una scelta motivata (Fase B,
+  secondo scaglione). Le tre candidate cadono tutte:
+
+  - le **aree di delega** coincidono con il numero di schede: un numero che il
+    lettore ottiene guardando non aggiunge niente a 88px;
+  - i **contattabili direttamente** sono 1 su 7, perché nel seed solo il sindaco
+    ha un'email. È una riga vera, ma resa protagonista si legge «il Comune non
+    si fa contattare» — una conclusione tratta da un dato mancante. È la
+    famiglia di AGENTS.md §3 (ondata 7, 3): un rapporto su un campione minuscolo,
+    messo in evidenza, diventa un'accusa;
+  - **follower** e **preferenze** sono numeri su una singola persona.
+
+  L'apertura la fa invece l'indice delle deleghe, che risponde alla domanda con
+  cui si arriva qui — «di questo chi si occupa?» — meglio di qualunque totale.
+*/
 export default async function OrganigrammaPage() {
   const user = await requireUser();
   const org = await getOrg(user.id);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6 page-enter">
       <SectionHeader
         eyebrow="Chi governa la città"
         title="Organigramma"
         description="La giunta del Comune di Pistoia: chi ha la responsabilità di ogni area, e quante persone segue ciascun assessore."
         icon={<Network size={22} />}
       />
+
+      {org.members.length > 0 ? (
+        <Card>
+          <CardEyebrow>Cosa copre la giunta</CardEyebrow>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {org.members.map((m) => (
+              <li key={m.id}>
+                <a
+                  href={`#assessore-${m.id}`}
+                  className="inline-flex items-center gap-2 rounded-pill border border-border bg-surface-2/60 px-3 py-1.5 text-sm transition-colors hover:border-border-strong hover:bg-surface-2"
+                >
+                  <span className="font-medium">{m.area}</span>
+                  <span className="text-xs text-muted-2">{m.name}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 border-t border-border pt-4 text-sm text-muted">
+            Ogni area ha un assessore di riferimento, coordinato dal sindaco.
+            Scrivi a chi si occupa della materia: è la strada più breve.
+          </p>
+        </Card>
+      ) : null}
 
       {/* Sindaco */}
       {org.sindaco ? (
@@ -66,7 +105,14 @@ export default async function OrganigrammaPage() {
       {/* Giunta */}
       <div>
         <h2 className="mb-3 px-1 text-base font-semibold">La giunta</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {/*
+          `grid-cols-1` accanto alle varianti con prefisso: senza, sotto la
+          soglia `sm` non esiste nessun grid-template-columns e la traccia
+          implicita è `auto`, il cui minimo è il min-content. Basta un'email
+          lunga e non spezzabile in una scheda per allargare la colonna oltre il
+          viewport a 360px (AGENTS.md §3, ondata 7, 5).
+        */}
+        <div className="grid grid-cols-1 gap-4 stagger sm:grid-cols-2 lg:grid-cols-3">
           {org.members.map((m) => (
             <MemberCard key={m.id} member={m} />
           ))}
@@ -78,7 +124,11 @@ export default async function OrganigrammaPage() {
 
 function MemberCard({ member }: { member: OrgMember }) {
   return (
-    <Card hover className="flex flex-col">
+    <Card
+      hover
+      id={`assessore-${member.id}`}
+      className="flex scroll-mt-20 flex-col"
+    >
       <div className="flex items-center gap-3">
         <Avatar initials={member.initials} color={member.color} size="lg" />
         <div className="min-w-0">

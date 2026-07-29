@@ -108,6 +108,33 @@ const PAGES = [
   { name: "volontariato", url: "/volontariato" },
   { name: "progetti", url: "/progetti" },
   { name: "eventi", url: "/eventi" },
+  // Fase B, secondo scaglione: `UTILITY_NAV` per intero. Il criterio non è più
+  // la vetrina degli hub — quella è esaurita — ma il punto d'ingresso: /avvisi
+  // arriva dal banner in home, /organigramma da "Cosa vuoi fare?", le altre due
+  // dall'elenco di servizio. Prese tutte e quattro insieme perché chiudono un
+  // livello intero, come il primo scaglione aveva chiuso gli hub.
+  { name: "avvisi", url: "/avvisi" },
+  { name: "organigramma", url: "/organigramma" },
+  { name: "faq", url: "/faq" },
+  { name: "glossario", url: "/glossario" },
+  // Fase B, terzo scaglione: tutto il resto. Il criterio del punto d'ingresso
+  // era esaurito e non ne serve un quarto — si finiscono.
+  { name: "profilo", url: "/profilo" },
+  { name: "impostazioni", url: "/impostazioni" },
+  { name: "notifiche", url: "/notifiche" },
+  { name: "sondaggi", url: "/sondaggi" },
+  { name: "stanze", url: "/comunita/stanze" },
+  {
+    name: "stanza-dettaglio",
+    url: "/comunita/stanze",
+    apriPrima: 'a[href^="/comunita/stanze/"]',
+    attendiUrl: /\/comunita\/stanze\/[^/]+$/,
+  },
+  // Le tre legali sono anonime: stanno fuori dal layout autenticato e non
+  // richiedono sessione, quindi vanno marcate o il primo passaggio le salta.
+  { name: "privacy", url: "/privacy", auth: false },
+  { name: "cookie", url: "/cookie", auth: false },
+  { name: "note-comunita", url: "/note-comunita", auth: false },
 ];
 
 const CREDENTIALS = {

@@ -22,6 +22,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "shots": "node scripts/shots.mjs",
+    "rotte": "node scripts/rotte.mjs",
     "typecheck": "tsc --noEmit"
   },
   "browserslist": [

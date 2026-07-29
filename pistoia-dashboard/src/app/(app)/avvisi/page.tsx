@@ -6,9 +6,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/ui/section-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DisplayNumber } from "@/components/signature/display-number";
 import { MapCanvas } from "@/components/mappa/map-canvas";
 import { noticeKind, noticeSeverity } from "@/lib/transparency";
-import { formatRelativeTime, formatDateShort } from "@/lib/format";
+import { formatRelativeTime, formatDateShort, formatNumber } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Avvisi urgenti",
@@ -87,6 +88,7 @@ export default async function AvvisiPage() {
   const notices = await getNotices();
   const active = notices.filter((n) => n.active);
   const past = notices.filter((n) => !n.active);
+  const critici = active.filter((n) => n.severity === "critico").length;
   const geoPoints = active
     .filter((n) => n.latitude != null && n.longitude != null)
     .map((n) => ({
@@ -109,17 +111,79 @@ export default async function AvvisiPage() {
       />
 
       {active.length === 0 ? (
+        /*
+          Lo stato vuoto SOSTITUISCE la cifra, non la affianca — ed è una scelta,
+          non una dimenticanza.
+
+          Zero avvisi attivi è la notizia migliore che questa pagina possa dare,
+          ma resa come cifra display sarebbe uno «0» a 88px: indistinguibile dal
+          difetto di AGENTS.md §3 (Fase A, 1), dove una pagina che non anima
+          restituisce zeri plausibili. Chi la vedesse non saprebbe se la città è
+          tranquilla o se il conteggio è rotto. La buona notizia vuole parole.
+        */
         <EmptyState
           title="Nessun avviso attivo"
           description="Buone notizie: al momento non ci sono emergenze o comunicazioni urgenti."
           accent="green"
         />
       ) : (
-        <div className="space-y-4 stagger">
-          {active.map((n) => (
-            <NoticeCard key={n.id} n={n} />
-          ))}
-        </div>
+        <>
+          <Card>
+            {/*
+              La cifra conta gli avvisi ATTIVI: sono righe vere di `Notice`,
+              senza `demoBaseline` e senza `take` a monte. È anche l'unica cifra
+              che risponde alla domanda con cui si arriva qui — «mi riguarda
+              qualcosa adesso?» — mentre un totale storico direbbe soltanto da
+              quanto esiste la bacheca.
+
+              Nessuna scala a tacche: l'intervallo 0→totale è vero in aritmetica
+              ma nessuno ha fissato un traguardo di quante emergenze debbano
+              esserci, e una tacca lo farebbe sembrare un obiettivo mancato o
+              raggiunto (FEATURES.md §5).
+            */}
+            <DisplayNumber
+              value={active.length}
+              unit={active.length === 1 ? "avviso" : "avvisi"}
+              label="In corso adesso"
+            />
+            <p className="mt-4 border-t border-border pt-4 text-sm text-muted">
+              {critici > 0 ? (
+                <>
+                  di cui{" "}
+                  <span className="font-semibold text-[var(--red)]">
+                    {formatNumber(critici)}
+                  </span>{" "}
+                  di gravità critica
+                </>
+              ) : (
+                <>nessuno di gravità critica</>
+              )}
+              {geoPoints.length > 0 ? (
+                <>
+                  {" · "}
+                  {formatNumber(geoPoints.length)}{" "}
+                  {geoPoints.length === 1
+                    ? "riguarda una zona precisa"
+                    : "riguardano una zona precisa"}
+                </>
+              ) : null}
+              {past.length > 0 ? (
+                <>
+                  {" · "}
+                  {formatNumber(past.length)}{" "}
+                  {past.length === 1 ? "concluso" : "conclusi"} di recente
+                </>
+              ) : null}
+              .
+            </p>
+          </Card>
+
+          <div className="space-y-4 stagger">
+            {active.map((n) => (
+              <NoticeCard key={n.id} n={n} />
+            ))}
+          </div>
+        </>
       )}
 
       {geoPoints.length > 0 ? (

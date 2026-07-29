@@ -6,6 +6,15 @@ export default function PrivacyPage() {
   return (
     <>
       <h1 className="text-2xl font-bold tracking-tight">Informativa sulla privacy</h1>
+      {/*
+        Un'informativa senza data non si può leggere: chi la consulta non sa se
+        vale ancora, e chi contesta un trattamento non sa quale testo fosse in
+        vigore quel giorno. La data è quella dell'ultima modifica reale del
+        documento, non quella dell'ultima volta che qualcuno ha toccato il file.
+      */}
+      <p className="!mt-1 !text-xs !text-muted-2">
+        In vigore dal 10 giugno 2026
+      </p>
       <p className="!text-muted-2">
         Dashboard di Pistoia è un <strong>progetto dimostrativo</strong> e non è un servizio ufficiale
         del Comune di Pistoia. Questa informativa descrive come la piattaforma tratterebbe i dati

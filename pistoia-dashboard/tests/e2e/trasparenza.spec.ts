@@ -54,7 +54,17 @@ test("le pagine Trasparenza si aprono e raccontano il ciclo completo", async ({
   // Glossario: i termini in linguaggio semplice.
   await page.goto("/glossario");
   await expect(page.getByRole("heading", { name: "Glossario della città" })).toBeVisible();
-  await expect(page.getByText("Avanzo di bilancio")).toBeVisible();
+  // Il termine si cerca dentro la sua àncora, non a testo libero: dalla Fase B
+  // la pagina apre con un indice, quindi ogni termine compare due volte — una
+  // nel chip e una nella definizione — e un getByText nudo è ambiguo.
+  await expect(
+    page.locator("#avanzo").getByText("Avanzo di bilancio"),
+  ).toBeVisible();
+  // L'indice punta all'àncora: è la stessa che usa <GlossaryTip> dalle altre
+  // pagine, quindi romperla romperebbe anche i tooltip contestuali.
+  await expect(
+    page.getByRole("link", { name: "Avanzo di bilancio" }),
+  ).toHaveAttribute("href", "#avanzo");
 });
 
 test("una proposta respinta spiega perché non si può fare", async ({ page }) => {

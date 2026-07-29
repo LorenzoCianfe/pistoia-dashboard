@@ -60,7 +60,7 @@ L'app vive in `pistoia-dashboard/`. La documentazione vive nella radice.
 
 ## 3. Design system — le regole che si sbagliano più spesso
 
-> §3 raccoglie **diciotto trappole già pagate**. Sono raggruppate per ondata
+> §3 raccoglie **diciannove trappole già pagate**. Sono raggruppate per ondata
 > solo perché è così che sono emerse: leggile tutte, valgono tutte ancora.
 
 **Prima di tutto: Astryx è la sorgente dei TOKEN, non lo strato di primitive.**
@@ -179,6 +179,20 @@ Stessa famiglia delle precedenti: **nessuna produce un errore.**
    toglie il pavimento alla dimensione usata, non riduce il contributo di
    min-content di un testo `nowrap`. La leva sta sulla traccia, non sul figlio.
 
+   **Corollario, pagato il 2026-07-29 su `/comunita/stanze`.** Vale anche
+   quando la traccia È `minmax(0, 1fr)`: `grid-cols-2` si stringe, ma
+   l'*elemento* di griglia ha `min-width: auto` e si ferma al proprio
+   min-content. Aggiungere `min-w-0` all'elemento toglie quel pavimento e la
+   scheda si stringe davvero — **e la pagina trabocca lo stesso**, perché una
+   parola lunga e non spezzabile («conversazioni», 85px) sporge dallo span
+   ristretto e finisce nello `scrollWidth`. Restringere non è far entrare.
+
+   Le tre uscite, in ordine di onestà: **allargare la colonna**
+   (`grid-cols-1 sm:grid-cols-2`), troncare, spezzare la parola. Le ultime due
+   risolvono la misura peggiorando la lettura, quindi si scelgono solo se la
+   prima è impossibile. A 155px quella scheda era comunque stretta: la misura
+   stava segnalando un problema di leggibilità, non solo di layout.
+
 6. **`npm run shots -- --only=...` non funziona:** npm intercetta `--only` come
    propria configurazione (`npm warn invalid config only=...`). In PowerShell
    nemmeno `--simple` e `--width` arrivano, e il sintomo è muto: lo script gira
@@ -194,7 +208,7 @@ gli elenchi di stati) perché "Stato della città" e la pagina dei quartieri, a 
 clic di distanza, avrebbero potuto mostrare due percentuali diverse della stessa
 città.
 
-### Quattro trappole del consolidamento (Fase A e B)
+### Cinque trappole del consolidamento (Fase A e B)
 
 Le prime due riguardano la **verifica**, non il prodotto: hanno prodotto
 diagnosi sbagliate con dati apparentemente solidi.
@@ -246,7 +260,38 @@ diagnosi sbagliate con dati apparentemente solidi.
    escono con lo stesso codice, il cancello non è un cancello. Ora i salti
    fanno uscire 1.
 
-4. **Una voce di menu attiva insieme al suo genitore litiga sulla pastiglia.**
+4. **`.next` stantio fa rispondere 404 a TUTTE le rotte annidate, e sembra che
+   qualcuno abbia cancellato metà applicazione.** Visto il 2026-07-29:
+   `/comunita/stanze` e i quattro dettagli davano 404 — sia digitando
+   l'indirizzo sia cliccando — mentre le 38 rotte a un solo segmento
+   rispondevano tutte.
+
+   **Si ripresenta a ogni ciclo di modifiche, e non è casuale.** Cancellato
+   `.next`, tutte e 43 le rotte tornano verdi; si modificano otto file (nessuno
+   annidato) e le rotte annidate rimuoiono. Visto tre volte nella stessa
+   sessione del 2026-07-29, con due diagnosi sbagliate prima di trovarlo. Non è
+   il codice: è la ricostruzione incrementale del dev server.
+
+   **Anche gli E2E lo prendono in pieno.** `playwright.config.ts` avvia
+   `npm run dev` sulla porta 3939: processo diverso, **stessa cartella
+   `.next`**. Quindi una suite può fallire su tre test annidati senza che nulla
+   sia rotto, e il sintomo — «Errore 404 · Pagina non trovata» sul dettaglio
+   segnalazione, su `/comunita/stanze`, sul dettaglio proposta — somiglia
+   moltissimo a una regressione appena introdotta. **Prima di cercare nel
+   diff, cancella `.next` e rilancia.**
+
+   `npm run shots` invece non lo vedeva: apre 27 rotte su 43 e a quelle di
+   dettaglio arriva *cliccando* dalla lista, mai per indirizzo. Da qui
+   `npm run rotte`, che le apre tutte e 43 e controlla tre cose insieme: stato
+   < 400, presenza di un `<h1>`, e **assenza del testo d'errore in pagina** —
+   perché una pagina finita sull'error boundary risponde 200, e la `not-found`
+   di Next un `<h1>` ce l'ha comunque. Un cancello che si ferma al 200
+   certifica come sana un'applicazione irraggiungibile.
+
+   La regola generale: **quando un sintomo somiglia a "abbiamo perso una
+   funzionalità", prima si misura l'inventario, poi si cerca nel codice.**
+
+5. **Una voce di menu attiva insieme al suo genitore litiga sulla pastiglia.**
    La barra laterale evidenzia con un solo elemento condiviso
    (`layoutId="side-active"`). Su una sotto-rotta come `/comunita/stanze`
    combaciano sia la sezione sia la destinazione, e due voci attive insieme se
@@ -266,6 +311,7 @@ npm run test:e2e       # playwright
 npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
 npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
 node scripts/shots.mjs --simple --width=360   # modalità semplice, viewport minima
+npm run rotte          # tutte e 43 le rotte rispondono e rendono contenuto?
 npm run db:reset       # ricrea il DB e ripopola i dati dimostrativi
 ```
 
@@ -308,6 +354,9 @@ Una modifica è finita quando **tutte** queste sono vere:
 - [ ] `npm run typecheck` passa
 - [ ] `npm run lint` passa
 - [ ] I test esistenti passano
+- [ ] `npm run rotte` è verde — **43 su 43**. È l'unico cancello che risponde
+      alla domanda «abbiamo perso una funzionalità?», e l'unico che apre le
+      rotte annidate per indirizzo invece che cliccandole
 - [ ] L'hai **guardata**: `npm run shots`, o il browser, in tema chiaro **e**
       scuro. Un typecheck verde non è una prova visiva.
 - [ ] Funziona da tastiera e il focus è visibile

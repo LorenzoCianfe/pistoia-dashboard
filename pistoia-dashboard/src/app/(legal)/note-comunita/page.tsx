@@ -6,6 +6,9 @@ export default function NoteComunitaPage() {
   return (
     <>
       <h1 className="text-2xl font-bold tracking-tight">Regole della community</h1>
+      <p className="!mt-1 !text-xs !text-muted-2">
+        In vigore dal 10 giugno 2026
+      </p>
       <p className="!text-muted-2">
         Questo è uno spazio civico: deve restare utile, leggibile e rispettoso. Partecipando accetti
         queste regole di comportamento.

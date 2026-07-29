@@ -147,13 +147,55 @@ Nessuno dei quattro introduce dipendenze: niente GSAP, niente WebGL.
 | `/progetti` | **progetti nati da segnalazioni ripetute** | È la tesi della pagina. Le segnalazioni dietro stanno nella frase e usano `reportCount`, lo stesso campo delle schede: sommare le righe vere darebbe un totale più basso di quello che il lettore vede sopra |
 | `/eventi` | **eventi in arrivo o ancora in corso** | Eredita la definizione di `getPublishedEvents`, che separa sulla data di **fine** — un evento iniziato ieri e lungo tre giorni è ancora in corso — così coincide con la riga dell'hub `/territorio` |
 
-**Tre esclusioni dichiarate**, per non far sembrare "dimenticate" delle scelte:
+> Fase B, secondo scaglione — *il punto d'ingresso, non più la vetrina* (2026-07-28)
+
+Gli hub sono coperti, quindi la vetrina è esaurita. Il criterio che le succede è
+lo stesso di prima portato avanti di un passo — **da dove ci si arriva** — ed è
+verificabile in `nav-items.ts`: il banner in home, poi «Cosa vuoi fare?»
+(protetto), poi l'elenco di servizio, poi il menu avatar. Prese tutte e quattro
+insieme perché **chiudono `UTILITY_NAV` per intero**, che è la stessa proprietà
+che rendeva difendibile il primo scaglione.
+
+| Rotta | Cifra display | Perché quella |
+|---|---|---|
+| `/avvisi` | avvisi **in corso adesso** | È la domanda con cui si arriva: «mi riguarda qualcosa ora?». Righe vere di `Notice`, nessun `demoBaseline` e nessun `take` a monte. Un totale storico direbbe solo da quanto esiste la bacheca |
+| `/faq` | **risposte ufficiali** del Comune | È la tesi della pagina — ogni risposta è del Comune, non un'ipotesi della community. Sui dati dimostrativi coincide col totale perché `official` ha default `true`, ma la definizione regge il giorno in cui una FAQ non lo sarà |
+
+**Cinque esclusioni dichiarate**, per non far sembrare "dimenticate" delle scelte:
 
 | Rotta | Perché niente cifra display |
 |---|---|
-| `/sondaggi` | `getPolls` somma `demoBaseline(baseVotes)` ai voti veri: a 88px sarebbe il numero più grande e più gonfiato della pagina |
+| ~~`/sondaggi`~~ | **Esclusione ritirata (terzo scaglione).** Era scritta troppo larga: valeva per una cifra *sui voti*, che `getPolls` gonfia con `demoBaseline(baseVotes)`, non per qualunque cifra. I sondaggi **aperti** sono righe di `Poll` e non passano da nessun baseline — la stessa scelta già fatta su `/priorita`, dove si contano gli interventi in votazione e non i voti raccolti |
 | `/mappa` | 41 righe di contenitore attorno a Leaflet. Non ha una composizione da portare: ha una vista |
 | `/digest` | È già composto — griglia di `Stat`, testata di stampa, sezioni. Promuovere uno dei quattro numeri direbbe che quello è la notizia, e in un riepilogo mensile nessuno lo è |
+| `/organigramma` | Le righe sono vere ma **nessun numero regge**: le aree di delega coincidono col numero di schede (tautologico), i contattabili sono 1 su 7 perché nel seed solo il sindaco ha un'email — a 88px si leggerebbe «il Comune non si fa contattare», una conclusione tratta da un dato mancante — e follower e preferenze sono numeri su una persona sola. Apre invece sull'indice delle deleghe |
+| `/glossario` | «13 termini spiegati» è vero e non è la ragione per cui qualcuno arriva qui: su un glossario si arriva con **una** parola in testa. Apre sull'indice dei termini, che è ciò che il contenuto dice nel suo insieme |
+
+> Fase B, terzo scaglione — *tutto il resto* (2026-07-29)
+
+Il criterio del punto d'ingresso era esaurito e non ne serve un quarto: si
+finiscono. **La Fase B è chiusa** — restano solo `/mappa`, `/digest` e `/admin`,
+esclusi con motivo.
+
+| Rotta | Cifra display | Perché quella |
+|---|---|---|
+| `/sondaggi` | **sondaggi aperti adesso** | Chi arriva vuole sapere a cosa può rispondere ora, non quanta gente ha già risposto. `active` e `userOptionId` sono righe vere; i voti no, e restano fuori |
+
+| Rotta | Composizione senza cifra | Perché |
+|---|---|---|
+| `/impostazioni` | indice delle sei sezioni | Sei riquadri di peso identico erano quattro schermate di scorrimento su telefono, e chi arriva sa *cosa* cerca ma non dove sia. Due si chiamavano «Cambia password» e «Sicurezza dell'account»: ora sono «Password» (l'azione) e «Accesso e dispositivi» (lo stato) |
+| `/notifiche` | nessuna, già composta | «5 non lette» sta già nell'intestazione della lista, accanto al pulsante che le azzera: a 88px si staccherebbe dall'azione. E non è un elenco in cui si cerca una voce, è un flusso — ha già filtri per tema e raggruppamento temporale |
+| `/profilo` | nessuna, già composta | La carta civica porta già i numeri di quella persona. Promuoverne uno a 88px trasformerebbe una scheda personale in una classifica |
+| `/comunita/stanze/[topic]` | nessuna, già composta | Ritorno alle stanze, testata col tema, composer, stato vuoto: non aveva il difetto |
+| `/privacy` · `/cookie` · `/note-comunita` | data di entrata in vigore | Un'informativa senza data non si può leggere: chi la consulta non sa se vale ancora, e chi contesta un trattamento non sa quale testo fosse in vigore quel giorno |
+
+**`/admin` è fuori dalla Fase B**, e non per dimenticanza: è dietro
+`requireAdmin()` quindi la raggiungibilità non la ordina, la Fase C-1 la
+riscrive per intero («Dashboard admin con analytics operative»), e `DESIGN.md`
+§6 la nomina come l'unico posto dove la densità *aumenta*. I suoi quattro
+contatori sono già veri — `openReportsCount` viene da un `findMany` senza
+`take`, quindi non è la trappola dell'ondata 7 — ma su una console di lavoro
+nessuno dei quattro è *la* notizia. È l'argomento che ha escluso `/digest`.
 
 **Nessuna delle tre porta la scala a tacche**, e la regola che ne è uscita vale
 per la Fase C: l'intervallo 0→totale è aritmeticamente vero ma **non è un
@@ -189,7 +231,7 @@ non regge una lettura d'insieme.
 |---|---|
 | ~~Architettura dell'informazione delle 30+ rotte~~ | ✅ **Fatto** — Fase A, 2026-07-26: 25 voci → 5 destinazioni, identiche su desktop e telefono. Vedi `docs/audit-consolidamento.md` |
 | Primitive sui *componenti* Astryx | **Valutato e scartato con motivo** (vedi `ROADMAP.md` ondata 5): `TextInput` è controllato per contratto, `Button` non offre un gancio per i link, `Banner` è troppo pesante inline, `ProgressBar` perde lo stagger. Astryx resta la sorgente dei token |
-| **18 rotte non ancora ridisegnate** *(erano 26)* | L'ondata 6 ha portato il sistema sulle quattro di punta. Le altre hanno *ereditato* i token dal ponte di retrocompatibilità: coerenti nei colori, non nella composizione. La Fase B ne ha coperte 8 e prosegue: con questo scaglione **i tre hub della Fase A sono coperti per intero**, salvo tre esclusioni dichiarate |
+| ~~26 rotte non ancora ridisegnate~~ | ✅ **Fase B chiusa** — 2026-07-29, in tre scaglioni: i tre hub, poi `UTILITY_NAV`, poi tutto il resto. Restano fuori solo `/mappa` (è una vista, non una composizione), `/digest` (già composto) e `/admin` (console di lavoro, riscritta dalla C-1) |
 | Terzo stadio del sankey (entrate per fonte) | Il modello dati non ha la scomposizione: servirebbe un `BudgetRevenue`, o l'ETL della Fase 2. Il sankey si ferma a due stadi invece di inventare |
 | Dichiarazione di accessibilità | Dovuta per legge a un ente pubblico italiano, ma il contenuto dipende da un audit vero: pubblicarla non verificata sarebbe peggio che non averla |
 | Test automatici di accessibilità | `axe-core` negli E2E resta da impostare. I contrasti dell'ondata 6 sono misurati a mano |

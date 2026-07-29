@@ -6,6 +6,9 @@ export default function CookiePage() {
   return (
     <>
       <h1 className="text-2xl font-bold tracking-tight">Cookie policy</h1>
+      <p className="!mt-1 !text-xs !text-muted-2">
+        In vigore dal 10 giugno 2026
+      </p>
       <p className="!text-muted-2">
         Dashboard di Pistoia usa il minimo indispensabile: nessun cookie di profilazione, nessun
         tracciamento pubblicitario, nessun cookie di terze parti per la pubblicità.

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { BookOpenText } from "lucide-react";
 import { GLOSSARY } from "@/lib/glossary";
-import { Card } from "@/components/ui/card";
+import { Card, CardEyebrow } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 
 export const metadata: Metadata = {
@@ -30,10 +30,42 @@ export default function GlossarioPage() {
         icon={<BookOpenText size={26} />}
       />
 
+      {/*
+        L'indice apre la pagina al posto di una cifra display, e la scelta è
+        motivata (Fase B, secondo scaglione): «13 termini spiegati» sarebbe un
+        numero di vanità — vero, ma non è la ragione per cui qualcuno arriva
+        qui. Su un glossario si arriva con UNA parola in testa, e ciò che il
+        contenuto dice nel suo insieme è quali parole copre. Stessa famiglia
+        dell'esclusione di /digest: dove nessun numero è la notizia, la cifra
+        non si mette per simmetria (FEATURES.md §5).
+
+        Le àncore esistevano già sui termini — sono quelle che usa <GlossaryTip>
+        — ma senza `scroll-mt` finivano sotto la barra in alto, che è appiccicata.
+      */}
+      <Card>
+        <CardEyebrow>Le parole spiegate</CardEyebrow>
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {sorted.map((t) => (
+            <li key={t.slug}>
+              <a
+                href={`#${t.slug}`}
+                className="inline-flex rounded-pill border border-border bg-surface-2/60 px-3 py-1.5 text-sm transition-colors hover:border-border-strong hover:bg-surface-2"
+              >
+                {t.term}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </Card>
+
       <Card>
         <dl className="divide-y divide-border">
           {sorted.map((t) => (
-            <div key={t.slug} id={t.slug} className="py-4 first:pt-1 last:pb-1">
+            <div
+              key={t.slug}
+              id={t.slug}
+              className="scroll-mt-20 py-4 first:pt-1 last:pb-1"
+            >
               <dt className="flex flex-wrap items-baseline gap-2">
                 <span className="font-display text-lg font-semibold tracking-tight">
                   {t.term}
