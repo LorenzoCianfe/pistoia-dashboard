@@ -320,7 +320,30 @@ npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
 node scripts/shots.mjs --simple --width=360   # modalità semplice, viewport minima
 npm run rotte          # tutte le rotte rispondono e rendono contenuto? (44 al 2026-07-30)
 npm run db:reset       # ricrea il DB e ripopola i dati dimostrativi
+
+python scripts/pdftext.py documento.pdf              # testo di un PDF
+python scripts/pdftext.py documento.pdf --griglia    # (x, y, testo), per le tabelle
 ```
+
+**`pdftext.py` serve alla Fase C**, dove le fonti sono PDF di ministeri e
+comuni. Sola libreria standard: nessuna dipendenza aggiunta, e non serve
+poppler. Esiste perché i PDF della pubblica amministrazione sbagliano in tre
+modi che **non producono un errore** — restituiscono testo plausibile e
+sbagliato, che è la categoria di difetti che qui costa di più:
+
+1. **Font sottoinsiemati.** I codici partono da `<01>` in *ogni* font: una mappa
+   unica li confonde, e il testo esce scambiato invece che vuoto.
+2. **Font compositi a due byte** (Type0/Identity-H). Iterare i byte uno per uno
+   dà tutti caratteri di sostituzione — sintomo **identico a un PDF
+   scansionato**, e ha già prodotto una diagnosi sbagliata sul decreto ANCI.
+3. **Array `TJ` crenati.** `[(Il )-250(Sindaco)]TJ` è la forma normale del testo
+   giustificato: cercare solo `Tj` lascia passare i frammenti isolati e produce
+   un documento per tre quarti mancante che sembra completo.
+
+Quando l'estrazione di una tabella larga scollega le colonne dalle righe, usa
+`--griglia` e riallinea a mano. **E se un importo non si riesce ad ancorare alla
+propria riga, non si pubblica**: attribuire la cifra sbagliata a una persona è
+peggio che non mostrarne nessuna.
 
 **Le opzioni dello script delle schermate vanno passate a `node`, non a `npm`.**
 In PowerShell `npm run shots -- --simple --width=360` non le fa arrivare (e
