@@ -5,6 +5,38 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.17.0] — 2026-07-30 · Fase C, la dichiarazione di chi pubblica
+
+> Il prerequisito 1 dell'osservatorio civico chiuso nella terza forma: non un
+> marchio separato — respinto due volte — ma **una dichiarazione esplicita di
+> chi pubblica**, sotto lo stemma che resta.
+
+### Aggiunto
+- **`ChiPubblica`** (`components/osservatorio/chi-pubblica.tsx`): cartiglio più filo persistente, in cima a ogni pagina che esprime un giudizio. Il **cartiglio** separa *chi scrive il giudizio* da *chi fornisce i numeri*, che è la coppia che il prerequisito chiede di dichiarare — una frase sola ne direbbe metà — e chiude sul diritto di replica allo stesso corpo del giudizio. Il **filo** si aggancia sotto la barra in alto.
+- **`/pagella`**, impalcatura della prima pagina di giudizio. Esiste già a metà perché la dichiarazione andava giudicata dove il difetto che corregge esiste davvero: sotto la barra in alto che porta lo stemma del Comune. Una proposta su fondo neutro non avrebbe detto cosa cambia. **Nessun voto è calcolato**: senza metodologia versionata e senza dati reali sarebbe inventato (`AGENTS.md` §2), quindi il posto del voto resta vuoto e dichiara perché.
+- `/pagella` entra **in entrambi i cancelli nello stesso momento**: `rotte.mjs` (43 → **44 rotte**) e `shots.mjs`. Durante la revisione ha portato quattro voci in `shots.mjs`, una per direzione, perché una direzione non fotografata non è una direzione rivista; alla scelta sono collassate a una.
+
+### Modificato
+- **`npm run test:e2e` cancella `.next` da sé** (`pretest:e2e`). Decisione delegata da Lorenzo e chiusa così: un cancello che diventa rosso per una ragione estranea alla modifica costa molto più dei ~40s che fa risparmiare, perché il tempo si perde a cercare nel diff — e quel falso rosso aveva già prodotto **due diagnosi sbagliate**. Il conto vero include anche il primo `npm run dev` successivo, che riparte da freddo. Scritto in `AGENTS.md` §3 e §4.
+
+### Deciso
+- **La forma della dichiarazione, fra quattro rese in contesto.** L'argomento che ha deciso non è estetico ma di **durata**: la barra in alto è `sticky`, quindi lo stemma resta sullo schermo per tutta la lettura mentre una dichiarazione in cima sparisce al primo scorrimento. Chi legge la terza materia di una pagella vedrebbe solo lo stemma sopra un giudizio sulla giunta — cioè esattamente lo stato che la dichiarazione doveva correggere. Il filo costa 64px a 360px in modalità semplice, ed è il solo argomento contro.
+- **Le due parti non si esportano separate.** Sarebbe possibile montarne metà, e la metà che si dimentica è sempre il filo, perché il difetto che copre non si vede finché non si scorre.
+- **Il viola come marcatore della voce redazionale**, e non per gusto: è l'unico colore che `DESIGN.md` §4 assegna al lato cittadino. Vive su filo e pallino, **mai su testo** — su superficie chiara fa ~3,3:1, sotto la soglia AA.
+
+### Corretto
+- **Il pallino del filo galleggiava a metà del blocco.** A 360px in modalità semplice la frase va a tre righe e un pallino centrato verticalmente non ne marca più l'inizio: ora è allineato alla prima riga. Trovato guardando la schermata a viewport fisso — a piena pagina uno `sticky` non si può misurare, perché la cattura fotografa il documento steso.
+
+### Ricerca — le fonti di «Il costo dell'amministrazione»
+- **Il presupposto di partenza era sbagliato, e scoprirlo sblocca la funzione.** Non sono «~20 cifre da Amministrazione trasparente»: le indennità degli amministratori locali **non le decide il Comune**. Sono parametrate per legge al trattamento dei presidenti di regione, per fascia demografica (L. 234/2021 art. 1 c. 583, con applicazione progressiva 45%/68%/piena dal 2024), e ripartite fra le cariche dalle percentuali del D.M. 119/2000. La cifra si ricava da **legge più popolazione**; il dato comunale serve a confermarla, non a produrla.
+- **Catena verificata per Pistoia**: capoluogo di provincia sotto i 100.000 abitanti → 70% della base; vicesindaco 55% e assessori 60% dell'indennità del sindaco; gettone dei consiglieri ≤ ¼ della stessa. Tabella completa e fonti in `ROADMAP.md` §6.
+- **Una riprova indipendente vale più di un ricontrollo.** L'allegato A del decreto ministeriale 30/05/2022 è un foglio di calcolo largo, le cui colonne l'estrazione scollega dalle righe: da solo non proverebbe nulla. Ma fra i suoi importi compare **5.313**, che è esattamente il valore prodotto dalla catena per il vicesindaco partendo da tutt'altra strada.
+- **Le cifre del Comune non ci sono, e quasi certamente è legittimo.** Nessun importo sulle pagine di sindaco, giunta e schede personali; il PDF che il portale offre lì è pubblicato «ai sensi dell'**art. 13**» — schema organizzativo — non dell'art. 14, che è quello dei compensi. Il sindaco è stato proclamato il 27 maggio 2026 e l'art. 14 c. 2 dà tre mesi. **Una pagina che oggi si aprisse su «dato non pubblicato» sarebbe un'accusa tratta da un dato mancante**, lo stesso difetto già pagato su `/organigramma` e `/promesse`.
+- Tre anelli restano aperti prima che una cifra vada a schermo, ed è scritto quali: la conferma della base, la fonte ISTAT diretta per la popolazione, e chi dei nove è vicesindaco.
+
+### Verificato
+- `typecheck`, `lint`, **96 test unitari**, **11/11 E2E** a dev server spento, **`rotte` 44/44**, `shots --simple --width=360` sull'intera applicazione senza traboccamenti.
+
 ## [0.16.0] — 2026-07-29 · Fase B chiusa, terzo scaglione
 
 > Tutto il resto. Il criterio del punto d'ingresso era esaurito e non ne serve

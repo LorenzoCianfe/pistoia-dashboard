@@ -620,6 +620,31 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   onboarding già concluso. Verificato: `tsc` pulito, eslint 0 problemi, Vitest **80/80** (11 nuovi),
   Playwright **11/11** (3 nuovi), `next build` pulito. Versione **0.10.0**. Tutto ancora **dati mockup**.
 
+---
+
+> ⚠️ **Questa sezione è ferma all'ondata 4 (2026-06-13).** Le ondate 5–8, la Fase A
+> e la Fase B sono registrate in **[`CHANGELOG.md`](./CHANGELOG.md)**, che è il
+> registro vivo: quando i due divergono, vale il changelog. Dichiararlo qui è
+> preferibile a colmare il vuoto a posteriori, che significherebbe ricostruire a
+> memoria decisioni prese in sessioni diverse.
+
+- **2026-07-30 (Fase C — la dichiarazione di chi pubblica)** — Chiuso il prerequisito 1
+  dell'osservatorio civico nella terza forma, dopo due marchi separati respinti: **lo stemma
+  del Comune resta** e l'equivoco di attribuzione si scioglie dicendolo.
+  `components/osservatorio/chi-pubblica.tsx` porta un **cartiglio** (separa *chi scrive il
+  giudizio* da *chi fornisce i numeri*, e chiude sul diritto di replica) più un **filo
+  persistente** agganciato sotto la barra in alto. Il filo non è una scelta di forma ma di
+  **durata**: la barra è `sticky`, quindi lo stemma resta per tutta la lettura mentre una
+  dichiarazione in cima sparisce al primo scorrimento — chi legge a metà pagina vedrebbe solo
+  lo stemma sopra un giudizio sulla giunta. Le due parti **non sono esportate separatamente**:
+  la metà che si dimentica è sempre il filo, perché il difetto che copre non si vede finché non
+  si scorre. Nuova rotta `/pagella` (impalcatura, **nessun voto calcolato**), aggiunta a
+  `rotte.mjs` e `shots.mjs` nello stesso momento (43 → **44 rotte**). `npm run test:e2e`
+  cancella ora `.next` da sé (`pretest:e2e`): toglie un falso rosso che aveva già prodotto due
+  diagnosi sbagliate. Ricognizione delle fonti reali per «Il costo dell'amministrazione» in
+  `ROADMAP.md` §6. Verificato: `typecheck`, `lint`, **96/96** unitari, **11/11** E2E,
+  **`rotte` 44/44**, `shots --simple --width=360` senza traboccamenti.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.

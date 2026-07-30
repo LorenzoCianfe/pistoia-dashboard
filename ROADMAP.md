@@ -443,8 +443,24 @@ tutti inventati.
    > **La forma che sostituisce il marchio separato: una dichiarazione
    > esplicita di chi pubblica**, in cima alle pagine che esprimono un
    > giudizio. Lo stemma resta dov'è; il problema di attribuzione si risolve
-   > dicendolo, non cambiando marca. Da disegnare e approvare **prima** delle
-   > tre funzioni di giudizio.
+   > dicendolo, non cambiando marca.
+   >
+   > ✅ **Disegnata e approvata il 2026-07-30** — quattro direzioni rese su una
+   > bozza di `/pagella`, cioè sotto lo stemma vero e non su fondo neutro.
+   > Scelta: **cartiglio + filo persistente**, in
+   > `components/osservatorio/chi-pubblica.tsx`. Firma: «Redazione della
+   > Dashboard di Pistoia».
+   >
+   > L'argomento che ha deciso fra le quattro non era estetico ma di **durata**:
+   > la barra in alto è `sticky`, quindi lo stemma resta sullo schermo per tutta
+   > la lettura mentre una dichiarazione in cima sparisce al primo scorrimento.
+   > Una dichiarazione che non dura quanto l'affermazione che smentisce lascia
+   > scoperto tutto il corpo della pagina — che su una pagella è quasi tutta la
+   > pagella. Da qui il filo, che costa 64px a 360px in modalità semplice.
+   >
+   > Le due parti non sono esportate separatamente: chi non può usarne metà non
+   > può dimenticarsi il filo, che è la metà il cui difetto non si vede finché
+   > non si scorre. Dettaglio in `FEATURES.md` §2.
    >
    > **Conseguenza operativa: le cinque funzioni si dividono in due gruppi.**
    >
@@ -480,6 +496,68 @@ tutti inventati.
    numeri già pubblicati, ognuno con l'URL del documento. Ogni altra funzione
    ha bisogno di una metodologia *prima* di aver bisogno dei dati. **Si parte
    da lì.**
+
+   > **Ricognizione delle fonti, 2026-07-30 — tre scoperte che cambiano il
+   > piano.**
+   >
+   > 1. **Le cifre non sono sul portale del Comune, e probabilmente è
+   >    legittimo.** *Amministrazione trasparente → Organizzazione → Titolari
+   >    di incarichi politici* esiste ed è ben strutturata, ma **nessun importo
+   >    in euro** compare sulle pagine del sindaco, della giunta o delle otto
+   >    schede personali. Il PDF che il portale offre lì è pubblicato «ai sensi
+   >    dell'**art. 13**» — schema organizzativo, competenze, uffici — non
+   >    dell'art. 14, che è quello dei compensi. E il sindaco **Giovanni
+   >    Capecchi è stato proclamato il 27 maggio 2026**: l'art. 14 c.2 dà tre
+   >    mesi dall'elezione, quindi la finestra si chiude verso il 27 agosto
+   >    2026. Oggi l'assenza non è opacità.
+   >
+   >    Conseguenza vincolante: **una pagina «Il costo dell'amministrazione»
+   >    che si aprisse su "dato non pubblicato" sarebbe un'accusa tratta da un
+   >    dato mancante** — lo stesso difetto che ha tolto la cifra da
+   >    `/organigramma` e la scala a tacche da `/promesse`.
+   >
+   > 2. **Le indennità non le decide il Comune.** Sono fissate a livello
+   >    nazionale per **fascia demografica**: D.M. 119/2000, poi la legge di
+   >    bilancio 2022 (L. 234/2021) che le ha parametrate al trattamento dei
+   >    presidenti di regione con applicazione progressiva (45% nel 2022, 68%
+   >    nel 2023, piena dal 2024). Questo **sgancia la funzione dalla
+   >    pubblicazione del Comune**: la cifra si ricava da legge più
+   >    popolazione, e il dato comunale serve a confermarla, non a produrla.
+   >
+   > 3. **La catena di calcolo è chiusa, tranne un anello.** Le percentuali
+   >    sono verificate; resta da confermare la base.
+   >
+   > | Anello | Valore | Fonte |
+   > |---|---|---|
+   > | Base | trattamento dei presidenti di regione, **13.800 € lordi/mese** | nota ANCI sulla legge di bilancio 2022 — dichiarato «attualmente», **da riconfermare** |
+   > | Fascia di Pistoia | capoluogo di provincia fino a 100.000 ab. → **70%** | L. 234/2021 art. 1 c. 583 lett. c) |
+   > | Popolazione | **88.889 ab.** al 31/12/2024 | ISTAT (via fonte secondaria, **da sostituire con ISTAT diretto**) |
+   > | Vicesindaco | **55%** dell'indennità del sindaco | D.M. 119/2000 art. 4 c. 4, fascia 50.001–100.000 |
+   > | Assessori | **60%** | D.M. 119/2000 art. 4 c. 9 |
+   > | Presidente del consiglio | equiparato agli assessori | D.M. 119/2000 art. 5 c. 3 |
+   > | Consiglieri | gettone ≤ **¼** dell'indennità del sindaco | art. 82 c. 2 TUEL |
+   >
+   > Ne discende, **subordinato alla conferma della base**: sindaco 9.660 €/mese,
+   > vicesindaco 5.313, assessore 5.796.
+   >
+   > **Una riprova indipendente vale più di un ricontrollo.** L'allegato A del
+   > decreto ministeriale 30/05/2022 — un foglio di calcolo largo, le cui colonne
+   > l'estrazione scollega dalle righe e che quindi da solo non basterebbe —
+   > contiene fra i propri importi esattamente **5.313**. È il valore che la
+   > catena produce per il vicesindaco partendo da tutt'altra strada. Due
+   > percorsi indipendenti sullo stesso numero.
+   >
+   > **Cosa manca prima di mettere una cifra a schermo:** confermare i 13.800 €
+   > (esiste un decreto interministeriale del **5 febbraio 2026** sulla stessa
+   > materia, che l'estrazione restituisce illeggibile), sostituire la fonte
+   > della popolazione con ISTAT diretto, e stabilire **chi dei nove è
+   > vicesindaco** — il sito del Comune non lo dichiara, e senza quello il
+   > totale della giunta non si compone.
+   >
+   > Materiale reale già raccolto e utilizzabile subito: sindaco con data di
+   > proclamazione, otto assessori con deleghe puntuali, dirigenti di
+   > riferimento e recapiti. Non è un costo, ma è un «chi fa cosa» verificato —
+   > dove oggi `/organigramma` mostra dati inventati.
 
    ⚠️ E una correzione a questo elenco: **il «Rating dei servizi» non dipende
    dal §8 affatto.** Non gli servono dati aperti, gli servono *utenti veri* che

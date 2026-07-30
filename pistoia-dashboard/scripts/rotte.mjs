@@ -42,6 +42,8 @@ const ROTTE = [
   "/trasparenza", "/bilancio", "/opere", "/decisioni", "/promesse", "/digest",
   "/territorio", "/mappa", "/quartieri", "/eventi",
   "/comunita", "/comunita/stanze",
+  // Fase C, bozza in revisione: ospita la dichiarazione di chi pubblica.
+  "/pagella",
   "/avvisi", "/organigramma", "/faq", "/glossario",
   "/notifiche", "/profilo", "/impostazioni",
   "/admin",

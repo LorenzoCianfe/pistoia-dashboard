@@ -56,6 +56,29 @@ nella barra in alto; area Comune nel menu avatar per i soli ADMIN.
 | **Glossario** | `/glossario` | ✅ | Termini amministrativi in linguaggio semplice + tooltip `GlossaryTip` |
 | **Question time** | `/question-time` | ✅ | Domande dei cittadini con risposta istituzionale |
 | **Patti, priorità, progetti, iniziative, volontariato** | varie | ✅ | Partecipazione civica |
+| **Pagella mensile** | `/pagella` | 🚧 | Impalcatura della prima pagina di giudizio dell'osservatorio civico (Fase C). Porta la **dichiarazione di chi pubblica**; **nessun voto è calcolato** |
+
+**La dichiarazione di chi pubblica** (`components/osservatorio/chi-pubblica.tsx`,
+approvata il 2026-07-30) è ciò che sostituisce il marchio separato dopo due
+tentativi respinti: lo stemma del Comune resta, e l'equivoco di attribuzione si
+scioglie dicendolo. Va in cima a ogni pagina che esprime un giudizio ed è **un
+pezzo solo**, non due componibili:
+
+- il **cartiglio** separa *chi scrive il giudizio* da *chi fornisce i numeri* —
+  una frase sola direbbe metà del prerequisito — e chiude sul diritto di
+  replica allo stesso corpo del giudizio;
+- il **filo persistente** si aggancia sotto la barra in alto. La ragione è di
+  durata, non di forma: la barra è `sticky`, quindi **lo stemma resta sullo
+  schermo per tutta la lettura mentre una dichiarazione in cima sparisce al
+  primo scorrimento**. Chi legge la terza materia vedrebbe solo lo stemma sopra
+  un giudizio sulla giunta — cioè lo stato che la dichiarazione doveva
+  correggere. Costa 64px, misurati a 360px in modalità semplice.
+
+Esporre le due parti separatamente renderebbe possibile montarne metà, e la
+metà che si dimentica è sempre il filo, perché il difetto che copre non si vede
+finché non si scorre. Il viola è il marcatore della voce redazionale — l'unico
+colore che `DESIGN.md` §4 assegna al lato cittadino — e vive su filo e pallino,
+**mai su testo**: su superficie chiara fa ~3,3:1.
 
 ## 3. Utente
 
@@ -232,6 +255,8 @@ non regge una lettura d'insieme.
 | ~~Architettura dell'informazione delle 30+ rotte~~ | ✅ **Fatto** — Fase A, 2026-07-26: 25 voci → 5 destinazioni, identiche su desktop e telefono. Vedi `docs/audit-consolidamento.md` |
 | Primitive sui *componenti* Astryx | **Valutato e scartato con motivo** (vedi `ROADMAP.md` ondata 5): `TextInput` è controllato per contratto, `Button` non offre un gancio per i link, `Banner` è troppo pesante inline, `ProgressBar` perde lo stagger. Astryx resta la sorgente dei token |
 | ~~26 rotte non ancora ridisegnate~~ | ✅ **Fase B chiusa** — 2026-07-29, in tre scaglioni: i tre hub, poi `UTILITY_NAV`, poi tutto il resto. Restano fuori solo `/mappa` (è una vista, non una composizione), `/digest` (già composto) e `/admin` (console di lavoro, riscritta dalla C-1) |
+| I voti della pagella | Servono la metodologia versionata (`/metodologia`, ancora da scrivere) e i dati reali. Il posto del voto resta vuoto e dichiara perché: un voto calcolato su dati dimostrativi non è una pagella, è una messa in scena |
+| `/metodologia` | Definizione, fonte, peso e soglia di ogni indicatore, versionati e con registro delle modifiche. Ogni pagella va timbrata con la versione che l'ha calcolata, o una pagella vecchia diventa incontestabile |
 | Terzo stadio del sankey (entrate per fonte) | Il modello dati non ha la scomposizione: servirebbe un `BudgetRevenue`, o l'ETL della Fase 2. Il sankey si ferma a due stadi invece di inventare |
 | Dichiarazione di accessibilità | Dovuta per legge a un ente pubblico italiano, ma il contenuto dipende da un audit vero: pubblicarla non verificata sarebbe peggio che non averla |
 | Test automatici di accessibilità | `axe-core` negli E2E resta da impostare. I contrasti dell'ondata 6 sono misurati a mano |

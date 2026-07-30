@@ -130,6 +130,11 @@ const PAGES = [
     apriPrima: 'a[href^="/comunita/stanze/"]',
     attendiUrl: /\/comunita\/stanze\/[^/]+$/,
   },
+  // Fase C: la prima pagina di giudizio, e la sola che porta la dichiarazione
+  // di chi pubblica. Il filo della dichiarazione è `sticky`, quindi qui la
+  // schermata a piena pagina prova solo che c'è — che resti agganciato durante
+  // lo scorrimento è una misura che va fatta a viewport fisso.
+  { name: "pagella", url: "/pagella" },
   // Le tre legali sono anonime: stanno fuori dal layout autenticato e non
   // richiedono sessione, quindi vanno marcate o il primo passaggio le salta.
   { name: "privacy", url: "/privacy", auth: false },

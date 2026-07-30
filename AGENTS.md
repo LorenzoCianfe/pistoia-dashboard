@@ -272,17 +272,24 @@ diagnosi sbagliate con dati apparentemente solidi.
    sessione del 2026-07-29, con due diagnosi sbagliate prima di trovarlo. Non è
    il codice: è la ricostruzione incrementale del dev server.
 
-   **Anche gli E2E lo prendono in pieno.** `playwright.config.ts` avvia
+   **Anche gli E2E lo prendevano in pieno.** `playwright.config.ts` avvia
    `npm run dev` sulla porta 3939: processo diverso, **stessa cartella
-   `.next`**. Quindi una suite può fallire su tre test annidati senza che nulla
-   sia rotto, e il sintomo — «Errore 404 · Pagina non trovata» sul dettaglio
-   segnalazione, su `/comunita/stanze`, sul dettaglio proposta — somiglia
-   moltissimo a una regressione appena introdotta. **Prima di cercare nel
-   diff, cancella `.next` e rilancia.**
+   `.next`**. Quindi una suite poteva fallire su tre test annidati senza che
+   nulla fosse rotto, e il sintomo — «Errore 404 · Pagina non trovata» sul
+   dettaglio segnalazione, su `/comunita/stanze`, sul dettaglio proposta —
+   somiglia moltissimo a una regressione appena introdotta.
 
-   `npm run shots` invece non lo vedeva: apre 27 rotte su 43 e a quelle di
-   dettaglio arriva *cliccando* dalla lista, mai per indirizzo. Da qui
-   `npm run rotte`, che le apre tutte e 43 e controlla tre cose insieme: stato
+   **Da 2026-07-29 `npm run test:e2e` cancella `.next` da sé** (`pretest:e2e`
+   in `package.json`). Costa una ricompilazione a ogni esecuzione; toglie un
+   rosso che non veniva dal codice, e che aveva già prodotto **due diagnosi
+   sbagliate**. Un cancello che diventa rosso per una ragione estranea alla
+   modifica costa molto più dei secondi che fa risparmiare, perché il tempo lo
+   si perde a cercare nel diff. **Fuori dagli E2E la regola resta a mano:
+   prima di cercare nel diff, cancella `.next` e rilancia.**
+
+   `npm run shots` invece non lo vedeva: apre una parte delle rotte, e a quelle
+   di dettaglio arriva *cliccando* dalla lista, mai per indirizzo. Da qui
+   `npm run rotte`, che le apre **tutte** e controlla tre cose insieme: stato
    < 400, presenza di un `<h1>`, e **assenza del testo d'errore in pagina** —
    perché una pagina finita sull'error boundary risponde 200, e la `not-found`
    di Next un `<h1>` ce l'ha comunque. Un cancello che si ferma al 200
@@ -311,7 +318,7 @@ npm run test:e2e       # playwright
 npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
 npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
 node scripts/shots.mjs --simple --width=360   # modalità semplice, viewport minima
-npm run rotte          # tutte e 43 le rotte rispondono e rendono contenuto?
+npm run rotte          # tutte le rotte rispondono e rendono contenuto? (44 al 2026-07-30)
 npm run db:reset       # ricrea il DB e ripopola i dati dimostrativi
 ```
 
@@ -327,6 +334,12 @@ stesso progetto, quindi con un `npm run dev` aperto l'avvio automatico di
 Playwright fallisce sempre. **Spegni il dev server** e lancia `npm run test:e2e`:
 Playwright avvia il proprio processo contro `prisma/e2e.db`, ricreato e
 riseminato da `tests/e2e/global-setup.ts`. Riferimento: 11/11 in ~50s.
+
+Lo script cancella `.next` prima di partire (`pretest:e2e`), per la ragione
+scritta in §3, trappola 4 della Fase A/B: la suite condivide quella cartella con
+il dev server e la ricostruzione incrementale rompe le rotte annidate. Il conto
+è ~40s di ricompilazione in più a esecuzione, e il primo `npm run dev`
+successivo riparte anch'esso da freddo.
 
 `E2E_BASE_URL` esiste ancora ma **non è la scorciatoia che sembra**: punta la
 suite al server di sviluppo, quindi condivide il DB di sviluppo *e* il
@@ -354,7 +367,9 @@ Una modifica è finita quando **tutte** queste sono vere:
 - [ ] `npm run typecheck` passa
 - [ ] `npm run lint` passa
 - [ ] I test esistenti passano
-- [ ] `npm run rotte` è verde — **43 su 43**. È l'unico cancello che risponde
+- [ ] `npm run rotte` è verde — **0 con problemi**, qualunque sia il totale
+      (44 al 2026-07-30; il numero cresce a ogni rotta nuova, e va letto dallo
+      script, non da qui). È l'unico cancello che risponde
       alla domanda «abbiamo perso una funzionalità?», e l'unico che apre le
       rotte annidate per indirizzo invece che cliccandole
 - [ ] L'hai **guardata**: `npm run shots`, o il browser, in tema chiaro **e**

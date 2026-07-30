@@ -332,7 +332,15 @@ una dichiarazione di chi pubblica.
 > resta.** La strada del marchio indipendente è chiusa, non riproporla.
 >
 > Al suo posto: una **dichiarazione esplicita di chi pubblica** in cima alle
-> pagine di giudizio. Da disegnare e approvare prima di scrivere codice.
+> pagine di giudizio.
+>
+> ✅ **Approvata il 2026-07-30**: cartiglio (separa *chi scrive* da *chi
+> fornisce i numeri*) più un filo persistente agganciato sotto la barra in
+> alto. Il filo esiste per una ragione di durata, non di forma — la barra è
+> `sticky`, quindi lo stemma resta per tutta la lettura e una dichiarazione in
+> cima no. Vive in `components/osservatorio/chi-pubblica.tsx` come pezzo unico,
+> perché la metà che si dimentica è sempre quella il cui difetto non si vede
+> finché non si scorre. La bozza che l'ha ospitata è `/pagella`.
 >
 > Ne discende che le cinque funzioni si dividono: «Il costo
 > dell'amministrazione» e «Rating dei servizi» stanno sotto lo stemma senza
