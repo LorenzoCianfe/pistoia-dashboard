@@ -674,6 +674,7 @@ model Servizio {
   id           String             @id
   valutazioni  Valutazione[]
   risposte     RispostaServizio[]
+  codiciQr     CodiceQr[]
 }
 
 /// La valutazione di un cittadino: stelle, e facoltativamente parole.
@@ -769,6 +770,22 @@ model RispostaServizio {
 
   @@index([servizioId, tipo])
   @@index([valutazioneId])
+}
+
+/// Un codice stampato accanto a uno sportello o in un luogo della città.
+///
+/// Porta servizio e luogo, così la pagina `/v/[codice]` chiede soltanto stelle
+/// ed email: i due campi scomodi sono già compilati (piano R-3). Il `luogo`
+/// finisce in `Valutazione.qrLuogo` ed è dichiarato nella composizione.
+model CodiceQr {
+  codice     String   @id
+  servizioId String
+  servizio   Servizio @relation(fields: [servizioId], references: [id], onDelete: Cascade)
+  luogo      String
+  /// Un codice compromesso (fotografato e ridistribuito) si spegne senza
+  /// perdere la storia dei voti già arrivati da quel luogo.
+  attivo     Boolean  @default(true)
+  createdAt  DateTime @default(now())
 }
 
 // ---------------------------------------------------------------------------

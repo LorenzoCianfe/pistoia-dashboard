@@ -10,6 +10,7 @@ import {
   composizione,
   mediana,
   inizioFinestra,
+  limiteConservazioneIp,
   media,
   nomePubblico,
   nonRimossa,
@@ -225,6 +226,27 @@ describe("chi può votare di nuovo, e quando", () => {
 
   it("un'altra persona vota lo stesso mese senza problemi", () => {
     expect(puoVotare(condizione, "lucia@esempio.it", "2026-08", precedenti)).toBe(true);
+  });
+});
+
+describe("la conservazione dell'IP, a date fisse", () => {
+  it("il 3 agosto 2026 il limite cade sul 4 febbraio 2026 (180 giorni)", () => {
+    const limite = limiteConservazioneIp(new Date("2026-08-03T00:00:00Z"));
+    expect(limite.toISOString()).toBe("2026-02-04T00:00:00.000Z");
+  });
+
+  it("un IP scritto ieri sopravvive, uno di sei mesi fa no", () => {
+    const oggi = new Date("2026-08-03T12:00:00Z");
+    const limite = limiteConservazioneIp(oggi);
+    const ieri = new Date("2026-08-02T12:00:00Z");
+    const seiMesiFa = new Date("2026-02-01T12:00:00Z");
+    expect(ieri.getTime() < limite.getTime()).toBe(false);
+    expect(seiMesiFa.getTime() < limite.getTime()).toBe(true);
+  });
+
+  it("la finestra si può stringere senza toccare la costante", () => {
+    const limite = limiteConservazioneIp(new Date("2026-08-03T00:00:00Z"), 30);
+    expect(limite.toISOString()).toBe("2026-07-04T00:00:00.000Z");
   });
 });
 

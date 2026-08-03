@@ -229,5 +229,65 @@ export async function getRisposte(s: Servizio) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// R-3, il voto
+// ---------------------------------------------------------------------------
+
+/** Il codice stampato: porta servizio e luogo alla pagina `/v/[codice]`. */
+export async function getCodiceQr(codice: string) {
+  return prisma.codiceQr.findUnique({ where: { codice } });
+}
+
+/** Tutti i codici, per il foglio da stampare (`/admin/codici-qr`). */
+export async function getCodiciQrTutti() {
+  return prisma.codiceQr.findMany({
+    orderBy: [{ servizioId: "asc" }, { codice: "asc" }],
+  });
+}
+
+/**
+ * I quartieri per la tendina del voto sulle condizioni. Facoltativa per chi
+ * vota, necessaria alla piattaforma: è ciò che permette a un quartiere di
+ * sbloccarsi da solo quando supera la soglia (`quartiereSbloccato`).
+ */
+export async function getQuartieriPerVoto(): Promise<{ id: string; nome: string }[]> {
+  const righe = await prisma.neighborhood.findMany({
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+  return righe.map((r) => ({ id: r.id, nome: r.name }));
+}
+
+/**
+ * La valutazione dietro un link di conferma. Il token è l'unica chiave: chi ha
+ * la mail può confermare o revocare, nessun account richiesto.
+ */
+export async function getValutazionePerToken(token: string) {
+  if (!token || token.length > 64) return null;
+  const v = await prisma.valutazione.findUnique({
+    where: { confermaToken: token },
+    select: {
+      stelle: true,
+      testo: true,
+      rimossaIl: true,
+      emailConfermata: true,
+      servizioId: true,
+      createdAt: true,
+      qrLuogo: true,
+    },
+  });
+  if (!v) return null;
+  const s = SERVIZI.find((x) => x.id === v.servizioId) ?? null;
+  if (!s) return null;
+  return {
+    servizio: s,
+    stelle: v.stelle,
+    testo: testoVisibile(v),
+    emailConfermata: v.emailConfermata,
+    quando: v.createdAt,
+    qrLuogo: v.qrLuogo,
+  };
+}
+
 export const PERIODO_CORRENTE = () => periodoDi(new Date());
 export { serviziDi };

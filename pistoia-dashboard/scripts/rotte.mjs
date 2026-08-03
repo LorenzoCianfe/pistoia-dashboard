@@ -49,6 +49,13 @@ const ROTTE = [
   // Fase C, «Valutazioni dei servizi». La seconda è ANNIDATA, quindi fra le
   // prime a cadere quando `.next` è stantio.
   "/valutazioni", "/valutazioni/pulizia",
+  // R-3: la pagina del QR (pubblica, gruppo (voto)) aperta col codice
+  // deterministico del seed, e l'atterraggio della mail con un token
+  // inventato: deve rispondere con la pagina cortese «link non più valido»,
+  // non con un errore. I percorsi con un token vero li prova l'E2E.
+  "/v/pt-anagrafe-01", "/v/conferma/link-non-valido",
+  // R-3: il foglio dei QR da stampare, ANNIDATA sotto /admin.
+  "/admin/codici-qr",
   "/avvisi", "/organigramma", "/faq", "/glossario",
   "/notifiche", "/profilo", "/impostazioni",
   "/admin",

@@ -47,6 +47,17 @@ export default function globalSetup() {
     fs.rmSync(path.resolve(process.cwd(), f), { force: true });
   }
 
+  // La cassetta d'uscita delle email (src/lib/email.ts scrive un file per
+  // messaggio in `.email/`). Va svuotata per la stessa ragione del database:
+  // un test che «riceve la mail» leggendo la cassetta non deve poter pescare
+  // quella di un'esecuzione precedente — le azioni si accumulano anche quando
+  // i dati no (AGENTS.md §3, Fase A, 2). Il percorso è replicato alla lettera
+  // qui e negli spec perché `server-only` impedisce di importare il modulo.
+  fs.rmSync(path.resolve(process.cwd(), ".email"), {
+    recursive: true,
+    force: true,
+  });
+
   const env = { ...process.env, DATABASE_URL: `file:./${DB_FILE}` };
   // `execSync` passa da una shell, ma qui i comandi sono costanti scritte a
   // mano: nessun input esterno viene interpolato, quindi non c'è superficie di

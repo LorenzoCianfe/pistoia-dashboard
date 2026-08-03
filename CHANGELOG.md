@@ -5,6 +5,32 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.21.0] — 2026-08-03 · Fase C, «Valutazioni dei servizi» — R-3, il voto
+
+> La fase che rende la funzione viva: si vota dalle schede e dai QR, la mail
+> di conferma porta il «non sono stato io, rimuovi», e il cancello è l'E2E che
+> **vota, riceve la mail e revoca**. Cancello pieno: typecheck · lint · **181**
+> unit · **17/17** E2E · `rotte` 50/50 · shots nei due temi e in modalità
+> semplice a 360px senza traboccamenti.
+
+### Le tre scelte sulle email (di Lorenzo, non del piano)
+- **Zero dipendenze**: niente SDK, niente SMTP. In produzione il trasporto sarà `fetch` verso l'API HTTP di un provider — configurazione, non codice.
+- **Il provider si sceglie con il dominio.** Senza SPF/DKIM nessuno consegna davvero, quindi scegliere oggi vincolerebbe senza abilitare. Preferenza dichiarata: residenza EU, e il provider andrà su `/privacy` come responsabile del trattamento.
+- **In locale ogni messaggio è un file** in `.email/` (`src/lib/email.ts`): l'E2E lo legge per «ricevere» la conferma, la demo lo mostra aprendolo, e in produzione l'invio **si rifiuta** finché il trasporto vero non esiste. La guardia sta *prima* della scrittura del voto: meglio nessun voto che un voto senza la mail che lo rende revocabile.
+
+### Aggiunto
+- **L'azione del voto** (`app/actions/valutazioni.ts`) — l'unica write action aperta a chi non ha un account: `getCurrentUser()` attribuisce quando può, il rate limit è per IP **ed** email (dichiaratamente best-effort), le parole vietate passano dal filtro della community, e la regola mensile delle condizioni riusa `puoVotare()` dal modulo di dominio.
+- **Il modulo a stelle** (`components/valutazioni/modulo-voto.tsx`) — l'unico componente client della funzione: radio nativi (tastiera e invio senza JS gratis), stato React solo per la resa, ogni prop serializzabile (la trappola di `AGENTS.md` §3, ondata 7.1, evitata alla radice).
+- **`/v/[codice]`** — la pagina del QR: una schermata, stelle + email, niente navigazione. Il codice porta servizio e luogo (`CodiceQr` nel seed: tre codici deterministici). **`/v/conferma/[token]`** — l'atterraggio della mail: mostra la valutazione così com'è e offre i due esiti come **azioni di form, mai effetti del GET** — i filtri antispam aprono i link, e un link che al passaggio rimuovesse cancellerebbe voti legittimi in silenzio.
+- **La revoca cancella davvero**: riga, email e token spariscono. Non è la rimozione redazionale (che azzera il testo e lascia la riga nel registro pubblico): qui è il titolare dell'indirizzo che disconosce il voto, e conservargli dati sarebbe il contrario di ciò che ha appena chiesto.
+- **Il generatore dei fogli QR** (`/admin/codici-qr`) — ogni scheda è il foglio da appendere: QR (**`uqr`**, l'unica dipendenza nuova di R-3, scelta esplicita: pacchetto minimo senza sotto-dipendenze), luogo, indirizzo breve, print stylesheet. I codici disattivati non si stampano.
+- **Conservazione applicata, non solo dichiarata**: `limiteConservazioneIp()` (provata a date fisse) azzera gli IP più vecchi di 180 giorni **a ogni voto** — una demo locale non ha un cron, e una regola scritta su `/privacy` ma mai eseguita sarebbe peggio di nessuna regola. `/privacy` ora dichiara email, IP, telefono-mai e l'invio simulato in demo.
+- **6 unit nuovi** (181) e **3 E2E nuovi** (17/17): vota-riceve-revoca, conferma-e-composizione, regola mensile. `global-setup` svuota la cassetta `.email/` come già ricrea il DB: le azioni si accumulano anche quando i dati no.
+- Le tre rotte nuove entrano in `rotte.mjs` (47 → **50**) e in `shots.mjs` **nello stesso momento**.
+
+### Imparato
+- **`src/proxy.ts` protegge `/valutazioni` col cookie di sessione**, quindi l'atterraggio della mail non poteva viverci: chi clicca dalla posta non ha una sessione e finiva al login — visto accadere negli E2E, non previsto a tavolino. Da qui `/v/` come prefisso pubblico di tutto ciò che arriva da fuori (QR e mail), senza toccare il file dell'autenticazione.
+
 ## [0.20.0] — 2026-08-03 · Fase C, «Valutazioni dei servizi» — fondamenta e lettura
 
 > La quinta e ultima funzione dell'osservatorio civico, sbloccata da una

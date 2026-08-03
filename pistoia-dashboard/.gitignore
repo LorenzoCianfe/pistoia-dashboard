@@ -58,3 +58,8 @@ test-results/
 # suite.
 /test-results/
 /playwright-report/
+
+# La cassetta d'uscita delle email di sviluppo (src/lib/email.ts): in locale
+# nessuna mail parte davvero, ogni messaggio è un file qui dentro. Gli E2E la
+# leggono per «ricevere» la conferma; si può svuotare in qualunque momento.
+/.email/

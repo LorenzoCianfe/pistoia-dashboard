@@ -120,6 +120,19 @@ const PAGES = [
   // perché a zero valutazioni le due pagine dicono cose diverse.
   { name: "valutazioni", url: "/valutazioni" },
   { name: "valutazione-servizio", url: "/valutazioni/pulizia" },
+  // R-3: la pagina del QR, pubblica e senza navigazione, aperta col codice
+  // deterministico del seed; e l'atterraggio della mail nello stato «link non
+  // più valido» — l'unico fotografabile senza un token vero. Gli stati con un
+  // token vivo li copre l'E2E, che vota davvero e legge la mail dal file.
+  { name: "voto-qr", url: "/v/pt-anagrafe-01" },
+  { name: "valutazione-conferma", url: "/v/conferma/link-non-valido" },
+  // ESCLUSA E DICHIARATA: /admin/codici-qr. Questo script accede da CITTADINO,
+  // e `requireAdmin()` reindirizza a /la-mia-citta — la "schermata" prodotta
+  // sarebbe la home spacciata per il foglio dei QR, cioè un cancello che
+  // certifica una pagina mai vista (AGENTS.md §3, ondata 7, trappola 4; visto
+  // accadere qui il 2026-08-03). Come il resto di /admin, entrerà quando
+  // l'ondata 8 rifarà l'area e questo script imparerà un passaggio da admin.
+  // Intanto la rotta è coperta da `rotte.mjs`, che accede da ADMIN.
   { name: "faq", url: "/faq" },
   { name: "glossario", url: "/glossario" },
   // Fase B, terzo scaglione: tutto il resto. Il criterio del punto d'ingresso

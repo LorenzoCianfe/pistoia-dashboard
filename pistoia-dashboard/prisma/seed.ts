@@ -91,6 +91,7 @@ async function wipe() {
   await prisma.budgetYear.deleteMany();
   await prisma.rispostaServizio.deleteMany();
   await prisma.valutazione.deleteMany();
+  await prisma.codiceQr.deleteMany();
   await prisma.servizio.deleteMany();
   await prisma.profileVerification.deleteMany();
   await prisma.citizenBadge.deleteMany();
@@ -642,6 +643,22 @@ async function main() {
   // giorno. La colonna dura viene dalle segnalazioni, che sono già seminate.
   await prisma.servizio.createMany({
     data: SERVIZI.map((s) => ({ id: s.id })),
+  });
+
+  // I codici QR sono infrastruttura, non giudizi: righe legittime nel seed
+  // anche dove le valutazioni restano a zero. I `codice` sono deterministici
+  // di proposito — `scripts/rotte.mjs` e `scripts/shots.mjs` aprono
+  // `/v/pt-anagrafe-01` per indirizzo, e un id casuale li accecherebbe.
+  await prisma.codiceQr.createMany({
+    data: [
+      {
+        codice: "pt-anagrafe-01",
+        servizioId: "anagrafe",
+        luogo: "Sportello anagrafe · Palazzo comunale",
+      },
+      { codice: "pt-tributi-01", servizioId: "tributi", luogo: "Ufficio tributi" },
+      { codice: "pt-verde-01", servizioId: "verde", luogo: "Giardini pubblici" },
+    ],
   });
 
   // --- Comunità (feed) -----------------------------------------------------

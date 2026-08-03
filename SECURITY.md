@@ -113,6 +113,18 @@ minimo 10 caratteri, almeno una lettera e un numero.
 | Votare consultazioni ufficiali (`Poll.requiresVerified`) | **verificato** |
 | Sostenere proposte | **verificato** |
 | Moderare, rispondere ufficialmente, broadcast | staff / moderatore |
+| **Valutare un servizio** (stelle + email, R-3) | **nessuno** — per decisione di prodotto |
+
+**La valutazione è l'unica write action aperta a chi non ha un account**
+(`app/actions/valutazioni.ts`, decisione 2026-08-03). Le sue difese sono
+diverse per costruzione: rate limit per **IP ed email** (entrambi
+dichiaratamente best-effort — l'IP è spoofabile senza proxy fidato), filtro
+parole della community, e la mail di conferma con **revoca via token**
+(`crypto.randomBytes(24)`, unico in schema). Conferma e revoca sono **azioni
+di form, mai effetti del GET**: i filtri antispam aprono i link delle mail, e
+un GET che mutasse agirebbe al posto della persona. Il prefisso **`/v/` è
+pubblico per disegno** — è la porta del QR e dell'atterraggio della mail — e
+sta fuori dai `PROTECTED_PREFIXES` di `proxy.ts`.
 
 **La verifica è simulata** (nessuna integrazione SPID/CIE) ed è **etichettata
 come tale nella UI**. Su una piattaforma che parla di trasparenza, fingere una
@@ -140,6 +152,12 @@ verifica reale sarebbe la cosa peggiore da fare.
   `self`.
 - Pagine legali: privacy, cookie, regole della comunità.
 - Le segnalazioni possono essere inviate in forma anonima.
+- **Valutazioni (R-3): due dati, due vite** — l'email vive finché la
+  valutazione resta pubblicata (la revoca cancella riga, email e token per
+  intero); l'**IP si azzera da solo dopo 180 giorni**
+  (`limiteConservazioneIp()`, eseguita a ogni voto — niente cron in una demo).
+  Il telefono non si raccoglie. In locale nessuna email parte: ogni messaggio
+  è un file in `.email/` (`src/lib/email.ts`), e `/privacy` lo dichiara.
 
 ---
 
@@ -151,7 +169,9 @@ Al 2026-07-25 `npm audit` riporta **12 vulnerabilità** (7 high, 4 moderate,
 `brace-expansion`, `valibot`.
 
 **Nessuna proviene da Astryx o StyleX**, verificato al momento della loro
-introduzione.
+introduzione. **`uqr`** (QR delle valutazioni, aggiunto il 2026-08-03 su
+decisione esplicita) è una foglia **senza sotto-dipendenze**: nessuna
+vulnerabilità propria al momento dell'introduzione.
 
 La maggior parte riguarda strumenti di sviluppo e non la superficie di
 produzione, ma vanno riviste prima di qualunque deploy pubblico. Aggiornare

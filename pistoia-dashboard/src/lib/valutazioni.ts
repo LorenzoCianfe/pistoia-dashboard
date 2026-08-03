@@ -133,6 +133,22 @@ export const RICHIESTA_SILENZIO_GIORNI = 30;
  */
 export const CONSERVAZIONE_IP_GIORNI = 180;
 
+/**
+ * Il momento prima del quale un IP non deve più esistere in archivio.
+ *
+ * Pura e con la data esplicita per essere provata a date fisse, come
+ * `statoPubblicazione()` in `lib/costo-amministrazione.ts`. La applica l'azione
+ * del voto a ogni scrittura: una demo locale non ha un cron, e agganciare la
+ * pulizia all'evento che produce il dato la rende automatica senza
+ * infrastruttura.
+ */
+export function limiteConservazioneIp(
+  oggi: Date,
+  giorni: number = CONSERVAZIONE_IP_GIORNI,
+): Date {
+  return new Date(oggi.getTime() - giorni * 86_400_000);
+}
+
 // ---------------------------------------------------------------------------
 // Il catalogo
 // ---------------------------------------------------------------------------

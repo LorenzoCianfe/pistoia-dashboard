@@ -288,7 +288,7 @@ pistoia-dashboard/
 | `Poll` / `PollOption` / `Vote` | Sondaggi: opzioni con voti base + voti reali (1 voto/utente) |
 | `Assessore` / `AssessoreFollow` | **Ancora d'identità per i «Segui», non una scheda anagrafica**: i fatti sulla giunta stanno in `lib/giunta.ts` con la fonte di ognuno. L'`id` è lo slug del modulo, così un «Segui» sopravvive a un riseed |
 | `CommunityPost` / `OfficialAnswer` / `PostComment` / `PostLike` | Feed "la città risponde" |
-| `Servizio` / `Valutazione` / `RispostaServizio` | Valutazioni dei servizi: catalogo (ancora d'identità, i fatti stanno in `lib/valutazioni.ts`), stelle e recensioni dei cittadini, risposte del Comune e note della redazione. Sostituisce `ServiceReview`, che portava quattro medie **inventate** |
+| `Servizio` / `Valutazione` / `RispostaServizio` / `CodiceQr` | Valutazioni dei servizi: catalogo (ancora d'identità, i fatti stanno in `lib/valutazioni.ts`), stelle e recensioni dei cittadini, risposte del Comune e note della redazione, codici stampati che portano servizio e luogo a `/v/[codice]`. Sostituisce `ServiceReview`, che portava quattro medie **inventate** |
 | `Notification` / `NotificationPreference` | Centro notifiche per utente + preferenze per canale |
 | `Neighborhood` | Quartieri e frazioni di Pistoia (territorialità, "Vicino a te") |
 | `ProfileVerification` | Richieste di verifica con coda di approvazione admin |
@@ -678,6 +678,19 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   zero. Corretto un difetto visto dal vivo: la colonna dura presentava **una mediana su due
   casi**. Piano in `docs/piano-rating-servizi.md`. **175/175** unitari, **14/14** E2E,
   **`rotte` 47/47**, `shots --simple --width=360` senza traboccamenti.
+
+- **0.21.0 — «Valutazioni dei servizi», R-3: il voto** (2026-08-03). La funzione diventa viva:
+  si vota dalle schede e dai QR. **Tre scelte sulle email, di Lorenzo**: zero dipendenze (in
+  produzione sarà `fetch` verso l'API HTTP di un provider), provider **col dominio** (EU
+  preferita, andrà su `/privacy` come responsabile), e in locale ogni messaggio è un **file**
+  in `.email/` — l'E2E lo legge per «ricevere» la conferma, e in produzione l'invio si rifiuta.
+  Azione del voto aperta ai senza-account (rate limit IP+email best-effort, filtro parole,
+  regola mensile da `puoVotare()`); revoca che **cancella davvero** riga, email e token;
+  `/v/[codice]` e `/v/conferma/[token]` sotto il prefisso pubblico `/v/` (il proxy protegge
+  `/valutazioni`, e chi clicca dalla posta non ha una sessione); fogli stampabili da
+  `/admin/codici-qr` con **`uqr`**, unica dipendenza nuova; IP azzerati oltre i 180 giorni a
+  ogni voto, dichiarato su `/privacy`. **181/181** unitari, **17/17** E2E (il cancello:
+  vota-riceve-revoca), **`rotte` 50/50**, shots nei due temi e a 360px puliti.
 
 ## 11. Roadmap
 

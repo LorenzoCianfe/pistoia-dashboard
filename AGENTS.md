@@ -445,6 +445,31 @@ significa riaprire esattamente il difetto che l'isolamento ha chiuso.
 piena pagina non mostra: il viewport si allarga fino a contenerlo e lo fa
 sparire.
 
+**`shots` accede da CITTADINO, `rotte` da ADMIN — e non è un dettaglio.** Una
+rotta `/admin/*` aggiunta a `shots.mjs` non fallisce: `requireAdmin()`
+reindirizza a `/la-mia-citta` e lo script fotografa **la home spacciandola per
+la pagina admin** — un cancello che certifica una pagina mai vista (visto
+accadere il 2026-08-03 con `/admin/codici-qr`). Le rotte admin si aggiungono a
+`rotte.mjs` e si **escludono dichiarandolo** da `shots.mjs`, finché lo script
+non imparerà un passaggio da admin (ondata 8).
+
+**Tre cose di R-3 che valgono per qualunque lavoro futuro (2026-08-03):**
+
+1. **`/v/` è il prefisso pubblico di ciò che arriva da fuori** (QR, link nelle
+   email). `src/proxy.ts` protegge `/valutazioni` col cookie di sessione:
+   un atterraggio di posta messo lì sotto finisce al login, perché chi clicca
+   dalla propria casella una sessione non ce l'ha. Prima di aggiungere una
+   rotta raggiunta da un link esterno, controlla `PROTECTED_PREFIXES`.
+2. **In locale le email sono FILE in `.email/`** (`src/lib/email.ts`): l'E2E
+   le legge per «riceverle», `tests/e2e/global-setup.ts` svuota la cassetta a
+   ogni esecuzione (le azioni si accumulano anche quando i dati no), e in
+   produzione l'invio **si rifiuta** finché non esistono dominio e provider
+   (decisione 2026-08-03, `docs/piano-rating-servizi.md` §8). Non introdurre
+   un mailer: la base c'è già.
+3. **Conferma e revoca dai link delle mail sono azioni di form, MAI effetti
+   del GET**: i filtri antispam aprono i link per ispezionarli, e un GET che
+   muta agisce al posto della persona.
+
 Se il dev server si comporta in modo assurdo (moduli non trovati, panic di
 Turbopack, azioni server che falliscono in silenzio): **cancella `.next` e
 riavvia**. Succede dopo un cambio di dipendenze ed è costato un'ora una volta.

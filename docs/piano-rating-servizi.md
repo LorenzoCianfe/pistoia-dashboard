@@ -207,11 +207,13 @@ Tre note che il codice deve rispettare:
 |---|---|---|
 | `/valutazioni` | La panoramica: due tabelloni, mai fusi | R-2 |
 | `/valutazioni/[servizio]` | La scheda: media, composizione, andamento, colonna dura, recensioni, risposte, registro | R-2 |
-| `/v/[codice]` | **La pagina del QR**: una schermata, stelle + email, niente navigazione | R-3 |
+| `/v/[codice]` | **La pagina del QR**: una schermata, stelle + email, niente navigazione | R-3 ✅ |
+| `/v/conferma/[token]` | L'atterraggio della mail: conferma o «non sono stato io» come azioni, mai come GET | R-3 ✅ |
+| `/admin/codici-qr` | Il generatore: ogni scheda è un foglio da stampare e appendere | R-3 ✅ |
 | `/metodologia` | Soglia, media, finestra, versione — prerequisito 3 | R-6 |
 
 Ogni rotta nuova entra in `scripts/rotte.mjs` **e** in `scripts/shots.mjs` nello
-stesso momento (`AGENTS.md` §5). Da 45 si arriva a **49**.
+stesso momento (`AGENTS.md` §5). Con R-3 il conteggio è a **50**.
 
 ---
 
@@ -232,11 +234,24 @@ in `nav-items.ts` · `rotte.mjs` e `shots.mjs`.
 **Cancello:** il cancello completo, comprese le schermate in modalità semplice a
 360px. Le pagine devono reggere **con zero valutazioni**, che è lo stato reale.
 
-### R-3 · Il voto
+### R-3 · Il voto ✅ *(chiusa 2026-08-03)*
 Azione server · validazione · email di conferma con revoca · il modulo a stelle ·
 `/v/[codice]` per i QR · il generatore dei codici.
 **Cancello:** un E2E che vota, riceve, revoca. La regola mensile e quella a
 episodio provate con date fisse, come `statoPubblicazione()`.
+
+> **Chiusa con il cancello pieno**: typecheck · lint · 181 unit · 17/17 E2E
+> (i tre nuovi: vota-riceve-revoca, conferma-e-composizione, regola mensile) ·
+> `rotte` 50/50 · shots nei due temi e a 360px. Le decisioni prese durante la
+> fase (email e QR) sono registrate in §8. Due note d'attuazione:
+>
+> - **L'atterraggio della mail vive su `/v/conferma/[token]`, non sotto
+>   `/valutazioni`**: `src/proxy.ts` protegge `/valutazioni` col cookie di
+>   sessione, e chi clicca dalla posta una sessione non ce l'ha. `/v/` è il
+>   prefisso pubblico di tutto ciò che arriva da fuori.
+> - **La revoca cancella la riga per intero** (email e token compresi): non è
+>   la rimozione redazionale di §5, che azzera il testo e lascia la riga nel
+>   registro. Chi dice «non sono stato io» non deve restare in archivio.
 
 ### R-4 · Risposte e moderazione
 Risposta al quadro e alla singola · attribuzione dall'account · timbro della
@@ -259,7 +274,8 @@ e il timbro di versione su ogni scheda.
 ## 8. Cosa resta aperto
 
 Delle quattro cose che il piano non poteva decidere da sé, **due sono state
-decise il 2026-08-03** e sono già nel codice.
+decise il 2026-08-03** e sono già nel codice. In coda (5–6) le due decisioni
+arrivate con R-3, registrate qui perché questo resti l'unico posto da leggere.
 
 1. ✅ **La conservazione dei dati.** **IP: 180 giorni.** **Email: finché la
    valutazione resta pubblicata**, poi sparisce con lei. Due dati con due scopi
@@ -275,13 +291,33 @@ decise il 2026-08-03** e sono già nel codice.
    `/metodologia` in R-6, quando la soglia si vedrà accanto alle altre regole
    invece che da sola. **Fino ad allora non va citata come definitiva in nessuna
    pagina pubblica.**
-3. ⏳ **Chi modera davvero.** Il registro pubblico costruisce fiducia solo se
-   qualcuno legge le segnalazioni in pochi giorni. Segnalazioni non moderate
-   marciscono più in fretta delle recensioni cattive. Da decidere entro R-4.
+3. ✅ **Chi modera davvero** (decisione di Lorenzo, 2026-08-03, chiusura R-3):
+   **la Redazione, reale, che firma SOLO come entità collettiva** — «Redazione
+   della Dashboard di Pistoia», la stessa firma di `ChiPubblica` — **mai con
+   il nome di una persona**. Non è la finzione dichiarata («in demo la
+   moderazione è simulata») né la firma personale: la moderazione avviene
+   davvero, e la faccia pubblica è l'entità. Ne discende per R-4: registro,
+   rimozioni e Note della Redazione portano quella firma; nessuna superficie
+   di moderazione espone un nome proprio.
 4. ✅ **Il nome.** «Rating dei servizi — Pistoia Index» prometteva un indice
    mensile pubblico, cioè la cosa che questo disegno rifiuta. Ora è
    **«Valutazioni dei servizi»**, e la parola «indice» non compare da nessuna
    parte.
+5. ✅ **Come si mandano le email** (decisione di Lorenzo, 2026-08-03, R-3).
+   Tre scelte separabili, prese separatamente: **zero dipendenze** — in
+   produzione il trasporto sarà `fetch` verso l'API HTTP di un provider,
+   configurazione e non codice; **il provider si sceglie insieme al dominio**
+   (senza SPF/DKIM nessuno consegna; preferenza dichiarata per la residenza
+   EU, e il provider andrà su `/privacy` come responsabile del trattamento);
+   **in locale ogni messaggio è un file** in `.email/` (`src/lib/email.ts`) —
+   l'E2E lo legge, la demo lo mostra, e in produzione l'invio si rifiuta
+   finché il trasporto vero non esiste. Il congelato «Mailer transazionale»
+   di `ROADMAP.md` (residuo Fase 1), quando si sbloccherà, parte da qui.
+6. ✅ **L'immagine dei QR è `uqr`** (decisione di Lorenzo, 2026-08-03, R-3):
+   pacchetto minimo, MIT, senza sotto-dipendenze, emette SVG. Scelto contro
+   le alternative «vendorizzare qrcodegen» (zero pacchetti ma codice di terzi
+   trascritto, scansione da verificare a mano) e «rimandare l'immagine».
+   È l'unica dipendenza nuova dell'intera funzione.
 
 ---
 

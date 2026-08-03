@@ -36,10 +36,36 @@ export default function PrivacyPage() {
         servizio che richiedi.
       </p>
 
+      <h2>Valutazioni dei servizi</h2>
+      <p>
+        Per valutare un servizio non serve un account: chiediamo soltanto un indirizzo email.
+        Il voto entra subito nel conteggio; l&apos;email serve a confermarlo o a rimuoverlo
+        («non sono stato io») e non compare mai in pagina.
+      </p>
+      <ul>
+        <li>
+          <strong>Email:</strong> conservata finché la valutazione resta pubblicata, poi
+          cancellata con lei. Chi rimuove il proprio voto cancella anche l&apos;indirizzo.
+        </li>
+        <li>
+          <strong>Indirizzo IP:</strong> raccolto solo per riconoscere gli abusi e cancellato
+          automaticamente dopo <strong>180 giorni</strong>.
+        </li>
+        <li>
+          <strong>Telefono:</strong> non viene richiesto né raccolto.
+        </li>
+      </ul>
+      <p>
+        In questa demo l&apos;invio delle email è simulato: nessun messaggio lascia il computer
+        su cui gira la piattaforma. Quando l&apos;invio diventerà reale, il fornitore che
+        recapita le email sarà indicato qui come responsabile del trattamento.
+      </p>
+
       <h2>Conservazione</h2>
       <p>
         I dati sono conservati finché l&apos;account è attivo. Puoi cancellare l&apos;account in
         qualunque momento: i contenuti pubblici già inviati restano visibili in forma anonima.
+        Per le valutazioni dei servizi valgono le durate della sezione precedente.
       </p>
 
       <h2>I tuoi diritti</h2>

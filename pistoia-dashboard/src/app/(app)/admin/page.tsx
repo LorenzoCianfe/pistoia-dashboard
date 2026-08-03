@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
   Shield,
   MessageCircleQuestion,
@@ -8,10 +9,12 @@ import {
   BadgeCheck,
   Lightbulb,
   History,
+  QrCode,
 } from "lucide-react";
 import { requireAdmin } from "@/lib/auth/dal";
 import { getAdminData, getModerationData } from "@/lib/data/admin";
 import { Card } from "@/components/ui/card";
+import { buttonClasses } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
 import { AnswerForm } from "@/components/admin/answer-form";
 import { OperaProgressForm } from "@/components/admin/opera-progress-form";
@@ -73,6 +76,23 @@ export default async function AdminPage() {
           </Card>
         ))}
       </div>
+
+      {/* R-3: i fogli QR delle valutazioni, da stampare e appendere. */}
+      <Card className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <QrCode size={18} className="shrink-0 text-teal" aria-hidden />
+          <div>
+            <p className="text-sm font-semibold">Codici QR delle valutazioni</p>
+            <p className="text-xs text-muted">
+              I fogli da stampare per sportelli e luoghi: portano al voto con
+              servizio e luogo già compilati.
+            </p>
+          </div>
+        </div>
+        <Link href="/admin/codici-qr" className={buttonClasses("secondary", "sm")}>
+          Apri e stampa
+        </Link>
+      </Card>
 
       {/* Verifiche + Segnalazioni */}
       <div className="grid gap-5 lg:grid-cols-2">

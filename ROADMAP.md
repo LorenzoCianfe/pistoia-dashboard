@@ -412,7 +412,7 @@ tutti inventati.
 | **Dossier persona** | Scheda pubblica per assessore: curriculum dichiarato, indennità dal portale trasparenza, esperienza nel settore di delega, dichiarazioni vs azioni | `FE` `BE` | richiesta 2026-07-26 | 💡 Fase C |
 | **Audit cittadino** | PDF trimestrale di 5–6 pagine in forma di mini-audit: executive summary, 5 indicatori con trend, 3 promesse, 3 spese, 3 domande senza risposta | `FE` `BE` `DES` | richiesta 2026-07-26 | 💡 Fase C |
 | **Il costo dell'amministrazione** | Quanto la legge prevede per sindaco, giunta e presidente del consiglio, con l'atto primario dietro ogni cifra | `FE` `BE` | richiesta 2026-07-26 | ✅ 2026-07-31 — `/trasparenza/costo-amministrazione` |
-| **Valutazioni dei servizi** *(già «Rating dei servizi — Pistoia Index»)* | Stelle 1–5 e recensioni scritte su servizi allo sportello **e** condizioni della città, in due tabelloni mai fusi. Media solo sopra soglia, composizione del campione sempre dichiarata, risposta del Comune nella stessa scheda | `FE` `BE` `DES` | richiesta 2026-07-26 · scoperta 2026-08-03 | 🚧 Fase C — piano in [`docs/piano-rating-servizi.md`](../docs/piano-rating-servizi.md) |
+| **Valutazioni dei servizi** *(già «Rating dei servizi — Pistoia Index»)* | Stelle 1–5 e recensioni scritte su servizi allo sportello **e** condizioni della città, in due tabelloni mai fusi. Media solo sopra soglia, composizione del campione sempre dichiarata, risposta del Comune nella stessa scheda | `FE` `BE` `DES` | richiesta 2026-07-26 · scoperta 2026-08-03 | 🚧 Fase C — **R-1…R-3 chiuse** (lettura **e voto**: schede, QR pubblici `/v/`, conferma/revoca via email su file, fogli stampabili). Restano R-4…R-6. Piano in [`docs/piano-rating-servizi.md`](../docs/piano-rating-servizi.md) |
 
 **Prerequisiti — nessuna delle cinque parte senza questi.**
 
@@ -836,7 +836,7 @@ documento. Dice la stessa cosa a chi legge, e regge in tribunale.
 | Lighthouse CI + performance budget | La velocità percepita non degrada | `ENG` | 🆕 | 📋 da impostare (prossima ondata) |
 | Audit dipendenze in CI | npm audit / osv-scanner sulla supply chain | `SEC` | 🆕 | 📋 da impostare (prossima ondata) |
 | PWA + offline + Web Push | App installabile, coda offline segnalazioni, push VAPID | `FE` `ENG` | idea esistente | 📋 |
-| Mailer transazionale | Verifica email, password dimenticata; sblocca digest email | `BE` | residuo Fase 1 | 🧊 su richiesta |
+| Mailer transazionale | Verifica email, password dimenticata; sblocca digest email | `BE` | residuo Fase 1 | 🧊 su richiesta — la base d'invio esiste da R-3 (`src/lib/email.ts`: file in locale, `fetch` verso il provider quando ci sarà il dominio; decisione 2026-08-03 in [`docs/piano-rating-servizi.md`](docs/piano-rating-servizi.md) §8) |
 | Switch SQLite → Postgres/Neon | Necessario solo per deploy/dati reali; procedura documentata | `BE` `ENG` | residuo Fase 1 | 🧊 alla ripresa |
 
 ---

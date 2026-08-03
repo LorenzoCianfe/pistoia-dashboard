@@ -5,6 +5,7 @@ import { ArrowLeft, ExternalLink, Trash2, BadgeCheck, QrCode } from "lucide-reac
 import { requireUser } from "@/lib/auth/dal";
 import {
   getAndamento,
+  getQuartieriPerVoto,
   getRecensioni,
   getRimozioni,
   getRisposte,
@@ -12,6 +13,7 @@ import {
   type ColonnaDura,
   type RecensioneResa,
 } from "@/lib/data/valutazioni";
+import { ModuloVoto } from "@/components/valutazioni/modulo-voto";
 import { Card, CardEyebrow } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { StarRating } from "@/components/ui/star-rating";
@@ -62,18 +64,20 @@ export default async function SchedaServizioPage({
 }: {
   params: Promise<{ servizio: string }>;
 }) {
-  await requireUser();
+  const user = await requireUser();
   const { servizio } = await params;
   const s = trovaServizio(servizio);
   if (!s) notFound();
 
-  const [scheda, recensioni, andamento, rimozioni, risposte] = await Promise.all([
-    getScheda(s),
-    getRecensioni(s),
-    getAndamento(s),
-    getRimozioni(s),
-    getRisposte(s),
-  ]);
+  const [scheda, recensioni, andamento, rimozioni, risposte, quartieri] =
+    await Promise.all([
+      getScheda(s),
+      getRecensioni(s),
+      getAndamento(s),
+      getRimozioni(s),
+      getRisposte(s),
+      s.famiglia === "condizione" ? getQuartieriPerVoto() : Promise.resolve(undefined),
+    ]);
   const { media: m, composizione: c, colonna } = scheda;
   const mesiConVoto = andamento.filter((a) => a.media != null);
 
@@ -163,6 +167,26 @@ export default async function SchedaServizioPage({
           />
         </Card>
       ) : null}
+
+      {/*
+        Il voto (R-3). Dopo il dato, mai prima: la pagina apre su ciò che la
+        città ha detto, non su un modulo (piano §0). Email e nome sono
+        precompilati dall'account perché qui una sessione c'è per forza — il
+        percorso davvero senza account è /v/[codice], dal QR.
+      */}
+      <Card id="vota">
+        <CardEyebrow>Vota anche tu</CardEyebrow>
+        <div className="mt-3">
+          <ModuloVoto
+            servizioId={s.id}
+            famiglia={s.famiglia}
+            domanda={DOMANDA_FAMIGLIA[s.famiglia]}
+            quartieri={quartieri}
+            defaultEmail={user.email}
+            defaultNome={user.name}
+          />
+        </div>
+      </Card>
 
       {/* Le risposte del Comune e le note della redazione. */}
       {risposte.length > 0 ? (
