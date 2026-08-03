@@ -2,6 +2,7 @@ import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { hash } from "@node-rs/argon2";
+import { GIUNTA } from "../src/lib/giunta";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
@@ -505,97 +506,31 @@ async function main() {
     ],
   });
 
-  // --- Assessori (organigramma) -------------------------------------------
-  const sindaco = await prisma.assessore.create({
-    data: {
-      name: "Marco Ferrari",
-      role: "Sindaco",
-      area: "Giunta comunale",
-      initials: "MF",
-      color: "red",
-      votesElected: 24_180,
-      email: "sindaco@comune.pistoia.it",
-      order: 0,
-    },
-  });
-
-  const vicesindaco = await prisma.assessore.create({
-    data: {
-      name: "Elena Bartolini",
-      role: "Vicesindaca",
-      area: "Bilancio e Personale",
-      initials: "EB",
-      color: "teal",
-      votesElected: 3_420,
-      parentId: sindaco.id,
-      order: 1,
-    },
-  });
-
-  const belli = await prisma.assessore.create({
-    data: {
-      name: "Chiara Belli",
-      role: "Assessora all'Ambiente e al Verde",
-      area: "Ambiente e Verde",
-      initials: "CB",
-      color: "green",
-      votesElected: 2_980,
-      parentId: sindaco.id,
-      order: 2,
-    },
-  });
-
+  // --- Giunta (ancore per i «Segui») ---------------------------------------
+  //
+  // Nessun dato anagrafico qui dentro: le nove persone della giunta sono reali
+  // e i loro fatti vivono in `src/lib/giunta.ts`, ognuno con la propria fonte.
+  // Il seed scrive solo gli id, che sono gli slug del modulo — così un «Segui»
+  // sopravvive a un riseed invece di puntare a un cuid che non esiste più.
   await prisma.assessore.createMany({
-    data: [
-      {
-        name: "Davide Innocenti",
-        role: "Assessore alla Mobilità",
-        area: "Mobilità e Lavori pubblici",
-        initials: "DI",
-        color: "viola",
-        votesElected: 2_540,
-        parentId: sindaco.id,
-        order: 3,
-      },
-      {
-        name: "Sara Niccolai",
-        role: "Assessora alla Cultura",
-        area: "Cultura e Turismo",
-        initials: "SN",
-        color: "amber",
-        votesElected: 2_210,
-        parentId: sindaco.id,
-        order: 4,
-      },
-      {
-        name: "Francesca Lippi",
-        role: "Assessora al Sociale",
-        area: "Sociale e Sanità",
-        initials: "FL",
-        color: "red",
-        votesElected: 1_990,
-        parentId: sindaco.id,
-        order: 5,
-      },
-      {
-        name: "Tommaso Vannini",
-        role: "Assessore all'Istruzione",
-        area: "Scuola e Istruzione",
-        initials: "TV",
-        color: "teal",
-        votesElected: 1_760,
-        parentId: sindaco.id,
-        order: 6,
-      },
-    ],
+    data: GIUNTA.map((c) => ({ id: c.id })),
   });
 
-  // Demo citizen follows the environment assessor.
+  // Il cittadino dimostrativo segue l'assessore all'Ambiente. Il «Segui» è
+  // un'azione dell'utente, non un fatto sulla persona: può stare nel seed.
   await prisma.assessoreFollow.create({
-    data: { assessoreId: belli.id, userId: citizen.id },
+    data: { assessoreId: "mattia-nesti", userId: citizen.id },
   });
 
   // --- Sondaggi ------------------------------------------------------------
+  //
+  // Nessun sondaggio è collegato a un assessore, e non è una dimenticanza.
+  // I sondaggi sono inventati; gli assessori, da questa sessione, no.
+  // «Piano mobilità del centro storico: cosa privilegiare?» attribuito a
+  // Stefania Nesi sarebbe una consultazione che quella persona non ha mai
+  // aperto — cioè un dato inventato su una persona reale, la stessa categoria
+  // delle preferenze elettorali tolte da /organigramma.
+  // `Poll.assessoreId` resta nullable e /sondaggi si protegge già da sé.
   await prisma.poll.create({
     data: {
       question: "Quale dovrebbe essere la priorità per il 2026?",
@@ -603,7 +538,6 @@ async function main() {
       year: 2026,
       category: "Priorità 2026",
       active: true,
-      assessoreId: belli.id,
       options: {
         create: [
           { label: "Verde urbano", color: "green", baseVotes: 410, order: 1 },
@@ -621,7 +555,6 @@ async function main() {
       year: 2026,
       category: "Bilancio partecipativo",
       active: true,
-      assessoreId: vicesindaco.id,
       options: {
         create: [
           { label: "Scuole e asili", color: "teal", baseVotes: 512, order: 1 },
@@ -639,7 +572,6 @@ async function main() {
       year: 2025,
       category: "Sondaggio concluso",
       active: false,
-      assessoreId: belli.id,
       options: {
         create: [
           { label: "Sì, funziona bene", color: "green", baseVotes: 1240, order: 1 },
@@ -660,7 +592,6 @@ async function main() {
       kind: "consultazione",
       requiresVerified: true,
       active: true,
-      assessoreId: vicesindaco.id,
       options: {
         create: [
           { label: "Più aree pedonali", color: "green", baseVotes: 280, order: 1 },
@@ -682,7 +613,6 @@ async function main() {
       requiresVerified: true,
       neighborhoodId: nb["le-fornaci"],
       active: true,
-      assessoreId: belli.id,
       options: {
         create: [
           { label: "Parco di Monteoliveto", color: "green", baseVotes: 142, order: 1 },

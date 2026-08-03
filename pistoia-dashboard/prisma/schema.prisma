@@ -549,21 +549,24 @@ model Vote {
   @@index([optionId])
 }
 
+/// Ancora d'identità per i «Segui», non una scheda anagrafica.
+///
+/// I fatti sulla giunta — nome, carica, deleghe, recapito — stanno in
+/// `src/lib/giunta.ts`, dove ognuno porta la propria fonte e il renderer
+/// scarta chi non ce l'ha. Sono persone reali: tenerne i dati qui, nella
+/// stessa tabella-per-dati-dimostrativi delle segnalazioni inventate, li
+/// esporrebbe a divergere in silenzio dalla fonte che li dichiara.
+///
+/// Resta quello che solo un database può sapere: chi segue chi. L'`id` non è
+/// un cuid ma lo slug del modulo, così i «Segui» sopravvivono a un riseed.
+///
+/// `votesElected` è stato rimosso, non riempito con numeri veri: per cinque
+/// persone su nove quel numero non esiste in nessuna fonte. La spiegazione per
+/// esteso è in testa a `lib/giunta.ts`.
 model Assessore {
-  id           String            @id @default(cuid())
-  name         String
-  role         String // "Sindaco", "Assessora all'Ambiente e al Verde"
-  area         String // short delega label
-  initials     String
-  color        String            @default("teal")
-  votesElected Int               @default(0)
-  email        String?
-  order        Int               @default(0)
-  parentId     String?
-  parent       Assessore?        @relation("OrgTree", fields: [parentId], references: [id])
-  children     Assessore[]       @relation("OrgTree")
-  polls        Poll[]
-  follows      AssessoreFollow[]
+  id      String            @id
+  polls   Poll[]
+  follows AssessoreFollow[]
 }
 
 model AssessoreFollow {

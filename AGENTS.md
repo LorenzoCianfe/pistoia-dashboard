@@ -6,7 +6,7 @@
 >
 > **Leggilo per intero all'inizio di ogni sessione, prima di toccare codice.**
 >
-> Aggiornato: 2026-07-26 (Fase B)
+> Aggiornato: 2026-08-03 (Fase C)
 
 ---
 
@@ -318,7 +318,7 @@ npm run test:e2e       # playwright
 npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
 npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
 node scripts/shots.mjs --simple --width=360   # modalità semplice, viewport minima
-npm run rotte          # tutte le rotte rispondono e rendono contenuto? (45 al 2026-07-31)
+npm run rotte          # tutte le rotte rispondono e rendono contenuto? (47 al 2026-08-03)
 npm run db:reset       # ricrea il DB e ripopola i dati dimostrativi
 
 python scripts/pdftext.py documento.pdf              # testo di un PDF
@@ -369,6 +369,50 @@ l'originale. Normattiva risponde a `curl` con un cookie jar e serve il **testo
 vigente**, che è ciò che serve quando una norma del 2000 potrebbe essere stata
 modificata.
 
+**Quattro trappole in più sulle fonti, pagate portando `/organigramma` sui dati
+veri (2026-08-03).** Come le altre, nessuna produce un errore.
+
+1. **Il corollario del PDF vale anche per le SPA: quando una pagina non ha il
+   dato, cerca l'endpoint che glielo serve.** I risultati elettorali del Comune
+   (Eleweb) e di Eligendo sono applicazioni JavaScript: `curl` e i lettori di
+   pagina prendono il guscio, e la conclusione naturale è «il dato non è
+   pubblico». Lo è: `js/locator.js` costruisce gli URL di `static_json/…`, e
+   `folder.js` dice quale cartella leggere. Da lì escono 12 liste e 357
+   candidati con le preferenze una per una. **Prima di dichiarare un dato
+   irraggiungibile, leggi il JavaScript che lo carica.**
+
+2. **Un dato con quattro letture plausibili è un dato che non si pubblica.**
+   Per i voti del sindaco lo stesso file dà 22.512 (voti al candidato), 21.478
+   (al netto dei voti al solo sindaco) e 21.572 (somma delle liste della
+   coalizione); la stampa ne pubblica una quarta, 21.709. **Le percentuali
+   coincidono tutte (~54,3%) e gli assoluti no** — ed è la percentuale che ti
+   convince di aver capito. Quando il portale dichiara in testa «DATI NON
+   UFFICIALI», quella riga è un dato anche lei.
+
+3. **L'assenza di una persona da un elenco è un fatto, non un buco.** Quattro
+   assessori su otto non compaiono in nessuna lista: non è un'estrazione
+   incompleta, è che gli assessori li nomina il sindaco. Ma ne discende una
+   regola di resa: **dare il numero a chi ce l'ha e lasciare vuoto agli altri
+   non è neutro.** Quel vuoto si legge «questi non li ha votati nessuno», che è
+   falso. È §3 (ondata 7, 3) applicata a una colonna invece che a una
+   percentuale — e la conseguenza è che il campo sparisce per tutti, non che si
+   riempia a metà.
+
+4. **Uno schema che regge per otto casi su nove è una trappola, non uno
+   schema.** I recapiti degli otto assessori sono tutti
+   `iniziale.cognome@comune.pistoia.it`; il sindaco è
+   `sindaco@comune.pistoia.it`. Chi avesse dedotto dal modello avrebbe sbagliato
+   **proprio la persona più in vista**. I recapiti si leggono dalla pagina che
+   li pubblica, uno per uno, sempre.
+
+E una che non è una trappola ma un modo di sbagliare diagnosi: **quando due
+estrazioni della stessa pagina divergono, guarda prima se stanno descrivendo due
+cose diverse.** Le «due versioni delle deleghe di Stefania Nesi» che avevano
+fatto omettere l'intero elenco da `/trasparenza/costo-amministrazione` erano il
+**titolo** della scheda e l'**elenco enumerato** sotto: il sommario e il
+portafoglio, non due versioni in disaccordo. Dettaglio in
+`docs/fonti-organigramma.md` §1.1.
+
 **Le opzioni dello script delle schermate vanno passate a `node`, non a `npm`.**
 In PowerShell `npm run shots -- --simple --width=360` non le fa arrivare (e
 `--only` viene proprio intercettato da npm come sua configurazione: `npm warn
@@ -415,7 +459,7 @@ Una modifica è finita quando **tutte** queste sono vere:
 - [ ] `npm run lint` passa
 - [ ] I test esistenti passano
 - [ ] `npm run rotte` è verde — **0 con problemi**, qualunque sia il totale
-      (45 al 2026-07-31; il numero cresce a ogni rotta nuova, e va letto dallo
+      (47 al 2026-08-03; il numero cresce a ogni rotta nuova, e va letto dallo
       script, non da qui). È l'unico cancello che risponde
       alla domanda «abbiamo perso una funzionalità?», e l'unico che apre le
       rotte annidate per indirizzo invece che cliccandole

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { Coins, CalendarClock, ExternalLink, Scale } from "lucide-react";
+import { Coins, CalendarClock, Scale } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
+import { SchedaFonte } from "@/components/osservatorio/fonte";
 import { DisplayNumber } from "@/components/signature/display-number";
 import { formatEuro, formatNumber } from "@/lib/format";
 import {
@@ -18,7 +19,6 @@ import {
   costoMensileGiunta,
   statoPubblicazione,
   vociPubblicabili,
-  type Riga,
   type Voce,
 } from "@/lib/costo-amministrazione";
 
@@ -49,39 +49,6 @@ export const metadata: Metadata = {
   2. **Nessuna scala a tacche.** L'intervallo 0 → costo della giunta è vero in
      aritmetica ma non è un traguardo che qualcuno abbia fissato.
 */
-
-function LinkFonte({ riga }: { riga: Riga }) {
-  return (
-    <a
-      href={riga.urlFonte}
-      target="_blank"
-      rel="noreferrer noopener"
-      className="inline-flex items-center gap-1 font-medium text-teal underline decoration-dotted underline-offset-2 hover:no-underline"
-    >
-      {riga.fonte}
-      <ExternalLink size={12} aria-hidden />
-      <span className="sr-only"> (si apre in una nuova scheda)</span>
-    </a>
-  );
-}
-
-function SchedaFonte({ riga }: { riga: Riga }) {
-  return (
-    <li className="border-t border-border pt-3 first:border-t-0 first:pt-0">
-      <p className="text-sm leading-relaxed">{riga.affermazione}</p>
-      <p className="mt-1.5 text-xs text-muted-2">
-        <LinkFonte riga={riga} /> · consultata il{" "}
-        <time dateTime={riga.dataConsultazione}>
-          {new Date(riga.dataConsultazione).toLocaleDateString("it-IT", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          })}
-        </time>
-      </p>
-    </li>
-  );
-}
 
 /*
   `min-w-0` sull'elemento di griglia, non solo `grid-cols-1`: la traccia

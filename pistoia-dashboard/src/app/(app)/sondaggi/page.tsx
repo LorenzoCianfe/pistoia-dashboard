@@ -2,33 +2,29 @@ import type { Metadata } from "next";
 import { Vote, Smile } from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
 import { getPolls, SODDISFAZIONE_DIGITALE } from "@/lib/data/sondaggi";
-import { getOrg } from "@/lib/data/organigramma";
-import { Card, CardEyebrow } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
-import { Avatar } from "@/components/ui/avatar";
 import { DisplayNumber } from "@/components/signature/display-number";
 import { RingGauge } from "@/components/charts/ring-gauge";
 import { PollCard } from "@/components/sondaggi/poll-card";
-import { FollowButton } from "@/components/assessori/follow-button";
 import { formatNumber } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Sondaggi" };
 
+/*
+  La scheda «Assessore di riferimento» è stata tolta il 2026-08-03, insieme al
+  collegamento fra `Poll` e `Assessore` nel seed.
+
+  Diceva «Eletta con N preferenze» accanto a una persona, e reggeva finché
+  quella persona era inventata. Con la giunta vera diventava due affermazioni
+  false su una persona reale: che avesse aperto una consultazione dimostrativa,
+  e un numero di preferenze che per cinque dei nove non esiste in nessuna fonte
+  (vedi `lib/giunta.ts`). Il referente si potrà rimettere quando un sondaggio
+  sarà davvero di qualcuno.
+*/
 export default async function SondaggiPage() {
   const user = await requireUser();
-  const [polls, org] = await Promise.all([
-    getPolls(user.id),
-    getOrg(user.id),
-  ]);
-
-  const followMap = new Map(
-    [org.sindaco, ...org.members]
-      .filter(Boolean)
-      .map((m) => [m!.id, m!.followedByMe]),
-  );
-
-  const mainPoll = polls.find((p) => p.active) ?? polls[0];
-  const referente = mainPoll?.assessore;
+  const polls = await getPolls(user.id);
 
   /*
     La cifra conta i sondaggi APERTI, mai i voti.
@@ -94,40 +90,6 @@ export default async function SondaggiPage() {
 
         {/* Side column */}
         <div className="space-y-5">
-          {referente ? (
-            <Card>
-              <CardEyebrow>Assessore di riferimento</CardEyebrow>
-              <div className="mt-3 flex items-center gap-3">
-                <Avatar
-                  initials={referente.initials}
-                  color={referente.color}
-                  size="lg"
-                />
-                <div className="min-w-0">
-                  <p className="font-semibold leading-tight">{referente.name}</p>
-                  <p className="text-sm text-muted">{referente.role}</p>
-                </div>
-              </div>
-              {/*
-                Era «Eletta con N preferenze», al femminile fisso: su Davide
-                Innocenti o Tommaso Vannini la frase era semplicemente
-                sbagliata. La forma senza participio vale per chiunque e non
-                obbliga a portarsi dietro un genere nel modello dati.
-              */}
-              <p className="mt-3 text-sm text-muted">
-                <span className="font-semibold text-foreground">
-                  {formatNumber(referente.votesElected)}
-                </span>{" "}
-                preferenze alle elezioni.
-              </p>
-              <div className="mt-4">
-                <FollowButton
-                  assessoreId={referente.id}
-                  following={followMap.get(referente.id) ?? false}
-                />
-              </div>
-            </Card>
-          ) : null}
 
           {/* Soddisfazione servizi digitali — KPI mock, visibile solo in DEMO_MODE */}
           {SODDISFAZIONE_DIGITALE != null ? (

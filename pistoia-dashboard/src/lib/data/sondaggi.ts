@@ -19,24 +19,25 @@ export type PollResult = {
   active: boolean;
   totalVotes: number;
   userOptionId: string | null;
-  assessore: {
-    id: string;
-    name: string;
-    role: string;
-    initials: string;
-    color: string;
-    votesElected: number;
-  } | null;
   /** Consultazione con documento (A2 §23, O4): null quando non c'è un documento. */
   doc: { title: string; summary: string; url: string | null } | null;
   options: PollOptionResult[];
 };
 
 export async function getPolls(userId: string): Promise<PollResult[]> {
+  /*
+    Nessun `include: { assessore: true }`, e non è un'ottimizzazione.
+
+    I sondaggi sono dimostrativi; gli assessori, dal 2026-08-03, sono nove
+    persone reali con la propria fonte (`lib/giunta.ts`). Mostrare «assessore
+    di riferimento: Stefania Nesi» sotto una consultazione che nessuno ha
+    aperto è un dato inventato su una persona reale — la stessa categoria delle
+    preferenze elettorali tolte da /organigramma. Il seed non collega più i due,
+    e qui la relazione smette anche di essere letta.
+  */
   const polls = await prisma.poll.findMany({
     orderBy: [{ active: "desc" }, { createdAt: "desc" }],
     include: {
-      assessore: true,
       options: {
         orderBy: { order: "asc" },
         include: { _count: { select: { votes: true } } },
@@ -62,16 +63,6 @@ export async function getPolls(userId: string): Promise<PollResult[]> {
       active: p.active,
       totalVotes: total,
       userOptionId: p.votes[0]?.optionId ?? null,
-      assessore: p.assessore
-        ? {
-            id: p.assessore.id,
-            name: p.assessore.name,
-            role: p.assessore.role,
-            initials: p.assessore.initials,
-            color: p.assessore.color,
-            votesElected: p.assessore.votesElected,
-          }
-        : null,
       doc: p.docTitle
         ? { title: p.docTitle, summary: p.docSummary ?? "", url: p.docUrl }
         : null,
@@ -83,12 +74,15 @@ export async function getPolls(userId: string): Promise<PollResult[]> {
   });
 }
 
-export async function getServiceReviews() {
-  // Le recensioni dei servizi sono interamente mock: fuori da DEMO_MODE
-  // spariscono (la UI mostra lo zero-state onesto).
-  if (!DEMO_MODE) return [];
-  return prisma.serviceReview.findMany({ orderBy: { order: "asc" } });
-}
+/*
+  `getServiceReviews()` è stata rimossa il 2026-08-03 con il modello
+  `ServiceReview`. Restituiva quattro medie inventate — «Anagrafe 4,6 su 1.280
+  recensioni» — che non potevano sopravvivere all'arrivo delle valutazioni
+  vere: sarebbero state due valutazioni degli stessi servizi nella stessa
+  applicazione, una reale e una fabbricata. Ora le valutazioni vivono in
+  `lib/valutazioni.ts` e partono da zero, che è lo stato onesto del giorno uno.
+  Vedi `docs/piano-rating-servizi.md` §5.
+*/
 
 // Soddisfazione media servizi digitali (mock KPI from the concept).
 // Null fuori da DEMO_MODE: la UI deve nascondere il KPI, non inventarlo.
