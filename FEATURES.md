@@ -4,9 +4,10 @@
 > ondata. Se una funzionalità esiste nel codice e non è qui, il documento è in
 > debito.
 >
-> Legenda: ✅ completa · 🚧 in corso · 🔒 richiede verifica · 👤 richiede login
+> Legenda: ✅ completa · 🚧 in corso · 🔒 richiede verifica · 👤 richiede login ·
+> 🔗 **dati reali, ogni riga con la propria fonte** (non dimostrativi)
 >
-> Aggiornato: 2026-07-25 (ondata 7)
+> Aggiornato: 2026-08-03 (Fase C)
 
 ---
 
@@ -42,7 +43,7 @@ nella barra in alto; area Comune nel menu avatar per i soli ADMIN.
 | **Comunità** | `/comunita` | ✅ 👤 | Cifra display sulla quota di **domande con risposta ufficiale** (contata sulle sole domande). Stanze tematiche a griglia col numero di conversazioni. Composer con tipo post e quartiere, feed con badge autore, like/commenti ottimistici, risposte ufficiali con ufficio, "questa risposta è utile?", segnala commento |
 | **Eventi** | `/eventi` | ✅ | Calendario mensile, pubblicazione dal Comune, proposta dalle associazioni verificate con approvazione |
 | **Quartieri** | `/quartieri` · `/[slug]` | ✅ | Ogni scheda porta una fascia `MeshSurface` la cui tinta è il **tasso di risoluzione di quell'area** — lo slot dove una fotografia entrerà (`DISCOVERY` D7). Sotto il campione minimo la scheda resta neutra e lo dichiara. Il dettaglio aggrega segnalazioni, opere, eventi, proposte, discussioni; follow. **Transizione a elemento condiviso** |
-| **Organigramma** | `/organigramma` | ✅ | Sindaco e giunta ad albero, follow degli assessori |
+| **Organigramma** | `/organigramma` | ✅ 🔗 | **Le nove persone reali della giunta**, ognuna con la scheda del Comune che la dichiara e la data in cui è stata aggiornata. Apre sull'indice delle **57 deleghe** in ordine alfabetico, ognuna col nome di chi la tiene. Recapiti letti dalle schede, mai dedotti. Nessun numero di preferenze: per cinque persone su nove non esiste in nessuna fonte (`docs/fonti-organigramma.md`). Follow degli assessori |
 
 ## 2. Trasparenza
 
@@ -57,7 +58,8 @@ nella barra in alto; area Comune nel menu avatar per i soli ADMIN.
 | **Question time** | `/question-time` | ✅ | Domande dei cittadini con risposta istituzionale |
 | **Patti, priorità, progetti, iniziative, volontariato** | varie | ✅ | Partecipazione civica |
 | **Pagella mensile** | `/pagella` | 🚧 | Impalcatura della prima pagina di giudizio dell'osservatorio civico (Fase C). Porta la **dichiarazione di chi pubblica**; **nessun voto è calcolato** |
-| **Il costo dell'amministrazione** | `/trasparenza/costo-amministrazione` | ✅ | **La prima pagina su dati reali** (Fase C). Indennità di sindaco, giunta e presidente del consiglio calcolate dalla catena di legge, con l'atto primario dietro ogni cifra. Sta sotto lo stemma **senza** la dichiarazione di chi pubblica: non esprime un giudizio, rende leggibile ciò che il D.Lgs 33/2013 impone di pubblicare. Fonti in [`docs/fonti-costo-amministrazione.md`](docs/fonti-costo-amministrazione.md) |
+| **Valutazioni dei servizi** | `/valutazioni` · `/valutazioni/[servizio]` · `/v/[codice]` | 🚧 | Stelle 1–5 e recensioni su **servizi allo sportello** e **condizioni della città**, in due tabelloni **mai fusi in una classifica sola**. Media pubblicata solo sopra soglia (20), composizione del campione sempre accanto al numero, risposta del Comune nella stessa scheda. Il giorno uno la scheda apre sul **dato duro da `Report`** con le stelle dichiarate vuote. Piano in [`docs/piano-rating-servizi.md`](docs/piano-rating-servizi.md) |
+| **Il costo dell'amministrazione** | `/trasparenza/costo-amministrazione` | ✅ 🔗 | **La prima pagina su dati reali** (Fase C). Indennità di sindaco, giunta e presidente del consiglio calcolate dalla catena di legge, con l'atto primario dietro ogni cifra. Sta sotto lo stemma **senza** la dichiarazione di chi pubblica: non esprime un giudizio, rende leggibile ciò che il D.Lgs 33/2013 impone di pubblicare. Fonti in [`docs/fonti-costo-amministrazione.md`](docs/fonti-costo-amministrazione.md) |
 
 **La dichiarazione di chi pubblica** (`components/osservatorio/chi-pubblica.tsx`,
 approvata il 2026-07-30) è ciò che sostituisce il marchio separato dopo due
@@ -192,7 +194,7 @@ che rendeva difendibile il primo scaglione.
 | ~~`/sondaggi`~~ | **Esclusione ritirata (terzo scaglione).** Era scritta troppo larga: valeva per una cifra *sui voti*, che `getPolls` gonfia con `demoBaseline(baseVotes)`, non per qualunque cifra. I sondaggi **aperti** sono righe di `Poll` e non passano da nessun baseline — la stessa scelta già fatta su `/priorita`, dove si contano gli interventi in votazione e non i voti raccolti |
 | `/mappa` | 41 righe di contenitore attorno a Leaflet. Non ha una composizione da portare: ha una vista |
 | `/digest` | È già composto — griglia di `Stat`, testata di stampa, sezioni. Promuovere uno dei quattro numeri direbbe che quello è la notizia, e in un riepilogo mensile nessuno lo è |
-| `/organigramma` | Le righe sono vere ma **nessun numero regge**: le aree di delega coincidono col numero di schede (tautologico), i contattabili sono 1 su 7 perché nel seed solo il sindaco ha un'email — a 88px si leggerebbe «il Comune non si fa contattare», una conclusione tratta da un dato mancante — e follower e preferenze sono numeri su una persona sola. Apre invece sull'indice delle deleghe |
+| `/organigramma` | Le righe sono vere ma **nessun numero regge**: le aree di delega coincidono col numero di schede (tautologico), i contattabili sono 1 su 7 perché nel seed solo il sindaco ha un'email — a 88px si leggerebbe «il Comune non si fa contattare», una conclusione tratta da un dato mancante — e follower e preferenze sono numeri su una persona sola. Apre invece sull'indice delle deleghe. **Riscritta il 2026-08-03: due dei tre motivi sono decaduti, la conclusione no — vedi sotto** |
 | `/glossario` | «13 termini spiegati» è vero e non è la ragione per cui qualcuno arriva qui: su un glossario si arriva con **una** parola in testa. Apre sull'indice dei termini, che è ciò che il contenuto dice nel suo insieme |
 
 > Fase B, terzo scaglione — *tutto il resto* (2026-07-29)
@@ -229,6 +231,42 @@ come «non avete fatto quasi niente», che è una conclusione, non il dato.
 La regola del campione minimo (`lib/citystats.ts`) resta e si generalizza in
 `campioneSufficiente()`: sotto soglia la pagina **dichiara** che il conteggio
 non regge una lettura d'insieme.
+
+> Fase C — `/organigramma` sui dati veri (2026-08-03)
+
+La pagina mostrava una giunta inventata (Marco Ferrari sindaco) mentre
+`/trasparenza/costo-amministrazione`, a un clic di distanza, dava i nomi veri.
+Ora legge le nove persone reali da `src/lib/giunta.ts`, dove ognuna porta la
+propria fonte e il renderer scarta chi non ce l'ha.
+
+**Due dei tre motivi dell'esclusione dalla cifra display sono decaduti, e la
+conclusione regge lo stesso** — vale la pena scriverlo perché è il caso in cui
+un argomento va riverificato invece che ereditato:
+
+| Motivo del 2026-07-28 | Oggi |
+|---|---|
+| «preferenze e follower sono numeri su una persona sola» | Le **preferenze non esistono più**: `votesElected` è stato rimosso dal modello, perché per cinque persone su nove il numero non esiste in nessuna fonte (`docs/fonti-organigramma.md` §2) |
+| «i contattabili sono 1 su 7, nel seed solo il sindaco ha un'email» | **Non è più vero**: le nove schede del Comune pubblicano tutte un recapito, quindi sono 9 su 9. Il difetto che la riga denunciava è rientrato da sé |
+| «le aree di delega coincidono col numero di schede» | **Resta, e ora copre anche il secondo**: «9 su 9» e «8 assessori» sono due modi di contare le schede che il lettore ha già davanti. Tautologico |
+
+Cambia invece **l'indice**, che era già l'apertura: da otto etichette (una per
+persona) alle **57 deleghe vere**, in ordine alfabetico, ognuna col nome di chi
+la tiene. Chi cerca «Toponomastica» la trova senza aprire otto schede — che è
+letteralmente la domanda con cui si arriva su un organigramma.
+
+Due conseguenze fuori pagina, entrambe della stessa famiglia («un dato inventato
+su una persona reale non è un dato dimostrativo»):
+
+- **`/sondaggi` perde la scheda «Assessore di riferimento»** e il seed non
+  collega più `Poll` a `Assessore`. Diceva «Eletta con N preferenze» e reggeva
+  finché la persona era inventata; sulla giunta vera diventava due affermazioni
+  false — una consultazione che quella persona non ha mai aperto, e un numero
+  che non esiste.
+- **Il «Segui» resta ma esce di vetrina** (decisione di Lorenzo): bottone e
+  conteggio dove sono, ma la descrizione della pagina non promette più «quante
+  persone segue ciascun assessore». Su nove politici in carica una metrica
+  social in testa alla pagina orienta la lettura verso una classifica di
+  popolarità, che non è ciò che la pagina misura.
 
 ---
 

@@ -3,6 +3,7 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { hash } from "@node-rs/argon2";
 import { GIUNTA } from "../src/lib/giunta";
+import { SERVIZI } from "../src/lib/valutazioni";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
@@ -88,7 +89,9 @@ async function wipe() {
   await prisma.budgetMonth.deleteMany();
   await prisma.budgetCategory.deleteMany();
   await prisma.budgetYear.deleteMany();
-  await prisma.serviceReview.deleteMany();
+  await prisma.rispostaServizio.deleteMany();
+  await prisma.valutazione.deleteMany();
+  await prisma.servizio.deleteMany();
   await prisma.profileVerification.deleteMany();
   await prisma.citizenBadge.deleteMany();
   await prisma.organizationProfile.deleteMany();
@@ -622,14 +625,23 @@ async function main() {
     },
   });
 
-  // --- Recensioni servizi --------------------------------------------------
-  await prisma.serviceReview.createMany({
-    data: [
-      { service: "Anagrafe", rating: 4.6, count: 1280, icon: "id-card", order: 1 },
-      { service: "Tributi online", rating: 4.8, count: 940, icon: "receipt", order: 2 },
-      { service: "Prenotazioni sanitarie", rating: 4.1, count: 720, icon: "stethoscope", order: 3 },
-      { service: "Sportello unico edilizia", rating: 4.3, count: 510, icon: "building-2", order: 4 },
-    ],
+  // --- Valutazioni dei servizi ---------------------------------------------
+  //
+  // Le undici caselle, e **nessuna valutazione**. Non è un lavoro lasciato a
+  // metà: è lo stato reale del giorno uno, ed è la scelta di Lorenzo del
+  // 2026-08-03 contro l'alternativa di tenere quattro medie dimostrative.
+  //
+  // Qui c'era `ServiceReview` con «Anagrafe 4,6 su 1.280 recensioni». Un voto
+  // inventato su un servizio pubblico non è un dato dimostrativo come una buca
+  // in via Roma: è un giudizio attribuito ai cittadini su un ufficio vero. E
+  // contamina all'indietro — chi scopre che il 4,6 era finto non crede più
+  // nemmeno al 3,1 vero che arriva dopo (`AGENTS.md` §2).
+  //
+  // Ne discende un vincolo sulle pagine, non un'attenuante: `/valutazioni` deve
+  // reggere a zero valutazioni, perché è così che la vedrà chiunque il primo
+  // giorno. La colonna dura viene dalle segnalazioni, che sono già seminate.
+  await prisma.servizio.createMany({
+    data: SERVIZI.map((s) => ({ id: s.id })),
   });
 
   // --- Comunità (feed) -----------------------------------------------------

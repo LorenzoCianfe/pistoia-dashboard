@@ -66,6 +66,8 @@ model User {
   qtVotes             QtVote[]
   priorityVotes       PriorityVote[]
   initiativeJoins     InitiativeJoin[]
+  valutazioni         Valutazione[]
+  risposteServizi     RispostaServizio[]
 
   @@index([neighborhoodId])
 }
@@ -94,6 +96,7 @@ model Neighborhood {
   adoptedPlaces AdoptedPlace[]
   pacts         NeighborhoodPact[]
   civicProjects CivicProject[]
+  valutazioni   Valutazione[]
 }
 
 // A request to verify a profile. In this mock phase verification is granted by
@@ -650,13 +653,122 @@ model PostLike {
   @@unique([postId, userId])
 }
 
-model ServiceReview {
-  id      String @id @default(cuid())
-  service String // Anagrafe, Tributi online, SUAP...
-  rating  Float // 4.6
-  count   Int // number of reviews
-  icon    String?
-  order   Int    @default(0)
+// ---------------------------------------------------------------------------
+// Valutazioni dei servizi (osservatorio civico, ROADMAP §6)
+//
+// Sostituisce `ServiceReview`, che portava quattro medie **inventate**
+// (Anagrafe 4,6 su 1.280 recensioni…). Non potevano sopravvivere all'arrivo di
+// valutazioni vere: chi ha visto «4,8 su 940» non legge «3 valutazioni» come un
+// progresso, e chi scopre che il 4,6 era finto non crede più nemmeno al 3,1
+// vero che arriva dopo. Piano completo in `docs/piano-rating-servizi.md`.
+// ---------------------------------------------------------------------------
+
+/// Ancora d'identità per le valutazioni, non un catalogo.
+///
+/// Nome, famiglia, descrizione e mappatura alle categorie di `Report` stanno in
+/// `src/lib/valutazioni.ts`, che è la sorgente unica: la tabella esiste perché
+/// `Valutazione` abbia una chiave esterna vera invece di una stringa libera —
+/// un `servizioId` scritto male produrrebbe valutazioni orfane che spariscono
+/// da ogni pagina senza un errore. Stesso schema di `Assessore`/`lib/giunta.ts`.
+model Servizio {
+  id           String             @id
+  valutazioni  Valutazione[]
+  risposte     RispostaServizio[]
+}
+
+/// La valutazione di un cittadino: stelle, e facoltativamente parole.
+///
+/// Nessun account richiesto — l'email è la chiave d'identità, e il voto entra
+/// **subito** nel conteggio (decisione del 2026-08-03): la conferma serve a
+/// revocare e a bloccare gli abusi a posteriori, non a pubblicare.
+model Valutazione {
+  id         String   @id @default(cuid())
+  servizioId String
+  servizio   Servizio @relation(fields: [servizioId], references: [id], onDelete: Cascade)
+
+  /// 1..5. L'intervallo è un traguardo fissato davvero, a differenza dello
+  /// 0→totale che ha fatto togliere la scala a tacche da /promesse.
+  stelle Int
+  testo  String?
+
+  // --- identità: email sempre, account mai obbligatorio --------------------
+  email           String
+  emailConfermata Boolean @default(false)
+  /// Token del link «conferma / non sono stato io, rimuovi».
+  confermaToken   String? @unique
+  /// Come compare in pagina. `null` ⇒ «Anonimo».
+  nomeVisualizzato String?
+  /// Falso ⇒ si mostra «Marco B.». Vero solo se la casella è spuntata: è il
+  /// default per **tutti**, compreso chi ha un account verificato.
+  mostraNomeIntero Boolean @default(false)
+  userId           String?
+  user             User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // --- dove e quando -------------------------------------------------------
+  quartiereId  String?
+  quartiere    Neighborhood? @relation(fields: [quartiereId], references: [id], onDelete: SetNull)
+  /// `AAAA-MM`. Scritto anche sugli sportelli, dove non entra nel calcolo: è
+  /// ciò che rende possibile un andamento senza riaggregare da `createdAt`.
+  periodo      String
+  canale       String        @default("web") // web | qr | segnalazione | digest | popup
+  /// Il luogo stampato sul QR, che è anche una prova debole di presenza.
+  qrLuogo      String?
+
+  // --- tracciabilità (art. 5 GDPR: solo ciò che serve all'abuso) -----------
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  // --- moderazione ---------------------------------------------------------
+  /// Rimuove la **Redazione**, mai il Comune. La riga resta per la
+  /// tracciabilità dell'autore; `testo` viene azzerato, perché il motivo più
+  /// frequente di rimozione sono i dati di un terzo, che vanno tolti davvero.
+  rimossaIl     DateTime?
+  rimossaMotivo String?
+  /// Segnalata dal Comune, che può contestare ma non cancellare.
+  segnalataIl   DateTime?
+
+  risposte RispostaServizio[]
+
+  @@index([servizioId, periodo])
+  @@index([servizioId, rimossaIl])
+  @@index([email, servizioId, periodo])
+}
+
+/// Risposta ufficiale o nota della redazione.
+///
+/// **L'attribuzione segue l'account che scrive** (decisione del 2026-08-03): se
+/// personale compare la persona con la carica, se generico compare il Comune.
+/// `caricaAlMomento` è un'istantanea presa da `lib/giunta.ts` alla scrittura —
+/// senza, una risposta archiviata continuerebbe ad affermare un incarico che
+/// quella persona non ricopre più.
+model RispostaServizio {
+  id   String @id @default(cuid())
+  /// `quadro` (periodica, sul servizio) | `singola` (a una valutazione)
+  /// | `nota-redazione` (blocco diverso: aggiunge un dato, non risponde)
+  tipo String
+
+  servizioId    String?
+  servizio      Servizio?    @relation(fields: [servizioId], references: [id], onDelete: Cascade)
+  valutazioneId String?
+  valutazione   Valutazione? @relation(fields: [valutazioneId], references: [id], onDelete: Cascade)
+  /// `AAAA-MM` per le risposte al quadro.
+  periodo       String?
+
+  testo           String
+  autoreId        String
+  autore          User    @relation(fields: [autoreId], references: [id], onDelete: Cascade)
+  caricaAlMomento String?
+
+  /// Solo per `nota-redazione`: la fonte, con la stessa disciplina di
+  /// `lib/costo-amministrazione.ts`. Senza URL la nota non va a schermo.
+  urlFonte          String?
+  dataConsultazione String?
+
+  createdAt DateTime @default(now())
+
+  @@index([servizioId, tipo])
+  @@index([valutazioneId])
 }
 
 // ---------------------------------------------------------------------------

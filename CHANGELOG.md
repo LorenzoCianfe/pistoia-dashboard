@@ -5,6 +5,83 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.20.0] — 2026-08-03 · Fase C, «Valutazioni dei servizi» — fondamenta e lettura
+
+> La quinta e ultima funzione dell'osservatorio civico, sbloccata da una
+> scoperta e non da un dato. Fasi **R-1** (fondamenta) e **R-2** (le due pagine
+> di lettura) chiuse; R-3…R-6 pianificate. Piano completo, con le dodici
+> decisioni che lo governano, in
+> [`docs/piano-rating-servizi.md`](docs/piano-rating-servizi.md).
+
+### La scoperta
+
+La domanda che ha sbloccato la funzione non era sui dati ma sul vuoto: **cosa
+mostra la pagina finché i voti non esistono?** La risposta — *il dato duro dal
+primo giorno* — vale oltre questa funzione, ed è la forma generale del difetto
+che aveva già tolto la cifra da `/organigramma` e la scala a tacche da
+`/promesse`: **un'assenza non si decora e non si riempie; le si mette accanto
+ciò che si sa già.**
+
+### Aggiunto
+- **`/valutazioni`** — la panoramica, con **due tabelloni che non si fondono mai in una classifica sola**: uno è una media di *episodi* (una pratica, una data, un ufficio), l'altro un *umore* su uno stato continuo. Metterli in graduatoria insieme affermerebbe che sono confrontabili.
+- **`/valutazioni/[servizio]`** — la scheda: media (solo sopra soglia), composizione del campione accanto al numero, andamento con **un punto al mese**, colonna dura, recensioni, risposte del Comune, e il **registro pubblico delle rimozioni**.
+- **`src/lib/valutazioni.ts`** — catalogo delle undici caselle e regole di dominio, modulo **neutro** (lo importano pagine, seed e test). **`src/lib/data/valutazioni.ts`** per le query.
+- **Modelli `Servizio`, `Valutazione`, `RispostaServizio`.** `Servizio` è un'ancora d'identità, non un catalogo: i fatti stanno nel modulo, com'è per `Assessore`/`lib/giunta.ts`.
+- 26 test unitari (**175** in totale) e **3 E2E** (**14/14**) che girano sullo stato del giorno uno, che è l'unico che la pagina vedrà davvero all'apertura.
+- Le due rotte entrano in `rotte.mjs` (45 → **47**) e in `shots.mjs` **nello stesso momento**.
+
+### Rimosso
+- **`ServiceReview` e le sue quattro medie inventate** — «Anagrafe 4,6 su 1.280 recensioni», «Tributi online 4,8 su 940» — più il blocco che le rendeva su `/comunita`. Un voto inventato su un servizio pubblico non è un dato dimostrativo come una buca in via Roma: è un giudizio attribuito ai cittadini su un ufficio vero. E contamina all'indietro — chi scopre che il 4,6 era finto non crede più nemmeno al 3,1 vero che arriva dopo (`AGENTS.md` §2). **Il seed non contiene nessuna valutazione**, e da qui il vincolo che le pagine devono reggere a zero.
+
+### Corretto
+- **La colonna dura presentava una mediana su due casi.** Visto dal vivo: la pagina scriveva «2 segnalazioni quest'anno, chiuse in 7 giorni» come se fosse il dato solido su cui la scheda si appoggia — mentre il seed ha **dieci** segnalazioni in tutto. Sette giorni mediani su due casi non è una misura, è la stessa accusa su campione minuscolo che `CAMPIONE_MINIMO_PER_GIUDIZIO` esiste per fermare, e faceva più danno del solito perché colpiva proprio la metà della pagina che deve essere quella affidabile. Da qui la regola: **il conteggio è un fatto e si mostra sempre, la mediana è una sintesi e vuole il campione minimo** — e quando manca la pagina lo *dice*, altrimenti il lettore attribuisce l'assenza a un Comune che non chiude niente.
+- **Una frase si rompeva su `sicurezza`.** Dove il volume non si accosta alle stelle e la mediana non c'è, il template produceva «Intanto dalle segnalazioni: chiuse». Nessun errore, solo una pagina che diceva una parola sola: ora la frase si compone a pezzi e il riquadro non si apre se non ha niente da dire.
+- **`su ${nome.toLowerCase()}` produceva «2 segnalazioni su pulizia».** In italiano la preposizione dipende da genere, numero e iniziale: cinque stringhe dichiarate (`Servizio.materia`) costano meno di una regola che sbaglia.
+- **Le stelle si riempiono con l'accento, non con l'ambra.** In `DESIGN.md` §4 `--amber` significa «attenzione e attesa»: una fila di stelle ambra usa il colore dell'allarme per dire che va bene. E la fila di stelle gialle è l'elemento più riconoscibilmente da template dell'intero web, cioè il caso in cui §1 dice di ridisegnare.
+
+### Deciso in scoperta
+- **Due famiglie, una sola interfaccia, mai una classifica sola.** Sportelli **a episodio**, condizioni **ogni mese**.
+- **Chiunque vota** (modello Trustpilot): nessun filtro, e la **composizione del campione dichiarata su ogni scheda** — portante, mai sotto una piega.
+- **Nessun account richiesto, email sempre obbligatoria**, e il voto entra **subito**: la conferma serve a revocare e a bloccare gli abusi a posteriori.
+- **«Marco B.» per tutti di default**, account verificati compresi: il nome intero è un atto deliberato, non una conseguenza dell'essersi registrati.
+- **Modera la Redazione, il Comune può solo segnalare**, con **registro pubblico** delle rimozioni. Chi è giudicato non controlla il proprio voto.
+- **L'attribuzione di una risposta segue l'account** che la scrive; la media e l'andamento **non stanno mai dentro un blocco attribuito a una persona**, o la media del servizio diventa la pagella di chi risponde.
+- **Soglia di pubblicazione 20**, e **non** è `CAMPIONE_MINIMO_PER_GIUDIZIO` (5): quella è la soglia di un *tasso* su casi che arrivano da soli. Chi recensisce si autoseleziona verso gli estremi — cinque recensioni non sono un campione rumoroso, sono un campione **storto**.
+- **Il nome cambia**: «Rating dei servizi — Pistoia Index» prometteva un indice unico che il disegno rifiuta, e un nome che promette un indice costringe prima o poi qualcuno a calcolarlo.
+
+## [0.19.0] — 2026-08-03 · Fase C, `/organigramma` smette di contraddire `/trasparenza`
+
+> Due risposte diverse alla stessa domanda dentro la stessa applicazione:
+> `/organigramma` dava Marco Ferrari sindaco, `/trasparenza/costo-amministrazione`
+> dava Giovanni Capecchi. Il difetto era nato dall'aver dato dati veri a una
+> sola delle due pagine.
+
+### Aggiunto
+- **`src/lib/giunta.ts`**: le nove persone reali della giunta, ognuna con la propria `Riga` di fonte. Modulo **neutro** (né `"use client"` né `server-only`): lo importano la pagina, il seed e i test. Importa `Riga` e `rigaPubblicabile` da `lib/costo-amministrazione.ts` invece di ridefinirli — due definizioni della stessa regola sono peggio di nessuna regola.
+- **[`docs/fonti-organigramma.md`](docs/fonti-organigramma.md)**: nome per nome, delega per delega, recapito per recapito, con URL e data di consultazione.
+- **L'indice delle 57 deleghe vere**, in ordine alfabetico, ognuna col nome di chi la tiene. Era l'apertura della pagina già dalla Fase B, ma con **una** etichetta per persona: chi cercava «Toponomastica» doveva aprire otto schede.
+- **`components/osservatorio/fonte.tsx`**: `LinkFonte`, `SchedaFonte` e `DataConsultazione` estratti dalla pagina del costo, ora che le pagine che citano un atto sono due. Due copie della stessa citazione divergono in silenzio.
+- 18 test su `tests/unit/giunta.test.ts` (**133 in totale**). Uno confronta le persone di `giunta.ts` con quelle di `costo-amministrazione.ts`: se una giunta cambia e si aggiorna un solo modulo, torna rosso.
+
+### Corretto
+- **`/organigramma` mostrava una giunta inventata.** Ora legge le nove persone reali, con la scheda del Comune che le dichiara e la data in cui è stata aggiornata.
+- **Le deleghe sono riprese dalla fonte, non copiate.** `/trasparenza/costo-amministrazione` le aveva **omesse** perché la ricognizione ne dava «due versioni» per Stefania Nesi. Non erano due versioni: erano il **titolo** della scheda e l'**elenco enumerato** sotto — il sommario e il portafoglio. Le due voci che facevano sembrare il conflitto sono «Rapporti con il Consiglio Comunale», che nel titolo non c'è, e «Attività produttive», che nel titolo è abbreviata.
+
+### Rimosso
+- **`votesElected` sparisce dal modello `Assessore`**, e non viene riempito con numeri veri. Per **cinque persone su nove** quel numero non esiste in nessuna fonte: un candidato sindaco non riceve preferenze (è votato sulla scheda del sindaco, e «Giovanni Capecchi» non compare fra i 357 candidati), e quattro assessori su otto non erano candidati in nessuna delle dodici liste. Per i quattro che una preferenza ce l'hanno, il numero descrive **un seggio che hanno lasciato**: il TUEL art. 64 li fa decadere da consiglieri all'atto della nomina. E anche il numero del sindaco è ambiguo quattro volte — 22.512 / 21.478 / 21.572 dal portale che si dichiara «DATI NON UFFICIALI», 21.709 dalla stampa. Al suo posto: **come** ciascuno è arrivato alla carica, che è vero per tutti e nove.
+- **`Assessore` smette di essere una scheda anagrafica** e resta l'ancora dei «Segui»: `id` (lo slug del modulo, non più un `cuid()`, così un «Segui» sopravvive a un riseed) e le due relazioni. I fatti sulle persone non stanno più nello stesso file delle segnalazioni inventate.
+- **`/sondaggi` perde la scheda «Assessore di riferimento»** e il seed non collega più `Poll` a `Assessore`. Diceva «Eletta con N preferenze» e reggeva finché la persona era inventata; sulla giunta vera diventava una consultazione che quella persona non ha mai aperto.
+
+### Modificato
+- **Il «Segui» resta ma esce di vetrina** (decisione di Lorenzo). Bottone e conteggio dove sono; la descrizione della pagina non promette più «quante persone segue ciascun assessore».
+- **`FEATURES.md` §5 riscritto sull'organigramma.** Dei tre motivi per cui la pagina non porta una cifra display ne restano zero come erano scritti — le preferenze non esistono più, i contattabili sono 9 su 9 e non 1 su 7 — ma **la conclusione regge**: «9 su 9» e «8 assessori» sono due modi di contare le schede che il lettore ha già davanti. Tautologico.
+
+### Note di ricognizione
+- **I risultati elettorali sono pubblici anche quando la pagina sembra vuota.** Eleweb ed Eligendo sono applicazioni JavaScript: `curl` prende il guscio. `js/locator.js` costruisce gli URL di `static_json/…` e `folder.js` dice quale cartella leggere — da lì escono 12 liste e 357 candidati con le preferenze una per una. È il corollario per le SPA della regola «quando un PDF resiste, cerca la versione HTML».
+- **Uno schema che regge otto casi su nove è una trappola.** Gli otto assessori sono `iniziale.cognome@comune.pistoia.it`; il sindaco è `sindaco@comune.pistoia.it`. Dedurre dal modello avrebbe sbagliato la persona più in vista della pagina.
+- **Due schede sono più fresche della notizia di presentazione**: Nesi aggiornata il 28 luglio, Giusti il 21 luglio, contro il 10 giugno della notizia. Ogni riga cita la scheda, non la notizia.
+- Le quattro trappole sono in `AGENTS.md` §4.
+
 ## [0.18.0] — 2026-07-31 · Fase C, «Il costo dell'amministrazione» sui dati reali
 
 > La prima pagina della piattaforma costruita interamente su fonti primarie.

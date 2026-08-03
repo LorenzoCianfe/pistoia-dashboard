@@ -1,6 +1,24 @@
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/*
+  Le stelle si riempiono con l'**accento**, non con l'ambra (cambiato il
+  2026-08-03, quando le valutazioni sono diventate vere).
+
+  Due ragioni, e la prima è di sistema: in `DESIGN.md` §4 `--amber` significa
+  «attenzione e attesa» — è il colore di «in valutazione» e degli avvisi non
+  critici. Una fila di cinque stelle ambra su una scheda che dice «4,1» usa il
+  colore dell'allarme per dire che va bene, e il significato dei token qui non
+  è negoziabile.
+
+  La seconda è di carattere: la fila di stelle gialle è l'elemento più
+  riconoscibilmente da template dell'intero web, ed è esattamente il caso in
+  cui `DESIGN.md` §1 dice di ridisegnare. `--color-accent` è «azione e vita»,
+  cioè il colore dei dati che crescono: è il ruolo giusto.
+
+  Il valore resta scritto accanto: lo stato non si comunica mai col solo
+  colore (`DESIGN.md` §11, 3).
+*/
 export function StarRating({
   value,
   size = 16,
@@ -35,7 +53,7 @@ export function StarRating({
             <Star
               key={i}
               size={size}
-              className="shrink-0 fill-[var(--amber)] text-[var(--amber)]"
+              className="shrink-0 fill-[var(--color-accent)] text-[var(--color-accent)]"
             />
           ))}
         </span>

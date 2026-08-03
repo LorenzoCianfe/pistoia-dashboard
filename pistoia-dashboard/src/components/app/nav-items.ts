@@ -29,6 +29,7 @@ import {
   HeartHandshake,
   Handshake,
   FolderKanban,
+  Star,
   type LucideIcon,
 } from "lucide-react";
 
@@ -73,6 +74,10 @@ export const DESTINATIONS: NavDestination[] = [
       { href: "/segnalazioni", label: "Segnalazioni", icon: Megaphone },
       { href: "/proposte", label: "Proposte", icon: Lightbulb },
       { href: "/sondaggi", label: "Sondaggi", icon: Vote },
+      // Sta sotto «Partecipa» e non sotto «Trasparenza» perché il gesto è
+      // partecipare: si lascia un voto. Leggerlo è trasparenza, ma chi arriva
+      // qui dal menu ci arriva per dire la sua, come per i sondaggi.
+      { href: "/valutazioni", label: "Valutazioni dei servizi", icon: Star },
       { href: "/priorita", label: "Vota la priorità", icon: ListOrdered },
       { href: "/question-time", label: "Question time", icon: MessageCircleQuestion },
       { href: "/volontariato", label: "Volontariato", icon: HeartHandshake },

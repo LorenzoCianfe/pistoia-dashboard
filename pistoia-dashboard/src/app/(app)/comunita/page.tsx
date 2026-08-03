@@ -3,12 +3,10 @@ import Link from "next/link";
 import { MessagesSquare, DoorOpen } from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
 import { getCommunityFeed, getTopicCounts } from "@/lib/data/comunita";
-import { getServiceReviews } from "@/lib/data/sondaggi";
 import { getNeighborhoods } from "@/lib/data/neighborhoods";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SectionHeader } from "@/components/ui/section-header";
-import { StarRating } from "@/components/ui/star-rating";
 import { Composer } from "@/components/comunita/composer";
 import { PostCard } from "@/components/comunita/post-card";
 import { DisplayNumber } from "@/components/signature/display-number";
@@ -20,9 +18,8 @@ export const metadata: Metadata = { title: "Comunità" };
 
 export default async function ComunitaPage() {
   const user = await requireUser();
-  const [feed, reviews, neighborhoods, perTema] = await Promise.all([
+  const [feed, neighborhoods, perTema] = await Promise.all([
     getCommunityFeed(user.id),
-    getServiceReviews(),
     getNeighborhoods(),
     getTopicCounts(),
   ]);
@@ -145,31 +142,6 @@ export default async function ComunitaPage() {
         </div>
       )}
 
-      {/* Interamente mock: getServiceReviews() è vuoto fuori da DEMO_MODE. */}
-      {reviews.length > 0 ? (
-      <Card>
-        <h2 className="text-base font-semibold">Recensioni dei servizi</h2>
-        <p className="text-sm text-muted">
-          Come i cittadini valutano i servizi del Comune.
-        </p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          {reviews.map((r) => (
-            <div
-              key={r.id}
-              className="flex items-center justify-between gap-3 rounded-[var(--radius-sm)] border border-border bg-surface-2/50 p-4"
-            >
-              <div>
-                <p className="font-semibold">{r.service}</p>
-                <p className="text-xs text-muted-2">
-                  {formatNumber(r.count)} valutazioni
-                </p>
-              </div>
-              <StarRating value={r.rating} showValue />
-            </div>
-          ))}
-        </div>
-      </Card>
-      ) : null}
     </div>
   );
 }

@@ -348,6 +348,30 @@ una dichiarazione di chi pubblica.
 > servizi e non persone); pagella, dossier e audit richiedono la
 > dichiarazione. Dettaglio in `ROADMAP.md` §6, prerequisito 1.
 
+> **Aggiornamento 2026-08-03 — due delle cinque sono in corso.**
+>
+> - ✅ **Il costo dell'amministrazione** è in produzione dal 2026-07-31, e il
+>   2026-08-03 `/organigramma` ha smesso di contraddirla: le nove persone della
+>   giunta vivono in `lib/giunta.ts` con la fonte di ognuna, e un test confronta
+>   i due moduli perché non tornino a divergere.
+> - 🚧 **Valutazioni dei servizi** — la quinta funzione, ex «Rating dei servizi
+>   — Pistoia Index». Piano completo in
+>   [`piano-rating-servizi.md`](./piano-rating-servizi.md), sei fasi ciascuna
+>   col proprio cancello.
+>
+> **La cosa che sblocca la quinta non era un dato ma una domanda:** *cosa mostra
+> la pagina finché i voti non esistono?* La risposta — il dato duro dal primo
+> giorno, preso da `Report`, con le stelle dichiarate vuote accanto — vale oltre
+> questa funzione, perché è la forma generale del problema che ha già tolto la
+> cifra da `/organigramma` e la scala a tacche da `/promesse`: **un'assenza non
+> si decora e non si riempie, le si mette accanto ciò che si sa già.**
+>
+> E una conseguenza sul prerequisito 3: le Valutazioni **consumano**
+> `/metodologia` invece di aspettarla. Soglia, finestra e media sono scelte
+> editoriali dentro un'aritmetica, quindi il documento versionato entra nel
+> piano della funzione (fase R-6) e da lì servirà anche a pagella, dossier e
+> audit.
+
 ### C-5 · Nuovo, emerso dall'audit
 
 | Voce | Origine |

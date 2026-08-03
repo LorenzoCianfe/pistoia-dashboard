@@ -20,6 +20,7 @@ const PROTECTED_PREFIXES = [
   "/mappa",
   "/quartieri",
   "/organigramma",
+  "/valutazioni",
   "/notifiche",
   "/profilo",
   "/impostazioni",

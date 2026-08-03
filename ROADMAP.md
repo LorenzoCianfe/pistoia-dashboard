@@ -412,7 +412,7 @@ tutti inventati.
 | **Dossier persona** | Scheda pubblica per assessore: curriculum dichiarato, indennità dal portale trasparenza, esperienza nel settore di delega, dichiarazioni vs azioni | `FE` `BE` | richiesta 2026-07-26 | 💡 Fase C |
 | **Audit cittadino** | PDF trimestrale di 5–6 pagine in forma di mini-audit: executive summary, 5 indicatori con trend, 3 promesse, 3 spese, 3 domande senza risposta | `FE` `BE` `DES` | richiesta 2026-07-26 | 💡 Fase C |
 | **Il costo dell'amministrazione** | Quanto la legge prevede per sindaco, giunta e presidente del consiglio, con l'atto primario dietro ogni cifra | `FE` `BE` | richiesta 2026-07-26 | ✅ 2026-07-31 — `/trasparenza/costo-amministrazione` |
-| **Rating dei servizi — "Pistoia Index"** | Voto cittadino 1–5 stelle su pulizia, illuminazione, sicurezza, trasporti, verde; indice mensile pubblico | `FE` `BE` | richiesta 2026-07-26 | 💡 Fase C |
+| **Valutazioni dei servizi** *(già «Rating dei servizi — Pistoia Index»)* | Stelle 1–5 e recensioni scritte su servizi allo sportello **e** condizioni della città, in due tabelloni mai fusi. Media solo sopra soglia, composizione del campione sempre dichiarata, risposta del Comune nella stessa scheda | `FE` `BE` `DES` | richiesta 2026-07-26 · scoperta 2026-08-03 | 🚧 Fase C — piano in [`docs/piano-rating-servizi.md`](../docs/piano-rating-servizi.md) |
 
 **Prerequisiti — nessuna delle cinque parte senza questi.**
 
@@ -599,10 +599,73 @@ tutti inventati.
    > riferimento e recapiti. Non è un costo, ma è un «chi fa cosa» verificato —
    > dove oggi `/organigramma` mostra dati inventati.
 
+   > ✅ **`/organigramma` è passato ai dati veri il 2026-08-03.** Le nove
+   > persone stanno in `src/lib/giunta.ts` con la fonte di ognuna; le fonti in
+   > [`docs/fonti-organigramma.md`](../docs/fonti-organigramma.md). Le due
+   > pagine non si contraddicono più, e un test lo verifica confrontando i nomi
+   > dei due moduli.
+   >
+   > **La scoperta che ha deciso il lavoro non era sui nomi ma sui numeri.**
+   > `votesElected` non si è potuto ancorare e quindi è sparito dal modello:
+   > per **cinque persone su nove** quel numero non esiste in nessuna fonte —
+   > un candidato sindaco non riceve preferenze, e quattro assessori su otto
+   > non erano candidati in nessuna lista. Per i quattro che ce l'hanno, il
+   > numero descrive un seggio che il TUEL art. 64 fa perdere all'atto della
+   > nomina. Al suo posto c'è **come** ciascuno è arrivato alla carica.
+   >
+   > Ne discende una regola che vale per pagella e dossier: **dare un numero a
+   > chi ce l'ha e lasciare vuoto agli altri non è neutro.** Quel vuoto si
+   > legge come un giudizio. O il campo si riempie per tutti, o sparisce per
+   > tutti.
+   >
+   > E le **deleghe** sono state riprese: le «due versioni» che le avevano
+   > fatte omettere dal costo dell'amministrazione erano il titolo della scheda
+   > e l'elenco enumerato sotto — il sommario e il portafoglio, non un
+   > conflitto. Sono 57 e aprono la pagina in ordine alfabetico.
+
    ⚠️ E una correzione a questo elenco: **il «Rating dei servizi» non dipende
    dal §8 affatto.** Non gli servono dati aperti, gli servono *utenti veri* che
    votino. È bloccato da un'altra cosa, e tenerlo in questa riga lo faceva
    sembrare in attesa di un lavoro che non lo sbloccherebbe.
+
+   > ✅ **Sbloccato il 2026-08-03 da una scoperta, non da un dato.** Nove
+   > domande a Lorenzo hanno prodotto dodici decisioni; il piano completo è in
+   > [`docs/piano-rating-servizi.md`](../docs/piano-rating-servizi.md).
+   >
+   > **La chiave era la domanda «cosa mostra la pagina finché i voti non
+   > esistono».** La risposta: *il dato duro dal primo giorno.* Pulizia,
+   > illuminazione, verde, trasporti e sicurezza sono già categorie di
+   > `Report`, con volumi e tempi di chiusura veri. La scheda apre su quelli e
+   > dichiara le stelle in attesa accanto — quindi non è mai vuota e non è mai
+   > finta, e l'accostamento è il prodotto vero: «le segnalazioni si chiudono in
+   > 9 giorni, i cittadini danno 2,4 su 5» dice qualcosa che nessuno dei due
+   > numeri dice da solo.
+   >
+   > **Due decisioni che vincolano anche le altre funzioni dell'osservatorio:**
+   >
+   > - **Niente indice unico.** Due tabelloni — servizi allo sportello e
+   >   condizioni della città — che non si fondono mai in una classifica sola:
+   >   uno è una media di episodi, l'altro un umore, e affiancarli in una
+   >   graduatoria afferma che sono commensurabili. Da qui il **cambio di
+   >   nome**: «Pistoia Index» prometteva esattamente il numero che il disegno
+   >   rifiuta, e un nome che promette un indice costringe prima o poi qualcuno
+   >   a calcolarlo.
+   > - **La cifra non convive mai con un volto.** Le risposte del Comune stanno
+   >   nel flusso delle recensioni, la media nella testata. Senza questa
+   >   separazione la media di un servizio diventa la pagella dell'assessore che
+   >   risponde — cioè il prerequisito 4 aggirato per disposizione grafica.
+   >
+   > La soglia di pubblicazione della media è **20** e **non** è
+   > `CAMPIONE_MINIMO_PER_GIUDIZIO`: quella vale 5 e resta dov'è, perché misura
+   > un *tasso* su casi che arrivano da soli. Chi recensisce invece si
+   > autoseleziona, e sui piccoli numeri si autoseleziona verso gli estremi:
+   > cinque recensioni non sono un campione rumoroso, sono un campione
+   > **storto**. Le due soglie misurano cose diverse e non vanno unificate per
+   > simmetria.
+   >
+   > Questa funzione **consuma il prerequisito 3**: soglia, finestra e media
+   > sono scelte editoriali dentro un'aritmetica, quindi `/metodologia` entra
+   > nel suo piano (fase R-6) invece di restare un lavoro a parte.
 3. **Metodologia pubblica e versionata.** «Non è la mia opinione, sono i
    dati» è vero solo a metà: *quali* indicatori, con *quali* pesi e *quali*
    soglie, è una scelta editoriale. Se la scelta è pubblicata e verificabile,

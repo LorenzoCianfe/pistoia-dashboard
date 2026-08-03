@@ -46,6 +46,9 @@ const ROTTE = [
   "/comunita", "/comunita/stanze",
   // Fase C, bozza in revisione: ospita la dichiarazione di chi pubblica.
   "/pagella",
+  // Fase C, «Valutazioni dei servizi». La seconda è ANNIDATA, quindi fra le
+  // prime a cadere quando `.next` è stantio.
+  "/valutazioni", "/valutazioni/pulizia",
   "/avvisi", "/organigramma", "/faq", "/glossario",
   "/notifiche", "/profilo", "/impostazioni",
   "/admin",

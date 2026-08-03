@@ -286,9 +286,9 @@ pistoia-dashboard/
 | `BudgetYear` / `BudgetMonth` / `BudgetCategory` | Bilancio: totali, serie mensile, spesa per missione |
 | `Opera` / `OperaUpdate` | Cantieri: stato, % avanzamento, investimento, aggiornamenti |
 | `Poll` / `PollOption` / `Vote` | Sondaggi: opzioni con voti base + voti reali (1 voto/utente) |
-| `Assessore` / `AssessoreFollow` | Giunta (albero `parentId`) e follow dei cittadini |
+| `Assessore` / `AssessoreFollow` | **Ancora d'identità per i «Segui», non una scheda anagrafica**: i fatti sulla giunta stanno in `lib/giunta.ts` con la fonte di ognuno. L'`id` è lo slug del modulo, così un «Segui» sopravvive a un riseed |
 | `CommunityPost` / `OfficialAnswer` / `PostComment` / `PostLike` | Feed "la città risponde" |
-| `ServiceReview` | Recensioni a stelle dei servizi |
+| `Servizio` / `Valutazione` / `RispostaServizio` | Valutazioni dei servizi: catalogo (ancora d'identità, i fatti stanno in `lib/valutazioni.ts`), stelle e recensioni dei cittadini, risposte del Comune e note della redazione. Sostituisce `ServiceReview`, che portava quattro medie **inventate** |
 | `Notification` / `NotificationPreference` | Centro notifiche per utente + preferenze per canale |
 | `Neighborhood` | Quartieri e frazioni di Pistoia (territorialità, "Vicino a te") |
 | `ProfileVerification` | Richieste di verifica con coda di approvazione admin |
@@ -644,6 +644,40 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   diagnosi sbagliate. Ricognizione delle fonti reali per «Il costo dell'amministrazione» in
   `ROADMAP.md` §6. Verificato: `typecheck`, `lint`, **96/96** unitari, **11/11** E2E,
   **`rotte` 44/44**, `shots --simple --width=360` senza traboccamenti.
+
+- **0.18.0 — «Il costo dell'amministrazione» sui dati reali** (2026-07-31). La prima pagina
+  costruita interamente su fonti primarie: `/trasparenza/costo-amministrazione`, con
+  `lib/costo-amministrazione.ts` dove `rigaPubblicabile()` scarta le righe senza URL **e il
+  totale applica lo stesso filtro** — una voce esclusa dall'elenco ma lasciata nella somma
+  sopravvivrebbe dentro la cifra display, dove nessuno la vede. Corretto il **vicesindaco al
+  75%** (art. 4 c. 5 del D.M. 119/2000, non il c. 4): la fascia «50.001–100.000» in
+  quell'articolo non esiste. E la «riprova indipendente» del 5.313 **non era una riprova** —
+  entrambi i percorsi passavano dal 55%, cioè un solo percorso contato due volte. Fonti in
+  `docs/fonti-costo-amministrazione.md`. **115/115** unitari, **`rotte` 45/45**.
+
+- **0.19.0 — `/organigramma` smette di contraddire `/trasparenza`** (2026-08-03). La pagina
+  dava Marco Ferrari sindaco mentre `/trasparenza/costo-amministrazione`, a un clic di
+  distanza, dava Giovanni Capecchi: due risposte diverse alla stessa domanda dentro la stessa
+  applicazione. Le nove persone vivono ora in `src/lib/giunta.ts`, ognuna con la propria
+  `Riga` di fonte, e un test confronta i due moduli perché non tornino a divergere.
+  **`votesElected` è stato rimosso dal modello, non riempito con numeri veri**: per cinque
+  persone su nove quel numero non esiste in nessuna fonte — un candidato sindaco non riceve
+  preferenze, e quattro assessori su otto non erano candidati in nessuna lista. Al suo posto:
+  *come* ciascuno è arrivato alla carica. `Assessore` diventa un'ancora per i «Segui».
+  Indice delle **57 deleghe** vere. Fonti in `docs/fonti-organigramma.md`; quattro trappole
+  nuove in `AGENTS.md` §4. **133/133** unitari, **11/11** E2E, **`rotte` 45/45**.
+
+- **0.20.0 — «Valutazioni dei servizi», fondamenta e lettura** (2026-08-03). La quinta funzione
+  dell'osservatorio, sbloccata da una scoperta e non da un dato: *cosa mostra la pagina finché
+  i voti non esistono?* La risposta — **il dato duro dal primo giorno**, preso da `Report` —
+  è la forma generale del difetto che aveva già tolto la cifra da `/organigramma`. Due rotte
+  nuove (`/valutazioni`, `/valutazioni/[servizio]`), **due tabelloni che non si fondono mai in
+  una classifica sola**, media solo sopra soglia con la composizione del campione accanto,
+  registro pubblico delle rimozioni. Fuori `ServiceReview` con le sue quattro medie inventate;
+  **il seed non contiene nessuna valutazione**, e da qui il vincolo che le pagine reggano a
+  zero. Corretto un difetto visto dal vivo: la colonna dura presentava **una mediana su due
+  casi**. Piano in `docs/piano-rating-servizi.md`. **175/175** unitari, **14/14** E2E,
+  **`rotte` 47/47**, `shots --simple --width=360` senza traboccamenti.
 
 ## 11. Roadmap
 

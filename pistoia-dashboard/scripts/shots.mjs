@@ -115,6 +115,11 @@ const PAGES = [
   // livello intero, come il primo scaglione aveva chiuso gli hub.
   { name: "avvisi", url: "/avvisi" },
   { name: "organigramma", url: "/organigramma" },
+  // Fase C. Vanno fotografate ENTRAMBE: la panoramica e una scheda, perché la
+  // scheda è l'unica che porta l'andamento e il registro delle rimozioni, e
+  // perché a zero valutazioni le due pagine dicono cose diverse.
+  { name: "valutazioni", url: "/valutazioni" },
+  { name: "valutazione-servizio", url: "/valutazioni/pulizia" },
   { name: "faq", url: "/faq" },
   { name: "glossario", url: "/glossario" },
   // Fase B, terzo scaglione: tutto il resto. Il criterio del punto d'ingresso
