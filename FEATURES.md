@@ -57,6 +57,7 @@ nella barra in alto; area Comune nel menu avatar per i soli ADMIN.
 | **Question time** | `/question-time` | ✅ | Domande dei cittadini con risposta istituzionale |
 | **Patti, priorità, progetti, iniziative, volontariato** | varie | ✅ | Partecipazione civica |
 | **Pagella mensile** | `/pagella` | 🚧 | Impalcatura della prima pagina di giudizio dell'osservatorio civico (Fase C). Porta la **dichiarazione di chi pubblica**; **nessun voto è calcolato** |
+| **Il costo dell'amministrazione** | `/trasparenza/costo-amministrazione` | ✅ | **La prima pagina su dati reali** (Fase C). Indennità di sindaco, giunta e presidente del consiglio calcolate dalla catena di legge, con l'atto primario dietro ogni cifra. Sta sotto lo stemma **senza** la dichiarazione di chi pubblica: non esprime un giudizio, rende leggibile ciò che il D.Lgs 33/2013 impone di pubblicare. Fonti in [`docs/fonti-costo-amministrazione.md`](docs/fonti-costo-amministrazione.md) |
 
 **La dichiarazione di chi pubblica** (`components/osservatorio/chi-pubblica.tsx`,
 approvata il 2026-07-30) è ciò che sostituisce il marchio separato dopo due

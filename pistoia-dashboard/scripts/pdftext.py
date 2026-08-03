@@ -136,8 +136,15 @@ for blocco in re.findall(rb"BT(.*?)ET", contenuto, re.S):
         frammenti.append((round(y, 1), x, testo))
 
 if GRIGLIA:
-    for y, x, t in sorted(frammenti, key=lambda f: (-f[0], f[1])):
-        print(f"{y:9.1f} {x:8.1f}  {t}")
+    # Non `print`: su Windows lo stdout è cp1252 e il primo glifo fuori dalla
+    # codepage fa uscire lo script con UnicodeEncodeError a metà tabella — cioè
+    # proprio sui documenti larghi per cui `--griglia` esiste. Si scrive in
+    # byte, come già fa la via normale in fondo al file.
+    griglia = "\n".join(
+        f"{y:9.1f} {x:8.1f}  {t}"
+        for y, x, t in sorted(frammenti, key=lambda f: (-f[0], f[1]))
+    )
+    sys.stdout.buffer.write(griglia.encode("utf-8", "replace"))
     sys.exit(0)
 
 righe = {}

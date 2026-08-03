@@ -40,6 +40,8 @@ const ROTTE = [
   "/partecipa", "/segnalazioni", "/proposte", "/sondaggi", "/priorita",
   "/question-time", "/volontariato", "/patti", "/progetti",
   "/trasparenza", "/bilancio", "/opere", "/decisioni", "/promesse", "/digest",
+  // Fase C: rotta ANNIDATA, quindi la prima a cadere quando `.next` è stantio.
+  "/trasparenza/costo-amministrazione",
   "/territorio", "/mappa", "/quartieri", "/eventi",
   "/comunita", "/comunita/stanze",
   // Fase C, bozza in revisione: ospita la dichiarazione di chi pubblica.

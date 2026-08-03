@@ -411,7 +411,7 @@ tutti inventati.
 | **Pagella mensile** | Voti 1–10 a sindaco e giunta su 6 materie (sicurezza, decoro, trasparenza, spesa, ascolto, promesse), calcolati dai dati raccolti | `FE` `BE` `DES` | richiesta 2026-07-26 | 💡 Fase C |
 | **Dossier persona** | Scheda pubblica per assessore: curriculum dichiarato, indennità dal portale trasparenza, esperienza nel settore di delega, dichiarazioni vs azioni | `FE` `BE` | richiesta 2026-07-26 | 💡 Fase C |
 | **Audit cittadino** | PDF trimestrale di 5–6 pagine in forma di mini-audit: executive summary, 5 indicatori con trend, 3 promesse, 3 spese, 3 domande senza risposta | `FE` `BE` `DES` | richiesta 2026-07-26 | 💡 Fase C |
-| **Il costo dell'amministrazione** | Calcolatrice pubblica: costo annuo/giornaliero/orario di sindaco, giunta e staff politico, confrontato col reddito medio pistoiese | `FE` `BE` | richiesta 2026-07-26 | 💡 Fase C |
+| **Il costo dell'amministrazione** | Quanto la legge prevede per sindaco, giunta e presidente del consiglio, con l'atto primario dietro ogni cifra | `FE` `BE` | richiesta 2026-07-26 | ✅ 2026-07-31 — `/trasparenza/costo-amministrazione` |
 | **Rating dei servizi — "Pistoia Index"** | Voto cittadino 1–5 stelle su pulizia, illuminazione, sicurezza, trasporti, verde; indice mensile pubblico | `FE` `BE` | richiesta 2026-07-26 | 💡 Fase C |
 
 **Prerequisiti — nessuna delle cinque parte senza questi.**
@@ -524,35 +524,75 @@ tutti inventati.
    >    pubblicazione del Comune**: la cifra si ricava da legge più
    >    popolazione, e il dato comunale serve a confermarla, non a produrla.
    >
-   > 3. **La catena di calcolo è chiusa, tranne un anello.** Le percentuali
-   >    sono verificate; resta da confermare la base.
+   > 3. **La catena di calcolo è chiusa** — chiusa davvero il 2026-07-31, con
+   >    ogni anello ancorato al testo primario. Il dettaglio, con URL e date di
+   >    consultazione, sta in
+   >    [`docs/fonti-costo-amministrazione.md`](../docs/fonti-costo-amministrazione.md).
    >
-   > | Anello | Valore | Fonte |
+   > | Anello | Valore | Fonte primaria |
    > |---|---|---|
-   > | Base | trattamento dei presidenti di regione, **13.800 € lordi/mese** | nota ANCI sulla legge di bilancio 2022 — dichiarato «attualmente», **da riconfermare** |
-   > | Fascia di Pistoia | capoluogo di provincia fino a 100.000 ab. → **70%** | L. 234/2021 art. 1 c. 583 lett. c) |
-   > | Popolazione | **88.889 ab.** al 31/12/2024 | ISTAT (via fonte secondaria, **da sostituire con ISTAT diretto**) |
-   > | Vicesindaco | **55%** dell'indennità del sindaco | D.M. 119/2000 art. 4 c. 4, fascia 50.001–100.000 |
-   > | Assessori | **60%** | D.M. 119/2000 art. 4 c. 9 |
+   > | Base | trattamento dei presidenti di regione, **13.800 € lordi/mese, per dodici mensilità** | Ministero dell'Interno, D.M. 30/05/2022, Allegato A: «il cui importo massimo è stato fissato in euro 13.800 mensili per dodici mensilità» |
+   > | Fascia di Pistoia | capoluogo di provincia fino a 100.000 ab. → **70%** | L. 234/2021 art. 1 c. 583 lett. c), citata alla lettera nelle premesse del D.M. Interno-MEF 05/02/2026 |
+   > | Popolazione | **88.889 ab.** al 31/12/2024 (89.054 al 31/12/2023, la cifra usata dal Ministero) | ISTAT diretto, serie POSAS, comune 047014 |
+   > | Vicesindaco | **75%** dell'indennità del sindaco | D.M. 119/2000 **art. 4 c. 5**, fascia *superiore a 50.000 ab.* — testo vigente su Normattiva |
+   > | Assessori | **60%** | D.M. 119/2000 art. 4 c. 9, fascia 50.000–250.000 |
    > | Presidente del consiglio | equiparato agli assessori | D.M. 119/2000 art. 5 c. 3 |
-   > | Consiglieri | gettone ≤ **¼** dell'indennità del sindaco | art. 82 c. 2 TUEL |
+   > | Consiglieri | gettone **≤ ¼** dell'indennità del sindaco — è un **tetto mensile**, non un compenso | TUEL art. 82 c. 2, testo in vigore dal 1-1-2020 |
    >
-   > Ne discende, **subordinato alla conferma della base**: sindaco 9.660 €/mese,
-   > vicesindaco 5.313, assessore 5.796.
+   > Ne discende: sindaco **9.660 €/mese**, vicesindaca **7.245**, assessore
+   > **5.796**, presidente del consiglio 5.796, tetto del consigliere 2.415.
+   > Giunta (sindaco + vicesindaca + 7 assessori) **57.477 €/mese**, cioè
+   > **689.724 €/anno**.
    >
-   > **Una riprova indipendente vale più di un ricontrollo.** L'allegato A del
-   > decreto ministeriale 30/05/2022 — un foglio di calcolo largo, le cui colonne
-   > l'estrazione scollega dalle righe e che quindi da solo non basterebbe —
-   > contiene fra i propri importi esattamente **5.313**. È il valore che la
-   > catena produce per il vicesindaco partendo da tutt'altra strada. Due
-   > percorsi indipendenti sullo stesso numero.
+   > ⚠️ **Correzione del 2026-07-31: il vicesindaco è 75%, non 55%.** La riga
+   > precedente citava «art. 4 c. 4, fascia 50.001–100.000». L'articolo era
+   > giusto, il comma no: il c. 4 copre la fascia *10.001–50.000*, e la fascia
+   > «50.001–100.000» **nell'art. 4 non esiste** — esiste nell'art. 3, che è la
+   > promozione di classe dei capoluoghi e riguarda il *sindaco*. Da lì la
+   > fascia è migrata sull'articolo sbagliato. Pistoia sta sopra i 50.000, e
+   > quindi cade nel c. 5: **75%**.
    >
-   > **Cosa manca prima di mettere una cifra a schermo:** confermare i 13.800 €
-   > (esiste un decreto interministeriale del **5 febbraio 2026** sulla stessa
-   > materia, che l'estrazione restituisce illeggibile), sostituire la fonte
-   > della popolazione con ISTAT diretto, e stabilire **chi dei nove è
-   > vicesindaco** — il sito del Comune non lo dichiara, e senza quello il
-   > totale della giunta non si compone.
+   > **E la «riprova indipendente» non lo era.** L'allegato A del D.M.
+   > 30/05/2022 contiene davvero 5.313, ma quel numero non conferma niente:
+   > entrambi i percorsi passavano dal 55%, quindi era un solo percorso contato
+   > due volte. Una riprova che condivide un anello con la catena che dovrebbe
+   > verificare non è una riprova — è la stessa affermazione detta due volte.
+   >
+   > La riprova vera stava nello stesso documento. Quell'allegato contiene
+   > **9.660**, **7.245** e **5.796** — i tre valori della catena corretta — più
+   > 115.920 (= 9.660 × 12) e la riga `70 · 9.660 · 115.920 · 125.580 · 52`,
+   > dove **52** è il numero dei comuni capoluogo di provincia fino a 100.000
+   > abitanti. Pistoia è uno di quei 52.
+   >
+   > **I tre anelli aperti sono chiusi**, e due si sono chiusi diversamente da
+   > come erano posti:
+   >
+   > - *La base.* Il decreto interministeriale del **5 febbraio 2026** non era
+   >   «sulla stessa materia»: è il **riparto di 220 milioni** ai comuni, non
+   >   l'atto che fissa la base. Serve lo stesso, perché nelle premesse cita il
+   >   comma 583 alla lettera. Il numero, scritto in parole, stava nell'allegato
+   >   del decreto del 2022 — cioè in un documento che avevamo già in mano.
+   > - *La popolazione.* Sostituita con ISTAT diretto. E la fascia non si
+   >   àncora alla popolazione residente ma a quella **dell'ultimo censimento
+   >   ufficiale** (comma 583; Corte dei conti Basilicata, delib. 11/2025:
+   >   criterio «statico»). Il Ministero, per il riparto 2025, ha usato la
+   >   popolazione ISTAT al 31/12/2023 da censimento permanente.
+   > - *Il vicesindaco.* **Stefania Nesi**, e il sito del Comune lo dichiara —
+   >   non nella scheda del sindaco, che era la pagina controllata prima, ma
+   >   nella notizia di presentazione della giunta del 10/06/2026. Nessuna
+   >   induzione. Nella stessa passata: presidente del consiglio comunale
+   >   **Paolo Tosi**, 32 consiglieri.
+   >
+   > Nota di contorno, che vale come regola: **sulla composizione della giunta
+   > la stampa sbagliava e il Comune no.** Le liste dei giornali mettono in
+   > giunta Irene Bottacci, che è consigliera; l'ottava assessora è Elena
+   > Sinimberghi.
+   >
+   > **Cosa resta fuori da una cifra a schermo**, e non per prudenza ma per
+   > esattezza: questi non sono i compensi percepiti, sono gli importi che la
+   > legge prevede. L'art. 82 c. 1 TUEL **dimezza** l'indennità del lavoratore
+   > dipendente che non abbia chiesto l'aspettativa, e chi dei nove sia in
+   > quella condizione è esattamente ciò che il Comune deve ancora pubblicare.
    >
    > Materiale reale già raccolto e utilizzabile subito: sindaco con data di
    > proclamazione, otto assessori con deleghe puntuali, dirigenti di

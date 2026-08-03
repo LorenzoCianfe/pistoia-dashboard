@@ -5,6 +5,32 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.18.0] — 2026-07-31 · Fase C, «Il costo dell'amministrazione» sui dati reali
+
+> La prima pagina della piattaforma costruita interamente su fonti primarie.
+> Ogni cifra è una riga con il proprio atto, e il renderer **rifiuta** quelle
+> senza fonte.
+
+### Aggiunto
+- **`/trasparenza/costo-amministrazione`**: quanto la legge prevede per sindaco, giunta e presidente del consiglio di Pistoia. Cifra display sul **costo annuo della giunta (689.724 €)** — una somma di righe vere, non tautologica e non un'accusa. Sta sotto lo stemma **senza** `ChiPubblica`: non dà un voto a nessuno, rende leggibile ciò che il D.Lgs 33/2013 impone di pubblicare.
+- **`lib/costo-amministrazione.ts`**: la catena di calcolo e le sue fonti, in un modulo **neutro** (né `"use client"` né `server-only`). `rigaPubblicabile()` scarta le righe senza URL http(s) e senza data — e `costoMensileGiunta()` applica lo **stesso filtro**, perché una voce esclusa dall'elenco ma lasciata nella somma sopravvivrebbe dentro la cifra display, dove nessuno la vede e nessuno la può contestare.
+- **[`docs/fonti-costo-amministrazione.md`](docs/fonti-costo-amministrazione.md)**: le fonti con citazione alla lettera, URL e data di consultazione. Tutte scaricate e lette, nessuna di seconda mano.
+- 19 test su `tests/unit/costo-amministrazione.test.ts` (115 in totale). Uno serve a sé stesso: `INDENNITA_VICESINDACO` non deve tornare 5.313.
+- La rotta entra in `rotte.mjs` (44 → **45 rotte**) e in `shots.mjs` **nello stesso momento**.
+
+### Corretto
+- **Il vicesindaco è al 75%, non al 55%** (`ROADMAP.md` §6). L'art. 4 del D.M. 119/2000 era l'articolo giusto ma il comma sbagliato: il c. 4 copre la fascia *10.001–50.000*, e la fascia «50.001–100.000» **in quell'articolo non esiste** — sta nell'art. 3, che è la promozione di classe dei capoluoghi e riguarda il *sindaco*. Da lì la fascia era migrata sull'articolo sbagliato. Pistoia sta sopra i 50.000: **7.245 €/mese**, non 5.313.
+- **La «riprova indipendente» del 5.313 non era una riprova.** Entrambi i percorsi passavano dal 55%: era un solo percorso contato due volte. Una riprova che condivide un anello con la catena che dovrebbe verificare non verifica niente — ed è più convincente proprio perché è la stessa affermazione. La riprova vera stava nello stesso documento: l'Allegato A del D.M. 30/05/2022 contiene **9.660**, **7.245** e **5.796**, più la riga `70 · 9.660 · 115.920 · 125.580 · 52`, dove 52 è il numero dei capoluoghi di provincia fino a 100.000 abitanti.
+- **Gli importi a quattro cifre non prendevano il separatore.** Il default di `Intl` per l'italiano è `useGrouping: "min2"`, quindi la stessa pagina scriveva «13.800 €» due righe sopra «9660 €», sotto una cifra display che il separatore ce l'ha. Corretto **una volta sola** in `lib/format.ts` (`formatEuro` e `formatNumber`) e non con un formattatore locale nella pagina che ne aveva bisogno: due definizioni della stessa formattazione sono la versione tipografica del difetto che `AGENTS.md` §3 condanna sugli indicatori. Verificate tutte le chiamate: sono conteggi, nessuna passa un anno — «2.026» è ciò che il default evitava, ed è scritto nel commento perché non ci si ricada.
+- **`scripts/pdftext.py --griglia` non arrivava in fondo su Windows.** `print` su stdout cp1252 usciva con `UnicodeEncodeError` al primo glifo fuori dalla codepage — cioè sui documenti larghi, che sono l'unica ragione per cui `--griglia` esiste. Ora scrive in byte, come già faceva la via normale.
+
+### Note di ricognizione
+- **La base di 13.800 € è confermata da un atto ministeriale**, non da una nota di associazione: l'Allegato A del D.M. 30/05/2022 scrive «il cui importo massimo è stato fissato in euro 13.800 mensili **per dodici mensilità**». La seconda metà della frase decide l'annualizzazione, che altrimenti sarebbe un'ipotesi — il fondo statale è ripartito su **tredici** mensilità perché comprende il fine mandato.
+- **Il decreto del 5 febbraio 2026 non era «sulla stessa materia»**: è il riparto di 220 milioni ai comuni, non l'atto che fissa la base. Serve lo stesso, perché cita il comma 583 alla lettera.
+- **Popolazione da ISTAT diretto** (serie POSAS, comune 047014): 88.889 al 31/12/2024. Trappola del file: la riga del totale ha età **`999`**, che passa per numerica — sommando tutto si ottiene 177.778, il doppio esatto, plausibile e senza errore.
+- **Il vicesindaco lo dichiara il Comune**, solo non nella pagina che era stata controllata: la scheda del sindaco no, la notizia di presentazione della giunta sì. L'assenza di un dato su *una* pagina non è l'assenza del dato.
+- **Sulla composizione della giunta la stampa sbagliava e il Comune no**: i giornali mettono in giunta una consigliera; l'ottava assessora è un'altra persona.
+
 ## [0.17.0] — 2026-07-30 · Fase C, la dichiarazione di chi pubblica
 
 > Il prerequisito 1 dell'osservatorio civico chiuso nella terza forma: non un

@@ -1,12 +1,33 @@
 // Italian-locale formatting helpers.
 
+/*
+  `useGrouping: "always"` e non il default.
+
+  Il default di `Intl` per l'italiano è `"min2"`: i numeri a quattro cifre NON
+  prendono il separatore. In prosa passa; in una colonna di importi no, perché
+  la stessa pagina finiva per scrivere «13.800 €» due righe sopra «9660 €», e
+  sotto una cifra display che il separatore ce l'ha. Su una pagina di soldi
+  «9660» si legge come un token, «9.660» come un importo.
+
+  Cambiato una volta sola qui, e non con un formattatore locale nella pagina
+  che ne aveva bisogno: due definizioni della stessa formattazione sono la
+  versione tipografica del difetto che AGENTS.md §3 condanna sugli indicatori.
+
+  Nessuna chiamata passa un anno: sono tutti conteggi (segnalazioni, follower,
+  preferenze, abitanti, giorni). Se un giorno servisse rendere un anno, NON va
+  usato questo helper — «2.026» è esattamente ciò che il default evitava.
+*/
 const eur0 = new Intl.NumberFormat("it-IT", {
   style: "currency",
   currency: "EUR",
   maximumFractionDigits: 0,
+  useGrouping: "always",
 });
 
-const num0 = new Intl.NumberFormat("it-IT", { maximumFractionDigits: 0 });
+const num0 = new Intl.NumberFormat("it-IT", {
+  maximumFractionDigits: 0,
+  useGrouping: "always",
+});
 
 /** "142.000.000 €" */
 export function formatEuro(value: number) {

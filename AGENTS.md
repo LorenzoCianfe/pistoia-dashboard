@@ -318,7 +318,7 @@ npm run test:e2e       # playwright
 npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
 npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
 node scripts/shots.mjs --simple --width=360   # modalità semplice, viewport minima
-npm run rotte          # tutte le rotte rispondono e rendono contenuto? (44 al 2026-07-30)
+npm run rotte          # tutte le rotte rispondono e rendono contenuto? (45 al 2026-07-31)
 npm run db:reset       # ricrea il DB e ripopola i dati dimostrativi
 
 python scripts/pdftext.py documento.pdf              # testo di un PDF
@@ -344,6 +344,30 @@ Quando l'estrazione di una tabella larga scollega le colonne dalle righe, usa
 `--griglia` e riallinea a mano. **E se un importo non si riesce ad ancorare alla
 propria riga, non si pubblica**: attribuire la cifra sbagliata a una persona è
 peggio che non mostrarne nessuna.
+
+**Tre cose imparate sulle fonti nella Fase C (2026-07-31).** Nessuna delle tre
+produce un errore, e tutte e tre producono un numero plausibile.
+
+1. **Una riprova che condivide un anello con la catena non è una riprova.** Il
+   vicesindaco era stato calcolato al 55% e «confermato» trovando 5.313 in una
+   tabella ministeriale — ma entrambi i percorsi passavano dal 55%: era un solo
+   percorso contato due volte, e suonava più convincente proprio perché era la
+   stessa affermazione. Prima di chiamare riprova un riscontro, chiedersi *quale
+   anello i due percorsi non hanno in comune*.
+2. **L'assenza di un dato su UNA pagina di un sito non è l'assenza del dato.**
+   Il vicesindaco di Pistoia non compare sulla scheda del sindaco e compare
+   nella notizia di presentazione della giunta. Una ricognizione aveva concluso
+   «il Comune non lo dichiara» avendo guardato solo la prima.
+3. **I file ISTAT hanno una riga di totale con età `999`**, che passa per
+   numerica. Sommare tutte le righe «numeriche» restituisce il doppio esatto
+   della popolazione — 177.778 invece di 88.889 — senza alcun errore.
+
+E una regola sugli strumenti che vale oltre i PDF: **quando un PDF resiste,
+cerca la versione HTML dello stesso atto** (Gazzetta Ufficiale, Normattiva)
+invece di migliorare l'estrattore. Il PDF è quasi sempre la copia, non
+l'originale. Normattiva risponde a `curl` con un cookie jar e serve il **testo
+vigente**, che è ciò che serve quando una norma del 2000 potrebbe essere stata
+modificata.
 
 **Le opzioni dello script delle schermate vanno passate a `node`, non a `npm`.**
 In PowerShell `npm run shots -- --simple --width=360` non le fa arrivare (e
@@ -391,7 +415,7 @@ Una modifica è finita quando **tutte** queste sono vere:
 - [ ] `npm run lint` passa
 - [ ] I test esistenti passano
 - [ ] `npm run rotte` è verde — **0 con problemi**, qualunque sia il totale
-      (44 al 2026-07-30; il numero cresce a ogni rotta nuova, e va letto dallo
+      (45 al 2026-07-31; il numero cresce a ogni rotta nuova, e va letto dallo
       script, non da qui). È l'unico cancello che risponde
       alla domanda «abbiamo perso una funzionalità?», e l'unico che apre le
       rotte annidate per indirizzo invece che cliccandole

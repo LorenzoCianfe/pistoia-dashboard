@@ -135,6 +135,12 @@ const PAGES = [
   // schermata a piena pagina prova solo che c'è — che resti agganciato durante
   // lo scorrimento è una misura che va fatta a viewport fisso.
   { name: "pagella", url: "/pagella" },
+  // Fase C: «Il costo dell'amministrazione». Sta sotto lo stemma SENZA la
+  // dichiarazione di chi pubblica, perché non esprime un giudizio — sono cifre
+  // che la legge impone di rendere pubbliche. Entra qui insieme alla modifica
+  // e non dopo: la cifra display è a 88px su un numero di sette caratteri, ed è
+  // esattamente il genere di riga che trabocca a 360px senza dare errore.
+  { name: "costo-amministrazione", url: "/trasparenza/costo-amministrazione" },
   // Le tre legali sono anonime: stanno fuori dal layout autenticato e non
   // richiedono sessione, quindi vanno marcate o il primo passaggio le salta.
   { name: "privacy", url: "/privacy", auth: false },
