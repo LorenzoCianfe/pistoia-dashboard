@@ -5,6 +5,26 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.23.0] — 2026-08-04 · Fase C, «Valutazioni dei servizi» — R-5, i sei ingressi e la lettura pubblica
+
+> La fase in cui la piattaforma inizia a CHIEDERE i voti — e il cancello è il
+> **contatore unico delle sollecitazioni**: sei ingressi, ma una persona è
+> sollecitata al massimo una volta ogni 30 giorni, contata al centro
+> (`RICHIESTA_SILENZIO_GIORNI`, provato a date fisse come
+> `statoPubblicazione()`). La forma è la composizione di Lorenzo su mockup in
+> contesto e due giri di domande: A1 · B su tutti i canali (col pop-up che
+> veste il rinnovo) · C1 · D1 · schema S2 · login-wall W1. Dettaglio in
+> `docs/piano-rating-servizi.md` §7 e §8 (decisione 8).
+
+### Aggiunto
+- **Il contatore unico** — modello `Sollecitazione` (append-only come `ModerationAction`: userId, canale, mostrataIl, esito) + modulo neutro **`lib/sollecitazioni.ts`** (`puoSollecitare`, `puoMostrarePopup`, `condizionePerCategoria`, `inPubblicoCampagna`, `promemoriaDovuto`) + 18 unit a date fisse. Regole decise: contano invito post-risoluzione, campagna e pop-up; menu, QR e blocco del digest no; **un voto chiude la finestra**; la X del pop-up tace **180 giorni** (`SILENZIO_POPUP_CHIUSO_GIORNI`).
+- **Ingresso A (segnalazione risolta)** — il ringraziamento di «è davvero risolta?» porta l'invito contestuale (categoria → condizione, 7 su 12), effimero, solo alla conferma; la riga si scrive dentro l'azione, mai in un GET.
+- **Ingresso B (campagna mensile)** — card in home nello slot dei richiami (si spegne con voto, X o fine mese) + notifica al primo accesso del mese (stessa sollecitazione: una riga) + **email opt-in** «Ricordamelo il mese prossimo» (`PromemoriaRinnovo`, invio opportunistico in `lib/promemoria.ts`, disiscrizione via form su **`/v/promemoria/[token]`**).
+- **Ingresso C (report del mese)** — card «Valutazioni dei servizi» nel `/digest`: prima il dato (a zero voti le mediane della colonna dura, dalla STESSA fonte delle schede), poi l'invito, che in stampa sparisce.
+- **Ingresso D (pop-up laterale)** — armato SOLO dai voti espressi (sondaggi, priorità, question time via `lib/completamenti.ts`); mai a tempo, mai all'arrivo, chiudibile, niente trappola del focus; a decidere è `chiediPopupAction` sul server; veste il rinnovo quando la persona è nel pubblico della campagna.
+- **La lettura pubblica (decisione W1)** — `/valutazioni` e le schede escono dai `PROTECTED_PREFIXES` (via esplicito) e vivono nel gruppo **`(pubblico)`**: con sessione l'`AppShell` intero (estratto dal layout di `(app)`: una definizione, due porte), senza sessione **barra anonima** (componente separato, stemma + «Accedi») e **modulo degradato a invito** con `?next` sull'ancora. `rotte.mjs` guadagna la **terza passata, anonima** (54 rotte), `shots.mjs` fotografa le due pagine in entrambi i regimi, e 3 E2E nuovi provano lettura, degrado e che il resto del muro non si è mosso.
+- Righe nuove su `/privacy` (promemoria e registro degli inviti) e in `SECURITY.md` §4/§6.
+
 ## [0.22.0] — 2026-08-03 · Fase C, «Valutazioni dei servizi» — R-4, risposte e moderazione
 
 > La fase in cui il Comune risponde e la Redazione modera — e il cancello è il

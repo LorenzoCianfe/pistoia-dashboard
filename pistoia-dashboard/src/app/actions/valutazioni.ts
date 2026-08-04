@@ -35,7 +35,15 @@ import {
      digitare l'indirizzo di un altro.
 */
 
-export type VotoState = { ok?: boolean; error?: string } | undefined;
+export type VotoState =
+  | {
+      ok?: boolean;
+      error?: string;
+      /** Per l'opt-in del promemoria mensile (R-5, B3): l'azione del
+       *  promemoria riparte da qui, mai da un'email digitata a parte. */
+      valutazioneId?: string;
+    }
+  | undefined;
 
 const HOUR = 60 * 60 * 1000;
 // Un ufficio o una famiglia condividono l'IP: generoso per l'uso vero,
@@ -214,7 +222,7 @@ export async function votaAction(
   const user = await getCurrentUser();
   const confermaToken = crypto.randomBytes(24).toString("base64url");
 
-  await prisma.valutazione.create({
+  const creata = await prisma.valutazione.create({
     data: {
       servizioId: s.id,
       stelle,
@@ -251,7 +259,7 @@ export async function votaAction(
 
   revalidatePath("/valutazioni");
   revalidatePath(`/valutazioni/${s.id}`);
-  return { ok: true };
+  return { ok: true, valutazioneId: creata.id };
 }
 
 // ---------------------------------------------------------------------------

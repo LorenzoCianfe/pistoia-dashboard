@@ -8,6 +8,7 @@ import {
   Landmark,
   CalendarDays,
   ArrowRight,
+  Star,
 } from "lucide-react";
 import { getMonthlyDigest } from "@/lib/data/digest";
 import { Card } from "@/components/ui/card";
@@ -98,6 +99,26 @@ export default async function DigestPage() {
         ) : null}
       </Card>
 
+      {/* Valutazioni dei servizi (R-5, forma C1): prima il dato, poi
+          l'invito. La card regge lo stato a zero — che è quello vero del
+          giorno uno — con la colonna dura; l'invito sparisce in stampa. Il
+          blocco è CONTENUTO del report, non una sollecitazione: non tocca il
+          contatore unico (decisione 2026-08-04). */}
+      <Card className="space-y-3">
+        <h2 className="flex items-center gap-2 text-base font-semibold">
+          <Star size={18} className="text-teal" aria-hidden />
+          Valutazioni dei servizi
+        </h2>
+        <ValutazioniDelMese v={digest.valutazioni} />
+        <Link
+          href="/valutazioni"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal hover:underline print:hidden"
+        >
+          Di&apos; come sta la tua zona
+          <ArrowRight size={15} aria-hidden />
+        </Link>
+      </Card>
+
       {/* Opere */}
       <Card className="space-y-3">
         <h2 className="flex items-center gap-2 text-base font-semibold">
@@ -130,7 +151,11 @@ export default async function DigestPage() {
         )}
       </Card>
 
-      <div className="grid gap-5 lg:grid-cols-2 print:grid-cols-2">
+      {/* `grid-cols-1` esplicito: senza, la traccia implicita è `auto` e il
+          suo minimo è il min-content — un badge nowrap allarga la colonna
+          oltre il viewport a 360px (AGENTS §3, ondata 7, trappola 5; emerso
+          appena il digest è entrato in shots con R-5). */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 print:grid-cols-2">
         {/* Proposte più sostenute */}
         <Card className="space-y-3">
           <h2 className="flex items-center gap-2 text-base font-semibold">
@@ -234,5 +259,85 @@ export default async function DigestPage() {
         </p>
       </Card>
     </div>
+  );
+}
+
+/**
+ * Il paragrafo delle Valutazioni: apre su ciò che si sa. Con medie sopra
+ * soglia le dice; con voti sotto soglia dichiara il conto e il perché del
+ * silenzio; a zero racconta la colonna dura — le mediane di chiusura, mai il
+ * volume accostato alle stelle (la frase cita solo i tempi, che reggono un
+ * giudizio anche su `sicurezza`).
+ */
+function ValutazioniDelMese({
+  v,
+}: {
+  v: {
+    entrate: number;
+    condizioni: {
+      id: string;
+      nome: string;
+      materia: string;
+      media: { valore: number | null; campione: number; pubblicabile: boolean };
+      giorniMediani: number | null;
+    }[];
+  };
+}) {
+  const pubblicate = v.condizioni.filter(
+    (c) => c.media.pubblicabile && c.media.valore != null,
+  );
+  const conMediana = v.condizioni.filter((c) => c.giorniMediani != null);
+  const mediane =
+    conMediana.length > 0 ? (
+      <>
+        {" "}
+        Quello che la piattaforma sa da sé c&apos;è già: le segnalazioni{" "}
+        {conMediana.map((c, i) => (
+          <span key={c.id}>
+            {i > 0 ? (i === conMediana.length - 1 ? " e " : ", ") : ""}
+            {c.materia}
+            {i === 0 ? " si chiudono in " : " in "}
+            <strong>{formatNumber(c.giorniMediani!)}</strong>
+            {i === 0 ? (c.giorniMediani === 1 ? " giorno mediano" : " giorni mediani") : ""}
+          </span>
+        ))}
+        .
+      </>
+    ) : null;
+
+  if (pubblicate.length > 0) {
+    return (
+      <p className="text-sm leading-relaxed text-muted">
+        Nel periodo sono entrate {formatNumber(v.entrate)} valutazioni.{" "}
+        {pubblicate.map((c, i) => (
+          <span key={c.id}>
+            {i > 0 ? " · " : ""}
+            <strong>{c.nome}</strong>: {c.media.valore!.toFixed(1).replace(".", ",")}{" "}
+            su 5 da {formatNumber(c.media.campione)} voti
+          </span>
+        ))}
+        {pubblicate.length < v.condizioni.length
+          ? ". Le altre condizioni sono sotto soglia: lì la media aspetta."
+          : "."}
+      </p>
+    );
+  }
+
+  if (v.entrate > 0) {
+    return (
+      <p className="text-sm leading-relaxed text-muted">
+        Nel periodo sono entrate {formatNumber(v.entrate)}{" "}
+        {v.entrate === 1 ? "valutazione" : "valutazioni"}: nessuna casella è
+        ancora sopra la soglia, e prima di allora una media direbbe più di
+        quanto sappiamo.{mediane}
+      </p>
+    );
+  }
+
+  return (
+    <p className="text-sm leading-relaxed text-muted">
+      Le schede sono aperte e le stelle, per ora, dichiarate in attesa: la
+      media compare quando una casella supera la soglia.{mediane}
+    </p>
   );
 }

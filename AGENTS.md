@@ -193,6 +193,14 @@ Stessa famiglia delle precedenti: **nessuna produce un errore.**
    prima è impossibile. A 155px quella scheda era comunque stretta: la misura
    stava segnalando un problema di leggibilità, non solo di layout.
 
+   **Pagata di nuovo il 2026-08-04, e questa volta era VECCHIA**: la griglia
+   due-colonne del `/digest` (`lg:grid-cols-2` senza base) traboccava a 360px
+   da sempre — ma il digest non era mai stato in `shots`, quindi nessun
+   cancello l'aveva misurata. È entrato in lista insieme alla card di R-5, e
+   il difetto è emerso al primo giro. Corollario operativo: **quando una
+   pagina entra per la prima volta in un cancello, i rossi possono essere
+   suoi di nascita, non della modifica che ce l'ha portata.**
+
 6. **`npm run shots -- --only=...` non funziona:** npm intercetta `--only` come
    propria configurazione (`npm warn invalid config only=...`). In PowerShell
    nemmeno `--simple` e `--width` arrivano, e il sintomo è muto: lo script gira
@@ -318,7 +326,7 @@ npm run test:e2e       # playwright
 npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
 npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
 node scripts/shots.mjs --simple --width=360   # modalità semplice, viewport minima
-npm run rotte          # tutte le rotte rispondono e rendono contenuto? (47 al 2026-08-03)
+npm run rotte          # tutte le rotte rispondono e rendono contenuto? (54 al 2026-08-04)
 npm run db:reset       # ricrea il DB e ripopola i dati dimostrativi
 
 python scripts/pdftext.py documento.pdf              # testo di un PDF
@@ -484,10 +492,12 @@ Una modifica è finita quando **tutte** queste sono vere:
 - [ ] `npm run lint` passa
 - [ ] I test esistenti passano
 - [ ] `npm run rotte` è verde — **0 con problemi**, qualunque sia il totale
-      (47 al 2026-08-03; il numero cresce a ogni rotta nuova, e va letto dallo
+      (54 al 2026-08-04; il numero cresce a ogni rotta nuova, e va letto dallo
       script, non da qui). È l'unico cancello che risponde
       alla domanda «abbiamo perso una funzionalità?», e l'unico che apre le
-      rotte annidate per indirizzo invece che cliccandole
+      rotte annidate per indirizzo invece che cliccandole. Da R-5 le passate
+      sono TRE: admin, moderatore, e **anonima** (le rotte a lettura pubblica,
+      con atterraggio preteso — un redirect al login risponderebbe 200)
 - [ ] L'hai **guardata**: `npm run shots`, o il browser, in tema chiaro **e**
       scuro. Un typecheck verde non è una prova visiva.
 - [ ] Funziona da tastiera e il focus è visibile

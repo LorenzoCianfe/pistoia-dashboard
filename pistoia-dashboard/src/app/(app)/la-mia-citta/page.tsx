@@ -21,7 +21,11 @@ import { getUnreadCount } from "@/lib/data/notifiche";
 import { getCityState } from "@/lib/data/citystate";
 import { getActiveNotices } from "@/lib/data/transparency";
 import { getOnboardingState } from "@/lib/data/onboarding";
+import { getCampagnaPersona } from "@/lib/data/sollecitazioni";
+import { periodoDi } from "@/lib/valutazioni";
+import { etichettaPeriodo } from "@/lib/redazione";
 import { OnboardingChecklist } from "@/components/app/onboarding-checklist";
+import { CampagnaHome } from "@/components/valutazioni/campagna-home";
 import { CityStateHero } from "@/components/trasparenza/city-state-hero";
 import { NoticeBanner } from "@/components/trasparenza/notice-banner";
 import { Card } from "@/components/ui/card";
@@ -54,13 +58,16 @@ export default async function MyCityPage() {
   const simple = (await cookies()).get(SIMPLE_MODE_COOKIE)?.value === "1";
   if (simple) return <SimpleHome user={user} />;
 
-  const [city, forYou, cityState, activeNotices, onboarding] = await Promise.all([
-    getMyCity(user),
-    user.civicInterests.length > 0 ? getForYou(user.civicInterests) : Promise.resolve([]),
-    getCityState(),
-    getActiveNotices(),
-    getOnboardingState(user),
-  ]);
+  const oggi = new Date();
+  const [city, forYou, cityState, activeNotices, onboarding, campagna] =
+    await Promise.all([
+      getMyCity(user),
+      user.civicInterests.length > 0 ? getForYou(user.civicInterests) : Promise.resolve([]),
+      getCityState(),
+      getActiveNotices(),
+      getOnboardingState(user),
+      getCampagnaPersona({ id: user.id, email: user.email }, oggi),
+    ]);
   const firstName = (user.publicName ?? user.name).split(" ")[0];
 
   return (
@@ -86,6 +93,18 @@ export default async function MyCityPage() {
 
       {/* Onboarding "primi passi in città" (O4): solo finché serve. */}
       {!onboarding.hidden ? <OnboardingChecklist steps={onboarding.steps} /> : null}
+
+      {/* La campagna mensile delle Valutazioni (R-5, B1): nello slot dei
+          richiami, mai sopra gli avvisi urgenti. Chi la vede lo decide il
+          contatore unico, sul server; il rinnovo è personale (i servizi
+          votati il mese scorso), non un appello generico. */}
+      {campagna.mostra ? (
+        <CampagnaHome
+          serviziRinnovabili={campagna.serviziRinnovabili}
+          daRegistrare={campagna.daRegistrare}
+          mese={etichettaPeriodo(periodoDi(oggi))}
+        />
+      ) : null}
 
       {/* Percorsi guidati (A1 §23): la home parte dagli obiettivi, non dai menu.
           Promossi sopra "Stato della città" nella Fase A: dei due compiti

@@ -54,6 +54,9 @@ const ROTTE = [
   // inventato: deve rispondere con la pagina cortese «link non più valido»,
   // non con un errore. I percorsi con un token vero li prova l'E2E.
   "/v/pt-anagrafe-01", "/v/conferma/link-non-valido",
+  // R-5: l'atterraggio del promemoria mensile, con token inventato — deve
+  // rispondere con la pagina cortese, non con un errore (come /v/conferma).
+  "/v/promemoria/link-non-valido",
   // R-3: il foglio dei QR da stampare, ANNIDATA sotto /admin.
   "/admin/codici-qr",
   "/avvisi", "/organigramma", "/faq", "/glossario",
@@ -77,6 +80,15 @@ const ROTTE = [
  * l'ATTERRAGGIO sull'indirizzo chiesto, non solo un 200 con un <h1>.
  */
 const ROTTE_MODERATORE = ["/redazione"];
+
+/**
+ * Rotte a LETTURA PUBBLICA (R-5, decisione W1 del 2026-08-04): si aprono
+ * SENZA alcun accesso. Anche qui il controllo pretende l'ATTERRAGGIO
+ * sull'indirizzo chiesto: se il proxy o il layout rimandassero al login, la
+ * risposta sarebbe comunque un 200 con un <h1> — e il cancello certificherebbe
+ * un'apertura mai avvenuta, la stessa trappola della passata moderatore.
+ */
+const ROTTE_ANONIME = ["/valutazioni", "/valutazioni/pulizia"];
 
 /** Liste da cui pescare un indirizzo di dettaglio vero. */
 const DETTAGLI = [
@@ -209,8 +221,44 @@ if (new URL(pageMod.url()).pathname.includes("/login")) {
 }
 await ctxMod.close();
 
+// Terza passata: le rotte pubbliche, SENZA login — un contesto vergine.
+const ctxAnon = await browser.newContext({ locale: "it-IT" });
+const pageAnon = await ctxAnon.newPage();
+for (const url of ROTTE_ANONIME) {
+  try {
+    const r = await pageAnon.goto(`${BASE}${url}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 30_000,
+    });
+    await pageAnon.waitForLoadState("networkidle").catch(() => {});
+    const status = r?.status() ?? 0;
+    const finale = new URL(pageAnon.url()).pathname;
+    const titoli = await pageAnon.locator("h1").count();
+    const testo = await pageAnon.locator("body").innerText();
+    const erroreInPagina =
+      /Pagina non trovata|Qualcosa è andato storto|Application error|Unhandled Runtime Error/i.test(
+        testo,
+      );
+    // `finale === url` è parte del cancello: un redirect al login passerebbe
+    // tutti gli altri controlli e la "lettura pubblica" resterebbe sulla carta.
+    const ok = status < 400 && titoli > 0 && !erroreInPagina && finale === url;
+    if (!ok) rotti += 1;
+    const nota = erroreInPagina
+      ? "  ← errore reso in pagina"
+      : finale !== url
+        ? `  → ${finale} (atterraggio mancato)`
+        : "";
+    console.log(`${ok ? "  ok " : "  ✗  "} ${String(status).padEnd(4)} ${url}${nota}  [anonimo]`);
+  } catch (e) {
+    rotti += 1;
+    console.log(`  ✗   ---  ${url}  ${e.message.split("\n")[0]}`);
+  }
+}
+await ctxAnon.close();
+
 await browser.close();
-const totale = ROTTE.length + dinamiche.length + ROTTE_MODERATORE.length;
+const totale =
+  ROTTE.length + dinamiche.length + ROTTE_MODERATORE.length + ROTTE_ANONIME.length;
 console.log(`\n${totale} rotte controllate, ${rotti} con problemi.`);
 if (rotti > 0) {
   console.error(

@@ -722,6 +722,30 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   d'atterraggio. **195/195** unitari, **20/20** E2E, **`rotte` 51/51**, shots nei due temi e
   a 360px puliti.
 
+- **0.23.0 — «Valutazioni dei servizi», R-5: i sei ingressi e la lettura pubblica**
+  (2026-08-04). La composizione di Lorenzo su mockup in contesto e due giri di domande:
+  **A1** (invito effimero nel ringraziamento di «è davvero risolta?», contestuale via
+  `condizionePerCategoria` — 7 categorie su 12, le altre non hanno una casella e quindi non
+  hanno un invito) · **B su tutti i canali** (card in home, notifica al primo accesso del
+  mese, email opt-in `PromemoriaRinnovo` con invio opportunistico e disiscrizione via form
+  su `/v/promemoria/[token]` — e il pop-up **veste il rinnovo** quando c'è) · **C1** (nel
+  digest prima il dato, dalle stesse `getScheda` delle schede, poi l'invito `print:hidden`)
+  · **D1** (pop-up armato solo dai voti espressi via `lib/completamenti.ts`; «Non ora» =
+  finestra, X = 180 giorni). **Il cancello della fase è il contatore unico**: tabella
+  `Sollecitazione` append-only (schema S2), regole pure in `lib/sollecitazioni.ts` provate
+  a DATE FISSE (18 unit): al massimo una sollecitazione per 30 giorni, contata al centro;
+  un voto chiude la finestra; menu, QR e digest non contano; l'ancora è l'account. **E il
+  login-wall si è deciso (W1)**: `/valutazioni` e le schede a lettura pubblica nel gruppo
+  `(pubblico)` — `AppShell` estratto e condiviso, `TopBarAnonima` separata dalla barra
+  protetta, modulo degradato a invito con `?next` sull'ancora, proxy alleggerito col via
+  esplicito. `rotte.mjs` guadagna la **terza passata anonima** con controllo d'atterraggio;
+  `shots.mjs` fotografa i due regimi; 3 E2E nuovi (lettura, degrado, e il muro che non si è
+  mosso altrove). Il digest, entrato in shots con la sua card, ha rivelato un traboccamento
+  **preesistente** a 360px (griglia `lg:grid-cols-2` senza base — AGENTS §3, ondata 7),
+  corretto con `grid-cols-1`. **213/213** unitari, **23/23** E2E, **`rotte` 54/54**, shots
+  nei due temi e a 360px puliti; pop-up e campagna provati anche dal vivo (voto retrodatato
+  nel solo db di sviluppo, poi riseminato).
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.

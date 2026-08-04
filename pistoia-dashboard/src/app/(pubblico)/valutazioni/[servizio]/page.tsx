@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, Trash2, BadgeCheck, QrCode } from "lucide-react";
-import { requireUser } from "@/lib/auth/dal";
+import { getCurrentUser } from "@/lib/auth/dal";
 import {
   getAndamento,
   getQuartieriPerVoto,
@@ -76,7 +76,11 @@ export default async function SchedaServizioPage({
 }: {
   params: Promise<{ servizio: string }>;
 }) {
-  const user = await requireUser();
+  // Sola lettura anche senza account (R-5, decisione W1 del 2026-08-04):
+  // `user` può essere null, e da null discendono tre degradi dichiarati —
+  // niente controlli staff, niente precompilazione, modulo sostituito
+  // dall'invito ad accedere (il voto senza account resta sui QR).
+  const user = await getCurrentUser();
   const { servizio } = await params;
   const s = trovaServizio(servizio);
   if (!s) notFound();
@@ -99,7 +103,7 @@ export default async function SchedaServizioPage({
     bottoni né lo stato «segnalata» raggiungono il browser di un cittadino —
     la segnalazione non ha segni pubblici finché la Redazione non decide.
   */
-  const staff = isStaff(user.role);
+  const staff = user != null && isStaff(user.role);
   const periodoCorrente = periodoDi(new Date());
   const quadroGiaRisposto = risposte.some(
     (r) => r.tipo === TIPO_QUADRO && r.periodo === periodoCorrente,
@@ -194,21 +198,27 @@ export default async function SchedaServizioPage({
 
       {/*
         Il voto (R-3). Dopo il dato, mai prima: la pagina apre su ciò che la
-        città ha detto, non su un modulo (piano §0). Email e nome sono
-        precompilati dall'account perché qui una sessione c'è per forza — il
-        percorso davvero senza account è /v/[codice], dal QR.
+        città ha detto, non su un modulo (piano §0). Con la sessione, email e
+        nome arrivano precompilati dall'account; senza (W1, lettura pubblica)
+        il modulo DEGRADA a invito — il voto dalla scheda vuole l'accesso,
+        perché è l'accesso a tenere il rinnovo mensile legato a una persona
+        sola; il percorso senza account resta /v/[codice], dal QR.
       */}
       <Card id="vota">
         <CardEyebrow>Vota anche tu</CardEyebrow>
         <div className="mt-3">
-          <ModuloVoto
-            servizioId={s.id}
-            famiglia={s.famiglia}
-            domanda={DOMANDA_FAMIGLIA[s.famiglia]}
-            quartieri={quartieri}
-            defaultEmail={user.email}
-            defaultNome={user.name}
-          />
+          {user ? (
+            <ModuloVoto
+              servizioId={s.id}
+              famiglia={s.famiglia}
+              domanda={DOMANDA_FAMIGLIA[s.famiglia]}
+              quartieri={quartieri}
+              defaultEmail={user.email}
+              defaultNome={user.name}
+            />
+          ) : (
+            <InvitoVotoAnonimo servizioId={s.id} />
+          )}
         </div>
       </Card>
 
@@ -391,6 +401,31 @@ export default async function SchedaServizioPage({
           Il Comune può segnalare una valutazione, non rimuoverla.
         </p>
       </Card>
+    </div>
+  );
+}
+
+/**
+ * Il modulo, degradato a invito per chi non ha una sessione (W1).
+ *
+ * Il `next` riporta ESATTAMENTE qui, sull'ancora del modulo: chi accede per
+ * votare non deve ritrovare la strada da solo. Il secondo percorso — il QR —
+ * si dichiara a parole: è carta appesa nei luoghi del servizio, non ha un
+ * link. («Come funziona» arriverà con /metodologia, R-6.)
+ */
+function InvitoVotoAnonimo({ servizioId }: { servizioId: string }) {
+  const next = encodeURIComponent(`/valutazioni/${servizioId}#vota`);
+  return (
+    <div>
+      <p className="max-w-prose text-sm leading-relaxed text-muted">
+        Per votare da qui serve un accesso: è ciò che tiene il rinnovo mensile
+        legato a una persona sola. Oppure vota senza account dal{" "}
+        <strong className="text-foreground">codice QR</strong> esposto nei
+        luoghi del servizio.
+      </p>
+      <Link href={`/login?next=${next}`} className="btn btn-primary btn-sm mt-3">
+        Accedi e vota
+      </Link>
     </div>
   );
 }

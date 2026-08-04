@@ -9,6 +9,7 @@ import { reportCategory } from "@/lib/community";
 import { toPercents } from "@/lib/percent";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { segnalaCompletamentoVoto } from "@/lib/completamenti";
 
 /*
   "Vota la priorità" (A2 §9): un voto per tornata, spostabile finché la
@@ -59,6 +60,9 @@ export function PriorityVotePanel({
       const res = await votePriorityAction(round.id, itemId);
       if (!res?.ok) {
         setError(res?.error ?? "Non è stato possibile registrare il voto. Riprova.");
+      } else {
+        // Completamento senza festa: può armare il pop-up (R-5, D1).
+        segnalaCompletamentoVoto();
       }
     });
   }

@@ -19,6 +19,12 @@ import { awardBadge } from "@/lib/badges";
 import { checkContribution } from "@/lib/moderation";
 import { limitWrite } from "@/lib/limits";
 import { notify } from "@/lib/notify";
+import { periodoDi } from "@/lib/valutazioni";
+import { condizionePerCategoria, puoSollecitare } from "@/lib/sollecitazioni";
+import {
+  getStatoSollecitazioni,
+  haVotatoNelPeriodo,
+} from "@/lib/data/sollecitazioni";
 
 export type ReportFormState =
   | { ok?: boolean; error?: string; id?: string }
@@ -303,7 +309,13 @@ export async function confirmResolutionAction(
 
   const report = await prisma.report.findUnique({
     where: { id: reportId },
-    select: { id: true, authorId: true, status: true, resolutionFeedback: true },
+    select: {
+      id: true,
+      authorId: true,
+      status: true,
+      resolutionFeedback: true,
+      category: true,
+    },
   });
   if (!report) return { ok: false as const, error: "Segnalazione non trovata." };
   if (report.authorId !== user.id) {
@@ -342,10 +354,39 @@ export async function confirmResolutionAction(
     });
   });
 
+  /*
+    L'ingresso contestuale delle Valutazioni (R-5, forma A1): chi ha appena
+    verificato un esito sul posto è nell'unico momento in cui chiedere un
+    voto è un seguito naturale. Solo alla CONFERMA — a chi riapre una pratica
+    non si chiede una stella — solo se la categoria ha una casella, e solo a
+    contatore libero: la riga si scrive qui, dentro l'azione, mai in un GET.
+  */
+  let invito: { servizioId: string; materia: string } | null = null;
+  if (!reopened) {
+    const condizione = condizionePerCategoria(report.category);
+    if (condizione) {
+      const persona = { id: user.id, email: user.email };
+      const adesso = new Date();
+      const [stato, giaVotato] = await Promise.all([
+        getStatoSollecitazioni(persona),
+        haVotatoNelPeriodo(persona, condizione.id, periodoDi(adesso)),
+      ]);
+      if (!giaVotato && puoSollecitare(adesso, stato)) {
+        await prisma.sollecitazione.create({
+          data: { userId: user.id, canale: "segnalazione" },
+        });
+        invito = {
+          servizioId: condizione.id,
+          materia: condizione.materia ?? `su ${condizione.nome}`,
+        };
+      }
+    }
+  }
+
   revalidatePath(`/segnalazioni/${report.id}`);
   revalidatePath("/segnalazioni");
   revalidatePath("/admin");
-  return { ok: true as const, outcome };
+  return { ok: true as const, outcome, invito };
 }
 
 // ---------------------------------------------------------------------------

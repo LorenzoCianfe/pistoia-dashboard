@@ -101,6 +101,10 @@ const PAGES = [
   // qui risulterebbe "verificata" senza essere mai stata aperta (AGENTS.md §3,
   // ondata 7, trappola 4).
   { name: "promesse", url: "/promesse" },
+  // R-5: il report del mese guadagna il blocco delle Valutazioni (forma C1) —
+  // entra qui INSIEME alla modifica, come da regola dell'ondata 7: una pagina
+  // ridisegnata e non elencata risulterebbe verificata senza mai essere aperta.
+  { name: "digest", url: "/digest" },
   { name: "decisioni", url: "/decisioni" },
   { name: "question-time", url: "/question-time" },
   { name: "priorita", url: "/priorita" },
@@ -120,12 +124,20 @@ const PAGES = [
   // perché a zero valutazioni le due pagine dicono cose diverse.
   { name: "valutazioni", url: "/valutazioni" },
   { name: "valutazione-servizio", url: "/valutazioni/pulizia" },
+  // R-5, decisione W1: le stesse due pagine cambiano STATO con la sessione
+  // (barra anonima, modulo degradato a invito). Una sola foto ne
+  // certificherebbe metà: si fotografano in tutti e due i regimi.
+  { name: "valutazioni-anonima", url: "/valutazioni", auth: false },
+  { name: "valutazione-servizio-anonima", url: "/valutazioni/pulizia", auth: false },
   // R-3: la pagina del QR, pubblica e senza navigazione, aperta col codice
   // deterministico del seed; e l'atterraggio della mail nello stato «link non
   // più valido» — l'unico fotografabile senza un token vero. Gli stati con un
   // token vivo li copre l'E2E, che vota davvero e legge la mail dal file.
   { name: "voto-qr", url: "/v/pt-anagrafe-01" },
   { name: "valutazione-conferma", url: "/v/conferma/link-non-valido" },
+  // R-5: l'atterraggio del promemoria mensile, nello stato «link non più
+  // valido» — l'unico fotografabile senza un token vero, come la conferma.
+  { name: "promemoria-stop", url: "/v/promemoria/link-non-valido" },
   // ESCLUSA E DICHIARATA: /admin/codici-qr. Questo script accede da CITTADINO,
   // e `requireAdmin()` reindirizza a /la-mia-citta — la "schermata" prodotta
   // sarebbe la home spacciata per il foglio dei QR, cioè un cancello che

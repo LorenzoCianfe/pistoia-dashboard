@@ -126,7 +126,18 @@ parole della community, e la mail di conferma con **revoca via token**
 di form, mai effetti del GET**: i filtri antispam aprono i link delle mail, e
 un GET che mutasse agirebbe al posto della persona. Il prefisso **`/v/` è
 pubblico per disegno** — è la porta del QR e dell'atterraggio della mail — e
-sta fuori dai `PROTECTED_PREFIXES` di `proxy.ts`.
+sta fuori dai `PROTECTED_PREFIXES` di `proxy.ts`. Vale anche per
+`/v/promemoria/[token]` (R-5): la disiscrizione dal promemoria mensile è
+un'azione di form sulla pagina del token.
+
+**Da R-5 anche `/valutazioni` e le schede sono a LETTURA pubblica**
+(decisione W1 del 2026-08-04): fuori dai `PROTECTED_PREFIXES`, nel gruppo
+`(pubblico)` con layout tollerante (`getCurrentUser`). Cambia solo la
+lettura: la **scrittura** resta com'era — il modulo sulla scheda esige la
+sessione (per gli anonimi degrada a invito), i controlli staff non entrano
+nell'albero di chi non è staff, e il voto senza account resta confinato a
+`/v/[codice]`. La passata anonima di `rotte.mjs` prova l'atterraggio; un E2E
+prova che il resto del muro non si è mosso.
 
 **La verifica è simulata** (nessuna integrazione SPID/CIE) ed è **etichettata
 come tale nella UI**. Su una piattaforma che parla di trasparenza, fingere una
@@ -167,6 +178,14 @@ verifica reale sarebbe la cosa peggiore da fare.
   (`limiteConservazioneIp()`, eseguita a ogni voto — niente cron in una demo).
   Il telefono non si raccoglie. In locale nessuna email parte: ogni messaggio
   è un file in `.email/` (`src/lib/email.ts`), e `/privacy` lo dichiara.
+- **Sollecitazioni (R-5): il contatore registra il minimo che serve** — per
+  chi ha un account, data e canale di ogni invito a valutare
+  (`Sollecitazione`, append-only), con un solo scopo dichiarato su
+  `/privacy`: non chiedere più di una volta per finestra. Il **promemoria
+  mensile** (`PromemoriaRinnovo`) esiste solo su richiesta esplicita dopo un
+  voto, tiene la sola email, e la disiscrizione (azione di form, mai GET)
+  cancella la riga per intero. Chi non ha un account non viene mai
+  sollecitato: non c'è niente da registrare su di lui.
 
 ---
 

@@ -68,6 +68,7 @@ model User {
   initiativeJoins     InitiativeJoin[]
   valutazioni         Valutazione[]
   risposteServizi     RispostaServizio[]
+  sollecitazioni      Sollecitazione[]
 
   @@index([neighborhoodId])
 }
@@ -790,6 +791,42 @@ model CodiceQr {
   /// perdere la storia dei voti già arrivati da quel luogo.
   attivo     Boolean  @default(true)
   createdAt  DateTime @default(now())
+}
+
+/// Una richiesta di valutazione mostrata a una persona (R-5, piano §1.1.7).
+///
+/// Append-only come `ModerationAction`: il contatore unico è l'ultima riga —
+/// sei ingressi, ma al massimo una sollecitazione per finestra di
+/// `RICHIESTA_SILENZIO_GIORNI`, contata qui al centro. `canale` ed `esito`
+/// reggono le regole per-canale (la X del pop-up impone un silenzio lungo).
+/// L'ancora è l'account: chi non ne ha uno entra dai QR, che sono carta e non
+/// sollecitano. Le regole pure stanno in `src/lib/sollecitazioni.ts`.
+model Sollecitazione {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  canale     String // segnalazione | campagna | popup
+  mostrataIl DateTime  @default(now())
+  /// seguita | rimandata | chiusa — null = mai risposta. «chiusa» è la X,
+  /// e sul pop-up vale un silenzio di SILENZIO_POPUP_CHIUSO_GIORNI.
+  esito      String?
+  esitoIl    DateTime?
+
+  @@index([userId, mostrataIl])
+}
+
+/// Il promemoria mensile del rinnovo, chiesto ESPLICITAMENTE dopo un voto
+/// (R-5, ingresso B3): mai iscritti d'ufficio. La chiave è l'email — è
+/// l'identità di chi vota, account o no — e la disiscrizione è un'azione di
+/// form sulla pagina del token, mai un effetto del GET.
+model PromemoriaRinnovo {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  token       String   @unique
+  chiestoIl   DateTime @default(now())
+  /// `AAAA-MM` dell'ultima mail partita: l'invio del mese è dovuto quando è
+  /// nullo o più vecchio del periodo corrente.
+  ultimoInvio String?
 }
 
 // ---------------------------------------------------------------------------

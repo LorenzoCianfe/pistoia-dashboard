@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Star, ChevronRight } from "lucide-react";
-import { requireUser } from "@/lib/auth/dal";
 import {
   getPanoramica,
   type ColonnaDura,
@@ -44,7 +43,8 @@ export const metadata: Metadata = {
   chiunque il primo giorno: il seed non contiene nemmeno un voto, di proposito.
 */
 export default async function ValutazioniPage() {
-  await requireUser();
+  // Nessun requireUser (R-5, decisione W1 del 2026-08-04): la panoramica è a
+  // lettura pubblica — il regime d'accesso lo dichiara il gruppo (pubblico).
   const p = await getPanoramica();
 
   return (

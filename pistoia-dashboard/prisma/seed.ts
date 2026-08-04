@@ -93,6 +93,12 @@ async function wipe() {
   await prisma.valutazione.deleteMany();
   await prisma.codiceQr.deleteMany();
   await prisma.servizio.deleteMany();
+  // R-5: la storia del contatore e i promemoria. `Sollecitazione` cadrebbe
+  // col cascade degli utenti, ma qui si dichiara; `PromemoriaRinnovo` NON ha
+  // FK e senza questa riga sopravviverebbe a ogni risemina — le azioni si
+  // accumulano anche quando i dati no (AGENTS §3, Fase A).
+  await prisma.sollecitazione.deleteMany();
+  await prisma.promemoriaRinnovo.deleteMany();
   await prisma.profileVerification.deleteMany();
   await prisma.citizenBadge.deleteMany();
   await prisma.organizationProfile.deleteMany();

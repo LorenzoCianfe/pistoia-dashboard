@@ -6,6 +6,7 @@ import { votaAction, type VotoState } from "@/app/actions/valutazioni";
 import { Field, Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/alert";
+import { PromemoriaOptin } from "@/components/valutazioni/promemoria-optin";
 import { cn } from "@/lib/utils";
 
 /*
@@ -71,6 +72,11 @@ export function ModuloVoto({
             ? " Il voto vale per questo mese: il prossimo potrai rinnovarlo."
             : ""}
         </p>
+        {/* R-5, B3: il promemoria si CHIEDE, dopo il voto — solo condizioni,
+            che sono le uniche a rinnovarsi. */}
+        {famiglia === "condizione" && state.valutazioneId ? (
+          <PromemoriaOptin valutazioneId={state.valutazioneId} />
+        ) : null}
       </div>
     );
   }

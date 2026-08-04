@@ -1,6 +1,8 @@
 import "server-only";
 import { prisma } from "@/lib/db";
 import { demoBaseline } from "@/lib/demo";
+import { serviziDi } from "@/lib/valutazioni";
+import { getScheda } from "@/lib/data/valutazioni";
 
 // Civic digest pubblico mensile (A2 §19): il riepilogo della città calcolato
 // dai dati reali della piattaforma sugli ultimi 30 giorni. Niente cache: i
@@ -77,9 +79,35 @@ export async function getMonthlyDigest() {
     .sort((a, b) => b.supports - a.supports)
     .slice(0, 3);
 
+  /*
+    Il blocco delle Valutazioni (R-5, C1): prima il dato, poi l'invito.
+    I numeri vengono da `getScheda`, la stessa fonte delle schede — una
+    definizione sola per indicatore (AGENTS §3, ondata 7): se il digest
+    calcolasse da sé, prima o poi direbbe una cifra diversa dalla scheda a
+    un clic di distanza.
+  */
+  const [valutazioniEntrate, condizioni] = await Promise.all([
+    prisma.valutazione.count({
+      where: { createdAt: { gte: since }, rimossaIl: null },
+    }),
+    Promise.all(serviziDi("condizione").map((s) => getScheda(s))),
+  ]);
+
   return {
     periodDays: DAYS,
     generatedAt: new Date(),
+    valutazioni: {
+      entrate: valutazioniEntrate,
+      condizioni: condizioni.map((c) => ({
+        id: c.servizio.id,
+        nome: c.servizio.nome,
+        materia: c.servizio.materia ?? `su ${c.servizio.nome}`,
+        media: c.media,
+        /** `null` anche quando le chiuse sono troppo poche: mai una sintesi
+         *  su un campione che non la regge. */
+        giorniMediani: c.colonna?.giorniMediani ?? null,
+      })),
+    },
     reports: {
       received: reportsReceived,
       resolved: reportsResolved,

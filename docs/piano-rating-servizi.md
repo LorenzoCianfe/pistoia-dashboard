@@ -209,6 +209,7 @@ Tre note che il codice deve rispettare:
 | `/valutazioni/[servizio]` | La scheda: media, composizione, andamento, colonna dura, recensioni, risposte, registro | R-2 |
 | `/v/[codice]` | **La pagina del QR**: una schermata, stelle + email, niente navigazione | R-3 ✅ |
 | `/v/conferma/[token]` | L'atterraggio della mail: conferma o «non sono stato io» come azioni, mai come GET | R-3 ✅ |
+| `/v/promemoria/[token]` | «Non inviarmelo più» del promemoria mensile: azione di form, mai GET | R-5 ✅ |
 | `/admin/codici-qr` | Il generatore: ogni scheda è un foglio da stampare e appendere | R-3 ✅ |
 | `/redazione` | La porta della Redazione: coda delle segnalazioni del Comune, rimozioni con motivo pubblico, Note con fonte | R-4 ✅ |
 | `/metodologia` | Soglia, media, finestra, versione — prerequisito 3 | R-6 |
@@ -300,10 +301,58 @@ parte del Comune · rimozione dalla Redazione · registro pubblico.
 > registro, risposta quadro+singola) · `rotte` **51/51** con la passata
 > moderatore · shots nei due temi e a 360px.
 
-### R-5 · I sei ingressi
+### R-5 · I sei ingressi ✅ *(chiusa 2026-08-04)*
 Aggancio a «è davvero risolta?» · campagna mensile · report del mese · pop-up ·
 voce di menu · QR stampabili.
 **Cancello:** il contatore unico delle sollecitazioni provato con date fisse.
+
+> **Chiusa col cancello pieno**: typecheck · lint · **213** unit (18 nuovi, il
+> contatore a date fisse) · **23/23** E2E (3 nuovi: lettura anonima, degrado
+> del modulo, il muro che regge altrove) · `rotte` **54/54** con TRE passate
+> (admin, moderatore, anonima) · shots nei due temi e a 360px — dove il
+> digest, entrato in lista con la sua card, ha rivelato un traboccamento
+> PREESISTENTE della griglia due-colonne (`lg:grid-cols-2` senza base,
+> AGENTS §3 ondata 7), corretto. Pop-up e campagna verificati DAL VIVO
+> (voto retrodatato al 1° luglio nel solo dev.db, poi riseminato): veste da
+> rinnovo, esiti in tabella, notifica generata, e il pop-up muto a finestra
+> occupata. Una scoperta di semantica, voluta: «un voto chiude la finestra»
+> SCAGLIONA la campagna — chi ha votato il 15 luglio è sollecitabile dal 14
+> agosto, non dal giorno 1; il rinnovo arriva sempre ad almeno 30 giorni
+> dall'ultimo voto.
+>
+> **La forma è stata COMPOSTA da Lorenzo il 2026-08-04**, su mockup in
+> contesto (facsimili delle pagine vere) e due giri di domande. La
+> composizione, tutta implementata:
+>
+> - **A1** · l'invito dopo «Sì, è risolta» vive DENTRO il ringraziamento,
+>   contestuale (categoria → condizione via `condizionePerCategoria`, 7
+>   categorie su 12; per le altre l'invito non esiste) ed **effimero**: al
+>   prossimo caricamento non c'è più. Solo alla conferma, mai alla
+>   riapertura. La riga si scrive dentro l'azione, mai in un GET.
+> - **B su tutti i canali** · card in home (slot dei richiami, si spegne con
+>   voto/X/fine mese) + notifica al primo accesso del mese + email opt-in
+>   («Ricordamelo il mese prossimo» dopo il voto, `PromemoriaRinnovo`,
+>   disiscrizione via form su `/v/promemoria/[token]`) — **e il pop-up veste
+>   il rinnovo** quando la persona è nel pubblico della campagna. Card e
+>   notifica sono UNA sollecitazione (una riga, canale `campagna`).
+> - **C1** · nel digest prima il dato, poi l'invito (`print:hidden`): a zero
+>   voti la colonna dura (mediane, mai il volume), con voti i numeri del mese
+>   dalla STESSA fonte delle schede (`getScheda`). Il blocco è contenuto, non
+>   sollecitazione.
+> - **D1** · il pop-up si arma SOLO dai voti espressi (sondaggi, priorità,
+>   question time — completamenti senza festa), generico o in veste di
+>   rinnovo; a decidere è `chiediPopupAction` sul server. «Non ora» =
+>   finestra ordinaria; la **X tace 180 giorni**
+>   (`SILENZIO_POPUP_CHIUSO_GIORNI`).
+> - **Contatore S2** · tabella `Sollecitazione { userId, canale, mostrataIl,
+>   esito, esitoIl }`, append-only come `ModerationAction`. Regole pure in
+>   `lib/sollecitazioni.ts` (`puoSollecitare`, `puoMostrarePopup`), provate a
+>   date fisse in `tests/unit/sollecitazioni.test.ts`. **Un voto chiude la
+>   finestra**; menu, QR e digest non contano; l'ancora è l'account (chi non
+>   ne ha uno entra dai QR e non viene mai sollecitato).
+>
+> Con R-5 è stata decisa e attuata anche l'apertura in sola lettura (W1):
+> vedi §8, decisione 8.
 
 ### R-6 · Metodologia
 `/metodologia` con soglia, media, finestra, registro delle modifiche, versione;
@@ -315,9 +364,9 @@ e il timbro di versione su ogni scheda.
 ## 8. Cosa resta aperto
 
 Delle quattro cose che il piano non poteva decidere da sé, **due sono state
-decise il 2026-08-03** e sono già nel codice. In coda (5–7) le decisioni
-arrivate con la chiusura di R-3, registrate qui perché questo resti l'unico
-posto da leggere.
+decise il 2026-08-03** e sono già nel codice. In coda (5–8) le decisioni
+arrivate con le chiusure di R-3 e R-5, registrate qui perché questo resti
+l'unico posto da leggere.
 
 1. ✅ **La conservazione dei dati.** **IP: 180 giorni.** **Email: finché la
    valutazione resta pubblicata**, poi sparisce con lei. Due dati con due scopi
@@ -369,6 +418,20 @@ posto da leggere.
    verde racconterebbe una città senza attriti. **Nessuna valutazione nel
    seed, sempre** — si arricchisce solo ciò che la piattaforma sa da sé, e le
    schede continuano ad aprire su «Nessun voto, ancora».
+8. ✅ **Il login-wall: /valutazioni si apre in sola lettura** (decisione di
+   Lorenzo, 2026-08-04, R-5 — scelta W1 su tre termini presentati con le
+   conseguenze dichiarate). Panoramica e schede vivono nel gruppo
+   `(pubblico)` con layout tollerante: con sessione l'`AppShell` intero
+   (identico a prima), senza sessione barra anonima (stemma + «Accedi»,
+   componente SEPARATO da `TopBar`, che non si tocca) e **modulo degradato a
+   invito** con `?next` sull'ancora del modulo — il voto web resta agli
+   autenticati, il voto senza account resta sui QR. `/valutazioni` è uscita
+   dai `PROTECTED_PREFIXES` del proxy (via esplicito dato con la scelta);
+   `rotte.mjs` ha una **passata anonima** che pretende l'atterraggio,
+   `shots.mjs` fotografa le due pagine in ENTRAMBI i regimi, e un E2E prova
+   che il resto del muro non si è mosso. Conseguenza dichiarata e accettata:
+   le pagine diventano indicizzabili — «Marco B.» di default è la
+   protezione, ed era stato scelto anche per questo.
 
 ---
 

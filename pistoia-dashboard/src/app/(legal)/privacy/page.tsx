@@ -54,6 +54,18 @@ export default function PrivacyPage() {
         <li>
           <strong>Telefono:</strong> non viene richiesto né raccolto.
         </li>
+        <li>
+          <strong>Promemoria mensile:</strong> solo se lo chiedi tu, dopo un voto,
+          riceviamo l&apos;incarico di scriverti <strong>una volta al mese</strong> quando
+          il voto sulle condizioni si rinnova. Ogni messaggio contiene il link «non
+          inviarmelo più»: la disattivazione è immediata e cancella l&apos;indirizzo
+          dall&apos;elenco dei promemoria.
+        </li>
+        <li>
+          <strong>Inviti in piattaforma:</strong> per chi ha un account, registriamo
+          quando ti abbiamo chiesto una valutazione (data e canale), per una sola
+          ragione: non chiedertela più di una volta al mese, da nessun canale.
+        </li>
       </ul>
       <p>
         In questa demo l&apos;invio delle email è simulato: nessun messaggio lascia il computer

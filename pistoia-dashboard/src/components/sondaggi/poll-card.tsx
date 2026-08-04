@@ -11,6 +11,7 @@ import { accent } from "@/lib/colors";
 import { formatNumber } from "@/lib/format";
 import { toPercents } from "@/lib/percent";
 import { cn } from "@/lib/utils";
+import { segnalaCompletamentoVoto } from "@/lib/completamenti";
 
 function applyVote(poll: PollResult, chosenId: string): PollResult {
   const prev = poll.userOptionId;
@@ -47,6 +48,9 @@ export function PollCard({ poll }: { poll: PollResult }) {
       if (res?.ok) {
         setToast(true);
         setTimeout(() => setToast(false), 2200);
+        // Un voto espresso è un completamento: può armare il pop-up delle
+        // Valutazioni (R-5, D1). Decide il server, qui si segnala e basta.
+        segnalaCompletamentoVoto();
       } else {
         // The optimistic vote has already rolled back; say why.
         setError(res?.error ?? "Non è stato possibile registrare il voto. Riprova.");

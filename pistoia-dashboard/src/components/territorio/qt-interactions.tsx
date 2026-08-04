@@ -8,6 +8,7 @@ import {
   type QuestionActionState,
 } from "@/app/actions/territorio";
 import { cn } from "@/lib/utils";
+import { segnalaCompletamentoVoto } from "@/lib/completamenti";
 
 /* Interazioni del question time (A2 §22): voto alle domande e nuova domanda. */
 
@@ -48,8 +49,12 @@ export function QtVoteButton({
       aria-label={state.voted ? "Togli il voto a questa domanda" : "Vota questa domanda"}
       onClick={() =>
         startTransition(async () => {
+          // È un interruttore: il completamento è solo il voto MESSO, non
+          // quello tolto (R-5, D1 — ritirare un voto non è completare nulla).
+          const votando = !state.voted;
           setOptimistic(undefined);
           await toggleQtVoteAction(questionId);
+          if (votando) segnalaCompletamentoVoto();
         })
       }
       className={cn(

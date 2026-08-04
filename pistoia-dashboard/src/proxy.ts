@@ -20,7 +20,9 @@ const PROTECTED_PREFIXES = [
   "/mappa",
   "/quartieri",
   "/organigramma",
-  "/valutazioni",
+  // "/valutazioni" NON c'è più (R-5, decisione W1 del 2026-08-04): la
+  // panoramica e le schede sono a lettura pubblica, nel gruppo (pubblico).
+  // Il guard vero resta nella DAL: qui si toglie solo l'acceleratore.
   "/notifiche",
   "/profilo",
   "/impostazioni",
