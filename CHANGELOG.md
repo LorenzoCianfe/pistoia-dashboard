@@ -5,6 +5,49 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.22.0] — 2026-08-03 · Fase C, «Valutazioni dei servizi» — R-4, risposte e moderazione
+
+> La fase in cui il Comune risponde e la Redazione modera — e il cancello è il
+> test che prova che **un account del Comune non può rimuovere**: nel modello
+> dei ruoli `ADMIN` è il super-account del COMUNE (SECURITY §4), quindi la
+> porta respinge anche lui. La forma è la composizione di Lorenzo su sei
+> decisioni separabili mostrate in contesto (A1+A2 · B1 · C3 · D1 · E2 · F
+> riservata): dettaglio in `docs/piano-rating-servizi.md` §7. Cancello pieno:
+> typecheck · lint · **195** unit · **20/20** E2E · `rotte` **51/51** ·
+> shots nei due temi e in modalità semplice a 360px.
+
+### Aggiunto
+- **`/redazione`** — la porta della Redazione (gate `requireRedazione`, ruolo `MODERATOR`): la coda delle segnalazioni del Comune (col motivo), la rimozione **con motivo pubblico** che finisce nel registro della scheda, il «lascia pubblicata», e il modulo della **Nota della Redazione** con fonte e data di consultazione obbligatorie. Tutto firma «Redazione della Dashboard di Pistoia», mai un nome proprio.
+- **Il Comune risponde dalla scheda** (controlli inline solo per staff/admin): al **quadro** del mese (una risposta per servizio+periodo, la seconda non sovrascrive in silenzio) e alla **singola**, che compare **annidata** sotto la recensione. La firma è il nome pubblico dell'account; se l'email è di un componente della giunta, la risposta porta il **timbro della carica** — «Assessora a … nel 2026» — scattato alla scrittura (`timbroCarica`, `lib/redazione.ts`) e mai ricalcolato.
+- **«Valutazioni dei servizi» in Area Comune**: le ultime recensioni con parole, con Rispondi/Segnala in loco — e la dichiarazione esplicita che rimuovere non si può da lì.
+- **La segnalazione del Comune** (`segnalataIl` + `segnalataMotivo`, migrazione dedicata): contesta, non cancella, e **non ha segni pubblici** finché la Redazione non decide (decisione di Lorenzo) — la vede solo la Redazione. Ogni atto (segnala, rimuovi, lascia, risposta, nota) è registrato in `ModerationAction`, append-only.
+- **`lib/redazione.ts`** — modulo neutro: `FIRMA_REDAZIONE` (ora importata anche da `ChiPubblica`: una definizione sola), `isRedazione`/`puoRimuovere` (il predicato del cancello), `timbroCarica`, `notaPubblicabile` (la nota senza fonte è rifiutata tre volte: azione, scrittura, resa), `etichettaPeriodo`. **`requireRedazione`** vive in `src/lib/auth/redazione.ts`, file NUOVO che compone la DAL senza toccarla.
+- **Il registro delle rimozioni diventa un elenco documentale** (forma E2): eyebrow col pallino viola, una riga per rimozione (data — motivo), presente anche vuoto, firma collettiva in calce.
+- **14 unit nuovi** (195) e **3 E2E nuovi** (20/20): il cancello alla porta (`/redazione` respinge l'ADMIN e accoglie il moderatore), il flusso segnala→coda→rimozione→registro, le risposte quadro+singola firmate «Comune di Pistoia».
+- **`rotte.mjs` impara la seconda passata da moderatore** (51 rotte): `/redazione` aperta da admin risponderebbe 200 sulla home dopo il redirect — un cancello che certifica una pagina mai vista — quindi la passata dedicata pretende anche l'**atterraggio** sull'indirizzo chiesto. In `shots.mjs` la rotta è esclusa e dichiarata, come /admin.
+
+### Cambiato
+- **`comune@pistoia.it` si chiama «Comune di Pistoia» anche internamente** (era «Redazione Comune»): la parola «Redazione» appartiene solo all'entità che firma la moderazione, e il renderer delle risposte ora legge il nome **pubblico** dell'account.
+- `/redazione` entra nei `PROTECTED_PREFIXES` di `src/proxy.ts` (ok esplicito di Lorenzo sul file protetto).
+
+## [0.21.1] — 2026-08-03 · Fase C — il seed che dimostra, e la forma di R-4 sul tavolo
+
+> Nessun codice di prodotto: cambia il **seed** (decisione di Lorenzo, chiusura
+> R-3) e la **forma** di R-4 viene proposta in sei decisioni separabili,
+> mostrate sulla scheda vera. Cancello pieno rieseguito: typecheck · lint ·
+> **181** unit · **17/17** E2E (il flake noto di `trasparenza.spec` è caduto
+> una volta ed è ripassato in suite piena, come documentato) · `rotte` 50/50 ·
+> shots nei due temi e in modalità semplice a 360px, zero traboccamenti.
+
+### Cambiato
+- **Il seed dimostra la colonna dura**: 32 segnalazioni dimostrative (24 chiuse, 8 aperte) sulle categorie delle cinque condizioni, persone inventate e luoghi veri. Ogni condizione guadagna la propria mediana — pulizia **5** · illuminazione **8** · verde **12** · trasporti **25** · sicurezza **9** giorni — perché con 1–2 casi per categoria ogni scheda diceva per sempre «troppo poche risultano chiuse» e la funzione non si vedeva mai al lavoro (`CAMPIONE_MINIMO_PER_GIUDIZIO` = 5, contato sulle chiuse).
+- **Il tasso di risoluzione in home passa da 33% a 66%** (27 risolte su 41) e la mesh dello «Stato della città» da «In affanno» ad **«A rilento»**. Metà scala è una scelta, non un caso: un seed tutto verde racconterebbe una città senza attriti.
+- **Su `sicurezza` la resa regge il nuovo dato**: il riquadro ora ha una mediana (9 giorni) e la frase parla solo dei tempi di chiusura — il volume resta non accostabile alle stelle (piano §3.2).
+- **Nessuna valutazione nel seed, sempre**: le schede continuano ad aprire su «Nessun voto, ancora», che è lo stato vero del giorno uno.
+
+### In attesa (R-4)
+- Le **proposte di forma** della moderazione — dove scrive il Comune, dove vive la coda della Redazione, la risposta firmata col timbro della carica, la Nota della Redazione, il registro firmato «Redazione della Dashboard di Pistoia», la visibilità della segnalazione — sono state mostrate **in contesto**, in sei decisioni separabili (A–F). Il codice di R-4 parte dalla composizione di Lorenzo; dettaglio in `docs/piano-rating-servizi.md` §7.
+
 ## [0.21.0] — 2026-08-03 · Fase C, «Valutazioni dei servizi» — R-3, il voto
 
 > La fase che rende la funzione viva: si vota dalle schede e dai QR, la mail

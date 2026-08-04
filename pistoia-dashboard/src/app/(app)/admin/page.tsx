@@ -10,9 +10,13 @@ import {
   Lightbulb,
   History,
   QrCode,
+  Star,
 } from "lucide-react";
 import { requireAdmin } from "@/lib/auth/dal";
 import { getAdminData, getModerationData } from "@/lib/data/admin";
+import { getRecensioniRecenti } from "@/lib/data/valutazioni";
+import { ControlliRecensione } from "@/components/valutazioni/controlli-staff";
+import { StarRating } from "@/components/ui/star-rating";
 import { Card } from "@/components/ui/card";
 import { buttonClasses } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
@@ -45,11 +49,22 @@ const MOD_LABEL: Record<string, string> = {
   event_reject: "Evento rifiutato",
   answer: "Risposta pubblicata",
   broadcast: "Notifica inviata",
+  // R-4, valutazioni: il Comune risponde e segnala; rimuove SOLO la redazione.
+  risposta_quadro: "Risposta al quadro pubblicata",
+  risposta_singola: "Risposta a una recensione pubblicata",
+  valutazione_segnalata: "Valutazione segnalata alla redazione",
+  valutazione_rimossa: "Valutazione rimossa (redazione)",
+  valutazione_lasciata: "Segnalazione chiusa: lasciata pubblicata",
+  nota_redazione: "Nota della Redazione pubblicata",
 };
 
 export default async function AdminPage() {
   await requireAdmin();
-  const [data, moderation] = await Promise.all([getAdminData(), getModerationData()]);
+  const [data, moderation, recensioni] = await Promise.all([
+    getAdminData(),
+    getModerationData(),
+    getRecensioniRecenti(),
+  ]);
 
   const stats = [
     { label: "Cittadini registrati", value: data.userCount },
@@ -92,6 +107,66 @@ export default async function AdminPage() {
         <Link href="/admin/codici-qr" className={buttonClasses("secondary", "sm")}>
           Apri e stampa
         </Link>
+      </Card>
+
+      {/*
+        R-4, forma A2: il posto di lavoro del Comune sulle valutazioni.
+        Rispondere e segnalare sì; rimuovere no — rimuove solo la redazione,
+        e le azioni di rimozione rifiutano gli account del Comune.
+      */}
+      <Card>
+        <div className="flex items-center gap-2">
+          <Star size={18} className="text-teal" aria-hidden />
+          <h2 className="text-base font-semibold">Valutazioni dei servizi</h2>
+        </div>
+        <p className="mt-1 text-sm text-muted">
+          Le ultime recensioni con parole: rispondi alla singola o segnala alla
+          redazione. Il quadro del mese si risponde dalla scheda del servizio.
+          Rimuovere non si può da qui: rimuove solo la redazione.
+        </p>
+        {recensioni.length === 0 ? (
+          <p className="mt-4 border-t border-border pt-3 text-sm text-muted">
+            Nessuna recensione scritta, ancora: i voti senza testo non hanno
+            niente a cui rispondere.
+          </p>
+        ) : (
+          <ul className="mt-4 space-y-3">
+            {recensioni.map((r) => (
+              <li key={r.id} className="border-t border-border pt-3">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                  <p className="flex flex-wrap items-center gap-2 text-sm">
+                    <Link
+                      href={`/valutazioni/${r.servizioId}`}
+                      className="font-semibold hover:underline"
+                    >
+                      {r.servizio}
+                    </Link>
+                    <StarRating value={r.stelle} size={12} />
+                    <span className="text-muted">{r.autore}</span>
+                  </p>
+                  <p className="text-xs text-muted-2">
+                    <time dateTime={r.quando.toISOString()}>
+                      {r.quando.toLocaleDateString("it-IT", {
+                        day: "numeric",
+                        month: "long",
+                      })}
+                    </time>
+                  </p>
+                </div>
+                {r.testo ? (
+                  <p className="mt-1 text-sm leading-relaxed text-muted">
+                    «{r.testo}»
+                  </p>
+                ) : null}
+                <ControlliRecensione
+                  valutazioneId={r.id}
+                  segnalata={r.segnalata}
+                  haRisposta={r.haRisposta}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
       </Card>
 
       {/* Verifiche + Segnalazioni */}

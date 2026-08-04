@@ -65,6 +65,19 @@ const ROTTE = [
   "/iniziative",
 ];
 
+/**
+ * Rotte che vogliono il ruolo MODERATORE — cioè la Redazione (R-4).
+ *
+ * NON stanno in `ROTTE`: la passata principale entra da ADMIN, che qui è il
+ * super-account del COMUNE, e `/redazione` lo respinge per disegno (il Comune
+ * non modera ciò che lo riguarda). Aperta da admin risponderebbe 200 sulla
+ * home dopo il redirect — un cancello che certifica una pagina mai vista, la
+ * stessa trappola di shots su /admin (AGENTS.md §4). Per queste rotte si fa
+ * una seconda passata con l'account moderatore, e si pretende anche
+ * l'ATTERRAGGIO sull'indirizzo chiesto, non solo un 200 con un <h1>.
+ */
+const ROTTE_MODERATORE = ["/redazione"];
+
 /** Liste da cui pescare un indirizzo di dettaglio vero. */
 const DETTAGLI = [
   ["/segnalazioni", "[data-report-card] a"],
@@ -149,8 +162,55 @@ for (const url of [...ROTTE, ...dinamiche]) {
   }
 }
 
+// Seconda passata: le rotte della Redazione, con l'account moderatore.
+const ctxMod = await browser.newContext({ locale: "it-IT" });
+const pageMod = await ctxMod.newPage();
+await pageMod.goto(`${BASE}/login`, { waitUntil: "domcontentloaded" });
+await pageMod.fill('input[name="email"]', process.env.ROTTE_MOD_EMAIL ?? "moderatore@pistoia.it");
+await pageMod.fill('input[name="password"]', process.env.ROTTE_MOD_PASSWORD ?? "Pistoia2026");
+await Promise.all([
+  pageMod.waitForURL((u) => !u.pathname.includes("/login"), { timeout: 30_000 }),
+  pageMod.click('button[type="submit"]'),
+]).catch(() => {});
+if (new URL(pageMod.url()).pathname.includes("/login")) {
+  console.error("✗ accesso moderatore non riuscito: le rotte della redazione non sono verificabili.");
+  rotti += ROTTE_MODERATORE.length;
+} else {
+  for (const url of ROTTE_MODERATORE) {
+    try {
+      const r = await pageMod.goto(`${BASE}${url}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 30_000,
+      });
+      await pageMod.waitForLoadState("networkidle").catch(() => {});
+      const status = r?.status() ?? 0;
+      const finale = new URL(pageMod.url()).pathname;
+      const titoli = await pageMod.locator("h1").count();
+      const testo = await pageMod.locator("body").innerText();
+      const erroreInPagina =
+        /Pagina non trovata|Qualcosa è andato storto|Application error|Unhandled Runtime Error/i.test(
+          testo,
+        );
+      // Qui `finale === url` è parte del cancello: un redirect silenzioso
+      // verso la home passerebbe tutti gli altri controlli.
+      const ok = status < 400 && titoli > 0 && !erroreInPagina && finale === url;
+      if (!ok) rotti += 1;
+      const nota = erroreInPagina
+        ? "  ← errore reso in pagina"
+        : finale !== url
+          ? `  → ${finale} (atterraggio mancato)`
+          : "";
+      console.log(`${ok ? "  ok " : "  ✗  "} ${String(status).padEnd(4)} ${url}${nota}  [moderatore]`);
+    } catch (e) {
+      rotti += 1;
+      console.log(`  ✗   ---  ${url}  ${e.message.split("\n")[0]}`);
+    }
+  }
+}
+await ctxMod.close();
+
 await browser.close();
-const totale = ROTTE.length + dinamiche.length;
+const totale = ROTTE.length + dinamiche.length + ROTTE_MODERATORE.length;
 console.log(`\n${totale} rotte controllate, ${rotti} con problemi.`);
 if (rotti > 0) {
   console.error(

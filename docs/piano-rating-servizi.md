@@ -210,10 +210,15 @@ Tre note che il codice deve rispettare:
 | `/v/[codice]` | **La pagina del QR**: una schermata, stelle + email, niente navigazione | R-3 ✅ |
 | `/v/conferma/[token]` | L'atterraggio della mail: conferma o «non sono stato io» come azioni, mai come GET | R-3 ✅ |
 | `/admin/codici-qr` | Il generatore: ogni scheda è un foglio da stampare e appendere | R-3 ✅ |
+| `/redazione` | La porta della Redazione: coda delle segnalazioni del Comune, rimozioni con motivo pubblico, Note con fonte | R-4 ✅ |
 | `/metodologia` | Soglia, media, finestra, versione — prerequisito 3 | R-6 |
 
 Ogni rotta nuova entra in `scripts/rotte.mjs` **e** in `scripts/shots.mjs` nello
-stesso momento (`AGENTS.md` §5). Con R-3 il conteggio è a **50**.
+stesso momento (`AGENTS.md` §5). Con R-4 il conteggio è a **51** — e `/redazione`
+ha insegnato a `rotte.mjs` una **seconda passata con l'account moderatore**:
+aperta da admin risponderebbe 200 sulla home dopo il redirect, e il controllo
+pretende anche l'atterraggio sull'indirizzo chiesto. In `shots.mjs` è esclusa e
+dichiarata, come /admin, finché l'ondata 8 non insegnerà i passaggi di ruolo.
 
 ---
 
@@ -253,11 +258,47 @@ episodio provate con date fisse, come `statoPubblicazione()`.
 >   la rimozione redazionale di §5, che azzera il testo e lascia la riga nel
 >   registro. Chi dice «non sono stato io» non deve restare in archivio.
 
-### R-4 · Risposte e moderazione
+### R-4 · Risposte e moderazione ✅ *(chiusa 2026-08-03)*
 Risposta al quadro e alla singola · attribuzione dall'account · timbro della
 carica da `lib/giunta.ts` · Nota della Redazione con fonte · segnalazione da
 parte del Comune · rimozione dalla Redazione · registro pubblico.
 **Cancello:** un test che prova che un account del Comune **non** può rimuovere.
+
+> **La forma è stata COMPOSTA da Lorenzo il 2026-08-03**, su sei decisioni
+> separabili mostrate in contesto (sulla scheda vera, con 24 valutazioni finte
+> solo nel DB locale). La composizione, tutta implementata:
+>
+> - **A1 + A2** · il Comune scrive **dalla scheda** (controlli inline su ogni
+>   recensione e sul quadro, visibili solo a staff e admin) **e** ha la
+>   sezione «Valutazioni dei servizi» in Area Comune;
+> - **B1** · la coda della Redazione vive su una rotta PROPRIA, `/redazione`
+>   (gate: ruolo `MODERATOR` via `requireRedazione` — non `requireModerator`,
+>   che lascerebbe passare `ADMIN`, cioè il super-account del COMUNE);
+> - **C3** · la risposta alla singola è **annidata** sotto la recensione; il
+>   quadro resta nel blocco «Le risposte» con eyebrow «quadro di {mese}»; la
+>   firma è il `publicName` dell'account (generico → «Comune di Pistoia»), col
+>   **timbro della carica** agganciato per email da `lib/giunta.ts` e scattato
+>   alla scrittura (`timbroCarica`, mai ricalcolato);
+> - **D1** · la Nota della Redazione sta **nel flusso «Le risposte»**, con
+>   pallino viola, firma collettiva e fonte obbligatoria (rifiutata tre volte:
+>   zod all'azione, `notaPubblicabile` alla scrittura E alla resa);
+> - **E2** · il registro è un **elenco documentale** (data — motivo), presente
+>   anche vuoto, firmato «Redazione della Dashboard di Pistoia» in calce;
+> - **F** · la segnalazione del Comune **non ha segni pubblici** finché la
+>   Redazione non decide: la vede solo la Redazione (e lo staff sul proprio
+>   controllo); l'esito pubblico è il registro. «Lascia pubblicata» chiude la
+>   segnalazione con la sola traccia nel log di audit (`ModerationAction`).
+>
+> Due conseguenze di contorno: l'account `comune@pistoia.it` si chiama ora
+> «Comune di Pistoia» anche internamente (il vecchio «Redazione Comune»
+> confondeva le due entità di §8.3), e la firma collettiva vive in
+> `lib/redazione.ts`, importata da `ChiPubblica` — una definizione sola.
+>
+> **Chiusa col cancello pieno**: typecheck · lint · **195** unit (14 nuovi,
+> compreso il predicato del cancello: `puoRimuovere("ADMIN") === false`) ·
+> **20/20** E2E (3 nuovi: il cancello alla porta, segnala→coda→rimozione→
+> registro, risposta quadro+singola) · `rotte` **51/51** con la passata
+> moderatore · shots nei due temi e a 360px.
 
 ### R-5 · I sei ingressi
 Aggancio a «è davvero risolta?» · campagna mensile · report del mese · pop-up ·
@@ -274,8 +315,9 @@ e il timbro di versione su ogni scheda.
 ## 8. Cosa resta aperto
 
 Delle quattro cose che il piano non poteva decidere da sé, **due sono state
-decise il 2026-08-03** e sono già nel codice. In coda (5–6) le due decisioni
-arrivate con R-3, registrate qui perché questo resti l'unico posto da leggere.
+decise il 2026-08-03** e sono già nel codice. In coda (5–7) le decisioni
+arrivate con la chiusura di R-3, registrate qui perché questo resti l'unico
+posto da leggere.
 
 1. ✅ **La conservazione dei dati.** **IP: 180 giorni.** **Email: finché la
    valutazione resta pubblicata**, poi sparisce con lei. Due dati con due scopi
@@ -318,6 +360,15 @@ arrivate con R-3, registrate qui perché questo resti l'unico posto da leggere.
    le alternative «vendorizzare qrcodegen» (zero pacchetti ma codice di terzi
    trascritto, scansione da verificare a mano) e «rimandare l'immagine».
    È l'unica dipendenza nuova dell'intera funzione.
+7. ✅ **Il seed si arricchisce di segnalazioni dimostrative** (decisione di
+   Lorenzo, 2026-08-03): 32 segnalazioni — 24 chiuse, 8 aperte — sulle
+   categorie delle cinque condizioni, persone inventate e luoghi veri, tempi
+   scelti perché ogni condizione abbia una mediana propria (pulizia 5 ·
+   illuminazione 8 · verde 12 · trasporti 25 · sicurezza 9 giorni) e il tasso
+   complessivo resti a metà scala (66%, «A rilento» in home): un seed tutto
+   verde racconterebbe una città senza attriti. **Nessuna valutazione nel
+   seed, sempre** — si arricchisce solo ciò che la piattaforma sa da sé, e le
+   schede continuano ad aprire su «Nessun voto, ancora».
 
 ---
 

@@ -158,7 +158,11 @@ async function main() {
   const admin = await prisma.user.create({
     data: {
       email: "comune@pistoia.it",
-      name: "Redazione Comune",
+      // «Comune di Pistoia» anche come nome interno (decisione 2026-08-03):
+      // il vecchio «Redazione Comune» confondeva le due entità che il piano
+      // delle valutazioni separa — la parola «Redazione» appartiene solo a
+      // chi firma la moderazione, mai a un account del Comune.
+      name: "Comune di Pistoia",
       publicName: "Comune di Pistoia",
       passwordHash: await hashPw("Comune2026!"),
       role: "ADMIN",
@@ -166,7 +170,7 @@ async function main() {
       verifiedType: "MUNICIPAL_STAFF",
       avatarColor: "red",
       quartiere: "Comune di Pistoia",
-      bio: "Account ufficiale (mock) della redazione del Comune.",
+      bio: "Account ufficiale (mock) del Comune di Pistoia.",
       emailVerified: true,
       badges: { create: [{ badgeType: "municipal", label: "Account ufficiale Comune", icon: "🏛️" }] },
     },
@@ -1031,6 +1035,149 @@ async function main() {
       },
     },
   });
+
+  // --- Il seed che dimostra (Fase C, decisione di Lorenzo, 2026-08-03) -----
+  // La colonna dura delle cinque condizioni pubblica la mediana dei giorni di
+  // chiusura solo da CAMPIONE_MINIMO_PER_GIUDIZIO (5) casi chiusi in su: con
+  // 1–2 casi per categoria ogni scheda diceva per sempre «troppo poche
+  // risultano chiuse» e la funzione non si vedeva mai al lavoro. Qui si
+  // arricchisce SOLO ciò che la piattaforma sa da sé — segnalazioni, mai
+  // valutazioni — con tempi scelti perché ogni condizione abbia una mediana
+  // propria (pulizia 5 · illuminazione 8 · verde 12 · trasporti 25 ·
+  // sicurezza 9 giorni) e il tasso di risoluzione complessivo resti a metà
+  // scala (~66%, «A rilento»): un seed tutto verde racconterebbe una città
+  // senza attriti. Le persone qui sotto sono inventate; i luoghi no.
+  const FIRME_DIMOSTRATIVE = [
+    ["Nadia T.", "NT", "teal"],
+    ["Stefano P.", "SP", "amber"],
+    ["Ilaria M.", "IM", "viola"],
+    ["Duccio B.", "DB", "green"],
+    ["Rita C.", "RC", "teal"],
+    ["Enzo F.", "EF", "amber"],
+  ] as const;
+
+  const UFFICIO_DIMOSTRATIVO: Record<string, string> = {
+    rifiuti: "Ufficio Igiene Urbana",
+    decoro: "Ufficio Igiene Urbana",
+    illuminazione: "Ufficio Strade e Manutenzioni",
+    sicurezza: "Ufficio Strade e Manutenzioni",
+    verde: "Ufficio Verde e Giardini",
+    parchi: "Ufficio Verde e Giardini",
+    trasporto: "Ufficio Mobilità",
+  };
+
+  const NOTA_CHIUSURA_DIMOSTRATIVA: Record<string, string> = {
+    rifiuti: "Ritiro straordinario effettuato.",
+    decoro: "Pulizia eseguita dalla squadra del decoro.",
+    illuminazione: "Guasto riparato, impianto verificato.",
+    verde: "Intervento di manutenzione del verde eseguito.",
+    parchi: "Riparazione completata, area riaperta.",
+    trasporto: "Intervento eseguito con il gestore del servizio.",
+    sicurezza: "Messa in sicurezza completata.",
+  };
+
+  // `chiusaInGiorni` presente ⇒ risolta; assente ⇒ aperta nello `stato` detto.
+  const DIMOSTRATIVE: {
+    titolo: string;
+    descrizione: string;
+    categoria: string;
+    quartiere: string;
+    luogo: string;
+    apertaGiorniFa: number;
+    chiusaInGiorni?: number;
+    stato?: string;
+    feedback?: true;
+  }[] = [
+    // pulizia ← rifiuti + decoro (con le 2 già chiuse sopra: mediana 5)
+    { titolo: "Campana del vetro strapiena in Via del Villone", descrizione: "La campana non viene svuotata da giorni e il vetro si accumula alla base.", categoria: "rifiuti", quartiere: "centro", luogo: "Via del Villone", apertaGiorniFa: 52, chiusaInGiorni: 4 },
+    { titolo: "Sacchi abbandonati in Via Pratese", descrizione: "Cumulo di sacchi fuori dai contenitori, all'angolo col distributore.", categoria: "rifiuti", quartiere: "le-fornaci", luogo: "Via Pratese", apertaGiorniFa: 33, chiusaInGiorni: 5, feedback: true },
+    { titolo: "Cassonetto ribaltato dopo il mercato in Piazza San Francesco", descrizione: "Il cassonetto è rovesciato dal sabato e il contenuto è sparso a terra.", categoria: "rifiuti", quartiere: "centro", luogo: "Piazza San Francesco", apertaGiorniFa: 68, chiusaInGiorni: 7 },
+    { titolo: "Scritte sul sottopasso di Viale Europa", descrizione: "Scritte spray sulle pareti del sottopasso pedonale, anche sopra i cartelli.", categoria: "decoro", quartiere: "bonelle", luogo: "Viale Europa, sottopasso", apertaGiorniFa: 47, chiusaInGiorni: 6 },
+    { titolo: "Manifesti abusivi in Corso Gramsci", descrizione: "Manifesti incollati fuori dagli spazi, coprono la segnaletica del parcheggio.", categoria: "decoro", quartiere: "centro", luogo: "Corso Gramsci", apertaGiorniFa: 24, chiusaInGiorni: 3 },
+    { titolo: "Raccolta saltata in Via di Valdibrana", descrizione: "Il giro di raccolta non è passato nel giorno previsto dal calendario.", categoria: "rifiuti", quartiere: "candeglia", luogo: "Via di Valdibrana", apertaGiorniFa: 5, stato: "in_lavorazione" },
+    { titolo: "Panchina imbrattata ai giardini di Pontenuovo", descrizione: "La panchina vicino all'ingresso è coperta di scritte.", categoria: "decoro", quartiere: "pontenuovo", luogo: "Giardini di Pontenuovo", apertaGiorniFa: 3 },
+
+    // illuminazione (con la già chiusa sopra: mediana 8)
+    { titolo: "Lampione spento davanti alla scuola di Bonelle", descrizione: "Il punto luce davanti all'ingresso della scuola è spento da una settimana.", categoria: "illuminazione", quartiere: "bonelle", luogo: "Bonelle, ingresso scuola", apertaGiorniFa: 61, chiusaInGiorni: 3 },
+    { titolo: "Tratto al buio in Via Sestini", descrizione: "Tre lampioni consecutivi spenti: il tratto resta completamente al buio.", categoria: "illuminazione", quartiere: "vergine", luogo: "Via Sestini", apertaGiorniFa: 39, chiusaInGiorni: 8 },
+    { titolo: "Luci del parcheggio accese anche di giorno in Via Pertini", descrizione: "L'impianto del parcheggio resta acceso 24 ore su 24 da settimane.", categoria: "illuminazione", quartiere: "sant-agostino", luogo: "Via Pertini, parcheggio", apertaGiorniFa: 80, chiusaInGiorni: 10 },
+    { titolo: "Lampione a intermittenza in Via Bonellina", descrizione: "La luce lampeggia tutta la notte e disturba le case di fronte.", categoria: "illuminazione", quartiere: "bonelle", luogo: "Via Bonellina", apertaGiorniFa: 100, chiusaInGiorni: 15 },
+    { titolo: "Quadro elettrico aperto ai giardini di Via Antonelli", descrizione: "Lo sportello del quadro dell'illuminazione è aperto e accessibile.", categoria: "illuminazione", quartiere: "le-fornaci", luogo: "Via Antonelli, giardini", apertaGiorniFa: 6, stato: "presa_in_carico" },
+
+    // verde + parchi (mediana 12)
+    { titolo: "Siepe che copre la visuale all'incrocio di Via Dalmazia", descrizione: "Uscendo dallo stop la siepe pubblica copre la vista sulla corsia.", categoria: "verde", quartiere: "le-fornaci", luogo: "Via Dalmazia", apertaGiorniFa: 44, chiusaInGiorni: 9 },
+    { titolo: "Sfalcio mancante nell'area verde di Via Erbosa", descrizione: "Erba oltre il ginocchio nell'area giochi e lungo il vialetto.", categoria: "verde", quartiere: "bottegone", luogo: "Via Erbosa, area verde", apertaGiorniFa: 90, chiusaInGiorni: 14 },
+    { titolo: "Ramo spezzato dopo il temporale in Viale Petrocchi", descrizione: "Un ramo grosso è rimasto appeso sopra il marciapiede alberato.", categoria: "verde", quartiere: "centro", luogo: "Viale Petrocchi", apertaGiorniFa: 120, chiusaInGiorni: 21 },
+    { titolo: "Fontanella rotta ai giardini di Via degli Armeni", descrizione: "La fontanella perde acqua di continuo e la zona attorno è allagata.", categoria: "parchi", quartiere: "sant-agostino", luogo: "Via degli Armeni, giardini", apertaGiorniFa: 29, chiusaInGiorni: 6, feedback: true },
+    { titolo: "Cancello del parco giochi che non chiude a Candeglia", descrizione: "La molla del cancello è rotta e i cani entrano nell'area bambini.", categoria: "parchi", quartiere: "candeglia", luogo: "Candeglia, parco giochi", apertaGiorniFa: 73, chiusaInGiorni: 12 },
+    { titolo: "Erba alta sul percorso dell'Ombrone", descrizione: "Il percorso pedonale lungo l'argine è invaso dall'erba su entrambi i lati.", categoria: "verde", quartiere: "sant-agostino", luogo: "Parco fluviale dell'Ombrone", apertaGiorniFa: 8, stato: "validata" },
+    { titolo: "Altalena consumata ai giardini della Vergine", descrizione: "Le corde dell'altalena sono sfilacciate e il seggiolino è crepato.", categoria: "parchi", quartiere: "vergine", luogo: "Giardini della Vergine", apertaGiorniFa: 4 },
+
+    // trasporti (mediana 25)
+    { titolo: "Palina della fermata divelta in Via Pratese", descrizione: "La palina è a terra dopo un urto: la fermata non si riconosce più.", categoria: "trasporto", quartiere: "le-fornaci", luogo: "Via Pratese, fermata", apertaGiorniFa: 55, chiusaInGiorni: 10 },
+    { titolo: "Orari illeggibili alla fermata di Piazza Treviso", descrizione: "Il quadro orari è sbiadito dal sole: non si legge più nessuna corsa.", categoria: "trasporto", quartiere: "sant-agostino", luogo: "Piazza Treviso", apertaGiorniFa: 86, chiusaInGiorni: 18 },
+    { titolo: "Pensilina con vetro crepato in Viale Adua", descrizione: "Il pannello laterale della pensilina è crepato ad altezza bambino.", categoria: "trasporto", quartiere: "sant-agostino", luogo: "Viale Adua", apertaGiorniFa: 130, chiusaInGiorni: 25 },
+    { titolo: "Corsa delle 7:40 sempre piena verso le scuole", descrizione: "Nei giorni di scuola il bus arriva già pieno e lascia studenti a terra.", categoria: "trasporto", quartiere: "collina", luogo: "Linea per il centro", apertaGiorniFa: 150, chiusaInGiorni: 31 },
+    { titolo: "Fermata senza seduta in Via Bonellina", descrizione: "L'attesa è lunga e la fermata non ha né seduta né appoggio.", categoria: "trasporto", quartiere: "bonelle", luogo: "Via Bonellina, fermata", apertaGiorniFa: 170, chiusaInGiorni: 40 },
+    { titolo: "Bus saltato sulla linea per Bottegone", descrizione: "La corsa delle 13:10 non è passata: nessun avviso alla fermata.", categoria: "trasporto", quartiere: "bottegone", luogo: "Linea per Bottegone", apertaGiorniFa: 2 },
+    { titolo: "Pensilina allagata alla fermata di Via Sestini", descrizione: "Quando piove l'acqua ristagna proprio sotto la pensilina.", categoria: "trasporto", quartiere: "vergine", luogo: "Via Sestini, fermata", apertaGiorniFa: 12, stato: "in_lavorazione" },
+
+    // sicurezza (mediana 9 — il volume resta non accostabile alle stelle)
+    { titolo: "Specchio stradale opaco all'uscita di Ramini", descrizione: "Lo specchio all'incrocio è opacizzato e non riflette più nulla.", categoria: "sicurezza", quartiere: "ramini", luogo: "Ramini, incrocio", apertaGiorniFa: 36, chiusaInGiorni: 5 },
+    { titolo: "Guardrail divelto sulla provinciale a Pontenuovo", descrizione: "Un tratto di barriera è piegato verso la banchina dopo un incidente.", categoria: "sicurezza", quartiere: "pontenuovo", luogo: "Pontenuovo, provinciale", apertaGiorniFa: 58, chiusaInGiorni: 7, feedback: true },
+    { titolo: "Dissuasori mancanti davanti alla scuola di Bottegone", descrizione: "Le auto salgono sul marciapiede all'uscita dei bambini.", categoria: "sicurezza", quartiere: "bottegone", luogo: "Bottegone, scuola", apertaGiorniFa: 77, chiusaInGiorni: 9 },
+    { titolo: "Segnaletica di cantiere abbandonata in Corso Gramsci", descrizione: "Transenne e cartelli lasciati in strada a cantiere finito.", categoria: "sicurezza", quartiere: "centro", luogo: "Corso Gramsci", apertaGiorniFa: 96, chiusaInGiorni: 12 },
+    { titolo: "Passaggio pedonale al buio alla Vergine", descrizione: "Il passaggio fra le due vie è senza luce e con siepi alte ai lati.", categoria: "sicurezza", quartiere: "vergine", luogo: "Vergine, passaggio pedonale", apertaGiorniFa: 113, chiusaInGiorni: 16 },
+    { titolo: "Auto contromano ricorrenti in Via Antonelli", descrizione: "Più volte a settimana auto imboccano il senso unico contromano.", categoria: "sicurezza", quartiere: "le-fornaci", luogo: "Via Antonelli", apertaGiorniFa: 7, stato: "validata" },
+  ];
+
+  const NOTA_STATO_DIMOSTRATIVO: Record<string, string> = {
+    validata: "Segnalazione validata e inoltrata all'ufficio competente.",
+    presa_in_carico: "Presa in carico dall'ufficio competente.",
+    in_lavorazione: "Intervento programmato.",
+  };
+
+  let firmaIdx = 0;
+  for (const d of DIMOSTRATIVE) {
+    const [nome, iniziali, colore] = FIRME_DIMOSTRATIVE[firmaIdx % FIRME_DIMOSTRATIVE.length];
+    firmaIdx += 1;
+    const creata = daysAgo(d.apertaGiorniFa);
+    const risolta = d.chiusaInGiorni != null ? daysAgo(d.apertaGiorniFa - d.chiusaInGiorni) : null;
+    const stato = risolta ? "risolta" : (d.stato ?? "ricevuta");
+    await prisma.report.create({
+      data: {
+        authorName: nome,
+        authorInitials: iniziali,
+        authorColor: colore,
+        title: d.titolo,
+        description: d.descrizione,
+        category: d.categoria,
+        status: stato,
+        neighborhoodId: nb[d.quartiere] ?? nb["centro"],
+        location: d.luogo,
+        assignedDepartment: stato === "ricevuta" ? null : UFFICIO_DIMOSTRATIVO[d.categoria],
+        baseConfirmations: [2, 5, 9, 3, 7, 12, 4, 6][firmaIdx % 8],
+        createdAt: creata,
+        resolvedAt: risolta,
+        ...(d.feedback && d.chiusaInGiorni != null
+          ? {
+              resolutionFeedback: "confermata",
+              resolutionFeedbackAt: daysAgo(d.apertaGiorniFa - d.chiusaInGiorni - 1),
+            }
+          : {}),
+        updates: {
+          create: [
+            { status: "ricevuta", note: "Segnalazione ricevuta.", official: true, authorName: "Comune di Pistoia", createdAt: creata },
+            ...(risolta
+              ? [{ status: "risolta", note: NOTA_CHIUSURA_DIMOSTRATIVA[d.categoria], official: true, authorName: "Comune di Pistoia", createdAt: risolta }]
+              : stato !== "ricevuta"
+                ? [{ status: stato, note: NOTA_STATO_DIMOSTRATIVO[stato], official: true, authorName: "Comune di Pistoia", createdAt: daysAgo(Math.max(0, d.apertaGiorniFa - 2)) }]
+                : []),
+          ],
+        },
+      },
+    });
+  }
 
   // "Anche io" confirmations from verified citizens.
   await prisma.reportConfirmation.createMany({

@@ -14,17 +14,29 @@ import {
   type RecensioneResa,
 } from "@/lib/data/valutazioni";
 import { ModuloVoto } from "@/components/valutazioni/modulo-voto";
+import {
+  ControlliRecensione,
+  RispondiQuadro,
+} from "@/components/valutazioni/controlli-staff";
 import { Card, CardEyebrow } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { StarRating } from "@/components/ui/star-rating";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatNumber } from "@/lib/format";
+import { isStaff } from "@/lib/community";
 import {
   DOMANDA_FAMIGLIA,
   SERVIZI,
   SOGLIA_PUBBLICAZIONE_VOTO,
+  periodoDi,
   servizio as trovaServizio,
 } from "@/lib/valutazioni";
+import {
+  FIRMA_REDAZIONE,
+  TIPO_NOTA_REDAZIONE,
+  TIPO_QUADRO,
+  etichettaPeriodo,
+} from "@/lib/redazione";
 
 export function generateStaticParams() {
   return SERVIZI.map((s) => ({ servizio: s.id }));
@@ -80,6 +92,18 @@ export default async function SchedaServizioPage({
     ]);
   const { media: m, composizione: c, colonna } = scheda;
   const mesiConVoto = andamento.filter((a) => a.media != null);
+
+  /*
+    I controlli di scrittura del Comune (R-4, forma A1) si montano SOLO per
+    staff e admin: per chiunque altro non entrano nell'albero, quindi né i
+    bottoni né lo stato «segnalata» raggiungono il browser di un cittadino —
+    la segnalazione non ha segni pubblici finché la Redazione non decide.
+  */
+  const staff = isStaff(user.role);
+  const periodoCorrente = periodoDi(new Date());
+  const quadroGiaRisposto = risposte.some(
+    (r) => r.tipo === TIPO_QUADRO && r.periodo === periodoCorrente,
+  );
 
   return (
     <div className="space-y-6 page-enter">
@@ -188,47 +212,98 @@ export default async function SchedaServizioPage({
         </div>
       </Card>
 
-      {/* Le risposte del Comune e le note della redazione. */}
-      {risposte.length > 0 ? (
+      {/*
+        Le risposte del Comune (al quadro) e le Note della Redazione — le
+        SINGOLE vivono annidate sotto la propria recensione (forma C3).
+        Per lo staff la sezione esiste anche vuota: è da qui che si risponde
+        al quadro del mese. La risposta resta allo stesso peso visivo della
+        pagina, mai dietro un <details> (prerequisito 5).
+      */}
+      {risposte.length > 0 || staff ? (
         <section aria-labelledby="risposte" className="space-y-3">
-          <h2
-            id="risposte"
-            className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-2"
-          >
-            Le risposte
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2
+              id="risposte"
+              className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-2"
+            >
+              Le risposte
+            </h2>
+            {staff ? (
+              <RispondiQuadro
+                servizioId={s.id}
+                etichetta={etichettaPeriodo(periodoCorrente)}
+                giaRisposto={quadroGiaRisposto}
+              />
+            ) : null}
+          </div>
+          {risposte.length === 0 ? (
+            <Card>
+              <p className="text-sm text-muted">
+                Nessuna risposta, ancora. Il quadro di{" "}
+                {etichettaPeriodo(periodoCorrente)} non ha una risposta del
+                Comune.
+              </p>
+            </Card>
+          ) : null}
           {risposte.map((r) => (
-            <Card key={r.id} className={r.tipo === "nota-redazione" ? "bg-surface-2/40" : ""}>
-              {r.tipo === "nota-redazione" ? (
+            <Card
+              key={r.id}
+              className={r.tipo === TIPO_NOTA_REDAZIONE ? "bg-surface-2/40" : ""}
+            >
+              {r.tipo === TIPO_NOTA_REDAZIONE ? (
                 <>
-                  <CardEyebrow>Nota della redazione</CardEyebrow>
+                  {/* Il pallino viola è il marcatore della voce redazionale
+                      (ChiPubblica); la firma è SEMPRE l'entità collettiva. */}
+                  <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-2">
+                    <span className="size-2 rounded-full bg-viola" aria-hidden />
+                    Nota della Redazione
+                  </p>
                   <p className="mt-2 text-sm leading-relaxed">{r.testo}</p>
-                  {r.urlFonte ? (
-                    <p className="mt-2 text-xs text-muted-2">
-                      <a
-                        href={r.urlFonte}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        className="inline-flex items-center gap-1 font-medium text-teal underline decoration-dotted underline-offset-2 hover:no-underline"
-                      >
-                        Fonte
-                        <ExternalLink size={11} aria-hidden />
-                        <span className="sr-only"> (si apre in una nuova scheda)</span>
-                      </a>
-                      {r.dataConsultazione ? ` · consultata il ${r.dataConsultazione}` : null}
-                    </p>
-                  ) : null}
+                  <p className="mt-2 text-xs text-muted-2">
+                    Firmata:{" "}
+                    <span className="font-medium text-foreground">
+                      {FIRMA_REDAZIONE}
+                    </span>{" "}
+                    ·{" "}
+                    <a
+                      href={r.urlFonte!}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="inline-flex items-center gap-1 font-medium text-teal underline decoration-dotted underline-offset-2 hover:no-underline"
+                    >
+                      Fonte
+                      <ExternalLink size={11} aria-hidden />
+                      <span className="sr-only"> (si apre in una nuova scheda)</span>
+                    </a>
+                    {r.dataConsultazione ? ` · consultata il ${r.dataConsultazione}` : null}
+                  </p>
                 </>
               ) : (
                 <>
-                  <p className="flex items-center gap-1.5 text-sm font-semibold">
-                    {r.autore.name}
+                  {r.periodo ? (
+                    <CardEyebrow>
+                      Risposta del Comune · quadro di {etichettaPeriodo(r.periodo)}
+                    </CardEyebrow>
+                  ) : (
+                    <CardEyebrow>Risposta del Comune</CardEyebrow>
+                  )}
+                  <p className="mt-2.5 flex items-center gap-1.5 text-sm font-semibold">
+                    {r.firma}
                     <BadgeCheck size={14} className="shrink-0 text-teal" aria-hidden />
                   </p>
                   {r.caricaAlMomento ? (
                     <p className="text-xs text-muted-2">{r.caricaAlMomento}</p>
                   ) : null}
                   <p className="mt-2 text-sm leading-relaxed">{r.testo}</p>
+                  <p className="mt-2 text-xs text-muted-2">
+                    <time dateTime={r.createdAt.toISOString()}>
+                      {r.createdAt.toLocaleDateString("it-IT", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </time>
+                  </p>
                 </>
               )}
             </Card>
@@ -248,7 +323,7 @@ export default async function SchedaServizioPage({
           {recensioni.length > 0 ? (
             <ul className="space-y-4">
               {recensioni.map((r) => (
-                <Recensione key={r.id} r={r} />
+                <Recensione key={r.id} r={r} staff={staff} />
               ))}
             </ul>
           ) : (
@@ -265,33 +340,55 @@ export default async function SchedaServizioPage({
       </section>
 
       {/*
-        Il registro delle rimozioni. Compare anche vuoto, e non è pignoleria:
-        una pagina che mostra il registro solo quando qualcosa è stato tolto fa
-        del registro stesso un segnale d'allarme. Dichiarare «nessuna rimossa»
-        è ciò che rende credibile la riga quando un giorno dirà «due rimosse».
+        Il registro delle rimozioni — elenco documentale (forma E2, decisione
+        2026-08-03), firmato come entità collettiva. Compare anche vuoto, e non
+        è pignoleria: una pagina che mostra il registro solo quando qualcosa è
+        stato tolto fa del registro stesso un segnale d'allarme. Dichiarare
+        «nessuna rimossa» è ciò che rende credibile la riga quando un giorno
+        dirà «due rimosse».
       */}
       <Card className="bg-surface-2/40">
-        <p className="flex items-start gap-2 text-xs leading-relaxed text-muted-2">
-          <Trash2 size={13} className="mt-0.5 shrink-0" aria-hidden />
-          {rimozioni.length === 0 ? (
+        <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-2">
+          <span className="size-2 rounded-full bg-viola" aria-hidden />
+          Registro delle rimozioni
+        </p>
+        {rimozioni.length === 0 ? (
+          <p className="mt-2 flex items-start gap-2 text-xs leading-relaxed text-muted-2">
+            <Trash2 size={13} className="mt-0.5 shrink-0" aria-hidden />
             <span>
               Nessuna valutazione rimossa da questa scheda. Rimuove la redazione,
               mai il Comune: chi è valutato può segnalare un contenuto, non
               cancellarlo.
             </span>
-          ) : (
-            <span>
-              {formatNumber(rimozioni.length)}{" "}
-              {rimozioni.length === 1 ? "valutazione rimossa" : "valutazioni rimosse"} —{" "}
-              {rimozioni
-                .map(
-                  (r) =>
-                    `${r.rimossaIl!.toLocaleDateString("it-IT", { day: "numeric", month: "long" })}, ${r.rimossaMotivo ?? "motivo non dichiarato"}`,
-                )
-                .join(" · ")}
-              . Rimuove la redazione, mai il Comune.
-            </span>
-          )}
+          </p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {rimozioni.map((r) => (
+              <li
+                key={r.id}
+                className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm"
+              >
+                <time
+                  dateTime={r.rimossaIl!.toISOString()}
+                  className="text-xs tabular-nums text-muted-2"
+                >
+                  {r.rimossaIl!.toLocaleDateString("it-IT", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </time>
+                <span className="min-w-0">
+                  {r.rimossaMotivo ?? "Motivo non dichiarato."}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-3 border-t border-border pt-3 text-xs leading-relaxed text-muted-2">
+          Ogni rimozione è firmata:{" "}
+          <span className="font-medium text-foreground">{FIRMA_REDAZIONE}</span>.
+          Il Comune può segnalare una valutazione, non rimuoverla.
         </p>
       </Card>
     </div>
@@ -481,7 +578,7 @@ function Andamento({
   );
 }
 
-function Recensione({ r }: { r: RecensioneResa }) {
+function Recensione({ r, staff }: { r: RecensioneResa; staff: boolean }) {
   return (
     <li className="min-w-0 border-t border-border pt-4 first:border-t-0 first:pt-0">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
@@ -511,6 +608,45 @@ function Recensione({ r }: { r: RecensioneResa }) {
       </div>
       {r.testo ? (
         <p className="mt-1.5 text-sm leading-relaxed">{r.testo}</p>
+      ) : null}
+
+      {/*
+        La risposta del Comune, ANNIDATA sotto la recensione a cui risponde
+        (forma C3, decisione 2026-08-03): si capisce a colpo d'occhio a cosa
+        risponde, e resta allo stesso peso visivo del flusso — mai dietro un
+        <details> (prerequisito 5). La firma è il nome pubblico dell'account;
+        il timbro della carica, se c'è, è quello scattato alla scrittura.
+      */}
+      {r.risposta ? (
+        <div className="mt-3 ml-3.5 border-l-2 border-[var(--color-accent)] pl-3.5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-2">
+            Risposta del Comune
+          </p>
+          <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold">
+            {r.risposta.firma}
+            <BadgeCheck size={14} className="shrink-0 text-teal" aria-hidden />
+          </p>
+          {r.risposta.carica ? (
+            <p className="text-xs text-muted-2">{r.risposta.carica}</p>
+          ) : null}
+          <p className="mt-1.5 text-sm leading-relaxed">{r.risposta.testo}</p>
+          <p className="mt-1 text-xs text-muted-2">
+            <time dateTime={r.risposta.quando.toISOString()}>
+              {r.risposta.quando.toLocaleDateString("it-IT", {
+                day: "numeric",
+                month: "long",
+              })}
+            </time>
+          </p>
+        </div>
+      ) : null}
+
+      {staff ? (
+        <ControlliRecensione
+          valutazioneId={r.id}
+          segnalata={r.segnalata}
+          haRisposta={r.risposta != null}
+        />
       ) : null}
     </li>
   );

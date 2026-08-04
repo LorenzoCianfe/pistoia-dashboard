@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Database, PenLine } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FIRMA_REDAZIONE } from "@/lib/redazione";
 
 /*
   La dichiarazione di chi pubblica — sostituisce il marchio separato.
@@ -28,8 +29,12 @@ import { cn } from "@/lib/utils";
   DESIGN.md §11 non lascia regredire.
 */
 
-/** Il soggetto che firma il giudizio. Scelto il 2026-07-30. */
-const AUTORE_PREDEFINITO = "Redazione della Dashboard di Pistoia";
+/**
+ * Il soggetto che firma il giudizio. Scelto il 2026-07-30; da R-4 la stringa
+ * vive in `lib/redazione.ts`, perché la stessa firma va su registro, rimozioni
+ * e Note — e due definizioni della stessa firma sono peggio di nessuna.
+ */
+const AUTORE_PREDEFINITO = FIRMA_REDAZIONE;
 
 /** Ancore della pagina ospite: la dichiarazione rimanda, non contiene. */
 const METODOLOGIA = "#metodologia";

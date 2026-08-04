@@ -2,6 +2,11 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import { CAMPIONE_MINIMO_PER_GIUDIZIO, STATI_FUORI_CONTEGGIO } from "@/lib/citystats";
 import {
+  TIPO_NOTA_REDAZIONE,
+  TIPO_QUADRO,
+  notaPubblicabile,
+} from "@/lib/redazione";
+import {
   SERVIZI,
   colonnaDuraDa,
   composizione,
@@ -123,6 +128,19 @@ export async function getPanoramica(oggi: Date = new Date()) {
   };
 }
 
+/**
+ * La risposta del Comune annidata sotto una recensione (R-4, forma C3).
+ * `firma` è il nome PUBBLICO dell'account che ha scritto: per l'account
+ * generico «Comune di Pistoia», per un personale la persona — col timbro
+ * della carica scattato alla scrittura, se ne aveva una.
+ */
+export type RispostaAnnidata = {
+  testo: string;
+  firma: string;
+  carica: string | null;
+  quando: Date;
+};
+
 export type RecensioneResa = {
   id: string;
   stelle: number;
@@ -133,6 +151,13 @@ export type RecensioneResa = {
   qrLuogo: string | null;
   quartiere: string | null;
   quando: Date;
+  risposta: RispostaAnnidata | null;
+  /**
+   * Segnalata dal Comune, in attesa della Redazione. NON si rende mai in
+   * pubblico (decisione 2026-08-03): serve solo ai controlli staff, che sono
+   * l'unico posto autorizzato a riceverla.
+   */
+  segnalata: boolean;
 };
 
 /** Le recensioni scritte, dalla più recente. Le rimosse non compaiono mai. */
@@ -156,7 +181,18 @@ export async function getRecensioni(
       nomeVisualizzato: true,
       mostraNomeIntero: true,
       createdAt: true,
+      segnalataIl: true,
       quartiere: { select: { name: true } },
+      risposte: {
+        orderBy: { createdAt: "asc" },
+        take: 1,
+        select: {
+          testo: true,
+          caricaAlMomento: true,
+          createdAt: true,
+          autore: { select: { name: true, publicName: true } },
+        },
+      },
     },
   });
 
@@ -170,6 +206,15 @@ export async function getRecensioni(
     qrLuogo: r.qrLuogo,
     quartiere: r.quartiere?.name ?? null,
     quando: r.createdAt,
+    risposta: r.risposte[0]
+      ? {
+          testo: r.risposte[0].testo,
+          firma: r.risposte[0].autore.publicName ?? r.risposte[0].autore.name,
+          carica: r.risposte[0].caricaAlMomento,
+          quando: r.risposte[0].createdAt,
+        }
+      : null,
+    segnalata: r.segnalataIl != null,
   }));
 }
 
@@ -209,10 +254,17 @@ export async function getRimozioni(s: Servizio) {
   });
 }
 
-/** Le risposte del Comune e le note della redazione su questo servizio. */
+/**
+ * Il blocco «Le risposte»: i quadri del Comune e le Note della Redazione.
+ *
+ * Le SINGOLE non passano di qui — vivono annidate sotto la propria recensione
+ * (forma C3, decisione 2026-08-03). E una Nota senza fonte viene SCARTATA,
+ * non degradata: stessa disciplina di `componentiPubblicabili` in
+ * `lib/giunta.ts` (`notaPubblicabile`).
+ */
 export async function getRisposte(s: Servizio) {
-  return prisma.rispostaServizio.findMany({
-    where: { servizioId: s.id },
+  const righe = await prisma.rispostaServizio.findMany({
+    where: { servizioId: s.id, tipo: { in: [TIPO_QUADRO, TIPO_NOTA_REDAZIONE] } },
     orderBy: { createdAt: "desc" },
     take: 10,
     select: {
@@ -224,9 +276,83 @@ export async function getRisposte(s: Servizio) {
       urlFonte: true,
       dataConsultazione: true,
       createdAt: true,
-      autore: { select: { name: true, accountType: true, avatarColor: true } },
+      autore: { select: { name: true, publicName: true } },
     },
   });
+  return righe
+    .filter(notaPubblicabile)
+    .map((r) => ({ ...r, firma: r.autore.publicName ?? r.autore.name }));
+}
+
+/**
+ * La coda della Redazione: le valutazioni segnalate dal Comune e non ancora
+ * decise. Il nome pubblico dell'autore è lo stesso della scheda — la
+ * Redazione giudica ciò che i lettori vedono, non i dati grezzi.
+ */
+export async function getCodaRedazione() {
+  const righe = await prisma.valutazione.findMany({
+    where: { segnalataIl: { not: null }, rimossaIl: null },
+    orderBy: { segnalataIl: "asc" },
+    select: {
+      id: true,
+      servizioId: true,
+      stelle: true,
+      testo: true,
+      rimossaIl: true,
+      nomeVisualizzato: true,
+      mostraNomeIntero: true,
+      createdAt: true,
+      segnalataIl: true,
+      segnalataMotivo: true,
+    },
+  });
+  return righe.map((r) => ({
+    id: r.id,
+    servizio: SERVIZI.find((s) => s.id === r.servizioId)?.nome ?? r.servizioId,
+    servizioId: r.servizioId,
+    stelle: r.stelle,
+    testo: testoVisibile(r),
+    autore: nomePubblico(r.nomeVisualizzato, r.mostraNomeIntero),
+    quando: r.createdAt,
+    segnalataIl: r.segnalataIl!,
+    segnalataMotivo: r.segnalataMotivo,
+  }));
+}
+
+/**
+ * Le ultime recensioni scritte, su tutti i servizi: il posto di lavoro del
+ * Comune in Area Comune (forma A2). Solo quelle con parole — a un voto senza
+ * testo non c'è niente da rispondere.
+ */
+export async function getRecensioniRecenti(quante = 6) {
+  const righe = await prisma.valutazione.findMany({
+    where: { rimossaIl: null, testo: { not: null } },
+    orderBy: { createdAt: "desc" },
+    take: quante,
+    select: {
+      id: true,
+      servizioId: true,
+      stelle: true,
+      testo: true,
+      rimossaIl: true,
+      nomeVisualizzato: true,
+      mostraNomeIntero: true,
+      createdAt: true,
+      segnalataIl: true,
+      risposte: { select: { id: true }, take: 1 },
+    },
+  });
+  return righe.map((r) => ({
+    id: r.id,
+    servizio: SERVIZI.find((s) => s.id === r.servizioId)?.nome ?? r.servizioId,
+    servizioId: r.servizioId,
+    stelle: r.stelle,
+    testo: testoVisibile(r),
+    autore: nomePubblico(r.nomeVisualizzato, r.mostraNomeIntero),
+    quando: r.createdAt,
+    segnalata: r.segnalataIl != null,
+    haRisposta: r.risposte.length > 0,
+  }));
 }
 
 // ---------------------------------------------------------------------------

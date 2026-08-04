@@ -25,6 +25,7 @@ const PROTECTED_PREFIXES = [
   "/profilo",
   "/impostazioni",
   "/admin",
+  "/redazione",
 ];
 
 function buildCsp(nonce: string, isDev: boolean): string {

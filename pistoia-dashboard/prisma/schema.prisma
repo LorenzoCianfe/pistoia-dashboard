@@ -727,7 +727,11 @@ model Valutazione {
   rimossaIl     DateTime?
   rimossaMotivo String?
   /// Segnalata dal Comune, che può contestare ma non cancellare.
-  segnalataIl   DateTime?
+  /// Finché la Redazione non decide, la segnalazione NON ha segni pubblici
+  /// (decisione di Lorenzo, 2026-08-03): l'esito pubblico è il registro.
+  segnalataIl     DateTime?
+  /// Perché il Comune la contesta: è ciò che la coda della Redazione esamina.
+  segnalataMotivo String?
 
   risposte RispostaServizio[]
 

@@ -114,6 +114,8 @@ minimo 10 caratteri, almeno una lettera e un numero.
 | Sostenere proposte | **verificato** |
 | Moderare, rispondere ufficialmente, broadcast | staff / moderatore |
 | **Valutare un servizio** (stelle + email, R-3) | **nessuno** — per decisione di prodotto |
+| Rispondere a una valutazione (quadro/singola) o **segnalarla** (R-4) | staff del Comune (`requireStaff`) |
+| **Rimuovere una valutazione** (R-4) | **solo la Redazione** — `requireRedazione` (`src/lib/auth/redazione.ts`), ruolo `MODERATOR`. **Mai un account del Comune, `ADMIN` compreso**: `ADMIN` è il super-account del Comune, e chi è giudicato può contestare, non cancellare. È il cancello di R-4, provato da unit (`puoRimuovere("ADMIN") === false`) ed E2E (`/redazione` respinge l'admin) |
 
 **La valutazione è l'unica write action aperta a chi non ha un account**
 (`app/actions/valutazioni.ts`, decisione 2026-08-03). Le sue difese sono
@@ -136,7 +138,14 @@ verifica reale sarebbe la cosa peggiore da fare.
 
 - Ogni azione del Comune o di un moderatore (verifica, cambio stato, risposta,
   post nascosto, broadcast) è registrata in `ModerationAction`: log
-  **append-only**, che vale anche come audit trail.
+  **append-only**, che vale anche come audit trail. Da R-4 valgono anche per
+  le valutazioni: risposta al quadro/singola, segnalazione (col motivo),
+  rimozione, «lasciata pubblicata», Nota della Redazione.
+- **Valutazioni (R-4)**: la rimozione redazionale **azzera il testo e lascia
+  la riga** — il registro pubblico della scheda mostra data e motivo, firmati
+  «Redazione della Dashboard di Pistoia». La segnalazione del Comune non ha
+  segni pubblici finché la Redazione non decide; l'esito pubblico è il
+  registro, quello interno il log.
 - I post si nascondono in soft-hide (`CommunityPost.hidden`), non si cancellano.
 - Filtro parole bloccate (`src/lib/word-filter.ts`), puro e testabile.
 - Ban e sospensioni, segnalazione dei commenti, unione dei duplicati.

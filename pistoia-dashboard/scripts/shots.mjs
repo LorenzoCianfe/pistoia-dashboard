@@ -133,6 +133,12 @@ const PAGES = [
   // accadere qui il 2026-08-03). Come il resto di /admin, entrerà quando
   // l'ondata 8 rifarà l'area e questo script imparerà un passaggio da admin.
   // Intanto la rotta è coperta da `rotte.mjs`, che accede da ADMIN.
+  //
+  // ESCLUSA E DICHIARATA per la stessa ragione: /redazione (R-4). Vuole il
+  // ruolo MODERATORE — né il cittadino di questo script né l'admin di
+  // `rotte.mjs` la vedono; lì è coperta da una seconda passata con l'account
+  // moderatore, che pretende anche l'atterraggio sull'indirizzo chiesto.
+  // Entrerà qui quando l'ondata 8 insegnerà allo script i passaggi di ruolo.
   { name: "faq", url: "/faq" },
   { name: "glossario", url: "/glossario" },
   // Fase B, terzo scaglione: tutto il resto. Il criterio del punto d'ingresso

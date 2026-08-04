@@ -141,7 +141,7 @@ Template: [`pistoia-dashboard/.env.example`](./pistoia-dashboard/.env.example).
 | Comune (admin) | `comune@pistoia.it` | `Comune2026!` |
 | Cittadino verificato (identità) | `lorenzo@pistoia.it` | `Pistoia2026` |
 | Cittadino **non** verificato | `marco@pistoia.it` | `Pistoia2026` |
-| Moderatore civico | `moderatore@pistoia.it` | `Pistoia2026` |
+| Moderatore civico — **è «la Redazione»** delle Valutazioni (R-4): entra su `/redazione`, dove gli account del Comune non entrano | `moderatore@pistoia.it` | `Pistoia2026` |
 | Associazione verificata | `associazione@pistoia.it` | `Pistoia2026` |
 | Attività locale verificata | `attivita@pistoia.it` | `Pistoia2026` |
 
@@ -253,7 +253,10 @@ pistoia-dashboard/
 - **Validazione** input con Zod (client e server); policy password (min 10, lettera + numero).
 - **DAL** (`src/lib/auth/dal.ts`): `getCurrentUser` (DTO senza hash), `requireUser`, `requireAdmin`,
   memoizzati con `React.cache`. Il `proxy.ts` fa solo un check ottimistico sulla presenza del cookie;
-  la verifica reale (DB) avviene nella DAL, vicino ai dati.
+  la verifica reale (DB) avviene nella DAL, vicino ai dati. **`requireRedazione`** (R-4) vive in un
+  file proprio, `src/lib/auth/redazione.ts`, che COMPONE `requireUser` senza toccare la DAL: lascia
+  passare solo il ruolo `MODERATOR` — non è `requireModerator`, che accetterebbe anche `ADMIN`, cioè
+  il super-account del Comune. Spostabile in `dal.ts` con l'ok esplicito di Lorenzo.
 - "Cambia password" e "Esci da tutti i dispositivi" invalidano tutte le sessioni esistenti.
 
 ### Ruoli, verifica e livelli di accesso (fase community)
@@ -691,6 +694,33 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   `/admin/codici-qr` con **`uqr`**, unica dipendenza nuova; IP azzerati oltre i 180 giorni a
   ogni voto, dichiarato su `/privacy`. **181/181** unitari, **17/17** E2E (il cancello:
   vota-riceve-revoca), **`rotte` 50/50**, shots nei due temi e a 360px puliti.
+
+- **0.21.1 — il seed che dimostra** (2026-08-03). Solo dati, nessun codice di prodotto: **32
+  segnalazioni dimostrative** (24 chiuse, 8 aperte) sulle categorie delle cinque condizioni,
+  persone inventate e luoghi veri, così ogni condizione guadagna la propria mediana dei tempi
+  di chiusura (pulizia **5** · illuminazione **8** · verde **12** · trasporti **25** ·
+  sicurezza **9** giorni) — prima, con 1–2 casi per categoria, le schede dicevano per sempre
+  «troppo poche risultano chiuse». Il tasso in home passa da 33% a **66%** e la mesh da
+  «In affanno» ad **«A rilento»**: metà scala è una scelta, un seed tutto verde racconterebbe
+  una città senza attriti. **Nessuna valutazione nel seed**, sempre. Nella stessa sessione la
+  **forma di R-4** è stata proposta in sei decisioni separabili (A–F), mostrate in contesto
+  sulla scheda vera, e composta da Lorenzo con domande interattive.
+
+- **0.22.0 — «Valutazioni dei servizi», R-4: risposte e moderazione** (2026-08-03). La
+  composizione di Lorenzo (A1+A2 · B1 · C3 · D1 · E2 · F riservata), tutta implementata.
+  **Il cancello della fase**: un account del Comune non può rimuovere — e `ADMIN` è il
+  super-account del COMUNE, quindi la porta respinge anche lui; «la Redazione» è il ruolo
+  `MODERATOR` (`requireRedazione`, file proprio che compone la DAL senza toccarla). Il Comune
+  risponde **dalla scheda** (quadro del mese e singola **annidata**, timbro della carica
+  agganciato per email da `lib/giunta.ts` e scattato alla scrittura) e **segnala** con motivo
+  (`segnalataMotivo`, migrazione dedicata) — senza segni pubblici finché la Redazione non
+  decide. `/redazione` porta coda, rimozione **con motivo pubblico** (azzera il testo, la
+  riga resta) e Nota della Redazione con fonte rifiutata tre volte (azione, scrittura, resa).
+  Registro come **elenco documentale** firmato; la firma vive in `lib/redazione.ts` e
+  `ChiPubblica` la importa. `comune@pistoia.it` si chiama «Comune di Pistoia» anche
+  internamente. `rotte.mjs` impara la **seconda passata da moderatore** con controllo
+  d'atterraggio. **195/195** unitari, **20/20** E2E, **`rotte` 51/51**, shots nei due temi e
+  a 360px puliti.
 
 ## 11. Roadmap
 
