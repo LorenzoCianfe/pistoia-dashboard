@@ -415,9 +415,14 @@ l'unico posto da leggere.
    scelti perché ogni condizione abbia una mediana propria (pulizia 5 ·
    illuminazione 8 · verde 12 · trasporti 25 · sicurezza 9 giorni) e il tasso
    complessivo resti a metà scala (66%, «A rilento» in home): un seed tutto
-   verde racconterebbe una città senza attriti. **Nessuna valutazione nel
-   seed, sempre** — si arricchisce solo ciò che la piattaforma sa da sé, e le
-   schede continuano ad aprire su «Nessun voto, ancora».
+   verde racconterebbe una città senza attriti. ~~**Nessuna valutazione nel
+   seed, sempre**~~ → **SUPERATA il 2026-08-04, a R-5 chiusa** (com'era
+   previsto: «se ne riparla in R-5»): Lorenzo ha deciso di **seminare un mese
+   dimostrativo di valutazioni dichiarate** — una condizione sopra soglia con
+   media e andamento, le altre sotto, persone inventate e mai reali — così la
+   demo mostra la funzione piena (composizione, risposte, campagna e pop-up
+   armabili). **I numeri passano dal giro di forma PRIMA di scrivere il
+   seed** (è lavoro della sessione R-6, insieme alla metodologia).
 8. ✅ **Il login-wall: /valutazioni si apre in sola lettura** (decisione di
    Lorenzo, 2026-08-04, R-5 — scelta W1 su tre termini presentati con le
    conseguenze dichiarate). Panoramica e schede vivono nel gruppo
