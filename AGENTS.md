@@ -622,6 +622,28 @@ Il deploy parte dal branch `main` della repo pubblica su GitHub e costruisce il
 il server ha un indirizzo privato e i webhook di GitHub non lo raggiungono. Si
 lancia a mano, dall'interfaccia di Coolify o via API.
 
+> ⚠️ **Un agente non può lanciarlo** (verificato il 2026-08-05). Le tre vie e
+> perché sono chiuse: il **pulsante Deploy** vuole il browser; l'**API REST**
+> vuole un token Bearer che **non è scritto da nessuna parte** — esiste, ha
+> permessi amministrativi, ed è una questione aperta nella documentazione della
+> VM (`~/Documents/Virtual Machines/Ubuntu 64-bit/documentazione/05-sicurezza.md`);
+> **SSH** vuole una chiave che sulla macchina di sviluppo **non c'è**
+> (`~/.ssh/` ha solo `known_hosts`, e `ssh lorenzo@192.168.50.173` risponde
+> *Permission denied*). Quindi: **il deploy lo preme Lorenzo**, e l'agente si
+> ferma a lasciare `main` pronto.
+>
+> **Come si verifica che sia andato**, senza aprire nulla — la tavolozza è
+> cambiata il 2026-08-05, quindi fa da marcatore:
+>
+> ```bash
+> B=http://pistoia.192.168.50.173.sslip.io
+> for c in $(curl -s $B/login | grep -oE '/_next/static/[^"]+\.css' | sort -u); do curl -s $B$c | grep -oE '0e9f92|0a756b'; done | sort | uniq -c
+> ```
+>
+> `0a756b` = la versione nuova è viva. `0e9f92` = sta ancora girando quella
+> vecchia. (Al 2026-08-05, con `f6b44c8` su `main` e il deploy non ancora
+> lanciato, risponde `0e9f92`.)
+
 L'indirizzo incorpora l'IP del server (`sslip.io` risolve qualunque nome della
 forma `<nome>.<ip>.sslip.io`). Comodo perché non richiede alcuna configurazione
 DNS, ma **se la macchina cambia indirizzo va riscritto l'FQDN** dell'applicazione
