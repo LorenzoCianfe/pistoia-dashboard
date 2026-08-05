@@ -1,0 +1,5 @@
+# Gli script di shell devono avere terminatori LF anche se vengono
+# modificati su Windows: con CRLF il container risponde "bad interpreter".
+*.sh text eol=lf
+Dockerfile text eol=lf
+docker-entrypoint.sh text eol=lf

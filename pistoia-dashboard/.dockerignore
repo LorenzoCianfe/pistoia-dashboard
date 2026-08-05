@@ -1,0 +1,23 @@
+node_modules
+.next
+.git
+.github
+
+# Segreti locali: a runtime le variabili arrivano da Coolify
+.env
+.env.local
+.env.*.local
+
+# Database di sviluppo e di test: non devono finire nell'immagine,
+# quello vero nasce sul volume persistente
+prisma/dev.db
+prisma/e2e.db
+prisma/*.db-journal
+
+# Artefatti di test e sviluppo
+test-results
+playwright-report
+tests
+.email
+tsconfig.tsbuildinfo
+screenshots
