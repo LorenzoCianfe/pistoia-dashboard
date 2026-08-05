@@ -74,7 +74,26 @@ function buildCsp(nonce: string, isDev: boolean): string {
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
-    ...(isDev ? [] : ["upgrade-insecure-requests"]),
+    /*
+      ⚠️ **`upgrade-insecure-requests` NON c'è, e va rimessa** (decisione di
+      Lorenzo, 2026-08-05, davanti al deploy che si apriva vuoto).
+
+      La direttiva promuove a `https://` ogni sottorisorsa chiesta in chiaro.
+      Su un sito **servito in HTTP** questo non protegge niente e rompe tutto:
+      il deploy su Coolify risponde su `http://pistoia.192.168.50.173.sslip.io`
+      e l'HTTPS su quel nome dà **503 con certificato non valido**, quindi ogni
+      script veniva promosso, falliva con `ERR_CERT_AUTHORITY_INVALID`, e la
+      pagina restava sul proprio «Caricamento in corso» col corpo vuoto.
+      Difetto **preesistente**, dalla Fase 0 (`bd2b812`): la demo deployata
+      rispondeva 200 e serviva l'HTML giusto, ma nessun browser è mai riuscito
+      a montarla.
+
+      Perché è tolta e non resa condizionale: quel deploy esiste **per vedere
+      il sito in locale sul web**, e lì l'HTTPS non c'è. Il giorno che ci sarà
+      un certificato valido, questa riga torna — su un sito in HTTPS la
+      direttiva serve davvero, e senza qualcuno se ne accorgerebbe tardi.
+      Il promemoria è in `ROADMAP.md`, traccia «Qualità continua».
+    */
   ].join("; ");
 }
 
