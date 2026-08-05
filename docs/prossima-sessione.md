@@ -44,6 +44,10 @@ browser.** Verificato: `/metodologia` rende 17.140 caratteri, `/valutazioni`
 1.826, zero risorse chieste in https, zero script senza nonce, `'strict-dynamic'`
 intatto in produzione.
 
+⚠️ **Ma sul deploy non si resta autenticati**: le pagine pubbliche si leggono,
+quelle protette no. Il difetto è diagnosticato e riprodotto — vedi la sezione
+rossa qui sotto, è la prima cosa da chiudere.
+
 Il deploy si lancia **via API** (AGENTS §8 ha i dettagli): il wrapper
 `C:\Users\loren\.homelab\cf.sh` legge il token dal file accanto a sé e non lo
 stampa mai; l'UUID dell'applicazione è `w148lovopnak9eshxuy13b1i`.
@@ -88,6 +92,48 @@ Serve saperlo perché tocca la tavolozza, che è la cosa più condivisa.
 - **Due cancelli nuovi**: `tests/e2e/accessibilita.spec.ts` (axe, 8 pagine × 2
   temi, WCAG AA, nessuna regola esclusa) e `lighthouserc.js` + job CI che
   **misura e non giudica**.
+
+## 🔴 PRIMA DI TUTTO: sul deploy non si resta autenticati
+
+**Segnalato da Lorenzo il 2026-08-05 e RIPRODOTTO.** Su
+`http://pistoia.192.168.50.173.sslip.io/` il login riesce — si atterra su
+`/la-mia-citta` — ma appena si naviga altrove si torna al login. Misurato con
+Playwright contro il sito vero: dopo l'accesso il browser conserva **zero
+cookie**, e `/bilancio`, `/segnalazioni`, `/profilo` atterrano tutte su
+`/login`.
+
+**La causa è certa**: `src/lib/auth/session.ts` imposta il cookie con
+
+```ts
+secure: process.env.NODE_ENV === "production",
+```
+
+In produzione il cookie prende l'attributo `Secure`, e **un browser rifiuta di
+conservare un cookie `Secure` arrivato su HTTP**. Il deploy è servito in chiaro,
+quindi il cookie viene scartato all'istante: il login "funziona" solo perché il
+redirect è deciso dal server nella stessa risposta.
+
+È **la stessa famiglia** del difetto di `upgrade-insecure-requests` chiuso lo
+stesso giorno: **il codice assume HTTPS in produzione, il deploy è in HTTP**.
+Vale la pena cercare se ci sono altri punti con la stessa assunzione.
+
+⚠️ `src/lib/auth/session.ts` è **protetto** (autenticazione): la correzione si
+concorda con Lorenzo prima di scriverla. Le tre strade, in ordine di onestà:
+
+1. **Derivare il flag dal protocollo reale della richiesta**
+   (`x-forwarded-proto`): il cookie è `Secure` quando la connessione lo è, e si
+   riaccende da solo il giorno del certificato. È la stessa forma della
+   correzione fatta alla CSP.
+2. **Una variabile d'ambiente esplicita** in Coolify (es. `COOKIE_SECURE=false`),
+   che dichiara la scelta invece di dedurla — ma va ricordata quando il dominio
+   cambia.
+3. **Legarlo a `SERVER_ACTIONS_ALLOWED_ORIGINS`**, che già dichiara il dominio
+   pubblico: `Secure` se comincia per `https://`. Un solo posto da tenere
+   allineato, che però serve già a un altro scopo.
+
+**Come si verifica che sia chiuso**, contro il sito deployato: fare login e poi
+aprire `/bilancio` — deve restare su `/bilancio`, e `context.cookies()` non deve
+essere vuoto.
 
 ## IL LAVORO — D: rifiniture e decisioni aperte
 

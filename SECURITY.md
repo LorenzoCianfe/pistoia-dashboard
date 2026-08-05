@@ -273,6 +273,28 @@ Due note per chi toccherà di nuovo queste versioni:
 
 ---
 
+### ⚠️ Il deploy è in HTTP, e il codice assume HTTPS (2026-08-05)
+
+Due difetti **dello stesso ceppo**, emersi lo stesso giorno sul deploy Coolify —
+che risponde su `http://pistoia.192.168.50.173.sslip.io` mentre l'HTTPS su quel
+nome dà 503 con certificato non valido:
+
+| Dove | Che cosa succedeva | Stato |
+|---|---|---|
+| `upgrade-insecure-requests` nella CSP | Promuoveva a `https://` ogni script; fallivano tutti con `ERR_CERT_AUTHORITY_INVALID` e **la demo si apriva col corpo vuoto** | ✅ **tolta** (decisione di Lorenzo). Torna col certificato — `ROADMAP.md`, traccia «Qualità continua» |
+| `secure: NODE_ENV === "production"` sul cookie di sessione (`src/lib/auth/session.ts`) | Il cookie prende `Secure`, e un browser **non conserva un cookie `Secure` arrivato su HTTP**: il login riesce, ma la navigazione successiva torna al login | 🔴 **aperto**. Riprodotto contro il sito vero: dopo l'accesso il browser ha **zero cookie** e `/bilancio`, `/segnalazioni`, `/profilo` atterrano su `/login` |
+
+Entrambi erano **invisibili ai cancelli**: `rotte` e `shots` girano contro lo
+sviluppo, dove `NODE_ENV` non è `production` e la CSP è quella di sviluppo. La
+regola che ne discende è in `AGENTS.md` §8: **un deploy non è finito quando
+risponde 200** — va aperto in un browser vero, e da autenticati.
+
+Il file dell'autenticazione è protetto: la correzione del cookie si concorda
+prima di scriverla. Le tre strade e il modo di verificarle sono in
+[`docs/prossima-sessione.md`](../docs/prossima-sessione.md).
+
+---
+
 ## 8. Fuori portata — dichiarato
 
 Cose che un servizio pubblico reale avrebbe e questo progetto **non** ha:
