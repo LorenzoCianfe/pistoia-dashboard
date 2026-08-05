@@ -44,9 +44,11 @@ const nextConfig: NextConfig = {
     ];
   },
   experimental: {
-    // Transizioni di rotta native (DESIGN.md §6): React <ViewTransition>
-    // attivato dalle navigazioni dell'App Router.
-    viewTransition: true,
+    // Le transizioni di rotta native (DESIGN.md §7) NON hanno più un flag: da
+    // Next 16.3 l'integrazione dell'App Router è attiva di default e
+    // `experimental.viewTransition` è uscito dallo schema di configurazione.
+    // Non rimetterlo: qui farebbe fallire il typecheck, e accenderebbe una
+    // cosa che è già accesa.
     // Keep server action payloads small; we only pass tiny form data.
     serverActions: {
       bodySizeLimit: "1mb",

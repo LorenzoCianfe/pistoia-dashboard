@@ -22,8 +22,20 @@ import { defineTheme } from '@astryxdesign/core/theme';
  * Palette sorgente
  * ---------------------------------------------------------------------- */
 
-/** Verde-acqua dei vivai: il colore dell'azione (DESIGN.md §4). */
-const TEAL = '#0E9F92';
+/**
+ * Verde-acqua dei vivai: il colore dell'azione (DESIGN.md §4).
+ *
+ * **Scurito il 2026-08-05 da `#0E9F92` per rispettare il contrasto AA**, che
+ * `DESIGN.md` §4 dichiara non negoziabile e che la prima misura automatica
+ * (axe) ha smentito. Il vecchio valore faceva 2,66:1 come testo sulla tela e
+ * 3,28:1 col bianco sopra — sotto il 4,5:1 richiesto: fallivano insieme **i
+ * link** e **il pulsante primario**, cioè i due usi principali del colore.
+ * `#0A756B` è il valore più chiaro che li porta entrambi sopra la soglia
+ * (4,50:1 come testo, 5,57:1 col bianco sopra), quindi è il più fedele
+ * possibile alla tinta di prima. Il tema scuro non è stato toccato: lì il
+ * contrasto passava già.
+ */
+const TEAL = '#0A756B';
 const TEAL_DARK = '#2FD0BD';
 
 /** Rosso dello stemma scaccato: brand e urgenza. Mai decorativo. */
@@ -89,7 +101,10 @@ export const pistoiaTheme = defineTheme({
 
     /* --- Testo ----------------------------------------------------------- */
     '--color-text-primary': ['#16181A', '#F5F4F2'],
-    '--color-text-secondary': ['#6B6E72', '#A3A19E'],
+    /* Scurito il 2026-08-05: `#6B6E72` faceva 4,14:1 sulla tela, appena sotto
+       AA. `#5A5D61` fa 5,35:1 e lascia spazio al livello sotto (`--muted-2`)
+       per restare distinguibile senza scendere anch'esso sotto la soglia. */
+    '--color-text-secondary': ['#5A5D61', '#A3A19E'],
     '--color-text-disabled': ['#A8AAAD', '#66645F'],
     '--color-text-accent': [TEAL, TEAL_DARK],
 
@@ -105,7 +120,10 @@ export const pistoiaTheme = defineTheme({
     '--color-border-emphasized': ['#C9C7C3', '#3D3A37'],
 
     /* --- Stato (semantica invariata, DESIGN.md §4) ------------------------ */
-    '--color-success': ['#1F9D63', '#45D089'],
+    /* Scurito il 2026-08-05: `#1F9D63` faceva 2,93:1 sul proprio chip `-soft`
+       e 3,14:1 come testo su una superficie chiara. `#187A4D` porta entrambi
+       sopra AA restando inequivocabilmente il verde del «risolto». */
+    '--color-success': ['#187A4D', '#45D089'],
     '--color-error': [CREST, CREST_DARK],
     '--color-on-error': ['#FFFFFF', '#2A0910'],
     '--color-on-success': ['#FFFFFF', '#062117'],

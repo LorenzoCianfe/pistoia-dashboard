@@ -114,6 +114,8 @@ Poi apri http://localhost:3000.
 | `npm run setup` | `migrate` + `seed` |
 | `npm test` / `npm run test:watch` | Unit test Vitest (one-shot / watch) |
 | `npm run test:e2e` | E2E Playwright (avvia da solo il dev server sulla porta 3939) |
+| `npm run a11y` | Solo il cancello di accessibilità (axe-core, 8 pagine × 2 temi) |
+| `npm run lighthouse` | Lighthouse CI sulla build di produzione — **misura, non giudica** (nessuna soglia finché non ne esiste una misurata) |
 | `npm run typecheck` | `tsc --noEmit` |
 
 ### Variabili d'ambiente (`.env`)
@@ -802,6 +804,39 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   Due E2E aggiornate insieme alla modifica (titolo pagina; timbro version-agnostic).
   **247** unitari (224 → 247), **25/25** E2E, **`rotte` 56, 0 con problemi** (tre
   passate), shots nei due temi e `--simple --width=360`.
+- **2026-08-05 (Fase C — «Qualità continua», C-2)** — La traccia trasversale aperta
+  nell'ordine deciso con Lorenzo: **audit → Next → axe → Lighthouse**.
+  **`npm audit` da 12 vulnerabilità a ZERO**, in tre passate: patch delle foglie di
+  sviluppo col **solo lockfile** (12 → 8; i 129 pacchetti annunciati da npm erano
+  binari opzionali per altre piattaforme), **`next` 16.3.0** (8 → 5, e porta
+  `postcss` 8.5.23 e `sharp` 0.35.3), **`prisma` 7.9.1** con client e adapter
+  allineati (5 → 0). **Cancelli nuovi**: `tests/e2e/accessibilita.spec.ts` con
+  **axe-core** (8 pagine × 2 temi, WCAG **AA**, nessuna esclusione,
+  `@axe-core/playwright`) e `lighthouserc.js` + job CI **non bloccante** sulla build
+  di produzione — con `@lhci/cli` eseguito via `npx` **pinnato** e non installato,
+  perché costava 285 pacchetti e cinque avvisi che il `Dockerfile`
+  (`npm ci --include=dev`) avrebbe portato in produzione. Più il passo `npm audit`
+  in CI, `npm run a11y` e `npm run lighthouse`.
+  **Il prezzo di Next 16.3**: da quella versione il server di sviluppo mette
+  nell'HTML un `<script>` **senza nonce** con dentro codice dell'applicazione;
+  `'strict-dynamic'` disattiva l'allowlist per host, quindi il file viene rifiutato
+  e **ogni pagina si apre col corpo vuoto**. Misurato che non è una nostra
+  configurazione sbagliata (`required-scripts.js` e il manifest client identici a
+  16.2.7), che **in produzione non accade** e che è identico su 16.3.1-canary.3.
+  Decisione di Lorenzo: **togliere `'strict-dynamic'` dal solo ramo di sviluppo** di
+  `buildCsp()`; in produzione resta. Da rimettere quando Next rimetterà il nonce.
+  **Il debito che axe ha trovato, e chiuso**: violazioni **preesistenti** — mai
+  misurate perché i contrasti dell'ondata 6 erano stati verificati a mano una volta
+  sola — contro quanto `DESIGN.md` §4 dichiarava. `button-name` sul menu del profilo
+  (nessun nome accessibile, ogni pagina autenticata), `link-in-text-block` (link
+  nella prosa distinti solo per colore) e `color-contrast` sulla **tavolozza
+  chiara**: teal `#0E9F92`→`#0A756B`, `--muted-2`→`#65686c`,
+  `--color-text-secondary`→`#5A5D61`, viola→`#675cb4`, ambra→`#965a19`,
+  success→`#187A4D`, più `--red-ink` per il solo chip rosso — **il rosso dello
+  stemma e il tema scuro non sono stati toccati**.
+  **Nuova trappola in `AGENTS.md` §3 (22)**: uccidere `npm run dev` non uccide
+  `next dev`, e il superstite avvelena gli E2E con **timeout** che sembrano
+  regressioni.
 
 ## 11. Roadmap
 

@@ -42,6 +42,18 @@ jobs:
       - name: Unit test (Vitest)
         run: npm test
 
+      # Audit delle dipendenze — traccia «Qualità continua».
+      #
+      # NON bloccante, e la ragione è dichiarata: al 2026-08-05 restano 8
+      # avvisi in due famiglie (`next` e la catena di Prisma Studio) che
+      # aspettano una decisione — vedi SECURITY.md §7. Un cancello rosso per
+      # qualcosa che si è scelto di non chiudere ancora smette di essere letto,
+      # e il primo avviso NUOVO passerebbe inosservato in mezzo ai vecchi.
+      # Quando le due decisioni saranno prese, questa riga diventa
+      # `npm audit --audit-level=high` senza `|| true`.
+      - name: Audit dipendenze (informativo)
+        run: npm audit || true
+
       - name: Drift migrazioni (schema ↔ migrations)
         # exit 2 se lo schema diverge dalle migrazioni committate.
         run: npx prisma migrate diff --from-migrations prisma/migrations --to-schema prisma/schema.prisma --exit-code
@@ -85,4 +97,51 @@ jobs:
         with:
           name: playwright-report
           path: pistoia-dashboard/playwright-report/
+          retention-days: 7
+
+  lighthouse:
+    name: Lighthouse (misura, non giudica)
+    runs-on: ubuntu-latest
+    needs: quality
+    # Non bloccante PER ORA, e per la stessa ragione del job E2E alla nascita:
+    # non esiste ancora una soglia misurata. Le soglie si scrivono in
+    # `lighthouserc.js` (`assert`) dopo aver guardato le prime passate; solo
+    # allora questa riga si toglie. Una soglia inventata prima del primo numero
+    # non difende niente e fa fallire la CI per rumore.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: pistoia-dashboard/package-lock.json
+
+      - name: Installa dipendenze
+        run: npm ci
+
+      - name: Prepara database (migrate + seed)
+        run: npx prisma migrate deploy && npx tsx prisma/seed.ts
+
+      # Si misura la build di produzione: in sviluppo il bundle non è
+      # minificato e i numeri non somigliano a quelli di nessun cittadino.
+      - name: Build di produzione
+        run: npm run build
+
+      # `@lhci/cli` NON è una dipendenza del progetto, ed è una scelta: porta
+      # **285 pacchetti** (e cinque avvisi propri, fra cui `tmp` high) che il
+      # `Dockerfile` si porterebbe in produzione, perché installa con
+      # `npm ci --include=dev`. Uno strumento di misura che gira solo in CI non
+      # deve entrare nell'immagine del servizio. La versione è **pinnata**:
+      # `npx` senza versione scaricherebbe l'ultima, cioè codice non deciso.
+      - name: Lighthouse CI
+        run: npx --yes @lhci/cli@0.15.1 autorun
+
+      - name: Carica i referti
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: pistoia-dashboard/.lighthouseci/
           retention-days: 7

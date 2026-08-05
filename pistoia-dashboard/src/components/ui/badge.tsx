@@ -9,7 +9,9 @@ export function Badge({
   style,
   ...props
 }: ComponentProps<"span"> & { color?: string; soft?: boolean }) {
-  const { fg, soft: softBg } = accent(color);
+  // `ink`, non `fg`: qui il colore diventa testo di 12px sopra il proprio
+  // `-soft`, ed è l'unico posto dove rosso e verde non raggiungono AA.
+  const { ink, soft: softBg } = accent(color);
   return (
     <span
       className={cn(
@@ -17,7 +19,7 @@ export function Badge({
         className,
       )}
       style={{
-        color: fg,
+        color: ink,
         backgroundColor: soft ? softBg : "transparent",
         ...style,
       }}

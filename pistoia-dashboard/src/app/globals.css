@@ -49,22 +49,59 @@
     --surface-3: light-dark(#e9e8e5, #2a2826);
     --foreground: var(--color-text-primary);
     --muted: var(--color-text-secondary);
-    --muted-2: light-dark(#85888c, #8e8b87);
+    /* Scurito il 2026-08-05 da `#85888c`, che faceva 2,88:1 sulla tela: era il
+       grigio più usato e il difetto di contrasto più diffuso della piattaforma.
+       `#65686c` fa 4,53:1 e resta comunque più chiaro di `--muted` (5,35:1),
+       così i due livelli di gerarchia non collassano in uno. */
+    --muted-2: light-dark(#65686c, #8e8b87);
     --border: var(--color-border);
     --border-strong: var(--color-border-emphasized);
 
     --teal: var(--color-accent);
-    --teal-strong: light-dark(#0a7f75, #5ce0d1);
+    /* I «forti» restano un gradino sotto il colore base, che il 2026-08-05 è
+       stato scurito per il contrasto AA: senza questo ritocco sarebbero
+       diventati più CHIARI del proprio base, invertendo la gerarchia. */
+    --teal-strong: light-dark(#075f57, #5ce0d1);
     --teal-soft: light-dark(#dff3f0, #0c2e2b);
-    --viola: light-dark(#8a7bf0, #a596f6);
-    --viola-strong: light-dark(#6f5fe0, #8a7bf0);
+    /* Viola scurito da `#8a7bf0`: sul proprio chip `-soft` faceva 2,43:1.
+       DESIGN.md §4 ammette i `-soft` come sfondo di badge col colore pieno
+       sopra, ed è proprio quell'accoppiata a non passare. Ora 4,61:1. */
+    --viola: light-dark(#675cb4, #a596f6);
+    --viola-strong: light-dark(#524a90, #8a7bf0);
     --viola-soft: light-dark(#eae7fd, #211e38);
-    --amber: light-dark(#d98324, #fbbf52);
+    /* Ambra scurita da `#d98324`: 2,48:1 sul proprio `-soft` (è la pastiglia
+       «Anteprima», 11px). Ora 4,75:1. */
+    --amber: light-dark(#965a19, #fbbf52);
     --amber-soft: light-dark(#fbebd3, #33280f);
     --red: var(--color-error);
     --red-soft: light-dark(#fbe2e6, #341419);
     --green: var(--color-success);
     --green-soft: light-dark(#d9f2e5, #0d2519);
+
+    /*
+      Gli INCHIOSTRI dei chip (2026-08-05).
+
+      `DESIGN.md` §4 ammette i `-soft` come sfondo di badge col colore pieno
+      sopra — ma per il **rosso dello stemma** e per il **verde** quella
+      coppia non raggiunge AA (3,72:1 e 2,93:1 a 12px). Scurire i due colori
+      base sarebbe stato sbagliato: il rosso `--color-error` **è** il rosso
+      dello stemma (`DESIGN.md` §3), identità prima che colore, e il verde
+      segnala «risolto» in tutta la piattaforma.
+
+      **Solo il rosso ha un inchiostro proprio.** Il verde è stato scurito alla
+      radice (`--color-success`, `#1F9D63` → `#187A4D`): è un colore di stato,
+      non un simbolo, e serviva comunque anche come testo su superficie chiara.
+      Il rosso no: `--color-error` **è** il rosso dello stemma (`DESIGN.md` §3),
+      identità prima che colore, e resta intatto dove significa — crest, icone,
+      bordi, tratti dei grafici. Cambia solo dove diventa testo di 12px sopra il
+      proprio chip. Gli altri passano da soli, col colore base già scurito per
+      AA (teal 4,83:1 · viola 4,61:1 · ambra 4,75:1).
+
+      Nel tema scuro non serve: lì i `-soft` sono fondi profondi e i colori
+      chiari sopra passano già.
+    */
+    --red-ink: light-dark(#be344d, #f06a82);
+    --green-ink: var(--green);
 
     --ring: var(--color-accent);
 
@@ -596,6 +633,32 @@
     background-size: 200% 100%;
     animation: var(--animate-shimmer);
     border-radius: var(--radius-inner);
+  }
+
+  /*
+    Un link DENTRO un testo non può distinguersi solo per il colore.
+
+    È WCAG 1.4.1 (`link-in-text-block`, trovata da axe il 2026-08-05 su
+    `/metodologia`, `/valutazioni` e `/pagella`): chi non distingue il teal dal
+    grigio non vede che quella parola è cliccabile, e `hover:underline` non
+    serve a chi naviga da tocco o da tastiera. La sottolineatura permanente è
+    la soluzione che non costa nulla a nessuno.
+
+    Vale **solo dentro un `<p>`**, che è la prosa vera. La prima stesura
+    prendeva anche `li` e `dd`, e si vedeva subito guardando le schermate: nelle
+    liste di *Per te* e *Vicino a te* ogni riga è un link a tutta scheda, e
+    sottolinearla la faceva sembrare testo invece che un oggetto da toccare.
+    Fuori dalla prosa un link è già riconoscibile dalla propria forma —
+    pastiglia, scheda, voce di menu — e infatti axe non lo segnala: la regola
+    `link-in-text-block` scatta solo quando il link è **circondato da testo**.
+
+    `:where()` azzera la specificità: una utility Tailwind (`no-underline`) ha
+    sempre l'ultima parola, e le classi `hover:underline` già scritte nelle
+    pagine restano innocue.
+  */
+  :where(p) a[href] {
+    text-decoration-line: underline;
+    text-underline-offset: 2px;
   }
 
   /*

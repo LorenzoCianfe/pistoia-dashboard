@@ -77,7 +77,13 @@ export function OperaComments({
             maxLength={600}
             aria-label="Scrivi un commento su questo cantiere"
             placeholder="Scrivi un commento…"
-            className="h-11 flex-1 rounded-pill border border-border-strong bg-surface px-4 text-sm placeholder:text-muted-2 focus-visible:border-teal focus-visible:outline-none"
+            // `min-w-0` non è ridondante accanto a `flex-1`: un `<input>` ha
+            // una larghezza intrinseca propria (l'attributo `size`, ~20
+            // caratteri) e in flex `min-width: auto` gli fa da pavimento — non
+            // scende sotto quella, e a 360px in modalità semplice spingeva il
+            // pulsante 6px fuori dallo schermo. È il corollario di AGENTS.md §3
+            // (ondata 7, 5): la leva sta sul pavimento dell'elemento.
+            className="h-11 min-w-0 flex-1 rounded-pill border border-border-strong bg-surface px-4 text-sm placeholder:text-muted-2 focus-visible:border-teal focus-visible:outline-none"
           />
           <button
             type="submit"

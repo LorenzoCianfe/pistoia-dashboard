@@ -283,6 +283,9 @@ su una persona reale non è un dato dimostrativo»):
 | `DEMO_MODE` con zero-state onesti | ✅ |
 | Provenienza dati dichiarata (`SourceBadge`) | ✅ |
 | Test unitari (Vitest) + E2E (Playwright) | ✅ |
+| **Cancello di accessibilità automatico** (axe-core negli E2E, 8 pagine × 2 temi, regole WCAG AA, nessuna esclusione) | ✅ 2026-08-05 — ha trovato un **debito di tavolozza preesistente**, corretto nella stessa sessione: `ROADMAP.md`, traccia «Qualità continua» |
+| **Lighthouse CI** sulla build di produzione | 🚧 impostato il 2026-08-05 — **misura, non giudica**: le soglie si scrivono dopo le prime passate |
+| **Audit dipendenze in CI** (`npm audit`) | ✅ 2026-08-05 — e `npm audit` riporta **zero vulnerabilità** (erano 12) |
 | Grafo di conoscenza del codice | ✅ `graphify-out/` |
 
 ---
@@ -297,7 +300,7 @@ su una persona reale non è un dato dimostrativo»):
 | I voti della pagella | ~~Serve la metodologia versionata~~ → ✅ **pubblicata il 2026-08-05** (capitolo 2 della v1.1, PRIMA del primo voto, come promesso in pagina). Restano i **dati reali**: la prima edizione nasce dalla prima ricognizione, dopo il termine dell'art. 14 (27/08/2026). Un voto su dati dimostrativi resta una messa in scena — `EDIZIONI` è vuoto e un test lo fa da guardiano |
 | ~~`/metodologia` per la pagella~~ | ✅ **Fatto** — v1.1 del 2026-08-05: capitolo 2 (regole 13–20) con definizione, traguardo normativo e formula di ogni indicatore, registro append-only, timbro su ogni pagina che calcola. Il primo voto nascerà già timbrato (`EdizionePagella.versioneMetodologia`) |
 | Terzo stadio del sankey (entrate per fonte) | Il modello dati non ha la scomposizione: servirebbe un `BudgetRevenue`, o l'ETL della Fase 2. Il sankey si ferma a due stadi invece di inventare |
-| Dichiarazione di accessibilità | Dovuta per legge a un ente pubblico italiano, ma il contenuto dipende da un audit vero: pubblicarla non verificata sarebbe peggio che non averla |
+| Dichiarazione di accessibilità | Dovuta per legge a un ente pubblico italiano, ma il contenuto dipende da un audit vero: pubblicarla non verificata sarebbe peggio che non averla. **Dal 2026-08-05 il terreno è più solido**: un cancello automatico (axe, WCAG AA, otto pagine nei due temi) gira a ogni esecuzione degli E2E, e il debito che ha trovato è stato chiuso. Resta che axe copre ~30–40% delle barriere reali: la parte da tastiera, da lettore di schermo e da persona vera non la misura nessuna macchina |
 | Test automatici di accessibilità | `axe-core` negli E2E resta da impostare. I contrasti dell'ondata 6 sono misurati a mano |
 | Verifica con screen reader | NVDA non è mai stato provato: il codice è scritto a specifica |
 | Dati reali da fonti aperte | In pausa: vedi `ROADMAP.md` §8 |

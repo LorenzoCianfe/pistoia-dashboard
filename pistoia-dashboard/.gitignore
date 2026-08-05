@@ -63,3 +63,8 @@ test-results/
 # nessuna mail parte davvero, ogni messaggio è un file qui dentro. Gli E2E la
 # leggono per «ricevere» la conferma; si può svuotare in qualunque momento.
 /.email/
+
+# Referti di Lighthouse CI (`lighthouserc.js`): misure, non codice. Restano sul
+# disco invece di finire su `temporary-public-storage`, che li pubblicherebbe
+# su un server pubblico — e pubblicare è una decisione, non un default.
+/.lighthouseci/

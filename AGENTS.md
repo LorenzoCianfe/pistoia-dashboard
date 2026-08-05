@@ -61,7 +61,7 @@ L'app vive in `pistoia-dashboard/`. La documentazione vive nella radice.
 
 ## 3. Design system — le regole che si sbagliano più spesso
 
-> §3 raccoglie **venti trappole già pagate**. Sono raggruppate per ondata
+> §3 raccoglie **ventidue trappole già pagate**. Sono raggruppate per ondata
 > solo perché è così che sono emerse: leggile tutte, valgono tutte ancora.
 
 **Prima di tutto: Astryx è la sorgente dei TOKEN, non lo strato di primitive.**
@@ -314,7 +314,7 @@ diagnosi sbagliate con dati apparentemente solidi.
    lo contendono. `side-nav.tsx` calcola quindi **una sola** voce attiva in
    tutta la barra.
 
-### Una trappola della Fase C (la pagella, 2026-08-05)
+### Due trappole della Fase C (la pagella 2026-08-05, la qualità continua 2026-08-05)
 
 1. **Il JSX di questo Next può mangiare lo spazio fra un'espressione e il
    testo che segue.** `da {VOTO_MIN} a {VOTO_MAX} ed è un conteggio…` è
@@ -336,6 +336,36 @@ diagnosi sbagliate con dati apparentemente solidi.
    dall'accessibilità). Un controllo che conta i nodi (`querySelectorAll`)
    senza filtrare per visibilità conta doppio e sembra un bug che non c'è.
 
+2. **Uccidere `npm run dev` non uccide `next dev`, e il superstite avvelena
+   gli E2E.** Fermare il comando (dal gestore dei task o dallo strumento di
+   un agente) termina il wrapper npm, ma il figlio —
+   `node next/dist/server/lib/start-server.js` — **resta vivo e in ascolto
+   sulla 3000**. Verificato il 2026-08-05: porta ancora occupata dopo lo
+   stop, con quella riga di comando.
+
+   Il danno non è la porta, è la **cartella `.next` condivisa**: il
+   superstite continua a ricostruirla mentre `pretest:e2e` la cancella e il
+   server di Playwright (3939) la riempie da capo. Risultato: **5 test su 25
+   caduti in specifiche scorrelate** — login, moderazione, trasparenza,
+   valutazioni — che somigliano a una regressione appena introdotta. Non lo
+   erano: rilanciata la suite a porte libere, quelle cinque passano.
+
+   Il segno che distingue questo caso da un guasto vero: **sono tutti
+   timeout**. Nessuno afferma un contenuto sbagliato; il pulsante del login
+   resta su «Accesso in corso…», i test lunghi sforano i 30s. Quando i rossi
+   sono tutti d'attesa e mai di merito, il sospetto è l'ambiente, non il
+   diff.
+
+   Prima di lanciare `npm run test:e2e`, **pretendi le porte libere**:
+
+   ```powershell
+   Get-NetTCPConnection -State Listen -LocalPort 3000,3939 -ErrorAction SilentlyContinue
+   ```
+
+   È la stessa famiglia della trappola 4 della Fase A/B (`.next` stantio) e
+   della regola di §4 «gli E2E vogliono la directory libera» — ma con una
+   causa che non si vede: il dev server che credi spento.
+
 ---
 
 ## 4. Comandi
@@ -345,7 +375,9 @@ npm run dev            # sviluppo
 npm run typecheck      # tsc --noEmit — sempre prima di dire "fatto"
 npm run lint
 npm test               # vitest
-npm run test:e2e       # playwright
+npm run test:e2e       # playwright (comprende il cancello di accessibilità)
+npm run a11y           # SOLO il cancello a11y: axe, 8 pagine × 2 temi, WCAG AA
+npm run lighthouse     # Lighthouse sulla build di produzione — misura, non giudica
 npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
 npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
 node scripts/shots.mjs --simple --width=360   # modalità semplice, viewport minima
@@ -501,6 +533,13 @@ non imparerà un passaggio da admin (ondata 8).
    del GET**: i filtri antispam aprono i link per ispezionarli, e un GET che
    muta agisce al posto della persona.
 
+**`pistoia-dashboard/AGENTS.md` si modifica da solo, e non sei stato tu.** Il
+blocco fra `BEGIN:nextjs-agent-rules` e `END` lo scrive **`next dev`**
+(`node_modules/next/dist/server/lib/generate-agent-files.js`): dopo un
+aggiornamento di Next il file risulta modificato senza che nessuno l'abbia
+aperto. Toglierlo dal diff non serve — si riscrive al primo avvio. Si committa
+insieme al lavoro. (Visto il 2026-08-05 aggiornando a 16.3.0.)
+
 Se il dev server si comporta in modo assurdo (moduli non trovati, panic di
 Turbopack, azioni server che falliscono in silenzio): **cancella `.next` e
 riavvia**. Succede dopo un cambio di dipendenze ed è costato un'ora una volta.
@@ -523,7 +562,13 @@ Una modifica è finita quando **tutte** queste sono vere:
       con atterraggio preteso — un redirect al login risponderebbe 200)
 - [ ] L'hai **guardata**: `npm run shots`, o il browser, in tema chiaro **e**
       scuro. Un typecheck verde non è una prova visiva.
-- [ ] Funziona da tastiera e il focus è visibile
+- [ ] Funziona da tastiera e il focus è visibile. **Il cancello axe non basta**:
+      da 2026-08-05 `npm run test:e2e` comprende `accessibilita.spec.ts` (WCAG
+      AA, 8 pagine × 2 temi, nessuna regola esclusa), ma axe copre ~30–40% delle
+      barriere reali — le meccaniche. Ordine di lettura, trappole di focus e
+      sensatezza degli annunci restano da provare a mano.
+      ⚠️ Se aggiungi un colore, **misura la coppia colore/`-soft`**: è lì che il
+      contrasto è caduto, e non si vede guardando
 - [ ] Regge la **modalità semplice** — `npm run shots -- --simple --width=360`,
       che è anche il controllo del traboccamento orizzontale alla viewport minima
 - [ ] `prefers-reduced-motion` non lascia contenuto invisibile o inaccessibile

@@ -320,10 +320,32 @@ tutti inventati.
 | Voce | Livello | Stato |
 |---|---|---|
 | Review "lenti mancanti": sicurezza, correttezza cache, idiomi Next 16 (saltate il 2026-06-11) | `SEC` `ENG` | 📋 consigliata presto |
-| Test a11y automatici (axe-core dentro gli E2E Playwright) | `ENG` `A11Y` | 📋 da impostare (prossima ondata) |
-| Lighthouse CI con performance budget | `ENG` | 📋 da impostare (prossima ondata) |
-| Audit dipendenze in CI (`npm audit` / osv-scanner) | `SEC` `ENG` | 📋 da impostare (prossima ondata) |
+| Test a11y automatici (axe-core dentro gli E2E Playwright) | `ENG` `A11Y` | ✅ **2026-08-05** — `tests/e2e/accessibilita.spec.ts`: 8 pagine × 2 temi, regole WCAG **AA**, **nessuna regola esclusa**. Ha trovato un **debito preesistente di tavolozza**, corretto nella stessa sessione: vedi sotto |
+| Lighthouse CI con performance budget | `ENG` | 🚧 **impostato il 2026-08-05** (`lighthouserc.js` + job in CI): **misura, non giudica**. Le soglie si scrivono dopo le prime passate; solo allora il job smette di essere `continue-on-error`. **Zero dipendenze nuove**: `@lhci/cli` gira con `npx` pinnato — installarlo costava **+285 pacchetti** e 5 avvisi, e il `Dockerfile` (`npm ci --include=dev`) se li porterebbe in produzione |
+| Audit dipendenze in CI (`npm audit` / osv-scanner) | `SEC` `ENG` | ✅ **2026-08-05** — passo informativo nel job `quality`. Non bloccante **e dichiarato**: restano 8 avvisi in attesa di due decisioni (`SECURITY.md` §7), e un cancello rosso per una cosa che si è scelto di non chiudere smette di essere letto |
 | Estensione test Vitest/E2E a ogni ondata | `ENG` | regola fissa |
+
+> **Il debito che axe ha trovato — e che è stato chiuso (2026-08-05).** Non
+> erano falsi positivi e non erano regressioni: violazioni **preesistenti**, mai
+> misurate perché i contrasti dell'ondata 6 erano stati verificati **a mano, una
+> volta sola**. `DESIGN.md` §4 dichiarava «Contrasto WCAG AA ovunque, già
+> verificato: non si regredisce», e **non era vero**.
+>
+> Tre regole, tre cause diverse:
+>
+> | Regola | Che cosa era | Come è stata chiusa |
+> |---|---|---|
+> | `button-name` (critical) | Il **menu del profilo** non aveva nome accessibile: dentro solo l'`Avatar`, che è `aria-hidden` di proposito, e un chevron. Su **ogni** pagina autenticata | `aria-label` sul pulsante |
+> | `color-contrast` | La **tavolozza chiara**: bianco su accent 3,28:1 (il pulsante primario) · teal su tela 2,65:1 (i link) · viola e ambra sui propri chip 2,43:1 e 2,48:1 · i due grigi muti 2,88:1 e 4,14:1 · verde su chip 2,93:1 · rosso dello stemma su chip 3,72:1 | Token scuriti ai **valori più chiari** che superano 4,5:1 (tabella in `DESIGN.md` §4). Il **rosso dello stemma non è stato toccato**: ha un `--red-ink` per il solo caso in cui diventa testo minuto. Il **tema scuro nemmeno**: lì passava già |
+> | `link-in-text-block` | I link nella prosa si distinguevano **solo per colore** | Sottolineatura permanente in `p`, `li`, `dd` (regola di sistema in `globals.css`, non venti ritocchi) |
+>
+> Quattro note d'attuazione, tutte della stessa famiglia — **numeri plausibili e
+> sbagliati**: axe va interrogato a pagina **posata** (~2,2s d'ingresso, o
+> dichiara 1,07:1 su testo nero), **scorsa** (le rivelazioni allo scroll partono
+> smorzate) e con **`prefers-reduced-motion`** (la sezione narrata è legata alla
+> ScrollTimeline: risalendo torna scura per disegno, ed è la resa ridotta quella
+> che deve essere leggibile — `DESIGN.md` §8 e §11.8). E il tetto di tempo va
+> alzato: axe su `/bilancio` supera da solo i 30s di default.
 
 ---
 

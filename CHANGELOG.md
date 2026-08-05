@@ -5,6 +5,57 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.26.0] — 2026-08-05 · Fase C, «Qualità continua» (C-2) — zero avvisi, due cancelli nuovi e la tavolozza che non rispettava la propria promessa
+
+> La traccia trasversale mai iniziata, aperta nell'ordine deciso con Lorenzo:
+> **audit → Next → axe → Lighthouse**. Il risultato: `npm audit` passa da
+> **12 vulnerabilità a ZERO**, e nascono i due cancelli che mancavano da tre
+> ondate.
+>
+> Ma la cosa che conta di più l'ha detta una macchina a un documento:
+> `DESIGN.md` §4 dichiarava «Contrasto WCAG AA ovunque, già verificato: non si
+> regredisce». **Non era vero.** La verifica era stata fatta a mano, una volta,
+> e alla prima misura automatica il tema chiaro falliva AA in cinque punti —
+> tutti di **tavolozza**, non di pagina: i link, il pulsante primario, i chip,
+> i due grigi. Corretto tutto, e il documento adesso dice come stanno le cose.
+>
+> E una lezione sui cancelli: Next 16.3 fa sparire il **corpo di ogni pagina**
+> in sviluppo, e `rotte` passava 56/56 mentre `shots` usciva 0. L'ha trovato
+> la casella «l'hai guardata» di `AGENTS.md` §5 — nessun controllo automatico
+> guardava se il contenuto ci fosse.
+
+### Aggiunto
+- **`tests/e2e/accessibilita.spec.ts`** — il cancello di accessibilità automatico che la traccia chiedeva da tre ondate: **axe-core** su 8 pagine (una per famiglia di composizione) × 2 temi, con le regole **WCAG AA** che `DESIGN.md` §11 dichiara vincolanti. Il fallimento racconta regola, impatto, selettori e link alla spiegazione, invece di stampare un oggetto axe. Dipendenza nuova: **`@axe-core/playwright`** (MPL-2.0, una sola sotto-dipendenza).
+- **`lighthouserc.js` + job `lighthouse` in CI** — sulla **build di produzione**, tre passate e mediana, referto **sul disco** e mai su `temporary-public-storage` (pubblicare è una decisione, non un default). **Misura e non giudica**: nessuna soglia finché non ne esiste una misurata, e il job resta `continue-on-error` — lo stesso percorso del job E2E alla nascita. **Nessuna dipendenza nuova**: `@lhci/cli` si esegue con `npx` a versione **pinnata**, perché installarlo costa **285 pacchetti** e cinque avvisi propri (`tmp` è high) — e il `Dockerfile` fa `npm ci --include=dev`, quindi finirebbero nell'immagine di produzione. Misurato e scartato: 597 → 881 pacchetti, 8 → 13 avvisi.
+- **Passo `npm audit` in CI**, per ora informativo: diventerà bloccante quando lo zero avrà retto qualche settimana. Renderlo bloccante lo stesso giorno in cui lo si raggiunge significa scoprire da una CI rossa che è uscito un avviso nuovo, invece che da una lettura.
+- **`--red-ink`**, l'inchiostro del chip rosso. `--color-error` **è** il rosso dello stemma (`DESIGN.md` §3): identità prima che colore, e resta intatto dove significa — crest, icone, bordi, tratti. Cambia solo dove diventa testo di 12px sopra il proprio `-soft`, che è l'unico punto in cui non raggiungeva AA (3,72:1 → 4,52:1). `lib/colors.ts` ha ora un terzo token, `ink`, e `Badge` usa quello.
+- **La sottolineatura permanente dei link nella prosa** (`p`, `li`, `dd`), in `globals.css` a specificità zero: WCAG 1.4.1 — `hover:underline` non esiste per chi naviga da tocco o da tastiera.
+- **`aria-label` sul menu del profilo**: conteneva solo l'`Avatar` (`aria-hidden` di proposito) e un chevron, quindi uno screen reader annunciava «pulsante» e basta. Violazione **critica**, presente su ogni pagina autenticata.
+- `npm run a11y` e `npm run lighthouse` per lanciare i due cancelli da soli.
+- **`AGENTS.md` §3, trappola 22**: uccidere `npm run dev` **non** uccide `next dev`. Il figlio resta in ascolto sulla 3000 e continua a ricostruire `.next` mentre `pretest:e2e` la cancella: **5 test su 25 caduti in specifiche scorrelate**, con l'aria della regressione appena introdotta. Il segno che smaschera il caso: sono **tutti timeout**, nessuno afferma un contenuto sbagliato.
+
+### Modificato
+- **`npm audit`: 12 → 0.** Tre passate: patch delle foglie di sviluppo col **solo lockfile** (12 → 8, `package.json` intatto — i 129 pacchetti che npm annunciava erano binari opzionali per altre piattaforme); **`next` 16.2.7 → 16.3.0** (8 → 5, e porta con sé `postcss` 8.5.23 e `sharp` 0.35.3); **`prisma` 7.8.0 → 7.9.1** con `@prisma/client` e l'adapter allineati (5 → **0**).
+- **La tavolozza del tema CHIARO, per rispettare AA** — con i valori **più chiari** che superano 4,5:1, così la tinta resta e cambia solo la profondità: teal `#0E9F92` → **`#0A756B`** (i link erano 2,66:1, il pulsante primario 3,28:1) · `--muted-2` `#85888c` → **`#65686c`** (2,88:1: il grigio più usato, e il difetto più diffuso) · `--color-text-secondary` `#6B6E72` → **`#5A5D61`** · `--viola` → **`#675cb4`** e `--amber` → **`#965a19`** (2,43:1 e 2,48:1 sui propri chip) · `--color-success` → **`#187A4D`**. **Il rosso dello stemma non è stato toccato** (ha l'inchiostro), e **il tema scuro nemmeno**: lì il contrasto passava già.
+- **`src/proxy.ts`: in sviluppo la CSP non ha più `'strict-dynamic'`** (decisione di Lorenzo). È ciò che sblocca Next 16.3: da quella versione il server di sviluppo mette nell'HTML un `<script>` **senza nonce** con dentro codice dell'applicazione, e `'strict-dynamic'` — che disattiva l'allowlist per host — lo fa rifiutare, lasciando **ogni pagina col corpo vuoto**. In produzione `'strict-dynamic'` è intatto. Misurato: non è una nostra configurazione sbagliata (`required-scripts.js` e il manifest client sono identici a 16.2.7), in produzione non accade, ed è identico su 16.3.1-canary.3.
+- `DESIGN.md` §4 e §7, `SECURITY.md` §7, `ROADMAP.md`, `FEATURES.md`, `DOCUMENTATION.md` aggiornati insieme al lavoro — con la tabella prima/dopo di ogni token.
+
+### Corretto
+- **`/opere/[id]` traboccava di 6px** a 360px in modalità semplice: il campo del commento è `flex-1` ma un `<input>` ha una larghezza intrinseca propria e in flex `min-width: auto` gli fa da pavimento, spingendo fuori il pulsante d'invio. Aggiunto `min-w-0` — è il corollario di `AGENTS.md` §3 (ondata 7, 5), e l'ha trovato il cancello delle schermate, non l'occhio.
+
+### Quattro note d'attuazione, pagate scrivendo il cancello a11y
+Hanno tutte la stessa forma: **numeri plausibili e sbagliati**, che è la categoria di difetti che qui costa di più.
+- **axe si interroga a pagina POSATA.** L'ingresso dura ~2,2s e prima restituisce rapporti impossibili: la prima stesura dichiarava **1,07:1** nel tema scuro, cioè testo invisibile, su pagine che le schermate mostrano perfettamente leggibili.
+- **E a pagina SCORSA.** Le rivelazioni allo scroll partono smorzate: senza scorrere, axe leggeva `#b5b5b5` su `#f9f8f7` (1,93:1) su una cifra che a schermo è nera. È `AGENTS.md` §3 (Fase A, 1) — ciò che dipende da IntersectionObserver non si giudica leggendo il DOM fermo.
+- **L'attesa dev'essere fissa.** Sondare l'opacità di ogni nodo sotto `<main>` costa più dell'analisi di axe (timeout a 90s su `/bilancio`), e `waitForLoadState("networkidle")` non finisce mai perché la connessione HMR tiene la rete occupata.
+- **Anche il tetto di tempo va alzato**: axe su `/bilancio` supera da solo i 30s di default, e il caso falliva con un rosso che non parlava di accessibilità.
+
+### Da fare, scritto perché non si perda
+- **Rimettere `'strict-dynamic'` in sviluppo** quando Next rimetterà il nonce su quel tag. Condizione verificabile: `curl -s localhost:3000/metodologia | grep '<script' | grep -vc nonce=` deve dare **0**. Oggi dà 1 su 16.3.0 e su 16.3.1-canary.3.
+- **Fissare le soglie di Lighthouse** dopo le prime passate in CI, e togliere `continue-on-error` dal job.
+- **Rendere bloccante `npm audit`** in CI (`--audit-level=high`, senza `|| true`) quando lo zero avrà retto.
+- **`/admin/*` e `/redazione` restano fuori** sia da `shots` sia dal cancello a11y: sono le superfici staff dell'ondata 8, e il debito visivo lì cresce a ogni giro.
+
 ## [0.25.0] — 2026-08-05 · Fase C, «La pagella della giunta» — la scoperta, la metodologia v1.1 e la forma A
 
 > La scoperta prima del codice, come per le valutazioni: **le sei materie non

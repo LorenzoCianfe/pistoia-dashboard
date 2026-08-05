@@ -197,19 +197,79 @@ verifica reale sarebbe la cosa peggiore da fare.
 
 ## 7. Dipendenze
 
-Al 2026-07-25 `npm audit` riporta **12 vulnerabilità** (7 high, 4 moderate,
-1 low), tutte in dipendenze **transitive e preesistenti**: `next`, `prisma`/
-`@prisma/dev`, `postcss`, `sharp`, `esbuild`, `hono`, `js-yaml`, `fast-uri`,
-`brace-expansion`, `valibot`.
+Al **2026-08-05** `npm audit` riporta **zero vulnerabilità**. Erano **12** al
+2026-07-25 (7 high, 4 moderate, 1 low), tutte transitive e preesistenti. Le tre
+passate che le hanno chiuse:
+
+| Passata | Cosa | Esito |
+|---|---|---|
+| Patch delle foglie | `js-yaml` `esbuild` `postcss` `nanoid` `fast-uri` `brace-expansion` | 12 → 8, col **solo lockfile**: `package.json` intatto |
+| **`next` 16.2.7 → 16.3.0** | la voce a priorità più alta: **bypass di middleware in App Router**, più otto avvisi suoi | 8 → 5. Porta con sé `postcss` 8.5.23 e `sharp` 0.35.3, che erano due delle voci |
+| **`prisma` 7.8.0 → 7.9.1** (con `@prisma/client` e l'adapter allineati) | la catena `@prisma/dev` → `hono`, `@hono/node-server`, `valibot` — il server locale di Prisma Studio | 5 → **0** |
+
+Il passo `npm audit` in CI resta **informativo** per ora. Diventerà bloccante
+(`npm audit --audit-level=high`, senza `|| true`) quando lo zero avrà retto
+qualche settimana: renderlo bloccante lo stesso giorno in cui lo si raggiunge
+significa scoprire dalla CI rossa che è uscito un avviso nuovo, invece che da
+una lettura.
+
+### ⚠️ Il prezzo di Next 16.3: `'strict-dynamic'` non c'è più in **sviluppo**
+
+**Da 16.3 il server di sviluppo mette nell'HTML un tag `<script>` senza il
+nonce**, e dentro c'è codice dell'applicazione (Motion). `'strict-dynamic'`
+disattiva l'allowlist per host, quindi `'self'` non lo salva: il file viene
+rifiutato, il bundle client non completa e **ogni pagina si apre col corpo
+vuoto** — barra, menu e footer al loro posto. Visto su `/metodologia` e
+`/valutazioni`, in due browser, schermata alla mano.
+
+Quattro cose misurate, perché la diagnosi non si rifaccia da capo:
+
+1. **Non è una nostra configurazione sbagliata.** `src/proxy.ts` segue alla
+   lettera la ricetta ufficiale di
+   `next/dist/docs/01-app/02-guides/content-security-policy.md`, `'unsafe-eval'`
+   in sviluppo compreso — e quella guida promette che Next attacca il nonce ai
+   «page-specific JavaScript bundles». `required-scripts.js` e il manifest
+   client sono **identici** a 16.2.7, e lì il nonce viene passato.
+2. **In produzione non accade**: sull'output di `next build`, **zero** tag
+   `<script>` senza nonce.
+3. **Non è ancora corretto a monte**: identico su **16.3.1-canary.3**.
+4. **Il contrasto è netto**: su 16.2.7 gli script senza nonce erano **0**.
+
+**La decisione (Lorenzo, 2026-08-05): togliere `'strict-dynamic'` solo nel ramo
+di sviluppo** di `buildCsp()`. In sviluppo la CSP resta e continua a rifiutare
+gli script inline e quelli di altri domini; cade solo la regola che impediva a
+`'self'` di autorizzare i file del nostro server. **In produzione
+`'strict-dynamic'` è intatto**, e con esso il vincolo che il tema DEVE essere
+compilato (`ARCHITECTURE.md` §3).
+
+Il costo, dichiarato: in sviluppo la CSP non è più identica a quella di
+produzione, quindi un difetto che solo `'strict-dynamic'` intercetta si vedrebbe
+soltanto dopo il build. **Da rifare quando Next rimetterà il nonce**: rimettere
+`'strict-dynamic'` nel ramo di sviluppo e verificare che le pagine si aprano
+piene.
+
+**Nessun cancello se ne sarebbe accorto**, e vale la pena ricordarlo:
+`npm run rotte` passava 56/56 e `npm run shots` usciva 0, perché il primo
+controlla che la rotta risponda e il secondo che non scorra di lato. L'ha
+trovato **guardare la pagina** — la casella di `AGENTS.md` §5.
 
 **Nessuna proviene da Astryx o StyleX**, verificato al momento della loro
 introduzione. **`uqr`** (QR delle valutazioni, aggiunto il 2026-08-03 su
 decisione esplicita) è una foglia **senza sotto-dipendenze**: nessuna
 vulnerabilità propria al momento dell'introduzione.
 
-La maggior parte riguarda strumenti di sviluppo e non la superficie di
-produzione, ma vanno riviste prima di qualunque deploy pubblico. Aggiornare
-`next` è la voce a priorità più alta (bypass di middleware in App Router).
+Due note per chi toccherà di nuovo queste versioni:
+
+- In 16.3 `experimental.viewTransition` **non esiste più** (l'integrazione
+  dell'App Router è di default e l'opzione è uscita dallo schema): va tolto da
+  `next.config.ts`, o il typecheck fallisce. Verificato anche che
+  `needsExperimentalReact()` non guarda quel flag né in 16.2.7 né in 16.3 —
+  l'aggiornamento **non** commuta React di nascosto.
+- **`@lhci/cli` non è una dipendenza del progetto** ed è una scelta: installarlo
+  costa **285 pacchetti** e cinque avvisi propri (`tmp` è high), e il
+  `Dockerfile` fa `npm ci --include=dev` — finirebbero nell'immagine di
+  produzione. Gira con `npx` a versione pinnata (`npm run lighthouse`, job in
+  CI). La stessa domanda va fatta a ogni strumento di misura futuro.
 
 ---
 

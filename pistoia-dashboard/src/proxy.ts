@@ -33,9 +33,34 @@ const PROTECTED_PREFIXES = [
 function buildCsp(nonce: string, isDev: boolean): string {
   return [
     "default-src 'self'",
-    // 'strict-dynamic': gli script con nonce possono caricarne altri (chunk
-    // Next). In dev React usa eval per ricostruire gli stack di errore.
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
+    /*
+      'strict-dynamic': gli script con nonce possono caricarne altri (chunk
+      Next). In dev React usa eval per ricostruire gli stack di errore.
+
+      ⚠️ **In sviluppo 'strict-dynamic' NON c'è**, e non è una svista
+      (decisione di Lorenzo, 2026-08-05, per sbloccare Next 16.3).
+      Da Next 16.3 il server di sviluppo mette nell'HTML **un tag `<script>`
+      senza nonce**, che porta codice dell'applicazione. `'strict-dynamic'`
+      **disattiva l'allowlist per host**, quindi `'self'` non lo salva: il file
+      viene rifiutato, il bundle client non completa e **ogni pagina resta sul
+      proprio «Caricamento in corso», col corpo vuoto**. Non è una nostra
+      configurazione sbagliata — `required-scripts.js` e il manifest client
+      sono identici a 16.2.7 e il nonce lì viene passato — e **in produzione
+      non accade**: sull'output di `next build` gli script senza nonce sono
+      zero, verificato.
+
+      Che cosa resta in piedi in sviluppo: la CSP c'è tutta, e `'self'`
+      continua a rifiutare gli script inline e quelli di altri domini. Cade
+      solo la regola che impediva a `'self'` di autorizzare i file serviti da
+      noi. In **produzione `'strict-dynamic'` resta**, e con esso il vincolo
+      che il tema DEVE essere compilato (`ARCHITECTURE.md` §3).
+
+      Il costo, dichiarato: in sviluppo la CSP non è più identica a quella di
+      produzione, quindi un difetto che solo `'strict-dynamic'` intercetta si
+      vedrebbe soltanto dopo il build. Questa riga si toglie quando Next
+      rimetterà il nonce su quel tag.
+    */
+    `script-src 'self' 'nonce-${nonce}'${isDev ? " 'unsafe-eval'" : " 'strict-dynamic'"}`,
     // Motion/Leaflet/next-themes impostano style attribute inline: il nonce
     // sugli stili romperebbe le librerie. Compromesso standard e a basso rischio.
     "style-src 'self' 'unsafe-inline'",

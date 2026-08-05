@@ -60,7 +60,7 @@ export function ConfirmButton({
           {state.confirmed ? <Check size={16} strokeWidth={2.5} /> : <Users size={16} />}
         </motion.span>
         {state.confirmed ? "Anche tu confermi" : "Anche io"}
-        <span className="tabular-nums opacity-80">· {formatNumber(state.count)}</span>
+        <span className="tabular-nums">· {formatNumber(state.count)}</span>
       </button>
       <ActionError error={error} />
     </div>

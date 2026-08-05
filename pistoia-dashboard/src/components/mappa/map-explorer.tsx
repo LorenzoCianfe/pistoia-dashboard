@@ -68,7 +68,7 @@ export function MapExplorer({
                 style={{ backgroundColor: on ? "#ffffff" : hex }}
               />
               {l.label}
-              <span className="tabular-nums opacity-80">{counts[l.key] ?? 0}</span>
+              <span className="tabular-nums">{counts[l.key] ?? 0}</span>
             </button>
           );
         })}

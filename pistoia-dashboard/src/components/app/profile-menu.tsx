@@ -49,6 +49,12 @@ export function ProfileMenu({ user }: { user: CurrentUser }) {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="true"
         aria-expanded={open}
+        // Il pulsante non ha testo: dentro c'è solo l'`Avatar`, che è
+        // `aria-hidden` di proposito (le iniziali non dicono niente a chi non
+        // vede), più un chevron decorativo. Senza questa etichetta uno
+        // screen reader annuncia «pulsante» e basta — violazione `button-name`
+        // trovata da axe il 2026-08-05 su ogni pagina autenticata.
+        aria-label={`Menu del profilo di ${user.name}`}
         className="flex items-center gap-1.5 rounded-pill border border-border bg-surface py-1 pl-1 pr-2 transition-colors hover:bg-surface-2"
       >
         <Avatar name={user.name} color={user.avatarColor} size="sm" />

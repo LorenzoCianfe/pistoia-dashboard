@@ -44,7 +44,10 @@ export function NoticeBanner({
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-semibold">{n.title}</span>
-                <span className="mt-0.5 block text-xs" style={{ color: tokens.fg }}>
+                {/* `ink`, non `fg`: qui il colore è testo di 12px sopra il proprio
+                  `-soft`, e per il rosso dello stemma quella coppia non
+                  raggiunge AA (3,72:1). Vedi `lib/colors.ts`. */}
+              <span className="mt-0.5 block text-xs" style={{ color: tokens.ink }}>
                   {kind.label} · {sev.label} · cosa cambia per te →
                 </span>
               </span>

@@ -45,7 +45,7 @@ export function SupportButton({
       >
         <Lock size={15} />
         Verificati per supportare
-        <span className="tabular-nums opacity-80">· {formatNumber(count)}</span>
+        <span className="tabular-nums">· {formatNumber(count)}</span>
       </Link>
     );
   }
@@ -80,7 +80,7 @@ export function SupportButton({
           {state.supported ? <Check size={15} strokeWidth={2.5} /> : <Heart size={15} />}
         </motion.span>
         {state.supported ? "Sostieni" : "Sostieni"}
-        <span className="tabular-nums opacity-80">· {formatNumber(state.count)}</span>
+        <span className="tabular-nums">· {formatNumber(state.count)}</span>
       </button>
       <ActionError error={error} />
     </div>

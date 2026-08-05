@@ -85,7 +85,7 @@ leggono come oggetti appoggiati, non come "il foglio".
 
 | Token | Significato | Esempi |
 |---|---|---|
-| `--color-accent` `#0E9F92` | **Azione e vita**: il colore primario | CTA, link, focus, progressi |
+| `--color-accent` `#0A756B` | **Azione e vita**: il colore primario | CTA, link, focus, progressi |
 | `--highlight` `#D9F312` | **Evidenza decorativa** | Chip, pallini "live", maniglie. **Mai testo, mai icone** |
 | `--color-error` `#D63A57` | **Brand e urgenza** (rosso dello stemma) | Crest, errori, segnalazioni urgenti |
 | `--color-success` | **Risolto / completato** | Esiti positivi, segnalazioni chiuse |
@@ -108,7 +108,40 @@ Per costruzione esiste `bg-highlight` ma **non** `text-highlight`.
 - **Un colore dominante per schermata.** Le pagine non sono arcobaleni.
 - I colori `-soft` sono gli unici ammessi come sfondi di badge/chip; il colore
   pieno va su testo/icone/bordi.
-- **Contrasto WCAG AA ovunque, AAA sul body.** Già verificato: non si regredisce.
+- **Contrasto WCAG AA ovunque, AAA sul body.** Verificato **da una macchina**,
+  a ogni esecuzione degli E2E (`tests/e2e/accessibilita.spec.ts`, axe-core sulle
+  regole `wcag2aa`/`wcag21aa`, otto pagine in entrambi i temi).
+
+> **Revisione del 2026-08-05 — la tavolozza chiara è stata scurita, e perché.**
+> Questa riga diceva «già verificato: non si regredisce». La verifica era stata
+> fatta **a mano, una volta**, e **non reggeva**: alla prima misura automatica
+> il tema chiaro falliva AA in quattro punti, tutti di tavolozza e non di
+> pagina.
+>
+> | Token | Prima | Dopo | Che cosa non passava |
+> |---|---|---|---|
+> | teal (`--color-accent`) | `#0E9F92` | **`#0A756B`** | 2,66:1 come testo sulla tela (**i link**) e 3,28:1 col bianco sopra (**il pulsante primario**) → 4,50:1 e 5,57:1 |
+> | `--muted-2` | `#85888c` | **`#65686c`** | 2,88:1 sulla tela — il grigio più usato, e il difetto più diffuso → 4,53:1 |
+> | `--color-text-secondary` | `#6B6E72` | **`#5A5D61`** | 4,14:1, appena sotto → 5,35:1 (e lascia spazio al livello sotto) |
+> | `--viola` | `#8a7bf0` | **`#675cb4`** | 2,43:1 sul proprio chip `-soft` → 4,61:1 |
+> | `--amber` | `#d98324` | **`#965a19`** | 2,48:1 sul proprio chip `-soft` (la pastiglia «Anteprima», 11px) → 4,75:1 |
+>
+> Ogni valore nuovo è **il più chiaro** che superi 4,5:1: la tinta resta quella,
+> cambia la profondità. **Il rosso dello stemma e il verde non sono stati
+> toccati**: la misura non li ha segnalati, e il rosso è identità prima che
+> colore. Il **tema scuro non è stato toccato**: lì il contrasto passava già —
+> il debito era tutto del chiaro.
+>
+> Ne discende una regola: **i `-soft` come sfondo di chip funzionano solo se il
+> colore pieno è abbastanza profondo.** La coppia colore/`-soft` va misurata
+> quando si aggiunge una tinta, non dopo.
+
+- **Un link dentro la prosa non si distingue solo per il colore** (WCAG 1.4.1).
+  Dentro un `<p>` i link sono **sottolineati sempre**, non solo al passaggio del
+  mouse — che non esiste per chi naviga da tocco o da tastiera. La regola vive
+  in `globals.css`, layer `pistoia`, a specificità zero. **Solo nella prosa**:
+  nelle liste ogni riga è un link a tutta scheda, e sottolinearla la farebbe
+  sembrare testo invece che un oggetto da toccare.
 - Il gradiente teal→viola resta ammesso in **un** momento per pagina al massimo.
 
 ---
@@ -195,13 +228,23 @@ ragione è architetturale: nell'App Router la lista si smonta prima che il
 dettaglio monti, quindi i due elementi non stanno mai nello stesso albero React
 e `layoutId` non ha nulla da interpolare.
 
-La via ufficiale sarebbe `<ViewTransition>` di React, ma non è disponibile:
-in Next 16.2.7 il flag `experimental.viewTransition` **non** commuta React sul
-canale experimental (`needsExperimentalReact()` guarda solo `taint`,
-`transitionIndicator`, `gestureTransition`) e React 19.2 stabile non esporta
-quel componente.
+`<ViewTransition>` di React copre l'altro mestiere — il **cross-fade** fra
+pagina vecchia e nuova — ed è quello che avvolge `(app)/template.tsx`. Non sa
+però fare il morph di un elemento che cambia rotta, per la stessa ragione
+architetturale di sopra: quando arriva il gemello, l'originale non esiste più.
 
-Si usa quindi **l'API nativa del browser, a mano** — `view-transition-name` più
+> **Aggiornato il 2026-08-05 (Next 16.3.0).** Questo paragrafo diceva che
+> `<ViewTransition>` «non è disponibile» perché in Next 16.2.7 il flag
+> `experimental.viewTransition` non commutava React sul canale experimental.
+> **Il flag non esiste più**: da 16.3 l'integrazione dell'App Router è attiva di
+> default ed è uscito dallo schema di configurazione — rimetterlo in
+> `next.config.ts` fa fallire il typecheck. Verificato anche che
+> `needsExperimentalReact()` non ha **mai** guardato quel flag (in 16.3 aggiunge
+> `blockingSSR` a `taint`, `transitionIndicator`, `gestureTransition`): il
+> componente arriva dalla build canary che l'App Router usa da sé, coi tipi in
+> `src/types/react-canary.d.ts`.
+
+Per il morph si usa quindi **l'API nativa del browser, a mano** — `view-transition-name` più
 `document.startViewTransition()` attorno alla navigazione. Le tre regole che ne
 derivano:
 
