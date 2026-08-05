@@ -6,22 +6,29 @@ import { Card, CardEyebrow } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import {
   IN_BREVE,
+  IN_BREVE_PAGELLA,
   REGISTRO_MODIFICHE,
   REGOLE,
+  REGOLE_PAGELLA,
   VERSIONE_METODOLOGIA,
+  type RegolaMetodologia,
 } from "@/lib/metodologia";
 import { FIRMA_REDAZIONE } from "@/lib/redazione";
 
 export const metadata: Metadata = {
-  title: "Metodologia — Valutazioni dei servizi",
+  title: "Metodologia — le regole dell'osservatorio",
   description:
-    "Le regole con cui le valutazioni dei servizi vengono raccolte, calcolate e moderate: ogni regola con il suo perché, la sua verifica e il punto del codice che la applica.",
+    "Le regole con cui le valutazioni dei servizi e la pagella della giunta vengono raccolte e calcolate: ogni regola con il suo perché, la sua verifica e il punto del codice che la applica.",
 };
 
 /*
   `/metodologia` — la resa del documento (R-6, forma A1 + A3 + A4, decisa il
   2026-08-05). Il CONTENUTO vive in `lib/metodologia.ts`, che interpola le
   costanti di dominio: questa pagina non contiene un numero scritto a mano.
+
+  Dalla v1.1 il documento ha DUE CAPITOLI con una versione sola: le
+  valutazioni (regole 1–12) e la pagella della giunta (13–20). La numerazione
+  prosegue perché «regola 14» resti un riferimento unico.
 
   A LETTURA PUBBLICA (forma C1), coerente con W1: le schede che chiunque può
   leggere citano queste regole, e un rimando che chiede il login sarebbe una
@@ -38,8 +45,8 @@ export default function MetodologiaPage() {
     <div className="space-y-6 page-enter">
       <SectionHeader
         eyebrow="Le regole del gioco"
-        title="Metodologia delle valutazioni"
-        description="Come le valutazioni dei servizi vengono raccolte, calcolate e moderate — regola per regola, col perché di ciascuna."
+        title="La metodologia dell'osservatorio"
+        description="Come le valutazioni dei servizi e la pagella della giunta vengono raccolte e calcolate — regola per regola, col perché di ciascuna."
         icon={<BookOpen size={22} />}
       />
 
@@ -55,61 +62,61 @@ export default function MetodologiaPage() {
         , mai dal silenzio.
       </p>
 
-      {/* In breve (A4): per chi non leggerà le dodici regole. */}
-      <Card className="bg-surface-2/40">
-        <CardEyebrow>In breve</CardEyebrow>
-        <ul className="mt-3 space-y-2">
-          {IN_BREVE.map((riga) => (
-            <li
-              key={riga}
-              className="flex gap-2.5 text-sm leading-relaxed text-muted"
-            >
-              <span aria-hidden className="mt-[9px] h-1 w-1 shrink-0 rounded-full bg-[var(--color-accent)]" />
-              <span>{riga}</span>
-            </li>
-          ))}
-        </ul>
-      </Card>
+      {/* Capitolo 1 — le valutazioni dei servizi. */}
+      <section aria-labelledby="capitolo-valutazioni" className="space-y-4">
+        <h2
+          id="capitolo-valutazioni"
+          className="text-lg font-bold tracking-tight"
+        >
+          <span className="text-muted-2">Capitolo 1 · </span>
+          Le valutazioni dei servizi
+        </h2>
 
-      {/* Le dodici regole (A1): la regola · il perché · la verifica · il codice. */}
-      <section aria-label="Le regole" className="space-y-4">
+        {/* In breve (A4): per chi non leggerà le dodici regole. */}
+        <Card className="bg-surface-2/40">
+          <CardEyebrow>In breve</CardEyebrow>
+          <ul className="mt-3 space-y-2">
+            {IN_BREVE.map((riga) => (
+              <li
+                key={riga}
+                className="flex gap-2.5 text-sm leading-relaxed text-muted"
+              >
+                <span aria-hidden className="mt-[9px] h-1 w-1 shrink-0 rounded-full bg-[var(--color-accent)]" />
+                <span>{riga}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+
         {REGOLE.map((r, i) => (
-          <Card key={r.id} id={r.id} className="scroll-mt-24">
-            <article>
-              <h2 className="text-base font-semibold">
-                <span className="text-muted-2">{i + 1} · </span>
-                {r.titolo}
-              </h2>
-              <p className="mt-2 max-w-prose text-sm font-medium leading-relaxed">
-                {r.regola}
-              </p>
-              <dl className="mt-3 space-y-2.5 border-t border-border pt-3">
-                <div>
-                  <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-2">
-                    Il perché
-                  </dt>
-                  <dd className="mt-1 max-w-prose text-sm leading-relaxed text-muted">
-                    {r.perche}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-2">
-                    La verifica
-                  </dt>
-                  <dd className="mt-1 max-w-prose text-sm leading-relaxed text-muted">
-                    {r.verifica}
-                  </dd>
-                </div>
-              </dl>
-              {/* Il cancello reso leggibile (A3): la definizione unica. */}
-              <p className="mt-3 rounded-inner bg-surface-2/60 px-3 py-2 font-mono text-xs leading-relaxed text-muted">
-                <span className="font-sans font-semibold uppercase tracking-[0.1em] text-muted-2">
-                  Nel codice
-                </span>{" "}
-                — {r.nelCodice}
-              </p>
-            </article>
-          </Card>
+          <RegolaCard key={r.id} regola={r} numero={i + 1} />
+        ))}
+      </section>
+
+      {/* Capitolo 2 — la pagella della giunta (v1.1). */}
+      <section aria-labelledby="capitolo-pagella" className="space-y-4">
+        <h2 id="capitolo-pagella" className="text-lg font-bold tracking-tight">
+          <span className="text-muted-2">Capitolo 2 · </span>
+          La pagella della giunta
+        </h2>
+
+        <Card className="bg-surface-2/40">
+          <CardEyebrow>In breve</CardEyebrow>
+          <ul className="mt-3 space-y-2">
+            {IN_BREVE_PAGELLA.map((riga) => (
+              <li
+                key={riga}
+                className="flex gap-2.5 text-sm leading-relaxed text-muted"
+              >
+                <span aria-hidden className="mt-[9px] h-1 w-1 shrink-0 rounded-full bg-[var(--color-accent)]" />
+                <span>{riga}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+
+        {REGOLE_PAGELLA.map((r, i) => (
+          <RegolaCard key={r.id} regola={r} numero={REGOLE.length + i + 1} />
         ))}
       </section>
 
@@ -144,10 +151,65 @@ export default function MetodologiaPage() {
           >
             le valutazioni
           </Link>{" "}
-          sono il posto dove vederle applicate.
+          e{" "}
+          <Link
+            href="/pagella"
+            className="text-teal underline-offset-2 hover:underline"
+          >
+            la pagella
+          </Link>{" "}
+          sono i posti dove vederle applicate.
         </p>
       </Card>
     </div>
+  );
+}
+
+/** La regola · il perché · la verifica · il codice (forma A1 + A3). */
+function RegolaCard({
+  regola: r,
+  numero,
+}: {
+  regola: RegolaMetodologia;
+  numero: number;
+}) {
+  return (
+    <Card id={r.id} className="scroll-mt-24">
+      <article>
+        <h3 className="text-base font-semibold">
+          <span className="text-muted-2">{numero} · </span>
+          {r.titolo}
+        </h3>
+        <p className="mt-2 max-w-prose text-sm font-medium leading-relaxed">
+          {r.regola}
+        </p>
+        <dl className="mt-3 space-y-2.5 border-t border-border pt-3">
+          <div>
+            <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-2">
+              Il perché
+            </dt>
+            <dd className="mt-1 max-w-prose text-sm leading-relaxed text-muted">
+              {r.perche}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-2">
+              La verifica
+            </dt>
+            <dd className="mt-1 max-w-prose text-sm leading-relaxed text-muted">
+              {r.verifica}
+            </dd>
+          </div>
+        </dl>
+        {/* Il cancello reso leggibile (A3): la definizione unica. */}
+        <p className="mt-3 rounded-inner bg-surface-2/60 px-3 py-2 font-mono text-xs leading-relaxed text-muted">
+          <span className="font-sans font-semibold uppercase tracking-[0.1em] text-muted-2">
+            Nel codice
+          </span>{" "}
+          — {r.nelCodice}
+        </p>
+      </article>
+    </Card>
   );
 }
 

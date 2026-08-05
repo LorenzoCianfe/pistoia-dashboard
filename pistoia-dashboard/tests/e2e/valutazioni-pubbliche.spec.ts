@@ -62,15 +62,20 @@ test("/metodologia si legge senza account, con la versione e le regole", async (
   // una spiegazione a porte chiuse (forma C1 del 2026-08-05).
   await expect(page).toHaveURL(/\/metodologia$/);
   await expect(
-    page.getByRole("heading", { name: "Metodologia delle valutazioni" }),
+    page.getByRole("heading", { name: "La metodologia dell'osservatorio" }),
   ).toBeVisible();
 
-  // La versione è il timbro che le altre pagine stampano; la regola 3 è la
-  // decisione che ha sciolto la soglia provvisoria; il registro è il posto
-  // dove ogni cambiamento resta scritto.
-  await expect(page.getByText(/Versione v1\.0/)).toBeVisible();
+  // La versione è il timbro che le altre pagine stampano — quale sia la
+  // versione lo pinza il test unitario del cancello, qui basta che ci sia.
+  // La regola 3 è la decisione che ha sciolto la soglia provvisoria; la 14 è
+  // il capitolo della pagella (v1.1); il registro è il posto dove ogni
+  // cambiamento resta scritto.
+  await expect(page.getByText(/Versione v\d+\.\d+/)).toBeVisible();
   await expect(
     page.getByRole("heading", { name: /Nessuna soglia minima/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /Il voto si riconta/ }),
   ).toBeVisible();
   await expect(page.getByText("Registro delle modifiche")).toBeVisible();
 });

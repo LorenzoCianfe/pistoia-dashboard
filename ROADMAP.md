@@ -408,7 +408,7 @@ tutti inventati.
 
 | Idea | Cosa fa | Livello | Fonte | Stato |
 |---|---|---|---|---|
-| **Pagella mensile** | Voti 1–10 a sindaco e giunta su 6 materie (sicurezza, decoro, trasparenza, spesa, ascolto, promesse), calcolati dai dati raccolti | `FE` `BE` `DES` | richiesta 2026-07-26 | 💡 Fase C |
+| **La pagella della giunta** *(già «Pagella mensile»)* | Voto 1–10 **alla giunta come organo collettivo** (mai a una persona) su sei materie **a due regimi**: ricontabile dove il traguardo è fissato per legge (Trasparenza, Spesa), a fatti dove non lo fissa nessuno (Promesse), assenza spiegata dove manca una fonte reale (Sicurezza, Decoro, Ascolto). Nessun voto d'insieme; edizioni trimestrali timbrate con la versione della metodologia | `FE` `BE` `DES` | richiesta 2026-07-26 · scoperta 2026-08-05 | 🚧 Fase C — **forma composta il 2026-08-05** (M1 · V1 · C1 · R1, scala 1 + 9 × quota) e **P-1/P-2 chiuse**: metodologia **v1.1** col capitolo 2 (regole 13–20, costanti interpolate da `lib/pagella.ts`), `/pagella` in forma A **senza alcuna edizione**. Prima edizione da ricognizione reale **dopo il 27/08/2026** (termine art. 14); il seed non semina pagelle. Piano in [`docs/piano-pagella.md`](docs/piano-pagella.md) |
 | **Dossier persona** | Scheda pubblica per assessore: curriculum dichiarato, indennità dal portale trasparenza, esperienza nel settore di delega, dichiarazioni vs azioni | `FE` `BE` | richiesta 2026-07-26 | 💡 Fase C |
 | **Audit cittadino** | PDF trimestrale di 5–6 pagine in forma di mini-audit: executive summary, 5 indicatori con trend, 3 promesse, 3 spese, 3 domande senza risposta | `FE` `BE` `DES` | richiesta 2026-07-26 | 💡 Fase C |
 | **Il costo dell'amministrazione** | Quanto la legge prevede per sindaco, giunta e presidente del consiglio, con l'atto primario dietro ogni cifra | `FE` `BE` | richiesta 2026-07-26 | ✅ 2026-07-31 — `/trasparenza/costo-amministrazione` |
@@ -686,6 +686,12 @@ tutti inventati.
    > su `/metodologia` (pubblica, v1.0, registro append-only) e timbrato in
    > calce a scheda, panoramica e digest (`TimbroMetodologia`). La pagella,
    > quando arriverà, timbrerà con la stessa versione.
+   >
+   > **E la pagella è arrivata lo stesso giorno**: dalla v1.1 le sue regole
+   > sono il **capitolo 2** dello stesso documento (13–20, interpolate da
+   > `lib/pagella.ts`), pubblicate PRIMA che il primo voto sia calcolato — e
+   > `EdizionePagella.versioneMetodologia` è il timbro scattato alla
+   > scrittura. Piano in [`docs/piano-pagella.md`](docs/piano-pagella.md).
 4. **La regola del campione minimo, estesa alle persone** — e per le persone
    non basta alzare la soglia. `lib/citystats.ts` ha stabilito che una
    percentuale su pochi casi, tinta di rosso, è un'accusa e non un dato, e lo

@@ -5,6 +5,34 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.25.0] — 2026-08-05 · Fase C, «La pagella della giunta» — la scoperta, la metodologia v1.1 e la forma A
+
+> La scoperta prima del codice, come per le valutazioni: **le sei materie non
+> sono ugualmente misurabili, e il voto onesto esiste solo dove qualcuno ha
+> fissato il traguardo** — per una giunta, la legge. La forma è la
+> composizione di Lorenzo su facsimili in contesto e due giri di domande
+> (**M1** sei materie a due regimi · **V1** voto 1–10 ricontabile · **C1**
+> trimestrale · **R1** stelle accostate mai sommate · scala **1 + 9 ×
+> quota** · ampiezza piena), registrata in
+> [`docs/piano-pagella.md`](docs/piano-pagella.md). Il cancello: **le regole
+> della pagella sono pubblicate PRIMA che il primo voto sia calcolato**, e il
+> primo voto nascerà già timbrato.
+
+### La scoperta che ha deciso la forma
+- L'inventario delle fonti, materia per materia: **Trasparenza** e **Spesa** hanno traguardi fissati per legge (art. 14 e 33 del D.Lgs 33/2013, termini TUEL, D.Lgs 231/2002) → voto ricontabile; **Promesse** ha una fonte reale (le linee programmatiche, TUEL art. 46) ma nessun traguardo → **a fatti**; **Sicurezza · Decoro · Ascolto** oggi non hanno una fonte reale che regga un giudizio → dichiarano che cosa le accenderebbe. È la scala a tacche di `/promesse` letta al contrario: dove il traguardo lo fissa la legge, il 1–10 torna a essere un conteggio.
+- **Regole derivate, dichiarate nel giro**: nessun voto d'insieme della giunta (l'argomento del «Pistoia Index»); nessun seed (un'edizione inventata su una giunta vera non è dimostrativa); prima edizione **dopo il 27/08/2026** (termine art. 14 — il Lavoro C diventa la prima riga di Trasparenza); la replica in demo dichiara «non ancora richiesta» (chiederla davvero è un'azione esterna, decisione a parte); un voto si pubblica **solo intero** (una riga senza fonte spegne il voto dell'intera materia).
+
+### Aggiunto
+- **`lib/pagella.ts`** — modulo neutro: le sei materie coi regimi, i **10 controlli** ancorati alle norme (7 Trasparenza, 3 Spesa), `votoPagella()` = 1 + 9 × quota (estremi provati: 0 superati = 1, tutti = 10), `esitiPubblicabili()` che scarta le righe senza URL (il modello è `Riga` di `lib/costo-amministrazione.ts` — una definizione sola), `votoMateria()` che restituisce `null` se anche un solo controllo manca, `EDIZIONI = []` col test-guardiano del seed, `SCADENZA_ART14`.
+- **Il capitolo 2 della metodologia** (`lib/metodologia.ts`, **v1.0 → v1.1**): otto regole (13–20) — chi si giudica · il voto si riconta · ogni punto è una riga con fonte · dove il voto non c'è · nessun voto d'insieme · la cadenza e il timbro · la replica in ogni stato · le stelle accostate — con l'«In breve» proprio, i numeri interpolati da `lib/pagella.ts` e la voce nel **registro append-only** (la v1.0 resta scritta, e un test lo prova).
+- **`/pagella` in forma A, senza edizione**: sei materie nei due regimi (le card a voto elencano i controlli che si conteranno, con la norma; le altre spiegano — mai un trattino muto), card «Prima edizione» col termine dell'art. 14, **diritto di replica in stato anteprima** («nessuna replica è stata richiesta»), riquadro **«La voce dei cittadini»** (medie e campioni veri da `getPanoramica`, badge «voti dimostrativi», mai dentro un voto), colophon `TimbroMetodologia`. Ancore `#metodologia` e `#fonti` conservate per `ChiPubblica`. Il titolo perde «mensile».
+- **`tests/unit/pagella.test.ts`** — 16 test: formula, voto solo intero, guardiano del seed, integrità del catalogo (ogni controllo cita D.Lgs/TUEL), date.
+
+### Modificato
+- **`/metodologia` a due capitoli** («Capitolo 1 · Le valutazioni dei servizi», «Capitolo 2 · La pagella della giunta»), titolo **«La metodologia dell'osservatorio»**, numerazione continua 1–20, registro in coda con i rimandi a valutazioni E pagella. Le regole passano da `h2` a `h3` sotto i capitoli.
+- `tests/unit/metodologia.test.ts` cambia **insieme alla versione** (il patto del cancello): v1.1, registro append-only provato, +7 test del capitolo 2 (224 → **247** unitari).
+- Due asserzioni E2E aggiornate con la modifica che le riguarda: il titolo di `/metodologia`, e il **timbro reso version-agnostic** (`metodologia v\d+\.\d+` — quale versione sia lo pinza l'unit test, così un bump non rompe un E2E che non lo prova).
+
 ## [0.24.0] — 2026-08-05 · Fase C, «Valutazioni dei servizi» — R-6, la metodologia. E il seme dimostrativo
 
 > La fase in cui le regole editoriali diventano un documento pubblico — e il

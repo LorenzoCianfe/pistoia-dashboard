@@ -779,6 +779,30 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   (212+12), **25/25** E2E, **`rotte` 56, 0 con problemi** (tre passate, `/metodologia`
   anche nell'anonima), shots nei due temi e `--simple --width=360`.
 
+- **0.25.0 — «La pagella della giunta»: la scoperta, la metodologia v1.1 e la forma A**
+  (2026-08-05). La scoperta prima del codice: **le sei materie non sono ugualmente
+  misurabili, e il voto onesto esiste solo dove qualcuno ha fissato il traguardo** — per
+  una giunta, la legge. Composizione di Lorenzo su facsimili in contesto e due giri di
+  domande: **M1** (sei materie a due regimi: voto solo dove il traguardo è normativo —
+  Trasparenza e Spesa; Promesse a fatti; Sicurezza · Decoro · Ascolto dichiarano che cosa
+  le accenderebbe) · **V1** (voto 1–10 **ricontabile**: mappatura pubblicata da controlli
+  con traguardo di legge) · **C1** (trimestrale — il titolo perde «mensile») · **R1**
+  (stelle dei cittadini accostate col campione, mai dentro un voto) · scala **1 + 9 ×
+  quota** · ampiezza piena. Piano e regole derivate (nessun voto d'insieme, nessun seed,
+  prima edizione dopo il **27/08/2026**, replica «non ancora richiesta», voto solo intero)
+  in `docs/piano-pagella.md`. **Il codice**: `lib/pagella.ts` (6 materie, 10 controlli
+  ancorati a D.Lgs 33/2013 · TUEL · D.Lgs 231/2002, `votoPagella()`, `votoMateria()` che
+  fa `null` se una sola riga manca, `esitiPubblicabili()` sul modello `Riga`,
+  `EDIZIONI = []` col test-guardiano); metodologia **v1.0 → v1.1** col **capitolo 2**
+  (regole 13–20, «In breve» proprio, numeri interpolati, registro append-only che
+  conserva la v1.0 — provato); `/metodologia` a due capitoli col titolo «La metodologia
+  dell'osservatorio»; `/pagella` riscritta in **forma A senza edizione** (controlli
+  elencati come promessa verificabile, card «Prima edizione», replica in stato anteprima,
+  «La voce dei cittadini» con badge dei voti dimostrativi, colophon, ancore conservate).
+  Due E2E aggiornate insieme alla modifica (titolo pagina; timbro version-agnostic).
+  **247** unitari (224 → 247), **25/25** E2E, **`rotte` 56, 0 con problemi** (tre
+  passate), shots nei due temi e `--simple --width=360`.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.

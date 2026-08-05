@@ -1,12 +1,23 @@
 import { describe, it, expect } from "vitest";
 import {
   IN_BREVE,
+  IN_BREVE_PAGELLA,
   REGISTRO_MODIFICHE,
   REGOLE,
+  REGOLE_PAGELLA,
   TIMBRO_METODOLOGIA,
   VERSIONE_METODOLOGIA,
   regolaMetodologia,
 } from "@/lib/metodologia";
+import {
+  MATERIE_PAGELLA,
+  SCADENZA_ART14,
+  VOTO_MAX,
+  VOTO_MIN,
+  controlliDi,
+  dataItaliana,
+  materieDi,
+} from "@/lib/pagella";
 import {
   CONSERVAZIONE_IP_GIORNI,
   FINESTRA_CONDIZIONE_GIORNI,
@@ -33,7 +44,7 @@ const regola = (id: string) => {
 
 describe("il documento: versione e registro", () => {
   it("ha una versione, e il timbro la stampa", () => {
-    expect(VERSIONE_METODOLOGIA).toBe("1.0");
+    expect(VERSIONE_METODOLOGIA).toBe("1.1");
     expect(TIMBRO_METODOLOGIA).toBe(`metodologia v${VERSIONE_METODOLOGIA}`);
   });
 
@@ -42,7 +53,13 @@ describe("il documento: versione e registro", () => {
     const testa = REGISTRO_MODIFICHE[0];
     expect(testa.versione).toBe(VERSIONE_METODOLOGIA);
     expect(testa.data).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(testa.cosa).toContain("nessuna soglia");
+    expect(testa.cosa).toContain("pagella");
+  });
+
+  it("il registro è append-only: la voce della v1.0 resta scritta", () => {
+    const v10 = REGISTRO_MODIFICHE.find((v) => v.versione === "1.0");
+    expect(v10).toBeDefined();
+    expect(v10!.cosa).toContain("nessuna soglia");
   });
 });
 
@@ -109,5 +126,58 @@ describe("il cancello: i numeri nei testi sono le costanti, non copie", () => {
     expect(testo).toContain(`da ${STELLE_MIN} a ${STELLE_MAX}`);
     expect(testo).toContain(`${FINESTRA_CONDIZIONE_GIORNI} giorni`);
     expect(testo).toContain(`${RICHIESTA_SILENZIO_GIORNI} giorni`);
+  });
+});
+
+describe("il capitolo 2: le otto regole della pagella (v1.1)", () => {
+  it("sono otto, coi quattro campi pieni e ancore uniche in TUTTO il documento", () => {
+    expect(REGOLE_PAGELLA).toHaveLength(8);
+    const tutte = [...REGOLE, ...REGOLE_PAGELLA].map((r) => r.id);
+    expect(new Set(tutte).size).toBe(tutte.length);
+    for (const r of REGOLE_PAGELLA) {
+      expect(r.id).toMatch(/^[a-z]+(-[a-z]+)*$/);
+      for (const campo of [r.titolo, r.regola, r.perche, r.verifica, r.nelCodice]) {
+        expect(campo.trim().length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("ogni riga «Nel codice» punta a un file, non a un'idea", () => {
+    for (const r of REGOLE_PAGELLA)
+      expect(r.nelCodice).toMatch(/src\/lib\/[a-z-]+\.ts/);
+  });
+
+  it("regolaMetodologia trova le regole di entrambi i capitoli", () => {
+    expect(regolaMetodologia("nessuna-soglia")).not.toBeNull();
+    expect(regolaMetodologia("il-voto-ricontabile")).not.toBeNull();
+  });
+});
+
+describe("il cancello del capitolo 2: i numeri sono le costanti della pagella", () => {
+  it("«chi si giudica» conta materie e regimi dal catalogo", () => {
+    const r = regola("chi-si-giudica").regola;
+    expect(r).toContain(`${MATERIE_PAGELLA.length}`);
+    expect(r).toContain(`${materieDi("voto").length} a voto`);
+    expect(r).toContain(`${materieDi("fatti").length} a fatti`);
+    expect(r).toContain(`${materieDi("senza-fonte").length} in attesa`);
+  });
+
+  it("«il voto si riconta» stampa la scala e i conteggi veri dei controlli", () => {
+    const r = regola("il-voto-ricontabile").regola;
+    expect(r).toContain(`da ${VOTO_MIN} a ${VOTO_MAX}`);
+    expect(r).toContain(`${controlliDi("trasparenza").length} controlli`);
+    expect(r).toContain(`${controlliDi("spesa").length} sulla Spesa`);
+  });
+
+  it("«la cadenza e il timbro» stampa il termine dell'art. 14 dalla costante", () => {
+    expect(regola("la-cadenza-trimestrale").regola).toContain(
+      dataItaliana(SCADENZA_ART14),
+    );
+  });
+
+  it("anche l'«in breve» della pagella segue le costanti", () => {
+    const testo = IN_BREVE_PAGELLA.join(" ");
+    expect(testo).toContain(`da ${VOTO_MIN} a ${VOTO_MAX}`);
+    expect(testo).toContain(dataItaliana(SCADENZA_ART14));
   });
 });

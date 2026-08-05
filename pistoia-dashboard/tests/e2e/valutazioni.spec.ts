@@ -71,7 +71,11 @@ test("la media compare dal primo voto, col campione dichiarato accanto", async (
   await expect(page.getByText("Un punto al mese")).toBeVisible();
 
   // Il timbro B2 in calce: la versione che ha calcolato ciò che si è letto.
-  await expect(page.getByRole("link", { name: "metodologia v1.0" })).toBeVisible();
+  // Quale versione sia lo pinza il test unitario: qui basta che il timbro
+  // esista e sia versionato, così un bump non rompe un E2E che non lo prova.
+  await expect(
+    page.getByRole("link", { name: /metodologia v\d+\.\d+/ }),
+  ).toBeVisible();
 });
 
 test("dalla panoramica si arriva alla scheda di un servizio", async ({ page }) => {

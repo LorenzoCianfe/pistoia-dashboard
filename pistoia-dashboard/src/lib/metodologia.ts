@@ -9,14 +9,29 @@ import {
 } from "@/lib/valutazioni";
 import { SILENZIO_POPUP_CHIUSO_GIORNI } from "@/lib/sollecitazioni";
 import { CAMPIONE_MINIMO_PER_GIUDIZIO } from "@/lib/citystats";
+import {
+  MATERIE_PAGELLA,
+  SCADENZA_ART14,
+  VOTO_MAX,
+  VOTO_MIN,
+  controlliDi,
+  dataItaliana,
+  materieDi,
+} from "@/lib/pagella";
 
 /**
- * La metodologia delle «Valutazioni dei servizi» — il documento, non la resa.
+ * La metodologia dell'osservatorio — il documento, non la resa.
  *
  * È il **documento versionato nel repository** che `ROADMAP.md` §6
  * (prerequisito 3) chiede: `/metodologia` lo rende, le altre pagine lo
  * timbrano. Modulo **neutro** come `lib/valutazioni.ts`: lo importano le
- * pagine, i test e domani la pagella.
+ * pagine, i test e la pagella.
+ *
+ * Dalla v1.1 il documento ha **due capitoli** con una versione sola: le
+ * «Valutazioni dei servizi» ({@link REGOLE}, regole 1–12) e «La pagella
+ * della giunta» ({@link REGOLE_PAGELLA}, regole 13–20). Una versione per
+ * capitolo permetterebbe a metà documento di cambiare in silenzio mentre
+ * l'altra metà fa da alibi.
  *
  * ## Il cancello (R-6, piano §7)
  *
@@ -37,7 +52,7 @@ import { CAMPIONE_MINIMO_PER_GIUDIZIO } from "@/lib/citystats";
 // La versione e il registro
 // ---------------------------------------------------------------------------
 
-export const VERSIONE_METODOLOGIA = "1.0";
+export const VERSIONE_METODOLOGIA = "1.1";
 
 /** Il timbro che le pagine stampano in calce: «metodologia v1.0». */
 export const TIMBRO_METODOLOGIA = `metodologia v${VERSIONE_METODOLOGIA}`;
@@ -51,6 +66,17 @@ export type VoceRegistro = {
 
 /** Dal più recente al più vecchio, come lo legge la pagina. */
 export const REGISTRO_MODIFICHE: VoceRegistro[] = [
+  {
+    versione: "1.1",
+    data: "2026-08-05",
+    cosa:
+      "Arriva il capitolo della pagella della giunta (regole 13–20): voto " +
+      "1–10 ricontabile solo dove il traguardo è fissato da una norma " +
+      "(1 + 9 × la quota dei controlli superati), sei materie a due regimi, " +
+      "cadenza trimestrale, replica sempre dichiarata, valutazioni dei " +
+      "cittadini accostate e mai sommate. Nessun voto è ancora calcolato: " +
+      "la prima edizione non prima del termine dell'art. 14 (27 agosto 2026).",
+  },
   {
     versione: "1.0",
     data: "2026-08-05",
@@ -314,8 +340,179 @@ export const REGOLE: RegolaMetodologia[] = [
   },
 ];
 
+// ---------------------------------------------------------------------------
+// Capitolo 2 — La pagella della giunta (v1.1, regole 13–20)
+// ---------------------------------------------------------------------------
+
+/**
+ * Le otto regole della pagella. Come il capitolo 1, **questo modulo le
+ * pubblica, non le inventa**: vivono in `lib/pagella.ts` e la riga
+ * `nelCodice` dice dove. La numerazione prosegue quella delle valutazioni
+ * perché «regola 14» resti un riferimento unico in tutto il documento.
+ */
+export const REGOLE_PAGELLA: RegolaMetodologia[] = [
+  {
+    id: "chi-si-giudica",
+    titolo: "Chi si giudica",
+    regola:
+      `La pagella giudica la giunta come organo collettivo: un voto su una ` +
+      `singola persona non esiste e non esisterà. Le materie sono ` +
+      `${MATERIE_PAGELLA.length}: ${materieDi("voto").length} a voto, ` +
+      `${materieDi("fatti").length} a fatti, ` +
+      `${materieDi("senza-fonte").length} in attesa di una fonte reale.`,
+    perche:
+      "Su una persona un voto sintetico comprime un record incompleto in un " +
+      "numero che sembra completo. Al livello della giunta la responsabilità " +
+      "è davvero collettiva — ed è l'unico livello a cui contare gli " +
+      "adempimenti ha senso, perché gli obblighi sono dell'organo.",
+    verifica:
+      "Nessuna pagina della piattaforma mostra un numero accanto a un nome " +
+      "proprio; la pagella non nomina persone.",
+    nelCodice: "MATERIE_PAGELLA · materieDi() · src/lib/pagella.ts",
+  },
+  {
+    id: "il-voto-ricontabile",
+    titolo: "Il voto si riconta",
+    regola:
+      `Il voto va da ${VOTO_MIN} a ${VOTO_MAX}: ${VOTO_MIN} più ` +
+      `${VOTO_MAX - VOTO_MIN} volte la quota dei controlli superati, ` +
+      `arrotondata. Ogni controllo ha un traguardo fissato da una norma, mai ` +
+      `dalla Redazione: ${controlliDi("trasparenza").length} controlli sulla ` +
+      `Trasparenza, ${controlliDi("spesa").length} sulla Spesa. Il ` +
+      `${VOTO_MAX} significa «tutto ciò che era dovuto», non «bravissimi».`,
+    perche:
+      "Una scala ha senso solo se il traguardo l'ha fissato qualcuno: è la " +
+      "ragione per cui la scala a tacche è stata tolta da /promesse. Qui il " +
+      "traguardo lo fissa la legge, e il voto resta un conteggio che " +
+      "chiunque può rifare a mano dalle righe in pagina.",
+    verifica:
+      "Ogni card a voto elenca i propri controlli: contare i superati e " +
+      "applicare la formula riproduce il voto stampato.",
+    nelCodice: "votoPagella() · CONTROLLI · controlliDi() · src/lib/pagella.ts",
+  },
+  {
+    id: "ogni-punto-una-riga",
+    titolo: "Ogni punto è una riga con fonte",
+    regola:
+      "Ogni controllo di una edizione porta una riga con l'affermazione, la " +
+      "fonte con URL e la data di consultazione. Se anche una sola riga di " +
+      "una materia manca o resta senza URL, il voto dell'intera materia non " +
+      "si pubblica — e la pagina dice quale riga manca.",
+    perche:
+      "Togliere dal denominatore i controlli senza prova gonfierebbe il voto " +
+      "in silenzio; un voto che non può mostrare tutte le sue righe non si " +
+      "riconta, e un voto che non si riconta è un'opinione.",
+    verifica:
+      "Ogni riga in pagina è un collegamento all'atto, con la data accanto; " +
+      "una materia senza voto dichiara il perché.",
+    nelCodice:
+      "esitiPubblicabili() · votoMateria() · src/lib/pagella.ts — il modello " +
+      "è Riga · src/lib/costo-amministrazione.ts",
+  },
+  {
+    id: "dove-il-voto-non-ce",
+    titolo: "Dove il voto non c'è",
+    regola:
+      "Dove nessuna norma fissa un traguardo, il voto non esiste: le " +
+      "Promesse si censiscono a fatti, ognuno con la propria fonte, e le " +
+      "materie senza una fonte reale dichiarano che cosa le accenderebbe. " +
+      "Un trattino muto non è ammesso.",
+    perche:
+      "Il conteggio è un fatto, la sintesi è un giudizio: inventare un " +
+      "traguardo pur di votare sarebbe una scelta editoriale nascosta dentro " +
+      "un'aritmetica. E un voto calcolato su dati dimostrativi " +
+      "riguarderebbe persone vere.",
+    verifica:
+      "Le card senza voto spiegano il perché in pagina, con le stesse parole " +
+      "di questo documento.",
+    nelCodice: "RegimeMateria · MATERIE_PAGELLA · src/lib/pagella.ts",
+  },
+  {
+    id: "nessun-voto-dinsieme",
+    titolo: "Nessun voto d'insieme",
+    regola:
+      "Le materie non si sommano: una media della giunta non esiste, così " +
+      "come non esiste un «voto della città» per le valutazioni (regola 1).",
+    perche:
+      "Sarebbe la prima cifra citata fuori contesto — l'argomento che ha " +
+      "rinominato il «Pistoia Index». Conteggi su traguardi diversi non sono " +
+      "commensurabili, e una media li dichiarerebbe tali.",
+    verifica: "Nessuna pagina mostra un numero unico della giunta.",
+    nelCodice:
+      "in src/lib/pagella.ts non esiste una funzione di somma fra materie: " +
+      "l'assenza è il cancello",
+  },
+  {
+    id: "la-cadenza-trimestrale",
+    titolo: "La cadenza e il timbro",
+    regola:
+      `Un'edizione a trimestre, con la data di consultazione di ogni fonte e ` +
+      `il timbro della versione che l'ha calcolata, scattato alla scrittura ` +
+      `e mai ricalcolato. La prima edizione non prima del ` +
+      `${dataItaliana(SCADENZA_ART14)}, il termine dell'art. 14 per la ` +
+      `giunta in carica.`,
+    perche:
+      "Le fonti vere si muovono al più per trimestre — l'indicatore dei " +
+      "pagamenti è trimestrale per legge — e un'edizione mensile " +
+      "racconterebbe undici volte «nessun atto nuovo». Prima del termine, " +
+      "un'assenza sul portale è ancora dentro la legge: giudicarla sarebbe " +
+      "un'accusa tratta da un dato mancante. E senza timbro una pagella " +
+      "vecchia diventa incontestabile, perché nessuno sa più con quali " +
+      "regole fu prodotta.",
+    verifica:
+      "L'archivio delle edizioni, datate e timbrate; il colophon in calce " +
+      "alla pagina.",
+    nelCodice:
+      "EDIZIONI · EdizionePagella.versioneMetodologia · SCADENZA_ART14 · " +
+      "src/lib/pagella.ts",
+  },
+  {
+    id: "la-replica",
+    titolo: "La replica, in ogni stato",
+    regola:
+      "Ogni edizione ospita la replica della giunta allo stesso corpo del " +
+      "giudizio, mai dietro un «vedi di più». Finché una replica non è " +
+      "stata richiesta, la pagina lo dichiara; quando è richiesta, restano " +
+      "scritte la data della richiesta e l'eventuale silenzio.",
+    perche:
+      "È la differenza fra un osservatorio e un tribunale senza difesa. Un " +
+      "silenzio dichiarato è un'informazione; un silenzio nascosto sembra " +
+      "assenso.",
+    verifica:
+      "Il blocco della replica esiste in ogni stato, anche quando dice solo " +
+      "che nessuna replica è stata ancora richiesta.",
+    nelCodice:
+      "EdizionePagella.replicaRichiestaIl · replicaRicevutaIl · " +
+      "src/lib/pagella.ts",
+  },
+  {
+    id: "le-valutazioni-accostate",
+    titolo: "Le stelle dei cittadini, accostate",
+    regola:
+      "Le valutazioni dei cittadini compaiono sulla pagella solo come " +
+      "contesto accostato, col loro campione dichiarato: non entrano in " +
+      "nessun voto, con nessun peso.",
+    perche:
+      "Le stelle sono un umore sui servizi, la pagella conta adempimenti " +
+      "della giunta: sommarli affermerebbe che sono commensurabili, e " +
+      "conterebbe due volte chi ha già giudicato. Si guardano insieme — " +
+      "l'accostamento è il prodotto — ma non si sommano.",
+    verifica:
+      "Il riquadro «La voce dei cittadini» porta medie e campioni e nessun " +
+      "numero delle materie; i voti delle materie non cambiano al cambiare " +
+      "delle stelle.",
+    nelCodice:
+      "votoMateria() non legge le valutazioni · src/lib/pagella.ts — il " +
+      "riquadro legge getPanoramica() · src/lib/data/valutazioni.ts",
+  },
+];
+
 export function regolaMetodologia(id: string): RegolaMetodologia | null {
-  return REGOLE.find((r) => r.id === id) ?? null;
+  return (
+    REGOLE.find((r) => r.id === id) ??
+    REGOLE_PAGELLA.find((r) => r.id === id) ??
+    null
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -333,4 +530,12 @@ export const IN_BREVE: string[] = [
   "Contano anche i voti non confermati: quanti e da dove, è dichiarato invece che filtrato.",
   `La piattaforma chiede con misura: mai più di una richiesta ogni ${RICHIESTA_SILENZIO_GIORNI} giorni, su tutti i canali insieme.`,
   "Rimuove solo la Redazione, con firma collettiva e registro pubblico; il Comune risponde, non cancella.",
+];
+
+/** Il sommario del capitolo 2, stessa forma: interpolato, mai ricopiato. */
+export const IN_BREVE_PAGELLA: string[] = [
+  "La pagella giudica la giunta come organo collettivo, mai una persona; le materie non si sommano in un voto unico.",
+  `Il voto va da ${VOTO_MIN} a ${VOTO_MAX} ed è un conteggio ricontabile: ${VOTO_MIN} più ${VOTO_MAX - VOTO_MIN} volte la quota dei controlli superati, ognuno con un traguardo fissato da una norma.`,
+  "Ogni punto è una riga con fonte e data di consultazione; se una riga manca, il voto dell'intera materia non esce.",
+  `Un'edizione a trimestre, timbrata con la versione che l'ha calcolata; la prima non prima del ${dataItaliana(SCADENZA_ART14)}. Le stelle dei cittadini restano accostate, mai sommate.`,
 ];

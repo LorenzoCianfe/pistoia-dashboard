@@ -6,7 +6,7 @@
 >
 > **Leggilo per intero all'inizio di ogni sessione, prima di toccare codice.**
 >
-> Aggiornato: 2026-08-03 (Fase C)
+> Aggiornato: 2026-08-05 (Fase C)
 
 ---
 
@@ -19,6 +19,7 @@ Interfaccia e documentazione **in italiano**. Dati dimostrativi, autenticazione
 reale.
 
 L'app vive in `pistoia-dashboard/`. La documentazione vive nella radice.
+**Il progetto è deployato su Coolify**, in rete locale: vedi §8.
 
 ---
 
@@ -60,7 +61,7 @@ L'app vive in `pistoia-dashboard/`. La documentazione vive nella radice.
 
 ## 3. Design system — le regole che si sbagliano più spesso
 
-> §3 raccoglie **diciannove trappole già pagate**. Sono raggruppate per ondata
+> §3 raccoglie **venti trappole già pagate**. Sono raggruppate per ondata
 > solo perché è così che sono emerse: leggile tutte, valgono tutte ancora.
 
 **Prima di tutto: Astryx è la sorgente dei TOKEN, non lo strato di primitive.**
@@ -313,6 +314,28 @@ diagnosi sbagliate con dati apparentemente solidi.
    lo contendono. `side-nav.tsx` calcola quindi **una sola** voce attiva in
    tutta la barra.
 
+### Una trappola della Fase C (la pagella, 2026-08-05)
+
+1. **Il JSX di questo Next può mangiare lo spazio fra un'espressione e il
+   testo che segue.** `da {VOTO_MIN} a {VOTO_MAX} ed è un conteggio…` è
+   arrivato a schermo come **«da 1 a 10ed è»**: lo spazio dopo `{VOTO_MAX}`
+   c'era nel sorgente (U+0020 verificato byte per byte), typecheck e lint
+   verdi, e la stessa pagina rendeva bene giunzioni identiche a poche righe
+   di distanza (`v{VERSIONE} con registro`, `{totale} hanno già voti`) —
+   quindi **non è prevedibile dal pattern e non ci si può fidare della
+   propria memoria di come funziona JSX**. La regola: al confine fra
+   un'espressione e il testo, lo spazio si scrive esplicito — `{" "}` — che è
+   la convenzione già usata in tutto il repository. La verifica che l'ha
+   trovato è quella di §5 («l'hai guardata»); la conferma rapida sul DOM è
+   una scansione delle fusioni cifra-lettera:
+   `document.body.innerText.match(/\d[a-zà-ù]/g)`.
+
+   Nota di contorno vista nella stessa sessione: nel DOM del dev server ogni
+   rotta può avere una **seconda copia nascosta e `inert`** del proprio
+   contenuto (fuori da `<main>`, framework, invisibile e fuori
+   dall'accessibilità). Un controllo che conta i nodi (`querySelectorAll`)
+   senza filtrare per visibilità conta doppio e sembra un bug che non c'è.
+
 ---
 
 ## 4. Comandi
@@ -541,3 +564,46 @@ gestisce già entrambe le cose.
   Ridurre l'ambito è una decisione sua, non tua.
 - Le decisioni già prese non si rimettono in discussione: sono in `DISCOVERY.md`
   e in `DESIGN.md`.
+
+---
+
+## 8. Deploy
+
+Il progetto è **deployato su Coolify**, un'istanza self-hosted in rete locale —
+non un hosting pubblico. Indirizzo: `http://pistoia.192.168.50.173.sslip.io`.
+
+Il deploy parte dal branch `main` della repo pubblica su GitHub e costruisce il
+`Dockerfile` che sta in `pistoia-dashboard/`. **Non c'è auto-deploy sul push**:
+il server ha un indirizzo privato e i webhook di GitHub non lo raggiungono. Si
+lancia a mano, dall'interfaccia di Coolify o via API.
+
+L'indirizzo incorpora l'IP del server (`sslip.io` risolve qualunque nome della
+forma `<nome>.<ip>.sslip.io`). Comodo perché non richiede alcuna configurazione
+DNS, ma **se la macchina cambia indirizzo va riscritto l'FQDN** dell'applicazione
+in Coolify, altrimenti il sito diventa irraggiungibile.
+
+### Quattro vincoli del container, da non rompere
+
+1. **Immagine Debian, mai Alpine.** `better-sqlite3` e `@node-rs/argon2`
+   distribuiscono binari precompilati solo per glibc. Su musl andrebbero
+   ricompilati da sorgente, con toolchain e tempi di build molto maggiori.
+2. **Le devDependencies restano installate.** `next build` le richiede e il seed
+   gira con `tsx`: potarle rompe il build o il primo avvio.
+3. **`prisma migrate deploy`, mai `migrate dev`.** Lo script `setup` usa la
+   variante di sviluppo, che può generare migrazioni nuove o proporre un reset
+   del database — in produzione è esattamente ciò che non si vuole.
+4. **Il database vive su un volume persistente**, montato in `/data`. Senza,
+   utenti, sessioni e voti sparirebbero a ogni redeploy. Il seed dimostrativo
+   gira una volta sola: `docker-entrypoint.sh` lo traccia con `/data/.seeded`.
+
+### Variabili d'ambiente
+
+Vivono in Coolify, non nel repository: `DATABASE_URL`, `SESSION_SECRET`,
+`DEMO_MODE`, `SERVER_ACTIONS_ALLOWED_ORIGINS`, `NODE_ENV`, `PORT`, `TZ`.
+
+`SERVER_ACTIONS_ALLOWED_ORIGINS` merita attenzione particolare: dietro il
+reverse proxy l'`Origin` che Next vede non coincide con il dominio pubblico, e
+senza quella variabile allineata al dominio del deploy **login e voti falliscono**
+con errori che non spiegano la causa. È la trappola più costosa di questo
+setup — se qualcosa smette di funzionare dopo un cambio di dominio, guarda lì
+per prima cosa.
