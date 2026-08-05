@@ -21,3 +21,10 @@ refs/
 # la configurazione vive in pistoia-dashboard/ ed è da lì che va eseguita.
 /test-results/
 /playwright-report/
+
+# Schermate delle singole ondate: sono artefatti rigenerabili con `npm run shots`
+# e pesavano 39 MB su 43 di repository. Restano su disco e nella storia git, ma
+# fuori dai commit nuovi: i deploy usano `git clone --depth=1` e scaricavano
+# quei megabyte a ogni build per costruire un'app che ne occupa quattro.
+/screenshots/ondata6/
+/screenshots/ondata6-semplice/
