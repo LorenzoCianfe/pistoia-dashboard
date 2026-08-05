@@ -622,27 +622,42 @@ Il deploy parte dal branch `main` della repo pubblica su GitHub e costruisce il
 il server ha un indirizzo privato e i webhook di GitHub non lo raggiungono. Si
 lancia a mano, dall'interfaccia di Coolify o via API.
 
-> ⚠️ **Un agente non può lanciarlo** (verificato il 2026-08-05). Le tre vie e
-> perché sono chiuse: il **pulsante Deploy** vuole il browser; l'**API REST**
-> vuole un token Bearer che **non è scritto da nessuna parte** — esiste, ha
-> permessi amministrativi, ed è una questione aperta nella documentazione della
-> VM (`~/Documents/Virtual Machines/Ubuntu 64-bit/documentazione/05-sicurezza.md`);
-> **SSH** vuole una chiave che sulla macchina di sviluppo **non c'è**
-> (`~/.ssh/` ha solo `known_hosts`, e `ssh lorenzo@192.168.50.173` risponde
-> *Permission denied*). Quindi: **il deploy lo preme Lorenzo**, e l'agente si
-> ferma a lasciare `main` pronto.
+> **Un agente PUÒ lanciarlo, via API** (2026-08-05). Gli accessi non stanno in
+> questo repository ma in
+> `~/Documents/Virtual Machines/Ubuntu 64-bit/documentazione/07-accessi.md`, che
+> dice **dove** sono le credenziali senza contenerne i valori. Il wrapper
+> `C:\Users\loren\.homelab\cf.sh` legge il token dal file accanto a sé e **non
+> lo stampa mai**, quindi non finisce nei registri né nella cronologia: si usa
+> quello, mai `curl` a mano con l'`Authorization` in chiaro.
 >
-> **Come si verifica che sia andato**, senza aprire nulla — la tavolozza è
-> cambiata il 2026-08-05, quindi fa da marcatore:
+> ```bash
+> sh "C:\Users\loren\.homelab\cf.sh" GET /applications
+> sh "C:\Users\loren\.homelab\cf.sh" GET "/deploy?uuid=w148lovopnak9eshxuy13b1i&force=false"
+> sh "C:\Users\loren\.homelab\cf.sh" GET "/deployments/<deployment_uuid>"   # finché non dà "finished"
+> ```
+>
+> `w148lovopnak9eshxuy13b1i` è l'UUID della Dashboard (gli altri sono in
+> `02-applicazioni.md`). Esiste anche `ssh homeserver`, con la chiave dedicata
+> in `~/.ssh/vm-coolify`.
+>
+> ⚠️ **Un deploy non è finito quando risponde 200.** Il 2026-08-05 la demo
+> rispondeva 200 e serviva l'HTML giusto, ma **nessun browser riusciva a
+> montarla**: `upgrade-insecure-requests` nella CSP promuoveva ogni script a
+> `https://` su un sito servito in HTTP, e fallivano tutti con
+> `ERR_CERT_AUTHORITY_INVALID`. Difetto **preesistente dalla Fase 0**, mai visto
+> da nessun cancello perché `rotte` e `shots` girano contro lo sviluppo.
+>
+> Dopo ogni deploy, quindi, **due controlli**: il marcatore della tavolozza —
 >
 > ```bash
 > B=http://pistoia.192.168.50.173.sslip.io
 > for c in $(curl -s $B/login | grep -oE '/_next/static/[^"]+\.css' | sort -u); do curl -s $B$c | grep -oE '0e9f92|0a756b'; done | sort | uniq -c
 > ```
 >
-> `0a756b` = la versione nuova è viva. `0e9f92` = sta ancora girando quella
-> vecchia. (Al 2026-08-05, con `f6b44c8` su `main` e il deploy non ancora
-> lanciato, risponde `0e9f92`.)
+> (`0a756b` = versione nuova viva) — **e l'apertura in un browser vero**, dove
+> `document.querySelector('main').innerText.length` deve dare migliaia di
+> caratteri. Se dà ~183, la pagina è ferma sul proprio «Caricamento in corso» e
+> il deploy **non** è a posto.
 
 L'indirizzo incorpora l'IP del server (`sslip.io` risolve qualunque nome della
 forma `<nome>.<ip>.sslip.io`). Comodo perché non richiede alcuna configurazione

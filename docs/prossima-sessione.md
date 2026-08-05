@@ -28,7 +28,7 @@ Leggi prima, in quest'ordine:
 
 ## Stato
 
-`main`, commit **`f6b44c8`**, pushato su GitHub.
+`main`, commit **`d93eaf0`**, pushato su GitHub **e deployato su Coolify**.
 
 - typecheck · lint · **247 unit** · **`rotte` 56, 0 con problemi** (tre passate)
   · **41/41 E2E** (25 di merito + **16 di accessibilità**) · shots nei due temi
@@ -39,16 +39,31 @@ Leggi prima, in quest'ordine:
   Giulia (`cittadino@`) e Lorenzo (`lorenzo@`) di nuovo armati, Marco in
   silenzio.
 
-⚠️ **`f6b44c8` NON è ancora in produzione.** Il deploy su Coolify lo preme
-Lorenzo (l'agente non può: vedi AGENTS §8). Verifica se è andato:
+**La produzione è allineata e — per la prima volta — si monta davvero in un
+browser.** Verificato: `/metodologia` rende 17.140 caratteri, `/valutazioni`
+1.826, zero risorse chieste in https, zero script senza nonce, `'strict-dynamic'`
+intatto in produzione.
+
+Il deploy si lancia **via API** (AGENTS §8 ha i dettagli): il wrapper
+`C:\Users\loren\.homelab\cf.sh` legge il token dal file accanto a sé e non lo
+stampa mai; l'UUID dell'applicazione è `w148lovopnak9eshxuy13b1i`.
+
+```bash
+sh "C:\Users\loren\.homelab\cf.sh" GET "/deploy?uuid=w148lovopnak9eshxuy13b1i&force=false"
+sh "C:\Users\loren\.homelab\cf.sh" GET "/deployments/<deployment_uuid>"   # finché non dà "finished"
+```
+
+E **dopo ogni deploy, guarda che la pagina si MONTI**, non solo che risponda —
+è la lezione del 2026-08-05:
 
 ```bash
 B=http://pistoia.192.168.50.173.sslip.io
 for c in $(curl -s $B/login | grep -oE '/_next/static/[^"]+\.css' | sort -u); do curl -s $B$c | grep -oE '0e9f92|0a756b'; done | sort | uniq -c
 ```
 
-`0a756b` = versione nuova viva · `0e9f92` = gira ancora la vecchia (era così il
-2026-08-05).
+`0a756b` = tavolozza nuova viva. Ma il 200 e il CSS giusto **non bastano**:
+apri `/metodologia` in un browser vero e pretendi che `main` abbia migliaia di
+caratteri, non 183.
 
 ## Che cosa è successo nella sessione precedente (C-2)
 
@@ -114,6 +129,18 @@ Non sono «da rivedere»: ognuno ha un controllo che dice quando è ora.
    (è il punto 4 del Lavoro D).
 5. **`@lhci/cli` è pinnato a `0.15.1`** in due posti (`package.json` e
    `.github/workflows/ci.yml`): se si aggiorna, vanno cambiati insieme.
+6. **Rimettere `upgrade-insecure-requests` nella CSP** quando il deploy avrà un
+   certificato valido. Tolta il 2026-08-05 da `src/proxy.ts` perché su un sito
+   servito in **HTTP** promuoveva ogni script a `https://`, lo faceva fallire
+   con `ERR_CERT_AUTHORITY_INVALID` e **apriva la demo col corpo vuoto** —
+   difetto preesistente dalla Fase 0, non una regressione, e nessun cancello
+   poteva vederlo. Verifica che sia ora: `curl -sI https://<dominio>/` risponde
+   200 con certificato valido.
+7. **Manca un cancello che guardi se la PRODUZIONE si monta.** `rotte` e `shots`
+   girano solo contro lo sviluppo: è per questo che una demo cieca è rimasta
+   cieca senza che nessuno lo sapesse. Il minimo utile: dopo ogni deploy,
+   caricare una pagina pubblica in un browser vero e pretendere che `main` abbia
+   più di N caratteri.
 
 ## Problemi noti, da non perdere
 
