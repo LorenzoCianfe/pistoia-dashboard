@@ -29,9 +29,11 @@ test("la scheda si legge senza account e il modulo degrada a invito", async ({
   await expect(page).toHaveURL(/\/valutazioni\/pulizia$/);
   await expect(page.getByRole("heading", { name: "Pulizia" })).toBeVisible();
 
-  // La lettura è INTERA: media (o attesa), colonna dura e registro delle
-  // rimozioni — le tre cose che rendono la funzione difendibile in pubblico.
-  await expect(page.getByText("Nessun voto, ancora")).toBeVisible();
+  // La lettura è INTERA e col seed dimostrativo include la media VERA (3,3,
+  // distribuzione fissa), il suo campione, la colonna dura e il registro delle
+  // rimozioni — le cose che rendono la funzione difendibile in pubblico.
+  await expect(page.getByText("3,3").first()).toBeVisible();
+  await expect(page.getByText(/34 valutazioni negli ultimi tre mesi/)).toBeVisible();
   await expect(page.getByText("Cosa dicono le segnalazioni")).toBeVisible();
   await expect(page.getByText("Registro delle rimozioni")).toBeVisible();
 
@@ -44,6 +46,33 @@ test("la scheda si legge senza account e il modulo degrada a invito", async ({
     "href",
     "/login?next=%2Fvalutazioni%2Fpulizia%23vota",
   );
+
+  // R-6: l'invito anonimo ha l'approdo che a R-5 mancava.
+  const comeFunziona = page.getByRole("link", { name: "Come funziona" });
+  await expect(comeFunziona).toBeVisible();
+  await expect(comeFunziona).toHaveAttribute("href", "/metodologia");
+});
+
+test("/metodologia si legge senza account, con la versione e le regole", async ({
+  page,
+}) => {
+  await page.goto("/metodologia");
+
+  // Atterraggio vero, come per /valutazioni: un redirect al login sarebbe
+  // una spiegazione a porte chiuse (forma C1 del 2026-08-05).
+  await expect(page).toHaveURL(/\/metodologia$/);
+  await expect(
+    page.getByRole("heading", { name: "Metodologia delle valutazioni" }),
+  ).toBeVisible();
+
+  // La versione è il timbro che le altre pagine stampano; la regola 3 è la
+  // decisione che ha sciolto la soglia provvisoria; il registro è il posto
+  // dove ogni cambiamento resta scritto.
+  await expect(page.getByText(/Versione v1\.0/)).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /Nessuna soglia minima/ }),
+  ).toBeVisible();
+  await expect(page.getByText("Registro delle modifiche")).toBeVisible();
 });
 
 test("il resto del muro non si è mosso: /segnalazioni senza sessione va al login", async ({

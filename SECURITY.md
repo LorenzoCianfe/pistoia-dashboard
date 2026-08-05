@@ -139,6 +139,12 @@ nell'albero di chi non è staff, e il voto senza account resta confinato a
 `/v/[codice]`. La passata anonima di `rotte.mjs` prova l'atterraggio; un E2E
 prova che il resto del muro non si è mosso.
 
+**Da R-6 è pubblica anche `/metodologia`** (forma C1 del 2026-08-05, coerente
+con W1: le schede che chiunque legge citano quelle regole). Solo lettura per
+costruzione — la pagina non ha azioni né form: rende `lib/metodologia.ts`, che
+non tocca il database. Stesso gruppo `(pubblico)`, stessa passata anonima con
+atterraggio preteso, stesso E2E di regime.
+
 **La verifica è simulata** (nessuna integrazione SPID/CIE) ed è **etichettata
 come tale nella UI**. Su una piattaforma che parla di trasparenza, fingere una
 verifica reale sarebbe la cosa peggiore da fare.

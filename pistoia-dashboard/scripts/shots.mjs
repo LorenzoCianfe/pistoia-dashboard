@@ -129,6 +129,9 @@ const PAGES = [
   // certificherebbe metà: si fotografano in tutti e due i regimi.
   { name: "valutazioni-anonima", url: "/valutazioni", auth: false },
   { name: "valutazione-servizio-anonima", url: "/valutazioni/pulizia", auth: false },
+  // R-6: la metodologia, nei due regimi come le schede che la citano.
+  { name: "metodologia", url: "/metodologia" },
+  { name: "metodologia-anonima", url: "/metodologia", auth: false },
   // R-3: la pagina del QR, pubblica e senza navigazione, aperta col codice
   // deterministico del seed; e l'atterraggio della mail nello stato «link non
   // più valido» — l'unico fotografabile senza un token vero. Gli stati con un

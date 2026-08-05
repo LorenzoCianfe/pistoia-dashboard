@@ -746,6 +746,39 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   nei due temi e a 360px puliti; pop-up e campagna provati anche dal vivo (voto retrodatato
   nel solo db di sviluppo, poi riseminato).
 
+- **0.24.0 — «Valutazioni dei servizi», R-6: la metodologia. E il seme dimostrativo**
+  (2026-08-05). La composizione di Lorenzo su mockup in contesto e due giri di domande:
+  **A1+A3+A4** (documento a dodici regole — la regola · il perché · la verifica · la riga
+  «Nel codice» — col sommario «In breve») · **C1** (pubblica, gruppo `(pubblico)`: le schede
+  che chiunque legge citano quelle regole) · **nessuna soglia** (la quinta opzione di
+  Lorenzo alla domanda sul valore: vedi sotto) · **B2** (timbro da colophon, mai in
+  testata). **Il cancello della fase**: i testi di `lib/metodologia.ts` interpolano le
+  costanti di dominio — `FINESTRA_CONDIZIONE_GIORNI`, `RICHIESTA_SILENZIO_GIORNI`,
+  `SILENZIO_POPUP_CHIUSO_GIORNI`, `CONSERVAZIONE_IP_GIORNI`, `CAMPIONE_MINIMO_PER_GIUDIZIO`,
+  `STELLE_MIN/MAX`, il catalogo — e `tests/unit/metodologia.test.ts` prova costante per
+  costante che cambiare un valore cambia pagina E documento. **La soglia è sciolta**:
+  `SOGLIA_PUBBLICAZIONE_VOTO` (20, provvisoria) e il flag `SOGLIA_PROVVISORIA` rimossi;
+  `media()` pubblica dal primo voto (il tipo `Media` perde `mancanti` e `pubblicabile`),
+  `quartiereSbloccato()` si accende col primo voto, e la decisione vale OVUNQUE la soglia
+  mordeva (andamento e quartiere compresi, senza eccezioni). Il campione minimo della
+  mediana (5, `citystats`) resta, con un test-guardiano nuovo sulla coesistenza. Superfici:
+  l'attesa della scheda esiste solo a zero voti, la panoramica perde «N su 20», il digest
+  perde il ramo «nessuna casella è sopra la soglia»; `TimbroMetodologia` («metodologia
+  v1.0» + firma della Redazione) in calce a scheda, panoramica e digest, vivo anche in
+  stampa; «Come funziona» sull'invito anonimo. **Il seme** (decisione §8.7, numeri
+  approvati sul tabellone del giro): 72 voti a distribuzioni fisse (mai `vary()`) su 24
+  persone inventate + 3 account demo — la gradazione dei campioni al posto del vecchio
+  «sopra/sotto soglia»: Pulizia 34 = 3,3 (andamento 3,2 → 3,4 → 3,3 su bucket ancorati al
+  calendario con `meseFa`), Verde 3,9, Sicurezza 2,8, Illuminazione 2,8, Anagrafe 4,1,
+  Tributi 2,5, Prenotazioni 4,3, **Trasporti e tre sportelli a zero**; Giulia e Lorenzo
+  votano ≥30 giorni fa (campagna e pop-up armati oggi), Marco 2 giorni fa (scaglionamento
+  dal vivo); 3 `Sollecitazione` seguite, nessun promemoria (solo su richiesta), 2 codici QR
+  nuovi (`pt-pulizia-01/02`), quadro del Comune su Pulizia · luglio (account generico,
+  testo senza fatti inventati). Le due E2E dell'assenza ripuntate su
+  `/valutazioni/trasporti`; la scheda pubblica prova la media vera. **224** unitari
+  (212+12), **25/25** E2E, **`rotte` 56, 0 con problemi** (tre passate, `/metodologia`
+  anche nell'anonima), shots nei due temi e `--simple --width=360`.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.

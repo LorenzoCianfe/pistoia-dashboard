@@ -3,7 +3,8 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { hash } from "@node-rs/argon2";
 import { GIUNTA } from "../src/lib/giunta";
-import { SERVIZI } from "../src/lib/valutazioni";
+import { SERVIZI, periodoDi } from "../src/lib/valutazioni";
+import { TIPO_QUADRO } from "../src/lib/redazione";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
@@ -638,27 +639,43 @@ async function main() {
 
   // --- Valutazioni dei servizi ---------------------------------------------
   //
-  // Le undici caselle, e **nessuna valutazione**. Non è un lavoro lasciato a
-  // metà: è lo stato reale del giorno uno, ed è la scelta di Lorenzo del
-  // 2026-08-03 contro l'alternativa di tenere quattro medie dimostrative.
+  // UN MESE DIMOSTRATIVO, DICHIARATO (decisione di Lorenzo del 2026-08-04,
+  // piano §8.7; i numeri sono passati dal giro di forma del 2026-08-05).
+  // Supera la scelta del 2026-08-03 di tenere il seed a zero: allora quattro
+  // medie inventate sarebbero state l'unico contenuto («un giudizio attribuito
+  // ai cittadini su un ufficio vero», AGENTS §2); oggi la demo deve mostrare
+  // regole che ESISTONO — la media dal primo voto col campione accanto,
+  // l'andamento, la campagna, il pop-up — e un tabellone eternamente vuoto
+  // non le mostra.
   //
-  // Qui c'era `ServiceReview` con «Anagrafe 4,6 su 1.280 recensioni». Un voto
-  // inventato su un servizio pubblico non è un dato dimostrativo come una buca
-  // in via Roma: è un giudizio attribuito ai cittadini su un ufficio vero. E
-  // contamina all'indietro — chi scopre che il 4,6 era finto non crede più
-  // nemmeno al 3,1 vero che arriva dopo (`AGENTS.md` §2).
-  //
-  // Ne discende un vincolo sulle pagine, non un'attenuante: `/valutazioni` deve
-  // reggere a zero valutazioni, perché è così che la vedrà chiunque il primo
-  // giorno. La colonna dura viene dalle segnalazioni, che sono già seminate.
+  // I vincoli che rendono il seme difendibile:
+  // - PERSONE INVENTATE, sempre: nessun votante è una persona reale; i nomi
+  //   si rendono «Nome C.» o «Anonimo». L'unica entità vera è l'account
+  //   generico «Comune di Pistoia» sul quadro — un ente, mai una persona.
+  // - DISTRIBUZIONI FISSE: niente `vary()` qui. Le medie sono identiche a
+  //   ogni risemina: Pulizia 3,3 (12·15·7 voti sui tre mesi: 3,2 → 3,4 →
+  //   3,3), Verde 3,9, Sicurezza 2,8, Illuminazione 2,8, Anagrafe 4,1,
+  //   Tributi 2,5, Prenotazioni 4,3.
+  // - LO ZERO RESTA: Trasporti e tre sportelli (edilizia, permessi ZTL,
+  //   protocollo) non hanno voti. L'assenza non si decora, e le E2E provano
+  //   l'assenza proprio su /valutazioni/trasporti.
+  // - LE DATE ARMANO LA DEMO: Giulia e Lorenzo hanno votato ≥30 giorni fa —
+  //   OGGI sollecitabili: card della campagna in home e pop-up armati sui
+  //   loro account. Marco ha votato 2 giorni fa: finestra chiusa, ed è lo
+  //   scaglionamento voluto del contatore visto dal vivo.
+  // - I bucket mensili sono ancorati al calendario (`meseFa`), così
+  //   l'andamento è stabile fra risemine; solo i voti-demo degli account e
+  //   quelli freschissimi usano `daysAgo`, perché le loro garanzie (finestra
+  //   aperta/chiusa) contano più del mese in cui cadono.
   await prisma.servizio.createMany({
     data: SERVIZI.map((s) => ({ id: s.id })),
   });
 
-  // I codici QR sono infrastruttura, non giudizi: righe legittime nel seed
-  // anche dove le valutazioni restano a zero. I `codice` sono deterministici
-  // di proposito — `scripts/rotte.mjs` e `scripts/shots.mjs` aprono
-  // `/v/pt-anagrafe-01` per indirizzo, e un id casuale li accecherebbe.
+  // I codici QR sono infrastruttura, non giudizi. I `codice` sono
+  // deterministici di proposito — `scripts/rotte.mjs` e `scripts/shots.mjs`
+  // aprono `/v/pt-anagrafe-01` per indirizzo, e un id casuale li accecherebbe.
+  // I due della pulizia stanno nei luoghi che compaiono come `qrLuogo` dei
+  // voti seminati «da QR in loco».
   await prisma.codiceQr.createMany({
     data: [
       {
@@ -668,7 +685,269 @@ async function main() {
       },
       { codice: "pt-tributi-01", servizioId: "tributi", luogo: "Ufficio tributi" },
       { codice: "pt-verde-01", servizioId: "verde", luogo: "Giardini pubblici" },
+      { codice: "pt-pulizia-01", servizioId: "pulizia", luogo: "Parco di Monteoliveto" },
+      { codice: "pt-pulizia-02", servizioId: "pulizia", luogo: "Biblioteca San Giorgio" },
     ],
+  });
+
+  // Il giorno `g` del mese corrente meno `mesi`, alle 10:00 UTC: i bucket
+  // dell'andamento restano gli stessi qualunque giorno giri la risemina.
+  const oggiUtc = new Date();
+  const meseFa = (mesi: number, giorno: number) =>
+    new Date(
+      Date.UTC(oggiUtc.getUTCFullYear(), oggiUtc.getUTCMonth() - mesi, giorno, 10, 0),
+    );
+
+  // I votanti inventati. `nome: null` si rende «Anonimo»; gli altri, con
+  // `mostraNomeIntero` mai spuntato, si rendono «Nome C.» — il default vero.
+  const VOTANTI: { nome: string | null; email: string; quartiere: string | null }[] = [
+    { nome: "Franca Tesi", email: "franca.tesi@esempio.it", quartiere: "centro" },
+    { nome: "Paolo Bardini", email: "paolo.bardini@esempio.it", quartiere: "le-fornaci" },
+    { nome: "Elena Corsini", email: "elena.corsini@esempio.it", quartiere: "sant-agostino" },
+    { nome: null, email: "riservato.uno@esempio.it", quartiere: "bottegone" },
+    { nome: "Duccio Melani", email: "duccio.melani@esempio.it", quartiere: "centro" },
+    { nome: "Rita Vannini", email: "rita.vannini@esempio.it", quartiere: "vergine" },
+    { nome: "Sandro Baldi", email: "sandro.baldi@esempio.it", quartiere: null },
+    { nome: "Lucia Ferri", email: "lucia.ferri@esempio.it", quartiere: "pontenuovo" },
+    { nome: null, email: "riservato.due@esempio.it", quartiere: "centro" },
+    { nome: "Guido Nannini", email: "guido.nannini@esempio.it", quartiere: "bonelle" },
+    { nome: "Marta Chiti", email: "marta.chiti@esempio.it", quartiere: "le-fornaci" },
+    { nome: "Bruno Salvi", email: "bruno.salvi@esempio.it", quartiere: "candeglia" },
+    { nome: "Ada Petri", email: "ada.petri@esempio.it", quartiere: "centro" },
+    { nome: null, email: "riservato.tre@esempio.it", quartiere: null },
+    { nome: "Carlo Dami", email: "carlo.dami@esempio.it", quartiere: "ramini" },
+    { nome: "Nora Bianchini", email: "nora.bianchini@esempio.it", quartiere: "sant-agostino" },
+    { nome: "Piero Fagni", email: "piero.fagni@esempio.it", quartiere: "collina" },
+    { nome: "Silvia Renzi", email: "silvia.renzi@esempio.it", quartiere: "centro" },
+    { nome: "Ugo Martelli", email: "ugo.martelli@esempio.it", quartiere: "bottegone" },
+    { nome: "Dina Corti", email: "dina.corti@esempio.it", quartiere: "vergine" },
+    { nome: "Furio Landi", email: "furio.landi@esempio.it", quartiere: "centro" },
+    { nome: null, email: "riservato.quattro@esempio.it", quartiere: "le-fornaci" },
+    { nome: "Olga Baroni", email: "olga.baroni@esempio.it", quartiere: "pontenuovo" },
+    { nome: "Nello Giusti", email: "nello.giusti@esempio.it", quartiere: "bonelle" },
+  ];
+
+  const PARCO = "Parco di Monteoliveto";
+  const BIBLIO = "Biblioteca San Giorgio";
+
+  // Una riga del seme. Il canale nasce dal QR quando c'è; il rinnovo mensile
+  // è rispettato per costruzione: nessun votante ripete la stessa condizione
+  // nello stesso mese (i gruppi sotto usano indici disgiunti per mese).
+  const v = (
+    servizioId: string,
+    stelle: number,
+    quando: Date,
+    votante: number,
+    extra: { conf?: boolean; testo?: string; qr?: string } = {},
+  ) => ({
+    servizioId,
+    stelle,
+    quando,
+    votante,
+    conf: extra.conf ?? false,
+    testo: extra.testo,
+    qr: extra.qr,
+  });
+
+  const SEME = [
+    // PULIZIA, due mesi fa — 12 voti, media 3,2.
+    v("pulizia", 1, meseFa(2, 3), 0, { conf: true, testo: "Cestini stracolmi per giorni nella mia via." }),
+    v("pulizia", 2, meseFa(2, 5), 1, { conf: true }),
+    v("pulizia", 2, meseFa(2, 8), 2, { testo: "Dopo il mercato la piazza resta sporca fino a sera." }),
+    v("pulizia", 3, meseFa(2, 11), 3, { conf: true }),
+    v("pulizia", 3, meseFa(2, 14), 4, {}),
+    v("pulizia", 3, meseFa(2, 17), 5, { conf: true, qr: PARCO }),
+    v("pulizia", 3, meseFa(2, 19), 6, { testo: "Va meglio in centro, ma le periferie aspettano." }),
+    v("pulizia", 4, meseFa(2, 21), 7, { conf: true }),
+    v("pulizia", 4, meseFa(2, 24), 8, { conf: true, testo: "Da quando è cambiato il giro, la mia strada è pulita." }),
+    v("pulizia", 4, meseFa(2, 26), 9, { qr: BIBLIO }),
+    v("pulizia", 4, meseFa(2, 27), 10, { conf: true, testo: "Raccolta puntuale, marciapiedi in ordine." }),
+    v("pulizia", 5, meseFa(2, 28), 11, { conf: true, testo: "Spazzamento puntuale ogni settimana, si vede." }),
+    // PULIZIA, il mese scorso — 15 voti col voto di Giulia (sotto), media 3,4.
+    v("pulizia", 1, meseFa(1, 2), 12, { conf: true, testo: "Bidoni pieni tutto il weekend in zona stadio." }),
+    v("pulizia", 2, meseFa(1, 3), 13, {}),
+    v("pulizia", 2, meseFa(1, 5), 14, { conf: true }),
+    v("pulizia", 3, meseFa(1, 8), 15, { conf: true, testo: "Meglio di prima, ma i cestini nei parchi sono pochi." }),
+    v("pulizia", 3, meseFa(1, 10), 16, { conf: true, qr: PARCO }),
+    v("pulizia", 3, meseFa(1, 12), 17, {}),
+    v("pulizia", 3, meseFa(1, 14), 18, { conf: true }),
+    v("pulizia", 3, meseFa(1, 16), 19, {}),
+    v("pulizia", 4, meseFa(1, 18), 20, { conf: true, testo: "La domenica mattina il centro è in ordine." }),
+    v("pulizia", 4, meseFa(1, 20), 21, { qr: PARCO }),
+    v("pulizia", 4, meseFa(1, 22), 22, { conf: true }),
+    v("pulizia", 5, meseFa(1, 24), 23, { conf: true, testo: "Bella la pulizia straordinaria dopo la fiera." }),
+    v("pulizia", 5, meseFa(1, 25), 4, { conf: true }),
+    v("pulizia", 5, meseFa(1, 26), 5, { qr: BIBLIO, testo: "Zona biblioteca sempre in ordine, complimenti." }),
+    // PULIZIA, gli ultimi giorni — 7 voti col voto di Marco (sotto), media 3,3.
+    v("pulizia", 2, daysAgo(1), 0, { conf: true, testo: "Foglie e cartacce ferme da giorni sul marciapiede." }),
+    v("pulizia", 3, daysAgo(1), 2, {}),
+    v("pulizia", 3, daysAgo(2), 6, { testo: "Discreto, ma il sabato sera lascia il segno." }),
+    v("pulizia", 4, daysAgo(3), 8, { conf: true }),
+    v("pulizia", 4, daysAgo(3), 9, { qr: PARCO, testo: "Area giochi pulita, cestini svuotati." }),
+    v("pulizia", 4, daysAgo(4), 11, { conf: true }),
+    // VERDE, il mese scorso — 6 voti col voto di Lorenzo (sotto), media 4,0.
+    v("verde", 3, meseFa(1, 4), 2, { testo: "Erba alta nei giardini della mia via." }),
+    v("verde", 3, meseFa(1, 9), 3, {}),
+    v("verde", 4, meseFa(1, 15), 7, { conf: true }),
+    v("verde", 5, meseFa(1, 21), 14, { conf: true, testo: "Le nuove piantumazioni sono bellissime." }),
+    v("verde", 5, meseFa(1, 26), 19, { conf: true, testo: "Parchi curati, ci porto i nipoti volentieri." }),
+    // VERDE, gli ultimi giorni — 2 voti, media 3,5 (finestra: 3,9).
+    v("verde", 3, daysAgo(2), 18, {}),
+    v("verde", 4, daysAgo(4), 22, { conf: true }),
+    // SICUREZZA — 6 voti in tre mesi, media 2,8. Il volume delle
+    // segnalazioni resta NON accostabile: la scheda parla solo di tempi.
+    v("sicurezza", 2, meseFa(2, 7), 20, { conf: true }),
+    v("sicurezza", 3, meseFa(2, 20), 21, { conf: true, testo: "Di giorno tranquillo, la sera dipende dalle zone." }),
+    v("sicurezza", 2, meseFa(1, 6), 6, {}),
+    v("sicurezza", 3, meseFa(1, 13), 8, { testo: "Alla stazione la sera non mi sento tranquilla." }),
+    v("sicurezza", 4, meseFa(1, 23), 15, { conf: true }),
+    v("sicurezza", 3, daysAgo(3), 23, { conf: true, testo: "Più illuminazione aiuterebbe anche la percezione." }),
+    // ILLUMINAZIONE — 5 voti, media 2,8.
+    v("illuminazione", 1, meseFa(1, 7), 9, { conf: true }),
+    v("illuminazione", 2, meseFa(1, 14), 16, { testo: "Tre lampioni spenti da settimane nella mia strada." }),
+    v("illuminazione", 4, meseFa(1, 22), 20, { conf: true }),
+    v("illuminazione", 3, daysAgo(2), 21, { testo: "Sostituiti i lampioni rotti, ora va meglio." }),
+    v("illuminazione", 4, daysAgo(4), 3, { conf: true }),
+    // TRASPORTI — zero voti, DI PROPOSITO: è il bersaglio delle E2E
+    // sull'assenza («Nessun voto, ancora»), e l'assenza non si decora.
+    // ANAGRAFE — 12 episodi all-time, media 4,1: lo sportello che funziona.
+    v("anagrafe", 3, daysAgo(7), 1, { conf: true, testo: "Attesa lunga ma personale gentile." }),
+    v("anagrafe", 3, daysAgo(12), 0, { conf: true }),
+    v("anagrafe", 4, daysAgo(18), 2, { conf: true }),
+    v("anagrafe", 4, daysAgo(23), 3, {}),
+    v("anagrafe", 4, daysAgo(29), 4, { conf: true, testo: "Carta d'identità rinnovata in venti minuti." }),
+    v("anagrafe", 4, daysAgo(35), 5, { conf: true }),
+    v("anagrafe", 4, daysAgo(41), 6, {}),
+    v("anagrafe", 4, daysAgo(48), 7, { conf: true, testo: "Prenotazione online comoda, sportello puntuale." }),
+    v("anagrafe", 4, daysAgo(55), 8, { conf: true }),
+    v("anagrafe", 5, daysAgo(63), 9, { testo: "Gentilissimi, risolto tutto in una visita." }),
+    v("anagrafe", 5, daysAgo(71), 10, { conf: true }),
+    v("anagrafe", 5, daysAgo(80), 11, { conf: true, testo: "Servizio rapido e chiaro, complimenti." }),
+    // TRIBUTI — 4 episodi, media 2,5: pochi voti, e la scheda lo dichiara.
+    v("tributi", 1, daysAgo(10), 12, { conf: true, testo: "Tre code diverse per un solo avviso." }),
+    v("tributi", 2, daysAgo(25), 13, { testo: "Risposte poco chiare sulla rateizzazione." }),
+    v("tributi", 3, daysAgo(40), 14, { conf: true }),
+    v("tributi", 4, daysAgo(60), 15, { conf: true }),
+    // PRENOTAZIONI — 3 episodi, media 4,3.
+    v("prenotazioni", 4, daysAgo(9), 16, { conf: true }),
+    v("prenotazioni", 4, daysAgo(33), 17, { testo: "App semplice, promemoria utile." }),
+    v("prenotazioni", 5, daysAgo(58), 18, { conf: true }),
+  ];
+
+  const CONDIZIONI = new Set(
+    SERVIZI.filter((s) => s.famiglia === "condizione").map((s) => s.id),
+  );
+
+  await prisma.valutazione.createMany({
+    data: SEME.map((s) => {
+      const p = VOTANTI[s.votante];
+      return {
+        servizioId: s.servizioId,
+        stelle: s.stelle,
+        testo: s.testo ?? null,
+        email: p.email,
+        emailConfermata: s.conf,
+        nomeVisualizzato: p.nome,
+        // Il quartiere ha senso solo sulle condizioni («la tua zona»); il
+        // modulo degli sportelli nemmeno lo chiede.
+        quartiereId:
+          CONDIZIONI.has(s.servizioId) && p.quartiere ? nb[p.quartiere] : null,
+        periodo: periodoDi(s.quando),
+        canale: s.qr ? "qr" : "web",
+        qrLuogo: s.qr ?? null,
+        createdAt: s.quando,
+      };
+    }),
+  });
+
+  // I voti degli account demo: sono loro ad ARMARE gli ingressi di R-5.
+  // Giulia e Lorenzo ≥30 giorni fa → oggi sollecitabili (card in home e
+  // pop-up armati appena accedono); Marco 2 giorni fa → finestra chiusa
+  // fino a +28 giorni: lo scaglionamento del contatore, visto dal vivo.
+  await prisma.valutazione.createMany({
+    data: [
+      {
+        servizioId: "pulizia",
+        stelle: 4,
+        testo: "Nella mia zona il ritiro funziona, in centro si può fare di più.",
+        email: citizen.email,
+        emailConfermata: true,
+        nomeVisualizzato: citizen.name,
+        userId: citizen.id,
+        quartiereId: nb["centro"],
+        periodo: periodoDi(daysAgo(33)),
+        canale: "campagna",
+        createdAt: daysAgo(33),
+      },
+      {
+        servizioId: "verde",
+        stelle: 4,
+        testo: "Sfalci più regolari rispetto all'anno scorso.",
+        email: lorenzo.email,
+        emailConfermata: true,
+        nomeVisualizzato: lorenzo.name,
+        userId: lorenzo.id,
+        quartiereId: nb["centro"],
+        periodo: periodoDi(daysAgo(34)),
+        canale: "campagna",
+        createdAt: daysAgo(34),
+      },
+      {
+        servizioId: "pulizia",
+        stelle: 3,
+        email: marco.email,
+        emailConfermata: true,
+        nomeVisualizzato: marco.name,
+        userId: marco.id,
+        quartiereId: nb["sant-agostino"],
+        periodo: periodoDi(daysAgo(2)),
+        canale: "campagna",
+        createdAt: daysAgo(2),
+      },
+    ],
+  });
+
+  // Il registro append-only del contatore: le campagne che quei tre voti
+  // hanno seguito. Nessun promemoria seminato — nasce SOLO su richiesta, e
+  // in demo si prova col flusso vero.
+  await prisma.sollecitazione.createMany({
+    data: [
+      {
+        userId: citizen.id,
+        canale: "campagna",
+        mostrataIl: daysAgo(33),
+        esito: "seguita",
+        esitoIl: daysAgo(33),
+      },
+      {
+        userId: lorenzo.id,
+        canale: "campagna",
+        mostrataIl: daysAgo(34),
+        esito: "seguita",
+        esitoIl: daysAgo(34),
+      },
+      {
+        userId: marco.id,
+        canale: "campagna",
+        mostrataIl: daysAgo(2),
+        esito: "seguita",
+        esitoIl: daysAgo(2),
+      },
+    ],
+  });
+
+  // La risposta del Comune al quadro del mese scorso su Pulizia — l'account
+  // GENERICO, mai una persona, e un testo di servizio senza fatti inventati.
+  await prisma.rispostaServizio.create({
+    data: {
+      tipo: TIPO_QUADRO,
+      servizioId: "pulizia",
+      periodo: periodoDi(daysAgo(33)),
+      testo:
+        "Grazie a chi ha valutato il servizio questo mese. Lo spazzamento segue il calendario pubblicato dal gestore; le valutazioni e le segnalazioni puntuali ci aiutano a correggere i passaggi dove serve.",
+      autoreId: admin.id,
+      createdAt: daysAgo(20),
+    },
   });
 
   // --- Comunità (feed) -----------------------------------------------------

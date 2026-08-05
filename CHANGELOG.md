@@ -5,6 +5,33 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.24.0] — 2026-08-05 · Fase C, «Valutazioni dei servizi» — R-6, la metodologia. E il seme dimostrativo
+
+> La fase in cui le regole editoriali diventano un documento pubblico — e il
+> cancello è che **cambiare una regola in un posto solo cambia pagina E
+> documento**: i testi di `/metodologia` interpolano le costanti di dominio,
+> mai un numero ricopiato, e `tests/unit/metodologia.test.ts` lo prova
+> costante per costante. La forma è la composizione di Lorenzo su mockup in
+> contesto e due giri di domande (A1+A3+A4 · C1 pubblica · **nessuna soglia**
+> · B2 colophon), più i numeri del seme approvati sullo stesso tabellone.
+> Cancello pieno: typecheck · lint · **224** unit · **25/25** E2E · `rotte`
+> **56, 0 con problemi** (tre passate) · shots nei due temi e `--simple
+> --width=360`.
+
+### La decisione che scioglie la soglia
+- **«Nessuna soglia»** (Lorenzo, 2026-08-05, davanti alle altre regole come il piano prometteva): la media compare **dal primo voto**, sempre col campione accanto — una soglia tace il dato proprio dove i votanti sono pochi, cioè in una città media quasi ovunque e quasi sempre. Vale **ovunque la soglia mordeva**: media, punto mensile dell'andamento, quartiere di domani. `SOGLIA_PUBBLICAZIONE_VOTO` e `SOGLIA_PROVVISORIA` non esistono più; `media()` perde il ramo e `Media` il campo `mancanti`; `quartiereSbloccato()` si accende col primo voto. Il **campione minimo della mediana** (5, `citystats`) resta — la colonna dura si presenta come il lato solido della pagina — e un test-guardiano nuovo protegge la coesistenza dall'«unificazione per simmetria» nella direzione opposta a prima.
+
+### Aggiunto
+- **`lib/metodologia.ts`** — il documento versionato nel repository (ROADMAP §6, prerequisito 3): **dodici regole** (la regola · il perché · la verifica · la riga «Nel codice» che nomina la definizione unica), sommario «In breve», `VERSIONE_METODOLOGIA` = **1.0**, `REGISTRO_MODIFICHE` append-only che apre registrando lo scioglimento della soglia. Ogni numero nei testi è interpolato dalle costanti (90 · 30 · 180 · 5 · 1–5 · 11 caselle).
+- **`/metodologia`** — la resa, **pubblica** (gruppo `(pubblico)`, coerente con W1: le schede pubbliche citano quelle regole). In `rotte.mjs` anche nella passata anonima con atterraggio preteso (54 → **56**), in `shots.mjs` nei due regimi.
+- **Il timbro B2** (`TimbroMetodologia`) — «metodologia v1.0» da **colophon**: in calce a scheda, panoramica e digest, con la firma della Redazione, mai in testata (che resta al dato e al suo campione). Nel digest sopravvive alla stampa: un report senza versione non è verificabile.
+- **«Come funziona»** sull'invito anonimo della scheda → `/metodologia` (l'approdo rimandato da R-5 perché non esisteva).
+- **Il mese dimostrativo nel seed** (decisione §8.7, numeri dal giro di forma): **72 voti** a distribuzioni fisse — mai `vary()`, medie identiche a ogni risemina — su persone inventate rese «Nome C.» o «Anonimo». Senza soglia la storia è la **gradazione dei campioni**: Pulizia 34 (3,3; andamento 3,2 → 3,4 → 3,3), Verde 8 (3,9), Sicurezza 6 (2,8), Illuminazione 5 (2,8), Anagrafe 12 (4,1), Tributi 4 (2,5), Prenotazioni 3 (4,3); **Trasporti e tre sportelli a zero** — l'assenza non si decora, e le E2E la provano su `/valutazioni/trasporti`. Giulia e Lorenzo votano ≥30 giorni fa (**campagna e pop-up armati oggi** sui loro account), Marco 2 giorni fa (finestra chiusa: lo scaglionamento dal vivo). Tre righe `Sollecitazione` (campagne seguite), **nessun promemoria** (nasce solo su richiesta), due codici QR nuovi per la pulizia (parco e biblioteca), e il **quadro del Comune** su Pulizia · luglio — account generico, testo di servizio senza fatti inventati.
+
+### Modificato
+- **Le superfici senza soglia**: sulla scheda l'attesa esiste solo a zero voti («la media compare col primo voto») e la tabella accessibile dice «nessun voto quel mese»; sulla panoramica spariscono «N su 20» e il paragrafo della soglia (ora racconta il patto del campione dichiarato); nel digest muore il ramo «nessuna casella è sopra la soglia» (se le entrate son tutte sugli sportelli, lo dice) e la coda diventa «le altre condizioni non hanno ancora voti».
+- Le due E2E dell'assenza si ripuntano su `/valutazioni/trasporti`; la scheda pubblica di Pulizia ora prova la **media vera** (3,3, distribuzione fissa) e il timbro; +2 E2E nuove (23 → **25**).
+
 ## [0.23.0] — 2026-08-04 · Fase C, «Valutazioni dei servizi» — R-5, i sei ingressi e la lettura pubblica
 
 > La fase in cui la piattaforma inizia a CHIEDERE i voti — e il cancello è il

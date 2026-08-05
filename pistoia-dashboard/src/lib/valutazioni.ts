@@ -54,44 +54,6 @@ export function stelleValide(n: number): boolean {
   return Number.isInteger(n) && n >= STELLE_MIN && n <= STELLE_MAX;
 }
 
-// ---------------------------------------------------------------------------
-// La soglia di pubblicazione
-// ---------------------------------------------------------------------------
-
-/**
- * Quante valutazioni servono perché una media vada a schermo.
- *
- * **Perché 20 e non 5.** `CAMPIONE_MINIMO_PER_GIUDIZIO` vale 5 in
- * `lib/citystats.ts` e resta dov'è: è la soglia di un **tasso** calcolato su
- * casi che arrivano da soli — una segnalazione la apre chi ha il problema, e
- * chi non ce l'ha non apre niente.
- *
- * Una media di recensioni è un'altra cosa, e la ragione non è statistica ma di
- * **selezione**: chi recensisce si autoseleziona, e sui piccoli numeri si
- * autoseleziona verso gli estremi — si scrive quando si è furiosi o
- * entusiasti. Cinque recensioni non sono un campione *rumoroso*, sono un
- * campione **storto**, e nessuna aritmetica raddrizza uno storto: alzare la
- * soglia è l'unica correzione onesta disponibile.
- *
- * Le due soglie **non** sono «due definizioni dello stesso indicatore»
- * (`AGENTS.md` §3, ondata 7): misurano due cose diverse. Sta scritto qui perché
- * nessuno le unifichi per simmetria.
- *
- * ⚠️ **Valore PROVVISORIO** (decisione di Lorenzo, 2026-08-03). Il numero
- * definitivo si sceglie scrivendo `/metodologia` in R-6, quando la soglia si
- * vedrà accanto alle altre regole invece che da sola. Fino ad allora resta 20 e
- * **non va citato come definitivo** in nessuna pagina pubblica.
- *
- * È comunque una **scelta editoriale**, e una soglia che si muove in silenzio è
- * il modo in cui una media scomoda viene soppressa: quando diventa definitiva
- * va pubblicata e versionata, e ogni cambiamento va nel registro delle
- * modifiche della metodologia.
- */
-export const SOGLIA_PUBBLICAZIONE_VOTO = 20;
-
-/** Vero finché la soglia non è stata fissata su `/metodologia` (R-6). */
-export const SOGLIA_PROVVISORIA = true;
-
 /** Giorni della finestra mobile su cui si media una condizione della città. */
 export const FINESTRA_CONDIZIONE_GIORNI = 90;
 
@@ -200,8 +162,9 @@ export type Servizio = {
  * sessanta schede che dicono «pochi dati», che non è una piattaforma di
  * valutazioni ma una sala d'attesa con una griglia.
  *
- * Il quartiere quindi non nasce: **si sblocca** quando supera la soglia da sé
- * ({@link quartiereSbloccato}).
+ * Il quartiere quindi non nasce come casella sua: si accende col primo voto
+ * che lo nomina ({@link quartiereSbloccato}), e i suoi voti confluiscono
+ * comunque nel dato cittadino.
  */
 export const SERVIZI: Servizio[] = [
   // --- Servizi allo sportello ---------------------------------------------
@@ -380,9 +343,9 @@ export function inizioFinestra(
 /**
  * Gli ultimi `n` periodi fino a `oggi`, dal più vecchio al più recente.
  *
- * Serve all'andamento, che ha **un punto al mese**: un mese sotto soglia resta
+ * Serve all'andamento, che ha **un punto al mese**: un mese senza voti resta
  * un buco dichiarato, non uno zero. Uno zero direbbe «valutato pessimo», che è
- * il contrario di «non abbiamo abbastanza risposte».
+ * il contrario di «nessuno ha risposto».
  */
 export function ultimiPeriodi(oggi: Date, n: number): string[] {
   const out: string[] = [];
@@ -394,43 +357,40 @@ export function ultimiPeriodi(oggi: Date, n: number): string[] {
 }
 
 // ---------------------------------------------------------------------------
-// La media e la soglia
+// La media, dal primo voto
 // ---------------------------------------------------------------------------
 
 export type Media = {
-  /** Media a una cifra decimale, oppure `null` se sotto soglia. */
+  /** Media a una cifra decimale, oppure `null` quando non c'è nemmeno un voto. */
   valore: number | null;
-  /** Quante valutazioni la compongono. Sempre vero, anche sotto soglia. */
+  /** Quante valutazioni la compongono. */
   campione: number;
-  pubblicabile: boolean;
-  /** Quante ne mancano alla soglia. 0 quando è pubblicabile. */
-  mancanti: number;
 };
 
 /**
- * La media, e il rifiuto di mostrarla quando il campione non la regge.
+ * La media, dal primo voto — e il patto che la rende pubblicabile.
  *
- * Il campione **si dichiara comunque**: sotto soglia la scheda dice quanti voti
- * mancano, invece di mostrare un vuoto. Un'assenza presentata come vuoto è la
- * stessa accusa tratta da un dato mancante che ha tolto la cifra da
- * `/organigramma` e la scala a tacche da `/promesse`.
+ * Fino al 2026-08-05 qui c'era una soglia (20, dichiaratamente provvisoria):
+ * sotto, la media taceva e la scheda contava quanti voti mancavano. Scrivendo
+ * `/metodologia` la soglia è stata sciolta in **nessuna soglia** (decisione di
+ * Lorenzo, registrata nel registro delle modifiche, v1.0). L'autoselezione di
+ * chi recensisce — si scrive da furiosi o da entusiasti, e sui piccoli numeri
+ * quella tendenza è gran parte del risultato — resta vera; ma una soglia tace
+ * il dato proprio dove i votanti sono pochi, cioè in una città media quasi
+ * ovunque e quasi sempre. La correzione scelta non è il silenzio: è il
+ * **campione stampato accanto, sempre**. La riga della composizione è portante
+ * e non decorativa — se qualcuno la stacca dalla media, il modello crolla.
+ *
+ * L'unica assenza è l'assenza vera: a zero voti `valore` è `null` e la scheda
+ * lo dichiara, invece di decorarlo — lo stesso rifiuto dell'assenza travestita
+ * che ha tolto la cifra da `/organigramma` e la scala a tacche da `/promesse`.
  */
-export function media(
-  stelle: number[],
-  soglia: number = SOGLIA_PUBBLICAZIONE_VOTO,
-): Media {
+export function media(stelle: number[]): Media {
   const valide = stelle.filter(stelleValide);
   const campione = valide.length;
-  if (campione < soglia) {
-    return { valore: null, campione, pubblicabile: false, mancanti: soglia - campione };
-  }
+  if (campione === 0) return { valore: null, campione: 0 };
   const somma = valide.reduce((t, n) => t + n, 0);
-  return {
-    valore: Math.round((somma / campione) * 10) / 10,
-    campione,
-    pubblicabile: true,
-    mancanti: 0,
-  };
+  return { valore: Math.round((somma / campione) * 10) / 10, campione };
 }
 
 // ---------------------------------------------------------------------------
@@ -487,21 +447,21 @@ export function nonRimossa(v: ValutazioneContata): boolean {
 // ---------------------------------------------------------------------------
 
 /**
- * Vero quando un quartiere ha guadagnato la propria media.
+ * Vero quando un quartiere ha una media propria da mostrare.
  *
- * Una condizione nasce **sulla città intera**; il quartiere si accende solo
- * quando le valutazioni di *quel* quartiere superano la soglia da sole. Finché
- * non accade i suoi voti confluiscono nel dato cittadino, e la scheda lo
- * dichiara invece di mostrare una media locale fragile.
+ * Una condizione nasce **sulla città intera** e i voti col quartiere
+ * confluiscono comunque nel dato cittadino. «Nessuna soglia» (2026-08-05) vale
+ * anche qui: il quartiere si accende **col primo voto suo**, col campione
+ * dichiarato accanto come ovunque — non esiste una quota da superare.
  *
- * È `campioneSufficiente()` portato sulla geografia: la mappa si accende un
- * pezzo alla volta, e ogni pezzo acceso è solido.
+ * Nessuna superficie rende ancora le medie locali: la regola sta qui, decisa e
+ * provata, per il giorno in cui la mappa arriverà. Se quel giorno servisse
+ * ripensarla, il posto è il registro delle modifiche di `/metodologia`.
  */
 export function quartiereSbloccato(
   valutazioniDelQuartiere: ValutazioneContata[],
-  soglia: number = SOGLIA_PUBBLICAZIONE_VOTO,
 ): boolean {
-  return valutazioniDelQuartiere.filter(nonRimossa).length >= soglia;
+  return valutazioniDelQuartiere.filter(nonRimossa).length > 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -653,10 +613,13 @@ export function mediana(valori: number[]): number | null {
  * vuole il campione minimo, contato sulle chiuse — che sono le uniche che
  * producono una durata.
  *
- * Nota di misura: la soglia è quella di `citystats` (5) e non quella delle
- * valutazioni (20). Non è un'incoerenza: le segnalazioni **arrivano da sole**,
- * mentre chi recensisce si autoseleziona. È la stessa ragione per cui le due
- * soglie esistono separate.
+ * Nota di misura: il campione minimo è quello di `citystats` (5) e **resta
+ * anche ora che le medie a stelle non hanno soglia** (2026-08-05). Non è
+ * un'incoerenza: la media è un'opinione aggregata che va a schermo col suo
+ * campione stampato accanto, la mediana è la metà della pagina che si presenta
+ * come il fatto solido — e un «caso tipico» calcolato su due casi non è un
+ * caso tipico. Se qualcuno unificasse le due regole per simmetria, i test
+ * della colonna dura cadrebbero.
  */
 export function colonnaDuraDa(
   s: Servizio,

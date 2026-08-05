@@ -9,8 +9,9 @@ import {
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { StarRating } from "@/components/ui/star-rating";
+import { TimbroMetodologia } from "@/components/valutazioni/timbro-metodologia";
 import { formatNumber } from "@/lib/format";
-import { SOGLIA_PUBBLICAZIONE_VOTO, TITOLO_FAMIGLIA } from "@/lib/valutazioni";
+import { TITOLO_FAMIGLIA } from "@/lib/valutazioni";
 
 export const metadata: Metadata = {
   title: "Valutazioni dei servizi",
@@ -40,7 +41,10 @@ export const metadata: Metadata = {
   ciò che l'insieme dice davvero.
 
   **La pagina deve reggere a zero valutazioni**, perché è così che la vede
-  chiunque il primo giorno: il seed non contiene nemmeno un voto, di proposito.
+  chiunque il primo giorno. Il seed semina un mese dimostrativo DICHIARATO
+  (decisione 2026-08-04, piano §8.7) — ma Trasporti e tre sportelli restano a
+  zero di proposito: l'assenza vera è parte di ciò che la pagina deve saper
+  dire, e le E2E la provano lì.
 */
 export default async function ValutazioniPage() {
   // Nessun requireUser (R-5, decisione W1 del 2026-08-04): la panoramica è a
@@ -76,15 +80,17 @@ export default async function ValutazioniPage() {
           esiste.
         </p>
         <p className="mt-3 border-t border-border pt-3 text-sm leading-relaxed text-muted">
-          Una media compare solo da{" "}
-          <strong className="text-foreground">
-            {formatNumber(SOGLIA_PUBBLICAZIONE_VOTO)} valutazioni
-          </strong>{" "}
-          in su. Sotto quella soglia il numero direbbe più di quanto sappiamo:
-          chi lascia una recensione tende a farlo quando è molto scontento o
-          molto contento, e su pochi voti quella tendenza è tutto il risultato.
+          Le medie compaiono <strong className="text-foreground">dal primo
+          voto</strong>, sempre col numero di valutazioni che le compone. Quel
+          numero sta accanto perché serve a pesare: chi lascia una recensione
+          tende a farlo quando è molto scontento o molto contento, e su pochi
+          voti quella tendenza pesa — una media da tre voti dice meno di una da
+          trenta, e la pagina non lo nasconde.
         </p>
       </Card>
+
+      {/* Il colophon (B2): la stessa riga della scheda e del digest. */}
+      <TimbroMetodologia />
     </div>
   );
 }
@@ -151,16 +157,15 @@ function RigaServizio({ scheda }: { scheda: SchedaServizio }) {
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-medium">{s.nome}</span>
 
-          {m.pubblicabile ? (
+          {m.valore != null ? (
             <span className="mt-1 block text-xs text-muted-2">
-              {formatNumber(c.totale)} valutazioni ·{" "}
+              {formatNumber(c.totale)}{" "}
+              {c.totale === 1 ? "valutazione" : "valutazioni"} ·{" "}
               {formatNumber(c.confermate)} da email confermata
             </span>
           ) : (
             <span className="mt-1 block text-xs text-muted-2">
-              {c.totale === 0
-                ? "Nessuna valutazione ancora"
-                : `${formatNumber(c.totale)} su ${formatNumber(c.totale + m.mancanti)} — il voto compare a ${formatNumber(c.totale + m.mancanti)}`}
+              Nessuna valutazione ancora
             </span>
           )}
 
@@ -170,7 +175,7 @@ function RigaServizio({ scheda }: { scheda: SchedaServizio }) {
             contenuto della scheda di dettaglio e qui sarebbe una terza riga
             che nessuno legge.
           */}
-          {!m.pubblicabile && colonna?.haQualcosaDaDire ? (
+          {m.valore == null && colonna?.haQualcosaDaDire ? (
             <span className="mt-1 block text-xs text-muted">
               Intanto dalle segnalazioni:{" "}
               <span className="text-foreground">{sintesiColonna(colonna)}</span>
@@ -179,7 +184,7 @@ function RigaServizio({ scheda }: { scheda: SchedaServizio }) {
         </span>
 
         <span className="flex shrink-0 items-center gap-2">
-          {m.pubblicabile && m.valore != null ? (
+          {m.valore != null ? (
             <StarRating value={m.valore} size={13} showValue />
           ) : (
             <span className="text-xs text-muted-2">in attesa</span>

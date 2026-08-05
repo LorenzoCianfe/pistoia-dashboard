@@ -5,7 +5,9 @@ import { Footer } from "@/components/app/footer";
 
 /*
   Il gruppo a LETTURA PUBBLICA (R-5, decisione W1 del 2026-08-04): le pagine
-  che chiunque può leggere senza account — oggi `/valutazioni` e le schede.
+  che chiunque può leggere senza account — `/valutazioni` con le schede, e
+  `/metodologia` (R-6, forma C1: le schede pubbliche citano quelle regole, e
+  un rimando che chiedesse il login sarebbe una spiegazione a porte chiuse).
 
   Due porte, un contratto:
   - con una sessione si rende l'`AppShell` INTERO, identico al gruppo

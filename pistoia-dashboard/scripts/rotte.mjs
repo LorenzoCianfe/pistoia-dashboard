@@ -49,6 +49,8 @@ const ROTTE = [
   // Fase C, «Valutazioni dei servizi». La seconda è ANNIDATA, quindi fra le
   // prime a cadere quando `.next` è stantio.
   "/valutazioni", "/valutazioni/pulizia",
+  // R-6: la metodologia — le regole pubblicate, col timbro di versione.
+  "/metodologia",
   // R-3: la pagina del QR (pubblica, gruppo (voto)) aperta col codice
   // deterministico del seed, e l'atterraggio della mail con un token
   // inventato: deve rispondere con la pagina cortese «link non più valido»,
@@ -88,7 +90,7 @@ const ROTTE_MODERATORE = ["/redazione"];
  * risposta sarebbe comunque un 200 con un <h1> — e il cancello certificherebbe
  * un'apertura mai avvenuta, la stessa trappola della passata moderatore.
  */
-const ROTTE_ANONIME = ["/valutazioni", "/valutazioni/pulizia"];
+const ROTTE_ANONIME = ["/valutazioni", "/valutazioni/pulizia", "/metodologia"];
 
 /** Liste da cui pescare un indirizzo di dettaglio vero. */
 const DETTAGLI = [

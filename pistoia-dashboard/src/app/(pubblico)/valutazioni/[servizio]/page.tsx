@@ -24,10 +24,10 @@ import { StarRating } from "@/components/ui/star-rating";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatNumber } from "@/lib/format";
 import { isStaff } from "@/lib/community";
+import { TimbroMetodologia } from "@/components/valutazioni/timbro-metodologia";
 import {
   DOMANDA_FAMIGLIA,
   SERVIZI,
-  SOGLIA_PUBBLICAZIONE_VOTO,
   periodoDi,
   servizio as trovaServizio,
 } from "@/lib/valutazioni";
@@ -127,9 +127,9 @@ export default async function SchedaServizioPage({
         description={s.descrizione}
       />
 
-      {/* Testata: la media, o quanto manca perché esista. */}
+      {/* Testata: la media dal primo voto, o l'assenza vera dichiarata. */}
       <Card>
-        {m.pubblicabile && m.valore != null ? (
+        {m.valore != null ? (
           <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-2">
@@ -150,16 +150,11 @@ export default async function SchedaServizioPage({
               Nessun voto, ancora
             </p>
             <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted">
-              {c.totale === 0
-                ? "Nessuno ha ancora valutato questo servizio."
-                : `${formatNumber(c.totale)} ${c.totale === 1 ? "persona ha" : "persone hanno"} già votato.`}{" "}
-              La media compare da{" "}
-              <strong className="text-foreground">
-                {formatNumber(SOGLIA_PUBBLICAZIONE_VOTO)} valutazioni
-              </strong>{" "}
-              in su — ne mancano{" "}
-              <strong className="text-foreground">{formatNumber(m.mancanti)}</strong>.
-              Prima di allora un numero direbbe più di quanto sappiamo.
+              {s.famiglia === "condizione"
+                ? "Nessun voto negli ultimi tre mesi."
+                : "Nessuno ha ancora valutato questo servizio."}{" "}
+              La media compare col primo voto, insieme al numero di voti che la
+              compone.
             </p>
           </div>
         )}
@@ -191,7 +186,7 @@ export default async function SchedaServizioPage({
           <ColonnaDuraTesto
             colonna={colonna}
             materia={s.materia ?? `su ${s.nome}`}
-            mediaVisibile={m.pubblicabile ? m.valore : null}
+            mediaVisibile={m.valore}
           />
         </Card>
       ) : null}
@@ -401,6 +396,9 @@ export default async function SchedaServizioPage({
           Il Comune può segnalare una valutazione, non rimuoverla.
         </p>
       </Card>
+
+      {/* Il colophon (B2): in calce, dove firma anche la Redazione. */}
+      <TimbroMetodologia />
     </div>
   );
 }
@@ -411,7 +409,8 @@ export default async function SchedaServizioPage({
  * Il `next` riporta ESATTAMENTE qui, sull'ancora del modulo: chi accede per
  * votare non deve ritrovare la strada da solo. Il secondo percorso — il QR —
  * si dichiara a parole: è carta appesa nei luoghi del servizio, non ha un
- * link. («Come funziona» arriverà con /metodologia, R-6.)
+ * link. «Come funziona» porta a /metodologia (R-6): l'invito spiega regole,
+ * e ora ha un posto dove mostrarle per intero.
  */
 function InvitoVotoAnonimo({ servizioId }: { servizioId: string }) {
   const next = encodeURIComponent(`/valutazioni/${servizioId}#vota`);
@@ -423,9 +422,18 @@ function InvitoVotoAnonimo({ servizioId }: { servizioId: string }) {
         <strong className="text-foreground">codice QR</strong> esposto nei
         luoghi del servizio.
       </p>
-      <Link href={`/login?next=${next}`} className="btn btn-primary btn-sm mt-3">
-        Accedi e vota
-      </Link>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Link href={`/login?next=${next}`} className="btn btn-primary btn-sm">
+          Accedi e vota
+        </Link>
+        {/*
+          L'approdo esisteva già come bisogno in R-5 (l'invito spiega regole
+          che non poteva mostrare); il bottone è arrivato con /metodologia.
+        */}
+        <Link href="/metodologia" className="btn btn-secondary btn-sm">
+          Come funziona
+        </Link>
+      </div>
     </div>
   );
 }
@@ -512,10 +520,10 @@ function ColonnaDuraTesto({
 /**
  * L'andamento, un punto al mese.
  *
- * I mesi sotto soglia sono **buchi**, non zeri: la spezzata si interrompe. Uno
- * zero direbbe «valutato pessimo», che è il contrario di «non abbiamo
- * abbastanza risposte». Sotto c'è la tabella equivalente, che `DESIGN.md` §11
- * pretende per ogni grafico.
+ * I mesi senza voti sono **buchi**, non zeri: la spezzata si interrompe. Uno
+ * zero direbbe «valutato pessimo», che è il contrario di «nessuno ha
+ * risposto». Sotto c'è la tabella equivalente, che `DESIGN.md` §11 pretende
+ * per ogni grafico.
  */
 function Andamento({
   punti,
@@ -597,7 +605,7 @@ function Andamento({
                 <td>
                   {p.media != null
                     ? p.media.toFixed(1).replace(".", ",")
-                    : "sotto soglia, nessuna media"}
+                    : "nessun voto quel mese"}
                 </td>
                 <td>{p.campione}</td>
               </tr>

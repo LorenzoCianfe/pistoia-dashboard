@@ -655,17 +655,18 @@ tutti inventati.
    >   separazione la media di un servizio diventa la pagella dell'assessore che
    >   risponde — cioè il prerequisito 4 aggirato per disposizione grafica.
    >
-   > La soglia di pubblicazione della media è **20** e **non** è
-   > `CAMPIONE_MINIMO_PER_GIUDIZIO`: quella vale 5 e resta dov'è, perché misura
-   > un *tasso* su casi che arrivano da soli. Chi recensisce invece si
-   > autoseleziona, e sui piccoli numeri si autoseleziona verso gli estremi:
-   > cinque recensioni non sono un campione rumoroso, sono un campione
-   > **storto**. Le due soglie misurano cose diverse e non vanno unificate per
-   > simmetria.
+   > La soglia di pubblicazione della media — 20, dichiaratamente provvisoria —
+   > è stata **sciolta in «nessuna soglia»** scrivendo `/metodologia`
+   > (decisione di Lorenzo, 2026-08-05): la media compare **dal primo voto**,
+   > sempre col campione accanto, perché una soglia tace il dato proprio dove
+   > i votanti sono pochi. `CAMPIONE_MINIMO_PER_GIUDIZIO` (5) **resta dov'è**:
+   > la mediana della colonna dura si presenta come il lato solido della
+   > pagina, e le due regole divergono per questa ragione — non per
+   > dimenticanza (`/metodologia`, regola 9).
    >
-   > Questa funzione **consuma il prerequisito 3**: soglia, finestra e media
-   > sono scelte editoriali dentro un'aritmetica, quindi `/metodologia` entra
-   > nel suo piano (fase R-6) invece di restare un lavoro a parte.
+   > Questa funzione **ha consumato il prerequisito 3**: le sue scelte
+   > editoriali sono pubblicate su `/metodologia` (fase R-6, chiusa il
+   > 2026-08-05) invece di restare un lavoro a parte.
 3. **Metodologia pubblica e versionata.** «Non è la mia opinione, sono i
    dati» è vero solo a metà: *quali* indicatori, con *quali* pesi e *quali*
    soglie, è una scelta editoriale. Se la scelta è pubblicata e verificabile,
@@ -678,6 +679,13 @@ tutti inventati.
    versione che l'ha calcolata** («metodologia v1.2»): senza il timbro, una
    pagella vecchia diventa incontestabile perché nessuno sa più con quali
    regole fu prodotta.
+
+   > **Consumato dalle Valutazioni il 2026-08-05** (R-6): il documento è
+   > `lib/metodologia.ts` — dodici regole coi numeri **interpolati dalle
+   > costanti di dominio**, provato da `tests/unit/metodologia.test.ts` — reso
+   > su `/metodologia` (pubblica, v1.0, registro append-only) e timbrato in
+   > calce a scheda, panoramica e digest (`TimbroMetodologia`). La pagella,
+   > quando arriverà, timbrerà con la stessa versione.
 4. **La regola del campione minimo, estesa alle persone** — e per le persone
    non basta alzare la soglia. `lib/citystats.ts` ha stabilito che una
    percentuale su pochi casi, tinta di rosso, è un'accusa e non un dato, e lo

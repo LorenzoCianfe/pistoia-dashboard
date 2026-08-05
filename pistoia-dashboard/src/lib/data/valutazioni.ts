@@ -72,8 +72,9 @@ async function colonnaDura(s: Servizio, oggi: Date): Promise<ColonnaDura | null>
       ),
     );
 
-  // La soglia della mediana è quella di `citystats` (5), non quella delle
-  // valutazioni (20): le segnalazioni arrivano da sole, le recensioni no.
+  // Il campione minimo della mediana è quello di `citystats` (5) e resta
+  // anche ora che le medie a stelle non hanno soglia: la mediana si presenta
+  // come il lato solido della pagina (vedi `colonnaDuraDa`).
   return colonnaDuraDa(s, giorni, reports.length, CAMPIONE_MINIMO_PER_GIUDIZIO);
 }
 
@@ -122,8 +123,8 @@ export async function getPanoramica(oggi: Date = new Date()) {
   return {
     sportello: per("sportello"),
     condizione: per("condizione"),
-    /** Quante caselle hanno guadagnato la propria media. Vero, e spesso zero. */
-    conVoto: schede.filter((x) => x.media.pubblicabile).length,
+    /** Quante caselle hanno almeno un voto, e quindi una media. */
+    conVoto: schede.filter((x) => x.media.valore != null).length,
     totale: schede.length,
   };
 }
@@ -221,10 +222,10 @@ export async function getRecensioni(
 /**
  * L'andamento: un punto al mese.
  *
- * Un mese sotto soglia resta un **buco dichiarato**, non uno zero. Uno zero
- * direbbe «valutato pessimo», che è il contrario di «non abbiamo abbastanza
- * risposte» — la stessa distinzione fra assenza e giudizio che regge tutta la
- * funzione.
+ * Un mese senza voti resta un **buco dichiarato**, non uno zero. Uno zero
+ * direbbe «valutato pessimo», che è il contrario di «nessuno ha risposto» — la
+ * stessa distinzione fra assenza e giudizio che regge tutta la funzione. Il
+ * campione di ogni mese viaggia col punto: la tabella accessibile lo dichiara.
  */
 export async function getAndamento(
   s: Servizio,
@@ -373,8 +374,9 @@ export async function getCodiciQrTutti() {
 
 /**
  * I quartieri per la tendina del voto sulle condizioni. Facoltativa per chi
- * vota, necessaria alla piattaforma: è ciò che permette a un quartiere di
- * sbloccarsi da solo quando supera la soglia (`quartiereSbloccato`).
+ * vota, necessaria alla piattaforma: è ciò che permetterà a un quartiere di
+ * accendersi col primo voto suo (`quartiereSbloccato`), quando la mappa
+ * arriverà.
  */
 export async function getQuartieriPerVoto(): Promise<{ id: string; nome: string }[]> {
   const righe = await prisma.neighborhood.findMany({

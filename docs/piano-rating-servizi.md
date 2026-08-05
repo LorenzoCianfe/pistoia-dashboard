@@ -212,7 +212,7 @@ Tre note che il codice deve rispettare:
 | `/v/promemoria/[token]` | «Non inviarmelo più» del promemoria mensile: azione di form, mai GET | R-5 ✅ |
 | `/admin/codici-qr` | Il generatore: ogni scheda è un foglio da stampare e appendere | R-3 ✅ |
 | `/redazione` | La porta della Redazione: coda delle segnalazioni del Comune, rimozioni con motivo pubblico, Note con fonte | R-4 ✅ |
-| `/metodologia` | Soglia, media, finestra, versione — prerequisito 3 | R-6 |
+| `/metodologia` | Le dodici regole con versione e registro, dalle costanti di dominio — prerequisito 3 | R-6 ✅ |
 
 Ogni rotta nuova entra in `scripts/rotte.mjs` **e** in `scripts/shots.mjs` nello
 stesso momento (`AGENTS.md` §5). Con R-4 il conteggio è a **51** — e `/redazione`
@@ -354,10 +354,51 @@ voce di menu · QR stampabili.
 > Con R-5 è stata decisa e attuata anche l'apertura in sola lettura (W1):
 > vedi §8, decisione 8.
 
-### R-6 · Metodologia
-`/metodologia` con soglia, media, finestra, registro delle modifiche, versione;
-e il timbro di versione su ogni scheda.
-**Cancello:** cambiare la soglia in un posto solo cambia pagina *e* documento.
+### R-6 · Metodologia ✅ (2026-08-05)
+`/metodologia` con le regole, il registro delle modifiche, la versione; e il
+timbro di versione su ogni scheda.
+**Cancello:** cambiare una regola in un posto solo cambia pagina *e* documento.
+
+> **CHIUSA il 2026-08-05.** La forma è stata composta da Lorenzo su mockup in
+> contesto e due giri di domande (il metodo di R-4 e R-5):
+>
+> - **A1 + A3 + A4** · documento a **dodici regole numerate** — la regola, il
+>   perché onesto, la verifica, e la riga **«Nel codice»** che nomina la
+>   definizione unica (il cancello reso leggibile) — con il sommario **«In
+>   breve»** in testa. Il contenuto vive in `lib/metodologia.ts`: ogni numero
+>   nei testi è **interpolato dalle costanti di dominio**, mai ricopiato, e
+>   `tests/unit/metodologia.test.ts` lo prova costante per costante. La
+>   pagina PUBBLICA le regole, non ne inventa.
+> - **C1 · pubblica** · gruppo `(pubblico)`, coerente con W1: le schede che
+>   chiunque legge citano queste regole, e un rimando dietro login sarebbe
+>   una spiegazione a porte chiuse. In `rotte.mjs` anche nella passata
+>   anonima (atterraggio preteso), in `shots.mjs` nei due regimi.
+> - **La soglia è SCIOLTA in «nessuna soglia»** (vedi §8, decisione 2): la
+>   media compare **dal primo voto**, sempre col campione accanto — e vale
+>   ovunque la soglia mordeva (punto mensile dell'andamento, quartiere di
+>   domani), senza eccezioni. `media()` ha perso il ramo e il tipo `Media` il
+>   campo `mancanti`; `quartiereSbloccato()` si accende col primo voto.
+> - **B2 · il timbro è un colophon** · «metodologia v1.0» in calce — mai in
+>   testata, che resta al dato e al suo campione — con la firma della
+>   Redazione, identico su scheda, panoramica e digest
+>   (`TimbroMetodologia`). Resta anche in stampa: un report senza versione
+>   non è verificabile.
+> - L'invito anonimo sulla scheda ha guadagnato **«Come funziona» →
+>   /metodologia** — l'approdo rimandato da R-5 perché non esisteva.
+> - Il **registro delle modifiche** apre con la v1.0 e registra lo
+>   scioglimento della soglia provvisoria: append-only, come le rimozioni.
+>
+> Nella stessa sessione è stato seminato **il mese dimostrativo** (decisione
+> §8.7): la storia non è più «una condizione sopra la soglia» — senza soglia
+> è la **gradazione dei campioni**: Pulizia 34 voti (3,3; andamento 3,2 →
+> 3,4 → 3,3), Verde 8 (3,9), Sicurezza 6 (2,8), Illuminazione 5 (2,8),
+> Anagrafe 12 (4,1), Tributi 4 (2,5), Prenotazioni 3 (4,3); **Trasporti e
+> tre sportelli a zero** (l'assenza non si decora — le E2E provano l'assenza
+> su `/valutazioni/trasporti`). Distribuzioni fisse, mai `vary()`. Giulia e
+> Lorenzo votano ≥30 giorni fa (campagna e pop-up armati OGGI sui loro
+> account), Marco 2 giorni fa (finestra chiusa: lo scaglionamento dal vivo).
+> Una sola risposta seminata: il **quadro del Comune** su Pulizia · luglio,
+> account generico, testo di servizio senza fatti inventati.
 
 ---
 
@@ -377,11 +418,17 @@ l'unico posto da leggere.
    raccoglie**: non è proporzionato allo scopo e non fa nulla che l'email non
    faccia. Costante `CONSERVAZIONE_IP_GIORNI`; da dichiarare su `/privacy` in
    R-3.
-2. ⏳ **Il numero della soglia resta PROVVISORIO.** 20 è nel codice e marcato
-   come tale (`SOGLIA_PROVVISORIA`); il valore definitivo si sceglie scrivendo
-   `/metodologia` in R-6, quando la soglia si vedrà accanto alle altre regole
-   invece che da sola. **Fino ad allora non va citata come definitiva in nessuna
-   pagina pubblica.**
+2. ✅ **La soglia è SCIOLTA in «nessuna soglia»** (decisione di Lorenzo,
+   2026-08-05, scrivendo `/metodologia` — esattamente come questa voce
+   prometteva). La media compare **dal primo voto**, sempre accompagnata dal
+   campione: una soglia tace il dato proprio dove i votanti sono pochi, cioè
+   in una città media quasi ovunque e quasi sempre, e la protezione onesta è
+   il volume in chiaro, non il silenzio. Vale **ovunque la soglia mordeva** —
+   media, punto mensile dell'andamento, quartiere di domani — senza
+   eccezioni. `SOGLIA_PUBBLICAZIONE_VOTO` e il flag `SOGLIA_PROVVISORIA` non
+   esistono più; il campione minimo della **mediana** della colonna dura (5,
+   di `citystats`) resta, e `/metodologia` dichiara il perché della
+   differenza. Registrata nel registro delle modifiche, v1.0.
 3. ✅ **Chi modera davvero** (decisione di Lorenzo, 2026-08-03, chiusura R-3):
    **la Redazione, reale, che firma SOLO come entità collettiva** — «Redazione
    della Dashboard di Pistoia», la stessa firma di `ChiPubblica` — **mai con
@@ -418,11 +465,14 @@ l'unico posto da leggere.
    verde racconterebbe una città senza attriti. ~~**Nessuna valutazione nel
    seed, sempre**~~ → **SUPERATA il 2026-08-04, a R-5 chiusa** (com'era
    previsto: «se ne riparla in R-5»): Lorenzo ha deciso di **seminare un mese
-   dimostrativo di valutazioni dichiarate** — una condizione sopra soglia con
-   media e andamento, le altre sotto, persone inventate e mai reali — così la
-   demo mostra la funzione piena (composizione, risposte, campagna e pop-up
-   armabili). **I numeri passano dal giro di forma PRIMA di scrivere il
-   seed** (è lavoro della sessione R-6, insieme alla metodologia).
+   dimostrativo di valutazioni dichiarate** — persone inventate e mai reali —
+   così la demo mostra la funzione piena (composizione, risposte, campagna e
+   pop-up armabili). **SEMINATO il 2026-08-05**, coi numeri passati dal giro
+   di forma: con «nessuna soglia» la storia è diventata la **gradazione dei
+   campioni** invece di «una sopra, le altre sotto» — 72 voti a
+   distribuzioni fisse, Trasporti a zero come bersaglio E2E dell'assenza, i
+   tre account demo che armano campagna, pop-up e scaglionamento (il
+   dettaglio nella chiusura di R-6, §7).
 8. ✅ **Il login-wall: /valutazioni si apre in sola lettura** (decisione di
    Lorenzo, 2026-08-04, R-5 — scelta W1 su tre termini presentati con le
    conseguenze dichiarate). Panoramica e schede vivono nel gruppo

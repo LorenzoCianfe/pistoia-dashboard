@@ -3,7 +3,6 @@ import {
   DOMANDA_FAMIGLIA,
   FINESTRA_CONDIZIONE_GIORNI,
   SERVIZI,
-  SOGLIA_PUBBLICAZIONE_VOTO,
   STELLE_MAX,
   STELLE_MIN,
   colonnaDuraDa,
@@ -103,20 +102,13 @@ describe("la scala a stelle", () => {
   });
 });
 
-describe("la soglia di pubblicazione", () => {
-  it("non mostra nessuna media sotto la soglia, ma dichiara il campione", () => {
-    const m = media(Array(19).fill(5));
-    expect(m.valore).toBeNull();
-    expect(m.pubblicabile).toBe(false);
-    expect(m.campione).toBe(19);
-    expect(m.mancanti).toBe(1);
-  });
-
-  it("pubblica esattamente alla soglia", () => {
-    const m = media(Array(SOGLIA_PUBBLICAZIONE_VOTO).fill(4));
-    expect(m.pubblicabile).toBe(true);
-    expect(m.valore).toBe(4);
-    expect(m.mancanti).toBe(0);
+describe("la media, dal primo voto", () => {
+  it("compare col primo voto, col campione dichiarato accanto", () => {
+    // «Nessuna soglia» (decisione di Lorenzo, 2026-08-05, /metodologia v1.0):
+    // la protezione non è il silenzio sotto una quota, è il campione stampato
+    // accanto — che è ciò che questo tipo restituisce sempre.
+    expect(media([5])).toEqual({ valore: 5, campione: 1 });
+    expect(media([2, 3])).toEqual({ valore: 2.5, campione: 2 });
   });
 
   it("arrotonda a una cifra decimale", () => {
@@ -125,17 +117,20 @@ describe("la soglia di pubblicazione", () => {
   });
 
   it("scarta i voti fuori scala invece di lasciarli sporcare la media", () => {
-    const m = media([...Array(20).fill(4), 0, 9, 2.5], 20);
+    const m = media([...Array(20).fill(4), 0, 9, 2.5]);
     expect(m.campione).toBe(20);
     expect(m.valore).toBe(4);
   });
 
-  it("è più alta di CAMPIONE_MINIMO_PER_GIUDIZIO, e di proposito", () => {
-    // Le due soglie NON sono due definizioni dello stesso indicatore: quella
-    // di citystats è la soglia di un tasso su casi che arrivano da soli, questa
-    // è la soglia di una media su recensioni che si autoselezionano verso gli
-    // estremi. Se qualcuno le unificasse per simmetria, questo test cadrebbe.
-    expect(SOGLIA_PUBBLICAZIONE_VOTO).toBeGreaterThan(CAMPIONE_MINIMO_PER_GIUDIZIO);
+  it("convive col campione minimo della mediana, e di proposito", () => {
+    // Non sono due definizioni dello stesso indicatore: la media è un'opinione
+    // aggregata che va a schermo col suo campione accanto, la mediana della
+    // colonna dura si presenta come il lato solido della pagina e sotto
+    // CAMPIONE_MINIMO_PER_GIUDIZIO tace. Se qualcuno togliesse quel minimo
+    // «per coerenza con nessuna soglia», questo test cadrebbe.
+    expect(media([4]).valore).not.toBeNull();
+    const c = colonnaDuraDa(servizio("pulizia")!, [7, 7], 2, CAMPIONE_MINIMO_PER_GIUDIZIO);
+    expect(c.giorniMediani).toBeNull();
   });
 });
 
@@ -155,11 +150,10 @@ describe("la composizione del campione", () => {
   });
 
   it("regge il caso vero del giorno uno: zero valutazioni", () => {
+    // L'unica assenza è l'assenza vera: a zero voti la media è null e la
+    // scheda lo dichiara, invece di decorarlo.
     expect(composizione([])).toEqual({ totale: 0, confermate: 0, daQr: 0 });
-    const m = media([]);
-    expect(m.valore).toBeNull();
-    expect(m.campione).toBe(0);
-    expect(m.mancanti).toBe(SOGLIA_PUBBLICAZIONE_VOTO);
+    expect(media([])).toEqual({ valore: null, campione: 0 });
   });
 });
 
@@ -251,17 +245,15 @@ describe("la conservazione dell'IP, a date fisse", () => {
 });
 
 describe("lo sblocco del quartiere", () => {
-  it("resta chiuso finché il quartiere non supera la soglia da solo", () => {
-    expect(quartiereSbloccato(Array(19).fill(voto()))).toBe(false);
-    expect(quartiereSbloccato(Array(20).fill(voto()))).toBe(true);
+  it("si accende col primo voto suo, come tutto il resto", () => {
+    // «Nessuna soglia» vale anche sulla geografia: nessuna superficie rende
+    // ancora le medie locali, ma la regola è decisa e sta qui.
+    expect(quartiereSbloccato([])).toBe(false);
+    expect(quartiereSbloccato([voto()])).toBe(true);
   });
 
-  it("non conta le rimosse per raggiungere la soglia", () => {
-    const voti = [
-      ...Array(19).fill(voto()),
-      voto({ rimossaIl: new Date("2026-08-01") }),
-    ];
-    expect(quartiereSbloccato(voti)).toBe(false);
+  it("una rimossa non accende niente", () => {
+    expect(quartiereSbloccato([voto({ rimossaIl: new Date("2026-08-01") })])).toBe(false);
   });
 });
 

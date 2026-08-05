@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
   MessagesSquare,
   ScrollText,
@@ -90,12 +91,20 @@ export default function PagellaPage() {
       <Card id="metodologia" className="scroll-mt-24 bg-surface-2/40">
         <h2 className="text-base font-bold tracking-tight">Come si calcola</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          Definizione, fonte, peso e soglia di ogni indicatore vivranno su
-          <span className="font-semibold text-foreground"> /metodologia</span>,
-          versionati, con un registro delle modifiche. Ogni pagella porta il
-          timbro della versione che l&apos;ha calcolata: senza il timbro, una
-          pagella vecchia diventa incontestabile perché nessuno sa più con quali
-          regole fu prodotta.
+          La{" "}
+          <Link
+            href="/metodologia"
+            className="font-semibold text-teal underline-offset-2 hover:underline"
+          >
+            metodologia
+          </Link>{" "}
+          esiste (v1.0, con registro delle modifiche) e oggi copre le
+          valutazioni dei servizi. Definizione, fonte, peso e soglia di ogni
+          indicatore della pagella entreranno lì con una versione nuova, prima
+          che il primo voto sia calcolato. Ogni pagella porterà il timbro della
+          versione che l&apos;ha calcolata: senza il timbro, una pagella
+          vecchia diventa incontestabile perché nessuno sa più con quali regole
+          fu prodotta.
         </p>
       </Card>
 

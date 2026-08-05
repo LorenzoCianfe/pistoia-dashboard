@@ -326,7 +326,7 @@ npm run test:e2e       # playwright
 npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
 npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
 node scripts/shots.mjs --simple --width=360   # modalità semplice, viewport minima
-npm run rotte          # tutte le rotte rispondono e rendono contenuto? (54 al 2026-08-04)
+npm run rotte          # tutte le rotte rispondono e rendono contenuto? (56 al 2026-08-05)
 npm run db:reset       # ricrea il DB e ripopola i dati dimostrativi
 
 python scripts/pdftext.py documento.pdf              # testo di un PDF
@@ -492,7 +492,7 @@ Una modifica è finita quando **tutte** queste sono vere:
 - [ ] `npm run lint` passa
 - [ ] I test esistenti passano
 - [ ] `npm run rotte` è verde — **0 con problemi**, qualunque sia il totale
-      (54 al 2026-08-04; il numero cresce a ogni rotta nuova, e va letto dallo
+      (56 al 2026-08-05; il numero cresce a ogni rotta nuova, e va letto dallo
       script, non da qui). È l'unico cancello che risponde
       alla domanda «abbiamo perso una funzionalità?», e l'unico che apre le
       rotte annidate per indirizzo invece che cliccandole. Da R-5 le passate

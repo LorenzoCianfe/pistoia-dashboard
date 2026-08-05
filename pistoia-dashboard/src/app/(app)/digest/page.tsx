@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Stat } from "@/components/ui/stat";
 import { SectionHeader } from "@/components/ui/section-header";
 import { PrintButton } from "@/components/trasparenza/print-button";
+import { TimbroMetodologia } from "@/components/valutazioni/timbro-metodologia";
 import { Crest } from "@/components/brand/crest";
 import { reportCategory, proposalStatus } from "@/lib/community";
 import { decisionOutcome } from "@/lib/transparency";
@@ -117,6 +118,9 @@ export default async function DigestPage() {
           Di&apos; come sta la tua zona
           <ArrowRight size={15} aria-hidden />
         </Link>
+        {/* Il colophon (B2) resta anche in stampa: un report citato senza
+            versione è un report non verificabile. */}
+        <TimbroMetodologia />
       </Card>
 
       {/* Opere */}
@@ -263,11 +267,11 @@ export default async function DigestPage() {
 }
 
 /**
- * Il paragrafo delle Valutazioni: apre su ciò che si sa. Con medie sopra
- * soglia le dice; con voti sotto soglia dichiara il conto e il perché del
- * silenzio; a zero racconta la colonna dura — le mediane di chiusura, mai il
- * volume accostato alle stelle (la frase cita solo i tempi, che reggono un
- * giudizio anche su `sicurezza`).
+ * Il paragrafo delle Valutazioni: apre su ciò che si sa. Con medie le dice,
+ * col campione accanto (nessuna soglia, /metodologia regola 3); se i voti del
+ * periodo sono tutti sugli sportelli lo dichiara; a zero racconta la colonna
+ * dura — le mediane di chiusura, mai il volume accostato alle stelle (la
+ * frase cita solo i tempi, che reggono un giudizio anche su `sicurezza`).
  */
 function ValutazioniDelMese({
   v,
@@ -278,14 +282,12 @@ function ValutazioniDelMese({
       id: string;
       nome: string;
       materia: string;
-      media: { valore: number | null; campione: number; pubblicabile: boolean };
+      media: { valore: number | null; campione: number };
       giorniMediani: number | null;
     }[];
   };
 }) {
-  const pubblicate = v.condizioni.filter(
-    (c) => c.media.pubblicabile && c.media.valore != null,
-  );
+  const pubblicate = v.condizioni.filter((c) => c.media.valore != null);
   const conMediana = v.condizioni.filter((c) => c.giorniMediani != null);
   const mediane =
     conMediana.length > 0 ? (
@@ -317,7 +319,7 @@ function ValutazioniDelMese({
           </span>
         ))}
         {pubblicate.length < v.condizioni.length
-          ? ". Le altre condizioni sono sotto soglia: lì la media aspetta."
+          ? ". Le altre condizioni non hanno ancora voti."
           : "."}
       </p>
     );
@@ -327,9 +329,8 @@ function ValutazioniDelMese({
     return (
       <p className="text-sm leading-relaxed text-muted">
         Nel periodo sono entrate {formatNumber(v.entrate)}{" "}
-        {v.entrate === 1 ? "valutazione" : "valutazioni"}: nessuna casella è
-        ancora sopra la soglia, e prima di allora una media direbbe più di
-        quanto sappiamo.{mediane}
+        {v.entrate === 1 ? "valutazione, tutta" : "valutazioni, tutte"} sugli
+        sportelli: le condizioni della città non hanno ancora voti.{mediane}
       </p>
     );
   }
@@ -337,7 +338,8 @@ function ValutazioniDelMese({
   return (
     <p className="text-sm leading-relaxed text-muted">
       Le schede sono aperte e le stelle, per ora, dichiarate in attesa: la
-      media compare quando una casella supera la soglia.{mediane}
+      media compare col primo voto, insieme al numero di voti che la
+      compone.{mediane}
     </p>
   );
 }
