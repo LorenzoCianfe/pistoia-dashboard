@@ -282,16 +282,19 @@ nome dà 503 con certificato non valido:
 | Dove | Che cosa succedeva | Stato |
 |---|---|---|
 | `upgrade-insecure-requests` nella CSP | Promuoveva a `https://` ogni script; fallivano tutti con `ERR_CERT_AUTHORITY_INVALID` e **la demo si apriva col corpo vuoto** | ✅ **tolta** (decisione di Lorenzo). Torna col certificato — `ROADMAP.md`, traccia «Qualità continua» |
-| `secure: NODE_ENV === "production"` sul cookie di sessione (`src/lib/auth/session.ts`) | Il cookie prende `Secure`, e un browser **non conserva un cookie `Secure` arrivato su HTTP**: il login riesce, ma la navigazione successiva torna al login | 🔴 **aperto**. Riprodotto contro il sito vero: dopo l'accesso il browser ha **zero cookie** e `/bilancio`, `/segnalazioni`, `/profilo` atterrano su `/login` |
+| `secure: NODE_ENV === "production"` sul cookie di sessione (`src/lib/auth/session.ts`) | Il cookie prendeva `Secure`, e un browser **non conserva un cookie `Secure` arrivato su HTTP**: il login riusciva — il redirect lo decide il server nella stessa risposta — ma la navigazione successiva tornava al login, per sempre | ✅ **chiuso**: `Secure` si decide da **`x-forwarded-proto`**, non da `NODE_ENV`. Verificato in produzione: il cookie viene conservato (`httpOnly` intatto) e cinque rotte protette restano dove devono |
 
 Entrambi erano **invisibili ai cancelli**: `rotte` e `shots` girano contro lo
 sviluppo, dove `NODE_ENV` non è `production` e la CSP è quella di sviluppo. La
 regola che ne discende è in `AGENTS.md` §8: **un deploy non è finito quando
 risponde 200** — va aperto in un browser vero, e da autenticati.
 
-Il file dell'autenticazione è protetto: la correzione del cookie si concorda
-prima di scriverla. Le tre strade e il modo di verificarle sono in
-[`docs/prossima-sessione.md`](../docs/prossima-sessione.md).
+Il ripiego della correzione al cookie è **conservativo di proposito**: si
+rinuncia a `Secure` solo quando il proxy dichiara **positivamente** che la
+connessione è in chiaro (`x-forwarded-proto`/`x-forwarded-scheme`); senza
+quell'intestazione si torna a `NODE_ENV`, perché un cookie di sessione senza
+`Secure` su una connessione che potrebbe essere cifrata sarebbe un regalo a chi
+ascolta. **Col certificato si riaccende da solo**, senza toccare codice.
 
 ---
 
