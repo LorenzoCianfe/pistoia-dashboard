@@ -58,6 +58,11 @@ sh "C:\Users\loren\.homelab\cf.sh" GET "/deploy?uuid=w148lovopnak9eshxuy13b1i&fo
 sh "C:\Users\loren\.homelab\cf.sh" GET "/deployments/<deployment_uuid>"   # finché non dà "finished"
 ```
 
+**Se fallisce con `exit code 137` è l'OOM killer, non il codice**: `next build`
+non ci sta nei 5.360 MB della VM quando gli altri container lavorano. Coolify
+tiene su la versione precedente e **rilanciare basta** (visto il 2026-08-05: al
+secondo tentativo è passato).
+
 E **dopo ogni deploy, guarda che la pagina si MONTI**, non solo che risponda —
 è la lezione del 2026-08-05:
 
@@ -68,7 +73,9 @@ for c in $(curl -s $B/login | grep -oE '/_next/static/[^"]+\.css' | sort -u); do
 
 `0a756b` = tavolozza nuova viva. Ma il 200 e il CSS giusto **non bastano**:
 apri `/metodologia` in un browser vero e pretendi che `main` abbia migliaia di
-caratteri, non 183.
+caratteri, non 183 — **e fai anche il login**, poi apri `/bilancio` e pretendi
+di restarci. (Non misurare `/login`: lì `main` ha ~228 caratteri anche quando è
+sana, perché è solo il modulo.)
 
 ## Che cosa è successo nella sessione precedente (C-2)
 

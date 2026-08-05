@@ -657,7 +657,21 @@ lancia a mano, dall'interfaccia di Coolify o via API.
 > (`0a756b` = versione nuova viva) — **e l'apertura in un browser vero**, dove
 > `document.querySelector('main').innerText.length` deve dare migliaia di
 > caratteri. Se dà ~183, la pagina è ferma sul proprio «Caricamento in corso» e
-> il deploy **non** è a posto.
+> il deploy **non** è a posto. Attenzione a `/login`: lì `main` ha ~228
+> caratteri **anche quando è sana**, perché è solo il modulo — misura una
+> pagina di contenuto, non quella.
+>
+> E **da autenticati**: il 2026-08-05 il login riusciva e ogni navigazione
+> successiva tornava al login, perché il cookie di sessione aveva `Secure` su un
+> sito servito in HTTP. Il controllo giusto è: accedi, apri `/bilancio`, e
+> pretendi di restare su `/bilancio`.
+>
+> **Se il deploy fallisce con `exit code 137`, è l'OOM killer, non il codice.**
+> Visto il 2026-08-05 su un commit di sola documentazione: `next build` non ci
+> sta nei 5.360 MB della VM quando gli altri container sono al lavoro. Coolify
+> tiene su la versione precedente (la produzione non cade), e **rilanciare
+> basta** — al secondo tentativo è passato. Se diventasse frequente, la leva è
+> la RAM della VM o meno container accesi durante il build, non il Dockerfile.
 
 L'indirizzo incorpora l'IP del server (`sslip.io` risolve qualunque nome della
 forma `<nome>.<ip>.sslip.io`). Comodo perché non richiede alcuna configurazione
