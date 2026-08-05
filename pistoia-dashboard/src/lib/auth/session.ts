@@ -1,5 +1,5 @@
 import "server-only";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createHmac, randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
@@ -47,11 +47,50 @@ export async function createSession(
   return { token, expiresAt };
 }
 
+/**
+ * `Secure` si decide dal protocollo **reale** della richiesta, non da
+ * `NODE_ENV`.
+ *
+ * Prima era `NODE_ENV === "production"`, e su un deploy servito in **HTTP** era
+ * un modo silenzioso di impedire l'accesso: un browser **non conserva un cookie
+ * `Secure` arrivato in chiaro**, quindi il login riusciva — il redirect lo
+ * decide il server nella stessa risposta — ma la navigazione successiva tornava
+ * al login, per sempre. Riprodotto contro il deploy il 2026-08-05: dopo
+ * l'accesso il browser aveva **zero cookie** e ogni rotta protetta atterrava su
+ * `/login`.
+ *
+ * Il ripiego è **conservativo di proposito**: si rinuncia a `Secure` solo
+ * quando il proxy dichiara positivamente che la connessione è in chiaro. Se
+ * l'intestazione non c'è — nessun reverse proxy davanti — si torna al
+ * comportamento di prima, perché un cookie di sessione senza `Secure` su una
+ * connessione che potrebbe essere HTTPS sarebbe un regalo a chi ascolta.
+ *
+ * Il giorno che il deploy avrà un certificato valido questa funzione si
+ * riaccende **da sola**, senza toccare codice: è la stessa forma della
+ * correzione fatta alla CSP (`src/proxy.ts`).
+ */
+async function connessioneCifrata(): Promise<boolean> {
+  const h = await headers();
+  // Traefik/Coolify mandano `x-forwarded-proto`; alcuni proxy usano `-scheme`.
+  // Con più proxy in fila il valore è una lista: vale il primo, cioè il client.
+  const dichiarato = (
+    h.get("x-forwarded-proto") ??
+    h.get("x-forwarded-scheme") ??
+    ""
+  )
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+
+  if (dichiarato) return dichiarato === "https";
+  return process.env.NODE_ENV === "production";
+}
+
 export async function setSessionCookie(token: string, expiresAt: Date) {
   const store = await cookies();
   store.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: await connessioneCifrata(),
     sameSite: "lax",
     path: "/",
     expires: expiresAt,
