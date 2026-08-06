@@ -109,7 +109,9 @@ jobs:
           retention-days: 7
 
   lighthouse:
-    name: Lighthouse (misura, non giudica)
+    # Il nome diceva «misura, non giudica» ed era vero fino al 2026-08-06:
+    # adesso giudica, e il documento non può restare indietro sul codice.
+    name: Lighthouse (soglie misurate)
     runs-on: ubuntu-latest
     needs: quality
     # BLOCCANTE dal 2026-08-06. Era `continue-on-error: true` «finché non
