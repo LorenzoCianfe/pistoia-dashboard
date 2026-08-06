@@ -432,11 +432,19 @@ un'inversione.
 4. Live region per i cambi di stato asincroni.
 5. La modalità semplice è un cittadino di prima classe: ogni feature nuova si
    verifica anche lì.
-6. Target touch ≥ 44px. ⚠️ **Nessun cancello lo misura**: `target-size` è una
-   regola **WCAG 2.2**, e `accessibilita.spec.ts` gira sui tag `wcag2aa` e
-   `wcag21aa`. Il footer ha avuto bersagli da **16px** su ogni pagina della
-   piattaforma finché qualcuno non li ha misurati a mano (2026-08-05). Questo
-   vincolo si verifica leggendo l'altezza resa, non fidandosi del verde.
+6. Target touch ≥ 44px. ⚠️ **Nessun cancello lo misura, e la regola come è
+   scritta qui non è trasformabile in uno.** Da 2026-08-06 il cancello axe
+   comprende `wcag22aa`, quindi `target-size` gira davvero (345 nodi, zero
+   violazioni) — ma quella regola chiede **24px con quattro eccezioni**
+   (spaziatura, inline, equivalente, essenziale), non 44 senza. I link del
+   footer erano alti **16px** e sarebbero passati lo stesso, perché ben
+   spaziati: li ha trovati una misura a mano, non un cancello.
+
+   Misurati col metro crudo di questa riga, sulle otto pagine del cancello ci
+   sono **246 elementi interattivi sotto i 44px** — e quasi tutti sono
+   legittimi: link dentro la prosa, che a 44px spaccherebbero il testo. Finché
+   questa riga non avrà le sue eccezioni, **non è un vincolo: è
+   un'aspirazione**, e va letta così. Decisione aperta in `ROADMAP.md`.
 7. **Ogni grafico ha un equivalente testuale** e, dove possibile, è
    attraversabile da tastiera.
 8. Nessun contenuto può restare invisibile perché un'animazione non è partita

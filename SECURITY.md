@@ -207,11 +207,26 @@ passate che le hanno chiuse:
 | **`next` 16.2.7 → 16.3.0** | la voce a priorità più alta: **bypass di middleware in App Router**, più otto avvisi suoi | 8 → 5. Porta con sé `postcss` 8.5.23 e `sharp` 0.35.3, che erano due delle voci |
 | **`prisma` 7.8.0 → 7.9.1** (con `@prisma/client` e l'adapter allineati) | la catena `@prisma/dev` → `hono`, `@hono/node-server`, `valibot` — il server locale di Prisma Studio | 5 → **0** |
 
-Il passo `npm audit` in CI resta **informativo** per ora. Diventerà bloccante
-(`npm audit --audit-level=high`, senza `|| true`) quando lo zero avrà retto
-qualche settimana: renderlo bloccante lo stesso giorno in cui lo si raggiunge
-significa scoprire dalla CI rossa che è uscito un avviso nuovo, invece che da
-una lettura.
+**Il passo `npm audit` in CI è BLOCCANTE dal 2026-08-06**: `npm audit
+--audit-level=high`, senza `|| true`.
+
+> Questo paragrafo diceva «diventerà bloccante quando lo zero avrà retto qualche
+> settimana». Ha retto **un giorno**, e la riga è stata chiusa lo stesso, per
+> decisione esplicita di Lorenzo (2026-08-06). La condizione originale non è
+> stata dimenticata: è stata **scavalcata**, e vale la pena scrivere perché
+> l'argomento che la sosteneva era più debole di quanto sembrasse.
+>
+> Il timore era «scoprire dalla CI rossa che è uscito un avviso nuovo, invece
+> che da una lettura». Ma è esattamente il mestiere di un cancello: nessuno
+> rilegge `npm audit` a mano ogni settimana, ed è per non doverlo fare che
+> esiste la CI.
+>
+> Resta valido il rischio opposto — un cancello che diventa rosso per rumore
+> smette di essere letto — e la soglia lo tiene a bada: `--audit-level=high`
+> agisce sul **codice di uscita**, non sul referto. Il report esce comunque
+> intero nei log, quindi un avviso `moderate` resta **visibile** senza far
+> cadere la pipeline. Se un giorno la si volesse più stretta, la leva è
+> `--audit-level=moderate`, non togliere la soglia.
 
 ### ⚠️ Il prezzo di Next 16.3: `'strict-dynamic'` non c'è più in **sviluppo**
 

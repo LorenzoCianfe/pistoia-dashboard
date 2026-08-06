@@ -44,15 +44,24 @@ jobs:
 
       # Audit delle dipendenze — traccia «Qualità continua».
       #
-      # NON bloccante, e la ragione è dichiarata: al 2026-08-05 restano 8
-      # avvisi in due famiglie (`next` e la catena di Prisma Studio) che
-      # aspettano una decisione — vedi SECURITY.md §7. Un cancello rosso per
-      # qualcosa che si è scelto di non chiudere ancora smette di essere letto,
-      # e il primo avviso NUOVO passerebbe inosservato in mezzo ai vecchi.
-      # Quando le due decisioni saranno prese, questa riga diventa
-      # `npm audit --audit-level=high` senza `|| true`.
-      - name: Audit dipendenze (informativo)
-        run: npm audit || true
+      # BLOCCANTE dal 2026-08-06. Fino al giorno prima era `npm audit || true`,
+      # e la ragione era dichiarata: restavano avvisi che aspettavano una
+      # decisione, e un cancello rosso per qualcosa che si è scelto di non
+      # chiudere smette di essere letto. Quella ragione è caduta: la C-2 ha
+      # portato l'audit da 12 a **zero**, e lo zero ha retto.
+      #
+      # `--audit-level=high` e non `npm audit` nudo: la soglia è sul CODICE DI
+      # USCITA, non sul referto — il report esce comunque intero nei log, quindi
+      # un avviso `moderate` resta VISIBILE senza far cadere la pipeline. È la
+      # stessa logica del commento di prima, applicata al contrario: qui il
+      # rosso deve significare «è successo qualcosa di serio», altrimenti smette
+      # di essere letto anche questo.
+      #
+      # `--include=dev` è implicito e voluto: il Dockerfile fa
+      # `npm ci --include=dev`, quindi le dipendenze di sviluppo finiscono
+      # nell'immagine di produzione e vanno auditate come le altre.
+      - name: Audit dipendenze
+        run: npm audit --audit-level=high
 
       - name: Drift migrazioni (schema ↔ migrations)
         # exit 2 se lo schema diverge dalle migrazioni committate.
@@ -138,10 +147,44 @@ jobs:
       - name: Lighthouse CI
         run: npx --yes @lhci/cli@0.15.1 autorun
 
+      # I PUNTEGGI NEL LOG, e non è un di più: senza `assert` in
+      # `lighthouserc.js`, `lhci autorun` si ferma a `collect` e **non stampa
+      # nessuna tabella**. Fino al 2026-08-06 questo job girava, scriveva 12
+      # referti sul disco, e non lasciava un solo numero leggibile da nessuna
+      # parte — mentre si diceva «le soglie si scrivono dopo aver guardato le
+      # prime passate». Non c'era niente da guardare.
+      #
+      # Legge il manifest e stampa la MEDIANA per URL, che è la corsa che
+      # `lhci` marca `isRepresentativeRun`.
+      - name: Punteggi (mediana delle tre passate)
+        if: always()
+        run: |
+          node -e '
+            const fs = require("fs");
+            const m = JSON.parse(fs.readFileSync(".lighthouseci/manifest.json", "utf8"));
+            const pad = (s, n) => String(s).padEnd(n);
+            console.log(pad("URL", 46) + ["perf", "a11y", "best", "seo"].map((h) => pad(h, 7)).join(""));
+            for (const r of m.filter((x) => x.isRepresentativeRun)) {
+              const s = r.summary;
+              console.log(
+                pad(r.url.replace("http://localhost:3000", ""), 46) +
+                [s.performance, s.accessibility, s["best-practices"], s.seo]
+                  .map((v) => pad(Math.round(v * 100), 7)).join("")
+              );
+            }
+          '
+
       - name: Carica i referti
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-report
           path: pistoia-dashboard/.lighthouseci/
+          # ⚠️ SENZA QUESTA RIGA NON SI CARICA NIENTE, e il job dice «success».
+          # `.lighthouseci` comincia con un punto, e da `upload-artifact@v4.4`
+          # i file nascosti sono esclusi per default: il passo si limitava a un
+          # `##[warning] No files were found`, che in un log da 400 righe non lo
+          # legge nessuno. Verificato sulla passata del 2026-08-05: dodici
+          # referti scritti, zero caricati, esito verde.
+          include-hidden-files: true
           retention-days: 7

@@ -33,7 +33,20 @@ export function StarRating({
   const pct = Math.max(0, Math.min(100, (value / 5) * 100));
   return (
     <span className={cn("inline-flex items-center gap-1.5", className)}>
+      {/*
+        `role="img"` NON è decorativo: senza, `aria-label` su uno `<span>` è
+        un attributo **proibito** (axe `aria-prohibited-attr`, gravità
+        `serious`), perché un elemento dal ruolo generico non può portare un
+        nome accessibile. L'etichetta veniva scartata in silenzio, e chi
+        naviga con uno screen reader sentiva la fila di stelle senza il voto.
+
+        Trovato il 2026-08-06 dal cancello axe, al **primo giro** in cui
+        `/admin/*` è entrata fra le pagine misurate: 182 nodi su due pagine.
+        `role="img"` rende il gruppo un elemento unico e nominabile — che è
+        anche la descrizione giusta di cosa sono cinque stelle disegnate.
+      */}
       <span
+        role="img"
         className="relative inline-block"
         style={{ width: size * 5 + 8, height: size }}
         aria-label={`${value.toFixed(1)} su 5`}

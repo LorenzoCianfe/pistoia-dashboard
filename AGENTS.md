@@ -573,13 +573,22 @@ significa riaprire esattamente il difetto che l'isolamento ha chiuso.
 piena pagina non mostra: il viewport si allarga fino a contenerlo e lo fa
 sparire.
 
-**`shots` accede da CITTADINO, `rotte` da ADMIN — e non è un dettaglio.** Una
-rotta `/admin/*` aggiunta a `shots.mjs` non fallisce: `requireAdmin()`
-reindirizza a `/la-mia-citta` e lo script fotografa **la home spacciandola per
-la pagina admin** — un cancello che certifica una pagina mai vista (visto
-accadere il 2026-08-03 con `/admin/codici-qr`). Le rotte admin si aggiungono a
-`rotte.mjs` e si **escludono dichiarandolo** da `shots.mjs`, finché lo script
-non imparerà un passaggio da admin (ondata 8).
+**`shots` sa fare i passaggi di ruolo dal 2026-08-06** (Lavoro D §4). Ogni voce
+di `PAGES` dichiara il proprio `ruolo:` — `anonimo`, `cittadino`, `admin`,
+`moderatore` — e lo script fa una passata per regime, in contesti separati:
+`/login` reindirizza chi ha già una sessione, quindi un ruolo non può disfare
+il proprio accesso per prenderne un altro. Le credenziali stanno in `RUOLI`,
+sovrascrivibili da `SHOTS_ADMIN_EMAIL` e simili.
+
+**La cosa da non rompere è il controllo dell'ATTERRAGGIO.** I guard di questo
+progetto **reindirizzano, non rifiutano**: `requireAdmin()` non risponde 403,
+manda a `/la-mia-citta` con stato 200 e contenuto perfettamente valido. Senza
+quel controllo lo script fotografa **la home spacciandola per la pagina admin**
+— un cancello che certifica una superficie mai vista, visto accadere il
+2026-08-03 con `/admin/codici-qr`, ed è la ragione per cui quelle rotte sono
+rimaste escluse per tre mesi. Adesso un atterraggio diverso da quello chiesto è
+un **fallimento**, non una foto. Stessa regola in `accessibilita.spec.ts`
+(`pretendiAtterraggio`) e in `rotte.mjs` (passate moderatore e anonima).
 
 **Tre cose di R-3 che valgono per qualunque lavoro futuro (2026-08-03):**
 

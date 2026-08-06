@@ -6,6 +6,21 @@ export const CITTADINO = {
   password: "Pistoia2026",
 };
 
+/** Il super-account del Comune. Vede `/admin/*`, e **non** `/redazione`. */
+export const ADMIN = {
+  email: "comune@pistoia.it",
+  password: "Comune2026!",
+};
+
+/**
+ * La Redazione (R-4). `/redazione` respinge l'admin **per disegno** — il
+ * Comune non modera ciò che lo riguarda — quindi è l'unico ruolo che la apre.
+ */
+export const MODERATORE = {
+  email: "moderatore@pistoia.it",
+  password: "Pistoia2026",
+};
+
 export async function login(
   page: Page,
   { email, password } = CITTADINO,

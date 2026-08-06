@@ -141,19 +141,27 @@ const PAGES = [
   // R-5: l'atterraggio del promemoria mensile, nello stato «link non più
   // valido» — l'unico fotografabile senza un token vero, come la conferma.
   { name: "promemoria-stop", url: "/v/promemoria/link-non-valido" },
-  // ESCLUSA E DICHIARATA: /admin/codici-qr. Questo script accede da CITTADINO,
-  // e `requireAdmin()` reindirizza a /la-mia-citta — la "schermata" prodotta
-  // sarebbe la home spacciata per il foglio dei QR, cioè un cancello che
-  // certifica una pagina mai vista (AGENTS.md §3, ondata 7, trappola 4; visto
-  // accadere qui il 2026-08-03). Come il resto di /admin, entrerà quando
-  // l'ondata 8 rifarà l'area e questo script imparerà un passaggio da admin.
-  // Intanto la rotta è coperta da `rotte.mjs`, che accede da ADMIN.
-  //
-  // ESCLUSA E DICHIARATA per la stessa ragione: /redazione (R-4). Vuole il
-  // ruolo MODERATORE — né il cittadino di questo script né l'admin di
-  // `rotte.mjs` la vedono; lì è coperta da una seconda passata con l'account
-  // moderatore, che pretende anche l'atterraggio sull'indirizzo chiesto.
-  // Entrerà qui quando l'ondata 8 insegnerà allo script i passaggi di ruolo.
+  /*
+    LE SUPERFICI DELLO STAFF, entrate il 2026-08-06 (Lavoro D §4).
+
+    Fino a ieri erano **esclusioni dichiarate**: questo script accedeva solo da
+    cittadino, e `requireAdmin()` reindirizza a /la-mia-citta — la "schermata"
+    prodotta sarebbe stata la home spacciata per il foglio dei QR, cioè un
+    cancello che certifica una pagina mai vista (visto accadere il 2026-08-03).
+    Il debito visivo lì cresceva a ogni giro, perché nessuno le guardava mai.
+
+    Adesso lo script sa fare i passaggi di ruolo (vedi `RUOLI` più sotto), e la
+    trappola è chiusa da un controllo esplicito: **si pretende l'ATTERRAGGIO**
+    sull'indirizzo chiesto. Se un redirect ci porta altrove la cattura è un
+    fallimento, non una foto — la stessa regola che `rotte.mjs` applica alle
+    sue passate per ruolo.
+
+    `/redazione` vuole MODERATORE e non admin, per disegno: il Comune non
+    modera ciò che lo riguarda (R-4).
+  */
+  { name: "admin", url: "/admin", ruolo: "admin" },
+  { name: "admin-codici-qr", url: "/admin/codici-qr", ruolo: "admin" },
+  { name: "redazione", url: "/redazione", ruolo: "moderatore" },
   { name: "faq", url: "/faq" },
   { name: "glossario", url: "/glossario" },
   // Fase B, terzo scaglione: tutto il resto. Il criterio del punto d'ingresso
@@ -187,15 +195,37 @@ const PAGES = [
   { name: "note-comunita", url: "/note-comunita", auth: false },
 ];
 
-const CREDENTIALS = {
-  email: process.env.SHOTS_EMAIL ?? "cittadino@pistoia.it",
-  password: process.env.SHOTS_PASSWORD ?? "Pistoia2026",
+/**
+ * I quattro regimi in cui l'applicazione si guarda, con le credenziali del
+ * seed. `anonimo` non ne ha: è l'assenza di sessione.
+ *
+ * Ogni pagina dichiara il proprio con `ruolo:`; senza, vale `cittadino`, che
+ * è il regime della stragrande maggioranza delle schermate. `auth: false`
+ * resta come scorciatoia storica per `anonimo`.
+ */
+const RUOLI = {
+  anonimo: null,
+  cittadino: {
+    email: process.env.SHOTS_EMAIL ?? "cittadino@pistoia.it",
+    password: process.env.SHOTS_PASSWORD ?? "Pistoia2026",
+  },
+  admin: {
+    email: process.env.SHOTS_ADMIN_EMAIL ?? "comune@pistoia.it",
+    password: process.env.SHOTS_ADMIN_PASSWORD ?? "Comune2026!",
+  },
+  moderatore: {
+    email: process.env.SHOTS_MOD_EMAIL ?? "moderatore@pistoia.it",
+    password: process.env.SHOTS_MOD_PASSWORD ?? "Pistoia2026",
+  },
 };
 
-async function login(page) {
+/** Il regime di una pagina, con i due valori predefiniti. */
+const ruoloDi = (p) => p.ruolo ?? (p.auth === false ? "anonimo" : "cittadino");
+
+async function login(page, credenziali) {
   await page.goto(`${BASE}/login`, { waitUntil: "domcontentloaded" });
-  await page.fill('input[name="email"]', CREDENTIALS.email);
-  await page.fill('input[name="password"]', CREDENTIALS.password);
+  await page.fill('input[name="email"]', credenziali.email);
+  await page.fill('input[name="password"]', credenziali.password);
   await Promise.all([
     page.waitForURL((u) => !u.pathname.includes("/login"), { timeout: 20_000 }),
     page.click('button[type="submit"]'),
@@ -203,16 +233,18 @@ async function login(page) {
 }
 
 /**
- * `anonime = true` cattura SOLO le pagine raggiungibili da disconnessi, senza
- * fare l'accesso; `false` fa l'accesso e cattura tutte le altre.
+ * Cattura le pagine di UN solo regime (`ruolo`), in un contesto suo.
  *
- * Sono due passaggi separati perché non possono convivere: `/login` reindirizza
- * chi ha già una sessione, quindi finché lo script faceva l'accesso in cima e
- * poi visitava tutte le pagine in fila, la schermata "login" conteneva in
- * realtà "La mia città". La prima schermata di ogni dimostrazione non era mai
- * stata davvero fotografata.
+ * I regimi non possono convivere in un contesto solo, e per due ragioni
+ * diverse: `/login` reindirizza chi ha già una sessione — finché lo script
+ * faceva l'accesso in cima e poi visitava tutte le pagine in fila, la
+ * schermata "login" conteneva in realtà "La mia città", e la prima schermata
+ * di ogni dimostrazione non era mai stata davvero fotografata — e un ruolo non
+ * può disfare il proprio accesso per prenderne un altro senza tornare
+ * sull'unica pagina che quel primo accesso rende irraggiungibile.
  */
-async function capture(ctx, theme, anonime) {
+async function capture(ctx, theme, ruolo) {
+  const anonime = ruolo === "anonimo";
   const page = await ctx.newPage();
   // next-themes legge da localStorage: impostarlo prima di ogni navigazione
   // evita il flash e rende la cattura deterministica.
@@ -225,10 +257,12 @@ async function capture(ctx, theme, anonime) {
   let authed = false;
   if (!anonime) {
     try {
-      await login(page);
+      await login(page, RUOLI[ruolo]);
       authed = true;
     } catch (e) {
-      console.warn(`  ⚠ login non riuscito: ${e.message.split("\n")[0]}`);
+      console.warn(
+        `  ⚠ login ${ruolo} non riuscito: ${e.message.split("\n")[0]}`,
+      );
     }
   }
 
@@ -240,9 +274,9 @@ async function capture(ctx, theme, anonime) {
 
   for (const p of PAGES) {
     if (ONLY.length && !ONLY.includes(p.name)) continue;
-    if (anonime !== (p.auth === false)) continue;
-    if (p.auth !== false && !authed) {
-      console.warn(`  – salto ${p.name} (richiede sessione)`);
+    if (ruoloDi(p) !== ruolo) continue;
+    if (!anonime && !authed) {
+      console.warn(`  – salto ${p.name} (richiede sessione ${ruolo})`);
       saltati += 1;
       continue;
     }
@@ -251,6 +285,28 @@ async function capture(ctx, theme, anonime) {
         waitUntil: "domcontentloaded",
         timeout: 25_000,
       });
+
+      /*
+        SI PRETENDE L'ATTERRAGGIO, e non è pedanteria: è la sola cosa che
+        rende sicure le pagine per ruolo.
+
+        `requireAdmin()` non risponde 403, **reindirizza**: aperta col ruolo
+        sbagliato, /admin/codici-qr consegna /la-mia-citta con stato 200 e
+        contenuto perfettamente valido. Lo script fotograferebbe la home
+        chiamandola col nome della pagina admin — un cancello che certifica
+        una superficie mai vista. È successo davvero il 2026-08-03, ed è la
+        ragione per cui queste rotte sono rimaste escluse per tre mesi.
+
+        Il controllo va PRIMA di `apriPrima`, che invece naviga apposta.
+      */
+      const atterrato = new URL(page.url()).pathname;
+      const chiesto = new URL(p.url, BASE).pathname;
+      if (atterrato !== chiesto) {
+        throw new Error(
+          `atterrata su ${atterrato} invece che su ${chiesto} — con ruolo ` +
+            `«${ruolo}» la schermata sarebbe di un'altra pagina`,
+        );
+      }
       /*
         Allarga il viewport all'altezza dell'intera pagina PRIMA di aspettare.
 
@@ -345,25 +401,20 @@ fs.mkdirSync(OUT, { recursive: true });
 
 for (const theme of ["light", "dark"]) {
   console.log(`\n${theme}:`);
-  const ctx = await browser.newContext({
-    viewport: VIEWPORT,
-    deviceScaleFactor: 2,
-    locale: "it-IT",
-    colorScheme: theme,
-  });
-  // Contesti distinti: la sessione dell'uno renderebbe irraggiungibile il login
-  // dell'altro.
-  await capture(ctx, theme, true);
-  await ctx.close();
-
-  const ctxAuth = await browser.newContext({
-    viewport: VIEWPORT,
-    deviceScaleFactor: 2,
-    locale: "it-IT",
-    colorScheme: theme,
-  });
-  await capture(ctxAuth, theme, false);
-  await ctxAuth.close();
+  // Un contesto per regime, e non è ottimizzabile: la sessione dell'uno
+  // renderebbe irraggiungibile il login dell'altro, perché /login reindirizza
+  // chi ce l'ha già.
+  for (const ruolo of ["anonimo", "cittadino", "admin", "moderatore"]) {
+    if (!PAGES.some((p) => ruoloDi(p) === ruolo)) continue;
+    const ctx = await browser.newContext({
+      viewport: VIEWPORT,
+      deviceScaleFactor: 2,
+      locale: "it-IT",
+      colorScheme: theme,
+    });
+    await capture(ctx, theme, ruolo);
+    await ctx.close();
+  }
 }
 
 await browser.close();

@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-import { login } from "./helpers";
+import { ADMIN, MODERATORE, login } from "./helpers";
 
 /*
   Cancello di accessibilità automatico (traccia «Qualità continua», ROADMAP).
@@ -30,8 +30,27 @@ import { login } from "./helpers";
 */
 test.describe.configure({ timeout: 90_000 });
 
-/** Le regole che DESIGN.md §11 dichiara vincolanti: AA, non AAA. */
-const REGOLE = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
+/**
+ * Le regole che DESIGN.md §11 dichiara vincolanti: AA, non AAA.
+ *
+ * **`wcag22a`/`wcag22aa` aggiunti il 2026-08-06**, dopo averli misurati e non
+ * prima: su tutte e otto le pagine, nei due temi, escono **zero violazioni**,
+ * e `target-size` non è inattivo — passa su **345 nodi**. Il costo di tenerli
+ * è nullo, il guadagno è che la prossima regressione 2.2 diventa rossa.
+ *
+ * ⚠️ **Ma questo non è il cancello dei 44px, e non va scambiato per tale.**
+ * `DESIGN.md` §11.6 chiede bersagli da ≥44px; WCAG 2.5.8 si accontenta di 24
+ * **e ha quattro eccezioni** (spaziatura, inline, equivalente, essenziale).
+ * I link del footer erano alti **16px** e sarebbero passati lo stesso, perché
+ * ben spaziati: il difetto trovato il 2026-08-05 l'ha visto una misura a mano,
+ * non axe, e non lo vedrebbe nemmeno adesso. Misurando gli elementi
+ * interattivi con un metro crudo (nessuna eccezione applicata) ne escono
+ * **246** sotto i 44px sulle stesse otto pagine — quasi tutti legittimi:
+ * link dentro la prosa, che a 44px spaccherebbero il testo. La regola §11.6
+ * come è scritta oggi **non è trasformabile in un cancello**: prima le
+ * servono le eccezioni. Decisione aperta in `ROADMAP.md`.
+ */
+const REGOLE = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
 
 /**
  * Le pagine sono scelte per **famiglia di composizione**, non per importanza:
@@ -44,20 +63,31 @@ const PAGINE_ANONIME = [
   { nome: "metodologia (documento lungo)", url: "/metodologia" },
 ];
 
-/**
- * **`/admin/*` e `/redazione` sono FUORI, e lo si dichiara.** Sono le superfici
- * di lavoro dello staff: `shots` non le fotografa (esclusione già dichiarata in
- * `AGENTS.md` §4, in attesa dell'ondata 8) e qui varrebbe lo stesso limite —
- * `login()` entra come cittadino, che su quelle rotte viene reindirizzato, e il
- * cancello certificherebbe una pagina mai vista. Entrano insieme, quando lo
- * script imparerà un passaggio da admin.
- */
 const PAGINE_AUTENTICATE = [
   { nome: "la mia città (hero + mesh)", url: "/la-mia-citta" },
   { nome: "bilancio (dati e grafici)", url: "/bilancio" },
   { nome: "segnalazioni (lista)", url: "/segnalazioni" },
   { nome: "quartieri (mesh coropletica)", url: "/quartieri" },
   { nome: "pagella (osservatorio)", url: "/pagella" },
+];
+
+/**
+ * **Le superfici di lavoro dello staff, entrate il 2026-08-06** (Lavoro D §4).
+ *
+ * Erano fuori, e dichiarate: `login()` entra come cittadino, che su quelle
+ * rotte **viene reindirizzato** — `requireAdmin()` non risponde 403, manda a
+ * /la-mia-citta con stato 200 — quindi il cancello avrebbe misurato la home
+ * col nome della pagina admin. Adesso ognuna entra col proprio ruolo, e la
+ * trappola è chiusa da `pretendiAtterraggio()`: se il redirect ci porta
+ * altrove il test fallisce invece di analizzare la pagina sbagliata.
+ *
+ * `/redazione` vuole MODERATORE e non admin, per disegno (R-4): il Comune non
+ * modera ciò che lo riguarda.
+ */
+const PAGINE_STAFF = [
+  { nome: "area Comune (admin)", url: "/admin", conto: ADMIN },
+  { nome: "codici QR (admin, da stampare)", url: "/admin/codici-qr", conto: ADMIN },
+  { nome: "redazione (moderatore)", url: "/redazione", conto: MODERATORE },
 ];
 
 /**
@@ -156,6 +186,25 @@ async function analizza(page: Page) {
   return new AxeBuilder({ page }).withTags(REGOLE).analyze();
 }
 
+/**
+ * Pretende di essere ATTERRATI dove si voleva andare.
+ *
+ * Serve solo alle rotte per ruolo, ma il costo è nullo e la ragione vale
+ * ovunque: i guard di questo progetto **reindirizzano**, non rifiutano. Una
+ * pagina aperta col ruolo sbagliato risponde 200 con contenuto valido — e un
+ * cancello che analizza quel contenuto dichiara accessibile una superficie che
+ * non ha mai visto. È la stessa trappola per cui `shots` fotografava la home
+ * chiamandola `/admin/codici-qr` (AGENTS.md §4).
+ */
+async function pretendiAtterraggio(page: Page, url: string) {
+  const dove = new URL(page.url()).pathname;
+  expect(
+    dove,
+    `atterrata su ${dove} invece che su ${url}: il ruolo non basta per questa ` +
+      `rotta, e analizzare la pagina d'arrivo certificherebbe qualcos'altro`,
+  ).toBe(url);
+}
+
 for (const tema of ["light", "dark"] as const) {
   test.describe(`accessibilità · tema ${tema}`, () => {
     for (const { nome, url } of PAGINE_ANONIME) {
@@ -176,6 +225,22 @@ for (const tema of ["light", "dark"] as const) {
         await conTema(page, tema);
         await login(page);
         await page.goto(url);
+        await pretendiAtterraggio(page, url);
+        await posata(page);
+        const esito = await analizza(page);
+        expect(
+          esito.violations,
+          `${url} (${tema}):\n${raccontaViolazioni(esito.violations)}`,
+        ).toEqual([]);
+      });
+    }
+
+    for (const { nome, url, conto } of PAGINE_STAFF) {
+      test(`${nome} non ha violazioni WCAG AA`, async ({ page }) => {
+        await conTema(page, tema);
+        await login(page, conto);
+        await page.goto(url);
+        await pretendiAtterraggio(page, url);
         await posata(page);
         const esito = await analizza(page);
         expect(
