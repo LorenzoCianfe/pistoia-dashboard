@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { login } from "./helpers";
 
 // R-5, decisione W1 (2026-08-04): /valutazioni e le schede si aprono in SOLA
 // LETTURA a chi non ha un account. Questi test girano SENZA login — il
@@ -17,8 +18,48 @@ test("la panoramica si legge senza account, con la barra anonima", async ({
   ).toBeVisible();
 
   // La barra anonima: stemma e «Accedi», niente campanello né profilo.
-  await expect(page.getByRole("link", { name: "Accedi" })).toBeVisible();
+  //
+  // L'ambito `banner` non è pedanteria: dal 2026-08-05 anche il footer offre
+  // un «Accedi», dentro la pastiglia che dichiara quali voci chiedono un
+  // account. Senza ambito il locatore ne trova due e il test cade in modo
+  // strict — cioè per una ragione che non è quella che sta provando.
+  await expect(
+    page.getByRole("banner").getByRole("link", { name: "Accedi" }),
+  ).toBeVisible();
   await expect(page.getByRole("link", { name: /notifiche/i })).toHaveCount(0);
+
+  // Il footer da anonimi (Lavoro D §1): le voci che chiedono un account NON
+  // spariscono — si dichiarano, una volta sola e in fondo. La regola è che
+  // nessuna porta si chiude in faccia senza preavviso.
+  // `locator("footer")` e non `getByRole("contentinfo")`: il footer vive
+  // DENTRO `<main>` (in `AppShell` come nel layout pubblico), e un `<footer>`
+  // discendente di `main` non è mappato a `contentinfo` — quindi non è un
+  // punto di riferimento per chi naviga a landmark. È un difetto vero e
+  // preesistente, annotato in ROADMAP: qui il test non ci si appoggia.
+  const footer = page.locator("footer");
+  await expect(
+    footer.getByText(/si aprono con un account/),
+  ).toBeVisible();
+  await expect(footer.getByRole("link", { name: "Glossario" })).toBeVisible();
+  await expect(footer.getByRole("link", { name: "Metodologia" })).toBeVisible();
+});
+
+test("dentro un account il footer non offre di accedere", async ({ page }) => {
+  // L'altro ramo della prop `autenticato`: la pastiglia è per chi è fuori, e
+  // chi è dentro non deve incontrarla mai. Vale la pena provarlo perché il
+  // valore predefinito della prop è `false`, quindi un innesto dimenticato
+  // sbaglia in questa direzione.
+  await login(page);
+  await page.goto("/valutazioni");
+
+  // `locator("footer")` e non `getByRole("contentinfo")`: il footer vive
+  // DENTRO `<main>` (in `AppShell` come nel layout pubblico), e un `<footer>`
+  // discendente di `main` non è mappato a `contentinfo` — quindi non è un
+  // punto di riferimento per chi naviga a landmark. È un difetto vero e
+  // preesistente, annotato in ROADMAP: qui il test non ci si appoggia.
+  const footer = page.locator("footer");
+  await expect(footer.getByRole("link", { name: "Glossario" })).toBeVisible();
+  await expect(footer.getByText(/si aprono con un account/)).toHaveCount(0);
 });
 
 test("la scheda si legge senza account e il modulo degrada a invito", async ({

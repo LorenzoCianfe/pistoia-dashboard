@@ -314,7 +314,7 @@ diagnosi sbagliate con dati apparentemente solidi.
    lo contendono. `side-nav.tsx` calcola quindi **una sola** voce attiva in
    tutta la barra.
 
-### Due trappole della Fase C (la pagella 2026-08-05, la qualità continua 2026-08-05)
+### Quattro trappole della Fase C (la pagella e la qualità continua 2026-08-05, il footer 2026-08-05)
 
 1. **Il JSX di questo Next può mangiare lo spazio fra un'espressione e il
    testo che segue.** `da {VOTO_MIN} a {VOTO_MAX} ed è un conteggio…` è
@@ -365,6 +365,71 @@ diagnosi sbagliate con dati apparentemente solidi.
    È la stessa famiglia della trappola 4 della Fase A/B (`.next` stantio) e
    della regola di §4 «gli E2E vogliono la directory libera» — ma con una
    causa che non si vede: il dev server che credi spento.
+
+3. **Il reset di Astryx batte l'ereditarietà anche per `font-size`, non solo
+   per il colore.** La trappola 3 dell'ondata 6 diceva che una dichiarazione
+   su `:where(p)` vince su un valore *ereditato* dal genitore, e la raccontava
+   col colore. Vale identica per la dimensione: `themes/generated/pistoia.css`
+   dichiara `font-size: var(--font-size-base)` su `:where(p)`, quindi
+
+   ```html
+   <div class="text-xs">     <!-- calcola 12px -->
+     <p>Dashboard di Pistoia</p>   <!-- rende 15px -->
+   </div>
+   ```
+
+   Il footer ci è vissuto dentro per mesi: il blocco d'identità rendeva a
+   **15px** contro i 12px dei link accanto, cioè con la gerarchia rovesciata —
+   il testo meno informativo era il più grande. Typecheck verde, lint verde, e
+   a occhio sembra solo «un po' sbilanciato».
+
+   La regola: **la classe di dimensione va sull'elemento che porta il testo,
+   mai su un contenitore che conta di passarla per eredità.** Una classe
+   sull'elemento ha specificità (0,1,0) e batte `:where(…)`; l'eredità no.
+   Il controllo che lo trova, su una pagina qualunque:
+
+   ```js
+   [...document.querySelectorAll('p')].filter(p =>
+     parseFloat(getComputedStyle(p).fontSize) >
+     parseFloat(getComputedStyle(p.parentElement).fontSize) + 0.5)
+   ```
+
+4. **Il cancello axe NON copre la dimensione dei bersagli.**
+   `accessibilita.spec.ts` gira sulle regole taggate `wcag2aa` e `wcag21aa`,
+   e `target-size` è **WCAG 2.2**: resta fuori, in silenzio. I link del
+   footer erano alti **16px** — contro i ≥44px che `DESIGN.md` §11.6 dichiara
+   vincolanti e i 24 del minimo WCAG 2.2 — su **ogni pagina della
+   piattaforma**, e nessun cancello ha mai avuto niente da ridire.
+
+   La regola generale, che vale oltre questo caso: **un cancello automatico
+   copre le regole che gli hai chiesto, non la promessa che hai scritto in un
+   documento.** Quando `DESIGN.md` §11 dichiara un vincolo, chiediti da quale
+   riga di quale script verrebbe misurato — e se la risposta è «nessuna»,
+   quel vincolo si verifica a mano o non si verifica.
+
+5. **Un componente che vive in colonne di larghezza diversa non può usare
+   `sm:` e `lg:`**, perché quelle guardano la **finestra**, non lo spazio che
+   ha davvero. Il footer sta in ~850px dentro `AppShell`, in **640px** sulle
+   pagine legali (`max-w-2xl`): con `lg:flex-row` a 1440px di finestra la
+   variante scattava **anche nella colonna stretta**, e lì i 640px si
+   dividevano in 320 d'identità più due colonne da **~82px**. «FAQ della
+   città» andava a capo, «IL PROGETTO» pure.
+
+   La leva è `@container` (Tailwind v4 ce l'ha nativo: `@container` sul
+   contenitore, poi `@sm:`, `@3xl:` sui figli), che misura la larghezza del
+   componente. Misurato dopo: 263px per colonna invece di 82.
+
+   **Il difetto non produce traboccamento**, quindi `shots` esce 0 e i test
+   passano: il testo va a capo, non fuori. **L'ha trovato la casella «l'hai
+   guardata» di §5**, aprendo `screenshots/wave/privacy-light.png`. Corollario:
+   quando aggiungi un componente condiviso, chiediti in **quante larghezze
+   diverse** viene reso — se sono due, le varianti di finestra sono già
+   sbagliate.
+
+   Nella stessa schermata, un secondo difetto della stessa natura: un'icona
+   messa come **elemento flex accanto** a una frase lunga, in colonna stretta,
+   finisce **da sola su una riga** e sembra un guasto. Dentro una frase le
+   icone si scrivono `inline-block`, così scorrono come una parola.
 
 ---
 

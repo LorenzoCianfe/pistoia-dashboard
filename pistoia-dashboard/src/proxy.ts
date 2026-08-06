@@ -20,6 +20,22 @@ const PROTECTED_PREFIXES = [
   "/mappa",
   "/quartieri",
   "/organigramma",
+  /*
+    Aggiunte il 2026-08-05 (Lavoro D, punto 1). Erano protette **per
+    residenza** e non per decisione: stanno nel gruppo `(app)`, il cui layout
+    chiama `requireUser()` — e la DAL fa `redirect("/login")` e basta, perché
+    non sa da dove venivi. Risultato misurato: chi ci arrivava da anonimo — dal
+    footer, da un link condiviso, da un segnalibro — accedeva e atterrava
+    altrove, dovendo ritrovare la pagina da sé. `/organigramma`, che qui c'era
+    già, conservava invece la destinazione: la differenza si vedeva solo
+    provandole una per una.
+
+    Qui NON cambia chi può leggerle (il guard vero resta la DAL): cambia solo
+    che il redirect porta con sé il `?next=`.
+  */
+  "/avvisi",
+  "/faq",
+  "/glossario",
   // "/valutazioni" NON c'è più (R-5, decisione W1 del 2026-08-04): la
   // panoramica e le schede sono a lettura pubblica, nel gruppo (pubblico).
   // Il guard vero resta nella DAL: qui si toglie solo l'acceleratore.

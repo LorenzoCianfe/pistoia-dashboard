@@ -5,6 +5,45 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.27.0] — 2026-08-05 · Lavoro D, punto 1 — il footer per chi non ha un account
+
+> La domanda di partenza era piccola: sulla scheda pubblica i link del footer
+> portano a pagine protette, che si fa? Misurandola è venuto fuori che **quattro
+> voci su sette** rispondono `307 → /login`, e che **tre di quelle quattro
+> perdono anche la destinazione** — chi accede atterra altrove e deve ritrovarsi
+> la pagina da sé. La differenza non era casuale: `/organigramma` è l'unica
+> elencata in `PROTECTED_PREFIXES`, cioè protetta **per decisione**; le altre tre
+> lo sono **per residenza**, perché stanno nel gruppo `(app)`, e la DAL fa
+> `redirect("/login")` senza sapere da dove venissi.
+>
+> E le superfici anonime erano **due**, non una: oltre a `(pubblico)` c'è
+> `(legal)`, dove atterra chi legge l'informativa dal modulo di voto del QR — che
+> per decisione esplicita **un account non ce l'ha**.
+>
+> Ma la risposta di Lorenzo alle quattro forme proposte è stata che il problema
+> era un altro: *«quelle sono delle scritte posizionate lì quasi a caso»*. Aveva
+> ragione, e si può dimostrare — **sei difetti misurati**, nessuno di gusto.
+> Il footer è stato rifatto.
+
+### Modificato
+- **`components/app/footer.tsx` — ridisegnato.** È una **scheda di vetro** appoggiata sulla tela (`.card`), non più un'area sotto un filo da 1px: risponde al difetto d'identità col **materiale** invece che con un ornamento, ed è `DESIGN.md` §4 applicata al fondo pagina. Due colonne col titolo **visibile** — «La città» e «Il progetto» — dove prima i due gruppi esistevano solo negli `aria-label` e si distinguevano per `#5A5D61`/500 contro `#65686C`/400, cioè per un capello. La divisione non è di comodo: la seconda colonna è tutta a lettura pubblica, la prima chiede un account.
+- **`/metodologia` entra nel footer** (decisione di Lorenzo): è pubblica ed è il regolamento che le schede di `/valutazioni` citano già nel corpo.
+- **`src/proxy.ts`: `/avvisi`, `/faq` e `/glossario` entrano in `PROTECTED_PREFIXES`.** Non cambia **chi** può leggerle — il guard vero resta la DAL — cambia che il redirect porta con sé il `?next=`, come già faceva `/organigramma`.
+- **`(legal)/layout.tsx` diventa asincrono** e chiama `getCurrentUser()`: senza, la pastiglia per gli anonimi comparirebbe anche a chi è già dentro. `AppShell` passa `autenticato`. Il valore predefinito della prop è `false` **di proposito**: un innesto dimenticato mostra l'invito a chi è dentro (difetto visibile), non lo nasconde a chi ne ha bisogno (difetto muto).
+
+### Corretto
+- **I bersagli del footer erano alti 16px**, su **ogni pagina della piattaforma**, contro i **≥44px** che `DESIGN.md` §11.6 dichiara vincolanti (e i 24 del minimo WCAG 2.2). Ora ogni voce è una riga da 44px. Il footer cresce da 113px a ~348px sul desktop: è il prezzo giusto della regola. **Nessun cancello poteva vederlo** — `accessibilita.spec.ts` gira sui tag `wcag2aa`/`wcag21aa`, e `target-size` è WCAG 2.2. Il buco è ora in `ROADMAP.md`, traccia «Qualità continua».
+- **Il blocco d'identità rendeva a 15px invece che a 12px.** `text-xs` stava sul contenitore, e il reset di Astryx dichiara `font-size` direttamente su `:where(p)`: una dichiarazione sull'elemento batte un valore *ereditato*. Risultato: il testo meno informativo del footer era il più grande di tutti, cioè la gerarchia rovesciata. È la trappola 3 dell'ondata 6 — documentata per il **colore** — che vale identica per la dimensione: adesso è scritta in `AGENTS.md` §3 come **trappola 23**, col controllo che la trova.
+
+- **Il footer si strozzava sulle pagine legali.** Usava `lg:flex-row`, cioè una soglia sulla **finestra**, ma vive in due colonne molto diverse: ~850px dentro `AppShell` e **640px** in `(legal)` (`max-w-2xl`). A 1440px di finestra la variante scattava anche nella colonna stretta, e lì i 640px si dividevano in 320 d'identità più due colonne da **~82px**: «FAQ della città» a capo, «IL PROGETTO» a capo. Passato a **`@container`** (nativo in Tailwind v4): la soglia adesso è la larghezza del footer, che è la sola che conti. Misurato: 263px per colonna invece di 82. **Nessun cancello poteva vederlo** — il testo andava a capo, non fuori, quindi `shots` usciva 0: l'ha trovato la casella «l'hai guardata» di `AGENTS.md` §5, aprendo lo screenshot.
+- **Il lucchetto della pastiglia restava orfano su una riga sua** in colonna stretta, perché era un elemento flex accanto alla frase invece che dentro. Ora è `inline-block` e scorre come una parola.
+
+### Documentazione
+- **`AGENTS.md` §3, trappole 23, 24 e 25**: il reset di Astryx batte l'ereditarietà anche per `font-size`; **un cancello automatico copre le regole che gli hai chiesto, non la promessa che hai scritto in un documento**; e **un componente che vive in colonne di larghezza diversa non può usare `sm:`/`lg:`** — se sono due larghezze, le varianti di finestra sono già sbagliate.
+- **`DESIGN.md` §4** — corollario alla revisione della tavolozza: i valori nuovi sono per costruzione *il più chiaro che superi 4,5:1*, quindi alcuni passano per pochissimo. `--muted-2` sulla tela fa **4,53:1**; una proposta di footer col motivo delle fasce romaniche al 3,5% lo portava a **4,24:1**, sotto soglia — una tinta che a occhio non esiste. **Un token che passa per tre centesimi non sopravvive a nessuno sfondo tinto.** All'opposto il vetro aiuta: sulla card `--muted-2` risale a 5,28:1. §6 e §11.6 aggiornate insieme.
+
+---
+
 ## [0.26.0] — 2026-08-05 · Fase C, «Qualità continua» (C-2) — zero avvisi, due cancelli nuovi e la tavolozza che non rispettava la propria promessa
 
 > La traccia trasversale mai iniziata, aperta nell'ordine deciso con Lorenzo:

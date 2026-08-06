@@ -350,7 +350,8 @@ applicate: `community_mvp`, `community_v2`, **`provenance`**, `ondata2_semplicit
 | FAQ della città | ✅ | **`/faq`** (O3): domande raggruppate per tema, badge 🏛️ "Risposta ufficiale", rimando alla Comunità |
 | Report del mese | ✅ | **Civic digest `/digest`** (O3): riepilogo 30 giorni calcolato dai dati (segnalazioni, opere, proposte, decisioni, eventi) + **export PDF** via print stylesheet |
 | Glossario | ✅ | **`/glossario`** (O3): termini amministrativi in linguaggio semplice (statico in `lib/glossary.ts`) + tooltip **`GlossaryTip`** nel bilancio |
-| Pagine legali | ✅ | `/privacy`, `/cookie`, `/note-comunita` (pubbliche) + **footer istituzionale** |
+| Pagine legali | ✅ | `/privacy`, `/cookie`, `/note-comunita` (pubbliche) — atterraggio dell'informativa linkata dal modulo di voto del QR, dove non c'è un account |
+| Footer | ✅ | **Scheda di vetro** appoggiata sulla tela (ridisegnato 2026-08-05, Lavoro D §1). Due colonne col titolo visibile: «La città» (avvisi, organigramma, FAQ, glossario — chiedono un account) e «Il progetto» (metodologia, privacy, cookie, regole community — pubbliche). Bersagli da **44px**; a chi non ha sessione una pastiglia dichiara il patto **una volta sola**, invece di offrire quattro porte chiuse. Prop `autenticato`, predefinita `false` perché l'errore muto è il peggiore. **Non si impagina da sé**: decide il contenitore |
 | Tema chiaro/scuro | ✅ | next-themes, colori di Pistoia mantenuti |
 
 ---

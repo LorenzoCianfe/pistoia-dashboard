@@ -135,6 +135,18 @@ Per costruzione esiste `bg-highlight` ma **non** `text-highlight`.
 > Ne discende una regola: **i `-soft` come sfondo di chip funzionano solo se il
 > colore pieno è abbastanza profondo.** La coppia colore/`-soft` va misurata
 > quando si aggiunge una tinta, non dopo.
+>
+> **Corollario, pagato il 2026-08-05 ridisegnando il footer.** I valori nuovi
+> sono per costruzione *il più chiaro che superi 4,5:1*, quindi alcuni passano
+> per pochissimo: `--muted-2` sulla tela fa **4,53:1**, tre centesimi sopra la
+> soglia. Una proposta di footer col motivo delle fasce romaniche al 3,5%
+> portava la tela da `#E8E7E4` a `#E1E0DD` — una tinta che a occhio non
+> esiste — e con essa `--muted-2` a **4,24:1**: sotto soglia intestazioni,
+> dichiarazione e colophon insieme. **Un token che passa per tre centesimi non
+> sopravvive a nessuno sfondo tinto**: sopra un motivo, anche tenue, il testo
+> secondario sale di un grado (`--color-text-secondary`, 5,01:1 sulla stessa
+> banda). All'opposto il vetro *aiuta*: sulla superficie delle card
+> `--muted-2` risale a 5,28:1.
 
 - **Un link dentro la prosa non si distingue solo per il colore** (WCAG 1.4.1).
   Dentro un `<p>` i link sono **sottolineati sempre**, non solo al passaggio del
@@ -199,6 +211,17 @@ l'opposto della regola precedente ed è voluto.
   copiare la forma ignorando il contenuto.
 - **Modalità semplice.** Tutto scala al 115%: ogni layout deve sopravvivere a
   quel test.
+- **Anche la chiusura è un oggetto** (revisione 2026-08-05). Il footer era
+  l'unico punto in cui la pagina *finiva*, con un filo da 1px: adesso è una
+  `card` appoggiata sulla tela come ogni altra superficie. La scelta è di
+  materiale e non di ornamento — è §4 applicata al fondo pagina, e ha un
+  effetto misurabile sulla leggibilità: sul vetro il testo secondario guadagna
+  quasi un punto di contrasto rispetto alla tela.
+
+  Da qui una regola di innesto: **il footer non si centra e non si impagina da
+  sé.** Decide il contenitore che lo ospita — dentro `AppShell` e `(pubblico)`
+  è la colonna di `main`, in `(legal)` un involucro apposta. Rimetterci dentro
+  un `mx-auto max-w-6xl px-4` raddoppierebbe il padding degli antenati.
 
 ---
 
@@ -409,7 +432,11 @@ un'inversione.
 4. Live region per i cambi di stato asincroni.
 5. La modalità semplice è un cittadino di prima classe: ogni feature nuova si
    verifica anche lì.
-6. Target touch ≥ 44px.
+6. Target touch ≥ 44px. ⚠️ **Nessun cancello lo misura**: `target-size` è una
+   regola **WCAG 2.2**, e `accessibilita.spec.ts` gira sui tag `wcag2aa` e
+   `wcag21aa`. Il footer ha avuto bersagli da **16px** su ogni pagina della
+   piattaforma finché qualcuno non li ha misurati a mano (2026-08-05). Questo
+   vincolo si verifica leggendo l'altezza resa, non fidandosi del verde.
 7. **Ogni grafico ha un equivalente testuale** e, dove possibile, è
    attraversabile da tastiera.
 8. Nessun contenuto può restare invisibile perché un'animazione non è partita

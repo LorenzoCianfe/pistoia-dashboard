@@ -29,6 +29,15 @@ Fuori dal menu, con casa dichiarata: avvisi (banner in home + footer),
 organigramma, FAQ e glossario nel footer; notifiche, profilo e impostazioni
 nella barra in alto; area Comune nel menu avatar per i soli ADMIN.
 
+**Il footer** (ridisegnato il 2026-08-05) è una **scheda di vetro** appoggiata
+sulla tela, non un'area sotto una linea. Due colonne col titolo **visibile**:
+«La città» (avvisi, organigramma, FAQ, glossario) e «Il progetto» (metodologia,
+privacy, cookie, regole community) — la divisione non è di comodo, è che la
+seconda è tutta a lettura pubblica e la prima chiede un account. **A chi non ha
+una sessione** una pastiglia in fondo lo dice una volta sola, invece di offrire
+quattro porte che si chiudono in faccia; chi è dentro non la incontra affatto.
+Ogni voce è un bersaglio da **44px** (prima erano 16).
+
 ## 1. Sezioni civiche
 
 | Sezione | Rotta | Stato | Cosa fa |

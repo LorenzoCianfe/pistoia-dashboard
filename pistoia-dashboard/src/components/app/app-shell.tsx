@@ -43,7 +43,12 @@ export async function AppShell({
           className="min-w-0 flex-1 pb-28 pt-6 outline-none lg:pb-12"
         >
           {children}
-          <Footer />
+          {/* `autenticato`: qui c'è sempre una sessione, quindi il footer non
+              deve mostrare l'invito ad accedere. Il valore predefinito della
+              prop è `false` di proposito — un innesto che se ne dimenticasse
+              mostrerebbe l'invito a chi è già dentro, difetto visibile;
+              l'inverso lo nasconderebbe a chi ne ha bisogno, difetto muto. */}
+          <Footer autenticato />
         </main>
       </div>
       <BottomNav />
