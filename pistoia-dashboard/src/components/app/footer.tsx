@@ -1,26 +1,8 @@
 import Link from "next/link";
 import { Lock } from "lucide-react";
 import { Crest } from "@/components/brand/crest";
-import { UTILITY_NAV } from "./nav-items";
+import { PROGETTO_NAV, UTILITY_NAV } from "./nav-items";
 import { DEMO_MODE } from "@/lib/demo";
-
-/**
- * Le pagine che spiegano il PROGETTO invece della città.
- *
- * Stanno in una colonna loro, separata da `UTILITY_NAV`, per una ragione di
- * sostanza e non di simmetria: **queste sono tutte a lettura pubblica, quelle
- * chiedono un account**. Finché i due insiemi coincidono con quella
- * differenza, la colonna è anche la spiegazione del lucchetto in fondo.
- *
- * `/metodologia` sta qui dal 2026-08-05 (decisione di Lorenzo): è pubblica, ed
- * è il regolamento che le schede di `/valutazioni` citano già nel corpo.
- */
-const PROGETTO = [
-  { href: "/metodologia", label: "Metodologia" },
-  { href: "/privacy", label: "Privacy" },
-  { href: "/cookie", label: "Cookie" },
-  { href: "/note-comunita", label: "Regole community" },
-];
 
 /**
  * Il footer, ridisegnato il 2026-08-05 (Lavoro D, punto 1).
@@ -93,7 +75,7 @@ export function Footer({ autenticato = false }: { autenticato?: boolean }) {
             (AGENTS.md §3, ondata 7, 5). */}
         <div className="grid grid-cols-1 gap-x-12 gap-y-6 @sm:grid-cols-2">
           <ColonnaFooter titolo="La città" voci={UTILITY_NAV} />
-          <ColonnaFooter titolo="Il progetto" voci={PROGETTO} />
+          <ColonnaFooter titolo="Il progetto" voci={PROGETTO_NAV} />
         </div>
       </div>
 

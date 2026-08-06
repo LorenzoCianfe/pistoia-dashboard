@@ -36,15 +36,15 @@ export default async function PubblicoLayout({
         Salta al contenuto
       </a>
       <TopBarAnonima />
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <main
-          id="contenuto"
-          tabIndex={-1}
-          className="min-w-0 pb-16 pt-6 outline-none"
-        >
+      <div className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
+        <main id="contenuto" tabIndex={-1} className="min-w-0 pt-6 outline-none">
           {children}
-          <Footer />
         </main>
+        {/* Fuori da `<main>` come in `AppShell`: un `<footer>` discendente di
+            `main` non è un `contentinfo`, quindi non è un punto di riferimento
+            per chi naviga a landmark. Qui non c'è barra laterale, perciò la
+            larghezza non cambia — cambia solo il ruolo. */}
+        <Footer />
       </div>
     </div>
   );

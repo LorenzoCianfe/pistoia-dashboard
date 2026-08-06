@@ -110,7 +110,8 @@ Per costruzione esiste `bg-highlight` ma **non** `text-highlight`.
   pieno va su testo/icone/bordi.
 - **Contrasto WCAG AA ovunque, AAA sul body.** Verificato **da una macchina**,
   a ogni esecuzione degli E2E (`tests/e2e/accessibilita.spec.ts`, axe-core sulle
-  regole `wcag2aa`/`wcag21aa`, otto pagine in entrambi i temi).
+  regole `wcag2aa`/`wcag21aa` **e `wcag22aa`**, undici pagine in entrambi i temi
+  — comprese le superfici di lavoro dello staff, entrate il 2026-08-06).
 
 > **Revisione del 2026-08-05 — la tavolozza chiara è stata scurita, e perché.**
 > Questa riga diceva «già verificato: non si regredisce». La verifica era stata

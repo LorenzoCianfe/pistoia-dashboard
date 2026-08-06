@@ -30,8 +30,11 @@ import {
   Handshake,
   FolderKanban,
   Star,
+  Award,
   type LucideIcon,
 } from "lucide-react";
+
+import { EDIZIONI } from "@/lib/pagella";
 
 export type NavItem = {
   href: string;
@@ -99,6 +102,26 @@ export const DESTINATIONS: NavDestination[] = [
         label: "Costo dell'amministrazione",
         icon: Coins,
       },
+      /*
+        LA PAGELLA, e la porta si apre da sé.
+
+        Sta sotto Trasparenza (decisione di Lorenzo, 2026-08-06) perché è ciò
+        che quella sezione promette portato alla conclusione, accanto a
+        Promesse e Bilancio che sono le sue fonti. Non sotto Partecipa: lì il
+        gesto è del cittadino, qui è la Redazione che giudica e il cittadino
+        legge.
+
+        **La condizione non è una data ma un fatto**: `EDIZIONI` è vuoto finché
+        la prima ricognizione reale non esiste (`lib/pagella.ts`, con un test a
+        guardia). Finché lo è, una voce di menu manderebbe un cittadino su una
+        pagina che dichiara di non avere ancora niente da dire. Il giorno in cui
+        la prima edizione entra in quell'elenco, questa voce compare **senza che
+        nessuno debba ricordarsene** — che è l'unica forma di rinvio che non si
+        dimentica.
+      */
+      ...(EDIZIONI.length > 0
+        ? [{ href: "/pagella", label: "La pagella della giunta", icon: Award }]
+        : []),
       { href: "/digest", label: "Report del mese", icon: Newspaper },
     ],
   },
@@ -134,6 +157,25 @@ export const UTILITY_NAV: NavItem[] = [
   { href: "/organigramma", label: "Organigramma", icon: Network },
   { href: "/faq", label: "FAQ della città", icon: HelpCircle },
   { href: "/glossario", label: "Glossario", icon: BookOpenText },
+];
+
+/**
+ * Le pagine che spiegano il PROGETTO invece della città.
+ *
+ * Stanno insieme per una ragione di sostanza e non di simmetria: **sono tutte
+ * a lettura pubblica**, mentre `UTILITY_NAV` chiede un account. È quella
+ * differenza che il footer dichiara con una pastiglia sola.
+ *
+ * Vive qui e non dentro `footer.tsx` perché dal 2026-08-06 la usano in due —
+ * il footer e la porta d'ingresso `/` — e due elenchi paralleli divergono
+ * sempre: sarebbero due risposte diverse alla stessa domanda «cosa può leggere
+ * chi non è entrato».
+ */
+export const PROGETTO_NAV = [
+  { href: "/metodologia", label: "Metodologia" },
+  { href: "/privacy", label: "Privacy" },
+  { href: "/cookie", label: "Cookie" },
+  { href: "/note-comunita", label: "Regole community" },
 ];
 
 /**

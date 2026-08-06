@@ -112,12 +112,11 @@ jobs:
     name: Lighthouse (misura, non giudica)
     runs-on: ubuntu-latest
     needs: quality
-    # Non bloccante PER ORA, e per la stessa ragione del job E2E alla nascita:
-    # non esiste ancora una soglia misurata. Le soglie si scrivono in
-    # `lighthouserc.js` (`assert`) dopo aver guardato le prime passate; solo
-    # allora questa riga si toglie. Una soglia inventata prima del primo numero
-    # non difende niente e fa fallire la CI per rumore.
-    continue-on-error: true
+    # BLOCCANTE dal 2026-08-06. Era `continue-on-error: true` «finché non
+    # esiste una soglia misurata»: adesso esiste, e sta in `lighthouserc.js`
+    # con la tabella della prima misura vera accanto. Le soglie stanno cinque
+    # punti sotto il minimo osservato, perché una soglia appoggiata al minimo
+    # lampeggia al primo rumore della macchina condivisa.
     steps:
       - uses: actions/checkout@v4
 

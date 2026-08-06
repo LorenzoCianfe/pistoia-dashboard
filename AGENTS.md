@@ -6,7 +6,7 @@
 >
 > **Leggilo per intero all'inizio di ogni sessione, prima di toccare codice.**
 >
-> Aggiornato: 2026-08-05 (Fase C)
+> Aggiornato: 2026-08-06 (Fase C · Lavoro D)
 
 ---
 
@@ -61,7 +61,7 @@ L'app vive in `pistoia-dashboard/`. La documentazione vive nella radice.
 
 ## 3. Design system — le regole che si sbagliano più spesso
 
-> §3 raccoglie **ventidue trappole già pagate**. Sono raggruppate per ondata
+> §3 raccoglie **venticinque trappole già pagate**. Sono raggruppate per ondata
 > solo perché è così che sono emerse: leggile tutte, valgono tutte ancora.
 
 **Prima di tutto: Astryx è la sorgente dei TOKEN, non lo strato di primitive.**
@@ -441,7 +441,7 @@ npm run typecheck      # tsc --noEmit — sempre prima di dire "fatto"
 npm run lint
 npm test               # vitest
 npm run test:e2e       # playwright (comprende il cancello di accessibilità)
-npm run a11y           # SOLO il cancello a11y: axe, 8 pagine × 2 temi, WCAG AA
+npm run a11y           # SOLO il cancello a11y: axe, 11 pagine × 2 temi, WCAG AA + 2.2
 npm run lighthouse     # Lighthouse sulla build di produzione — misura, non giudica
 npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
 npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
@@ -573,6 +573,21 @@ significa riaprire esattamente il difetto che l'isolamento ha chiuso.
 piena pagina non mostra: il viewport si allarga fino a contenerlo e lo fa
 sparire.
 
+**Il browser di `shots` si RILANCIA a ogni passata**, e non è pigrizia: con
+quattro regimi invece di due, un solo processo Chromium moriva a metà giro
+(uscita `0x80000003`, stack su `chromium.launch`) — chiudere un contesto **non
+restituisce la memoria**, e una schermata a piena pagina di `/admin` è
+2880×8000 a `deviceScaleFactor: 2`. Il primo sintomo era **un blocco senza
+errore**: venti minuti senza una riga di log, che è il modo peggiore in cui un
+cancello possa fallire.
+
+**E se Chromium smette di partire del tutto** — «Invalid file descriptor to ICU
+data received», lancio fallito in un secondo su qualunque script — non è il
+codice e non è la memoria: è l'installazione. Si ripara con
+`npx playwright install chromium --force`, ~2 minuti, e blocca `shots`, gli E2E
+e il cancello a11y insieme finché non lo fai. Il binario risponde a
+`--version` anche quando è in questo stato: non è una prova che sia sano.
+
 **`shots` sa fare i passaggi di ruolo dal 2026-08-06** (Lavoro D §4). Ogni voce
 di `PAGES` dichiara il proprio `ruolo:` — `anonimo`, `cittadino`, `admin`,
 `moderatore` — e lo script fa una passata per regime, in contesti separati:
@@ -638,7 +653,8 @@ Una modifica è finita quando **tutte** queste sono vere:
       scuro. Un typecheck verde non è una prova visiva.
 - [ ] Funziona da tastiera e il focus è visibile. **Il cancello axe non basta**:
       da 2026-08-05 `npm run test:e2e` comprende `accessibilita.spec.ts` (WCAG
-      AA, 8 pagine × 2 temi, nessuna regola esclusa), ma axe copre ~30–40% delle
+      AA e 2.2, **11 pagine × 2 temi = 22 casi**, su 48 E2E totali — comprese `/admin/*` e `/redazione` dal
+      2026-08-06 — nessuna regola esclusa), ma axe copre ~30–40% delle
       barriere reali — le meccaniche. Ordine di lettura, trappole di focus e
       sensatezza degli annunci restano da provare a mano.
       ⚠️ Se aggiungi un colore, **misura la coppia colore/`-soft`**: è lì che il

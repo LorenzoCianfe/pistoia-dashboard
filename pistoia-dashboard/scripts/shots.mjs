@@ -396,16 +396,39 @@ async function capture(ctx, theme, ruolo) {
   await page.close();
 }
 
-const browser = await chromium.launch();
 fs.mkdirSync(OUT, { recursive: true });
 
 for (const theme of ["light", "dark"]) {
   console.log(`\n${theme}:`);
-  // Un contesto per regime, e non è ottimizzabile: la sessione dell'uno
-  // renderebbe irraggiungibile il login dell'altro, perché /login reindirizza
-  // chi ce l'ha già.
+  /*
+    Un contesto per REGIME, e non è ottimizzabile: la sessione dell'uno
+    renderebbe irraggiungibile il login dell'altro, perché `/login`
+    reindirizza chi ce l'ha già.
+
+    E un BROWSER NUOVO per ogni contesto, che invece è una scelta pagata.
+
+    Fino al 2026-08-06 il browser era uno solo per tutta l'esecuzione. Con due
+    regimi reggeva; con quattro (l'ingresso di admin e moderatore) il processo
+    Chromium è **morto a metà giro**, due volte di fila, sempre allo stesso
+    punto: alla creazione del terzo contesto, dopo un centinaio di schermate a
+    piena pagina. Uscita `0x80000003` e uno stack che punta a `chromium.launch`
+    — cioè non un errore di pagina ma la morte dell'istanza. Sulla macchina
+    restavano 1,8 GB liberi su 15,2, col dev server a ~1 GB.
+
+    La causa è che Chromium **non restituisce davvero la memoria** chiudendo un
+    contesto: una schermata a piena pagina di `/admin` è 2880×8000 a
+    `deviceScaleFactor: 2`, cioè ~92 MB di bitmap, e i contesti si sommano
+    dentro lo stesso processo. Chiudere il browser è l'unica cosa che la
+    restituisce per davvero.
+
+    Costo: ~1s di avvio per passata, otto passate, ~8s su un giro da dodici
+    minuti. Il primo sintomo era **un blocco senza errore** — venti minuti
+    senza una riga di log — che è il modo peggiore in cui un cancello può
+    fallire.
+  */
   for (const ruolo of ["anonimo", "cittadino", "admin", "moderatore"]) {
     if (!PAGES.some((p) => ruoloDi(p) === ruolo)) continue;
+    const browser = await chromium.launch();
     const ctx = await browser.newContext({
       viewport: VIEWPORT,
       deviceScaleFactor: 2,
@@ -414,10 +437,9 @@ for (const theme of ["light", "dark"]) {
     });
     await capture(ctx, theme, ruolo);
     await ctx.close();
+    await browser.close();
   }
 }
-
-await browser.close();
 console.log(`\nFatto → ${OUT}`);
 if (problemi > 0) {
   console.error(

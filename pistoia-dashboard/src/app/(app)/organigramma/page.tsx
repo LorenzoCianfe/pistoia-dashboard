@@ -6,6 +6,7 @@ import { Card, CardEyebrow } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Avatar } from "@/components/ui/avatar";
 import { FollowButton } from "@/components/assessori/follow-button";
+import { IndiceDeleghe } from "@/components/organigramma/indice-deleghe";
 import { DataConsultazione, SchedaFonte } from "@/components/osservatorio/fonte";
 import { GIUNTA, RIGA_GIUNTA, RIGA_INCOMPATIBILITA } from "@/lib/giunta";
 import { formatNumber } from "@/lib/format";
@@ -75,29 +76,18 @@ export default async function OrganigrammaPage() {
         <Card>
           <CardEyebrow>Cosa copre la giunta</CardEyebrow>
           {/*
-            `grid-cols-1` accanto alle varianti con prefisso, e `min-w-0`
-            sull'elemento: sotto la soglia `sm` la traccia implicita è `auto`,
-            il cui minimo è il min-content, e l'elemento di griglia si ferma al
-            proprio min-content anche quando la traccia è `minmax(0, 1fr)`.
-            Qui il min-content è una delega lunga e inscindibile come
-            «Attività produttive, vivaismo e sviluppo economico sostenibile»
-            (AGENTS.md §3, ondata 7/5 e il suo corollario del 2026-07-29).
+            Il filtro sta DENTRO il componente client, la lista arriva da qui:
+            i dati restano server, l'interazione è l'unica cosa che passa il
+            confine. Le voci sono ridotte a stringhe piatte di proposito — una
+            prop non serializzabile sparirebbe a runtime in silenzio.
           */}
-          <ul className="mt-3 grid grid-cols-1 gap-x-6 gap-y-0.5 sm:grid-cols-2 lg:grid-cols-3">
-            {org.deleghe.map(({ delega, componente }) => (
-              <li key={`${componente.id}-${delega}`} className="min-w-0">
-                <a
-                  href={`#assessore-${componente.id}`}
-                  className="-mx-2 block rounded-inner px-2 py-1.5 transition-colors hover:bg-surface-2"
-                >
-                  <span className="block text-sm leading-snug">{delega}</span>
-                  <span className="block text-xs text-muted-2">
-                    {componente.nome}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
+          <IndiceDeleghe
+            voci={org.deleghe.map(({ delega, componente }) => ({
+              delega,
+              nome: componente.nome,
+              ancora: componente.id,
+            }))}
+          />
           <p className="mt-4 border-t border-border pt-4 text-sm text-muted">
             {formatNumber(org.deleghe.length)} deleghe fra{" "}
             {formatNumber(org.members.length)} assessori, come le elenca il

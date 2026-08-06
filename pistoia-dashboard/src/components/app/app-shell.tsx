@@ -40,16 +40,41 @@ export async function AppShell({
         <main
           id="contenuto"
           tabIndex={-1}
-          className="min-w-0 flex-1 pb-28 pt-6 outline-none lg:pb-12"
+          className="min-w-0 flex-1 pt-6 outline-none"
         >
           {children}
-          {/* `autenticato`: qui c'è sempre una sessione, quindi il footer non
-              deve mostrare l'invito ad accedere. Il valore predefinito della
-              prop è `false` di proposito — un innesto che se ne dimenticasse
-              mostrerebbe l'invito a chi è già dentro, difetto visibile;
-              l'inverso lo nasconderebbe a chi ne ha bisogno, difetto muto. */}
-          <Footer autenticato />
         </main>
+      </div>
+
+      {/*
+        IL FOOTER STA FUORI DA `<main>`, ed è una decisione di sostanza
+        (Lorenzo, 2026-08-06) non un riordino.
+
+        Un `<footer>` **discendente di `main`** non è mappato al ruolo
+        `contentinfo`: lo dice HTML-AAM, e lo ha dimostrato un test che lo
+        cercava come `contentinfo` e ne trovava **zero**. Per mesi chi naviga a
+        punti di riferimento non ha avuto modo di saltare al footer, su nessuna
+        pagina — e la regola axe che lo direbbe
+        (`landmark-contentinfo-is-top-level`) è taggata `best-practice`, quindi
+        resta fuori dal cancello.
+
+        Il prezzo, dichiarato: qui fuori il footer **non è più allineato alla
+        colonna di `main`** ma parte da sinistra, sotto la barra laterale. È la
+        resa scelta fra le due proposte — l'alternativa allineata voleva un
+        secondo contenitore che ripetesse a mano la geometria della barra, e
+        quella geometria sarebbe rimasta da tenere allineata per sempre.
+
+        `pb-28 lg:pb-12` viaggia col footer e non con `main`: serve a non farlo
+        finire sotto la navigazione bassa, ed è il footer l'ultima cosa della
+        pagina.
+      */}
+      <div className="mx-auto max-w-6xl px-4 pb-28 sm:px-6 lg:pb-12">
+        {/* `autenticato`: qui c'è sempre una sessione, quindi il footer non
+            deve mostrare l'invito ad accedere. Il valore predefinito della
+            prop è `false` di proposito — un innesto che se ne dimenticasse
+            mostrerebbe l'invito a chi è già dentro, difetto visibile;
+            l'inverso lo nasconderebbe a chi ne ha bisogno, difetto muto. */}
+        <Footer autenticato />
       </div>
       <BottomNav />
       {/* Modalità presentazione (O0): vive nel guscio così sopravvive alle

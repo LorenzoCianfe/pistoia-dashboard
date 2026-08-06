@@ -5,6 +5,53 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.29.0] — 2026-08-06 · Lavoro D — le quattro decisioni di forma
+
+> Quattro domande che aspettavano una scelta di Lorenzo, portate su facsimile e
+> chiuse tutte. Nessuna era tecnica: ognuna cambia cosa vede un cittadino.
+
+### Aggiunto
+- **La porta d'ingresso porta anche i link.** Da `/` — la prima pagina che vede chi arriva senza account — `/privacy`, `/cookie` e le regole della community **non erano raggiungibili**: c'era una riga di testo e zero collegamenti. Ora c'è una riga con le pagine che si aprono **davvero a chiunque**: valutazioni, metodologia, privacy, cookie, regole. **Non il footer intero**, e per una ragione: quello porta anche la colonna «La città», cioè quattro voci col lucchetto — e la prima cosa che la città dice a un visitatore non deve essere «per queste ti serve entrare».
+- **`PROGETTO_NAV` in `nav-items.ts`**, condiviso fra footer e porta d'ingresso: due elenchi paralleli sarebbero due risposte diverse alla stessa domanda «cosa può leggere chi non è entrato».
+- **Un filtro sopra l'indice delle 57 deleghe** (`/organigramma`). L'indice esiste per far trovare **una** materia fra 57, e scorrerle tutte è il modo più lento di cercarne una: il campo fa il mestiere che l'indice promette **senza togliere né riordinare niente** — chi non scrive nulla vede esattamente la pagina di prima. Cerca anche fra i **nomi**, perché «di cosa si occupa Nesti» è la stessa domanda letta dall'altro capo; il conteggio sta in una **live region**, o la lista si accorcerebbe in silenzio per chi usa uno screen reader; il campo è alto **44px**, che qui è la regola applicata senza discussione — è un bersaglio isolato e tattile, non un link nella prosa.
+- **Una porta per `/pagella`, che si apre da sé.** Sta sotto **Trasparenza**, accanto a Promesse e Bilancio che sono le sue fonti — non sotto Partecipa, dove il gesto è del cittadino mentre qui è la Redazione che giudica. **La condizione non è una data ma un fatto**: la voce compare quando `EDIZIONI` smette di essere vuoto (`lib/pagella.ts`, con un test a guardia). Finché lo è, un menu manderebbe un cittadino su una pagina che dichiara di non avere ancora niente da dire — e il giorno della prima edizione la voce compare **senza che nessuno debba ricordarsene**.
+
+### Modificato
+- **Il footer esce da `<main>`** e diventa un vero `contentinfo`. Un `<footer>` discendente di `main` non è mappato a quel ruolo: per mesi chi naviga a punti di riferimento non ha avuto modo di saltarci, **su nessuna pagina**. Prezzo dichiarato: dentro `AppShell` il footer non è più allineato alla colonna di `main` ma parte da sinistra, sotto la barra laterale — l'alternativa allineata voleva un secondo contenitore che ripetesse a mano la geometria della barra, per sempre.
+- **`shots.mjs` rilancia il browser a ogni passata.** Con quattro regimi invece di due, un solo processo Chromium **moriva a metà giro** — chiudere un contesto non restituisce la memoria, e una schermata a piena pagina di `/admin` è 2880×8000 a `deviceScaleFactor: 2`. Il primo sintomo è stato **un blocco senza errore**, venti minuti senza una riga di log.
+
+### Note d'ambiente
+- **Chromium ha smesso di partire del tutto**, a metà sessione: «Invalid file descriptor to ICU data received», lancio fallito in un secondo su qualunque script — e con esso `shots`, gli E2E e il cancello a11y insieme. Non era il codice né la memoria: era l'installazione, riparata con `npx playwright install chromium --force`. Annotato in `AGENTS.md` §4, con il dettaglio che rende la diagnosi difficile: **il binario risponde a `--version` anche in quello stato**.
+
+---
+
+## [0.28.0] — 2026-08-06 · Lavoro D — i cancelli guardano dove non guardavano
+
+> Quattro voci della traccia «Qualità continua», chiuse insieme. Il filo che le
+> lega non è tecnico: **ogni cancello copriva meno di quanto sembrasse**, e in
+> tre casi su quattro nessuno poteva accorgersene leggendo il verde.
+
+### Aggiunto
+- **WCAG 2.2 nel cancello axe** (`wcag22a`/`wcag22aa`), aggiunti **dopo averli misurati** e non prima: zero violazioni su 8 pagine × 2 temi, e `target-size` passa su **345 nodi** — quindi lo zero è «pulito», non «la regola non gira». La distinzione è il punto: uno zero può voler dire che una regola non ha mai girato.
+- **`/admin`, `/admin/codici-qr` e `/redazione` dentro `shots` e dentro il cancello a11y** (Lavoro D §4). Erano esclusioni dichiarate da tre mesi. `shots.mjs` ha ora **quattro regimi** — anonimo, cittadino, admin, moderatore — con un contesto per regime, perché `/login` reindirizza chi ha già una sessione. Il cancello a11y passa da **16 a 22 casi** (11 pagine × 2 temi).
+- **Il controllo dell'ATTERRAGGIO**, che è ciò che rende sicure le rotte per ruolo: i guard di questo progetto **reindirizzano invece di rifiutare**, quindi col ruolo sbagliato `/admin/codici-qr` consegna la home con stato 200 e contenuto valido. Ora un atterraggio diverso da quello chiesto è un **fallimento**, non una foto — in `shots.mjs` e in `accessibilita.spec.ts` (`pretendiAtterraggio`).
+- **I punteggi di Lighthouse nel log della CI**, mediana per URL letta dal manifest.
+
+### Corretto — tre difetti trovati dai cancelli appena estesi
+- **`aria-prohibited-attr`** (serious, 182 nodi): `StarRating` metteva `aria-label` su uno `<span>` **senza ruolo**, dove è un attributo proibito. L'etichetta veniva scartata in silenzio e il voto non era annunciato da nessuna tecnologia assistiva. Chiuso con `role="img"`.
+- **`color-contrast`** (serious): l'`Avatar` usava `fg` sopra il proprio `-soft` — **3,72:1** per il rosso dello stemma. È esattamente il caso per cui la C-2 aveva creato `--red-ink`, applicato a `Badge` e al banner degli avvisi ma non qui. Non si era mai visto perché **il colore dell'avatar deriva dal nome**, e nessuna pagina misurata cadeva sul rosso: ci è cascato il super-account del Comune, entrato fra le pagine misurate solo adesso. **Un difetto che dipende dai dati si vede solo se fra i dati misurati c'è il caso che lo innesca.**
+- **`/admin` traboccava di 125px** a 360px in modalità semplice, nei due temi: `grid gap-2 sm:grid-cols-2` **senza `grid-cols-1`**, con dentro due `<select>` il cui min-content è l'opzione più lunga («Giochi rotti al giardino di Via Pacini», 416px); più un `<input>` `flex-1` senza `min-w-0`. Sono le trappole 5 dell'ondata 7 e 23 della C-2, entrambe già documentate — e sopravvissute perché quella pagina non era in nessun cancello visivo.
+
+### Modificato
+- **`npm audit` è BLOCCANTE** (`--audit-level=high`, senza `|| true`). La condizione scritta diceva «quando lo zero avrà retto qualche settimana»: ha retto **un giorno** ed è stata scavalcata per decisione esplicita. `SECURITY.md` §7 dice perché l'argomento che la sosteneva era più debole di quanto sembrasse — nessuno rilegge `npm audit` a mano ogni settimana, ed è per non doverlo fare che esiste la CI. La soglia agisce sul **codice di uscita**, non sul referto: un `moderate` resta visibile nei log senza far cadere la pipeline.
+- **Lighthouse ha soglie, e il job è bloccante.** Erano assenti «in attesa di guardare le prime passate» — ma **le passate non si potevano guardare**, per due difetti indipendenti scoperti insieme: `.lighthouseci` comincia con un punto e `upload-artifact@v4` esclude i file nascosti per default (dodici referti scritti, **zero caricati**, job verde, un `##[warning]` in un log da 400 righe); e senza `assert`, `lhci autorun` si ferma a `collect` e non stampa nessuna tabella. Il meccanismo per leggere i numeri era rotto da entrambe le parti, quindi la condizione non poteva avverarsi da sola. Prima misura vera: perf **100 · 100 · 95 · 95**, a11y 100 ovunque. Le soglie stanno **cinque punti sotto il minimo osservato**, perché una soglia appoggiata al minimo lampeggia al primo rumore.
+
+### Documentazione
+- **`AGENTS.md` §3, trappole 23–25** e §4 riscritta sui passaggi di ruolo.
+- **`DESIGN.md` §11.6 dichiara la propria inapplicabilità**, ed è la scoperta più scomoda della giornata: WCAG 2.5.8 chiede 24px **con quattro eccezioni**, §11.6 chiede 44 **senza**. Col metro crudo, sulle otto pagine del cancello ci sono **246 elementi interattivi sotto i 44px**, quasi tutti legittimi (link dentro la prosa). La regola non funziona da vincolo, funziona da aspirazione — e infatti i 16px del footer sono sopravvissuti per mesi. **Decisione richiesta**, in `ROADMAP.md`.
+
+---
+
 ## [0.27.0] — 2026-08-05 · Lavoro D, punto 1 — il footer per chi non ha un account
 
 > La domanda di partenza era piccola: sulla scheda pubblica i link del footer

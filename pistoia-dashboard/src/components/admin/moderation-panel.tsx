@@ -130,12 +130,29 @@ export function ModerationPanel({
         <h3 className="flex items-center gap-1.5 text-sm font-semibold">
           <Merge size={15} /> Unisci segnalazioni duplicate
         </h3>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        {/*
+          `grid-cols-1` e `min-w-0` insieme, e servono tutti e due — è la
+          trappola 5 dell'ondata 7 col suo corollario (AGENTS.md §3).
+
+          Senza `grid-cols-1` la traccia implicita è `auto`, il cui minimo è il
+          **min-content**; e il min-content di un `<select>` è la sua opzione
+          più lunga, qui «Giochi rotti al giardino di Via Pacini»: **416px**.
+          Con `grid-cols-1` la traccia diventa `minmax(0, 1fr)` e si stringe,
+          ma l'ELEMENTO di griglia ha ancora `min-width: auto` e si ferma da
+          sé — `min-w-0` toglie quel pavimento.
+
+          Costo misurato prima della correzione: /admin traboccava di **125px**
+          a 360px in modalità semplice, nei due temi. Non si era mai visto
+          perché /admin è entrata nel cancello delle schermate solo il
+          2026-08-06: è il corollario di §3 — quando una pagina entra per la
+          prima volta in un cancello, i rossi possono essere suoi di nascita.
+        */}
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           <select
             value={source}
             onChange={(e) => setSource(e.target.value)}
             aria-label="Segnalazione duplicata"
-            className="h-10 rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm"
+            className="h-10 min-w-0 rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm"
           >
             <option value="">Duplicata…</option>
             {openReports.map((r) => (
@@ -148,7 +165,7 @@ export function ModerationPanel({
             value={target}
             onChange={(e) => setTarget(e.target.value)}
             aria-label="Segnalazione principale"
-            className="h-10 rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm"
+            className="h-10 min-w-0 rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm"
           >
             <option value="">Da unire a…</option>
             {openReports.map((r) => (
@@ -186,12 +203,16 @@ export function ModerationPanel({
       <section>
         <h3 className="text-sm font-semibold">Parole bloccate</h3>
         <div className="mt-3 flex items-center gap-2">
+          {/* `min-w-0` accanto a `flex-1`: l'input ha una larghezza intrinseca
+              e in flex `min-width: auto` gli fa da pavimento, quindi spinge
+              fuori il pulsante accanto invece di stringersi. Stesso difetto
+              già pagato su `/opere/[id]` (AGENTS.md §3, trappola 23). */}
           <input
             value={newWord}
             onChange={(e) => setNewWord(e.target.value)}
             placeholder="Aggiungi un termine…"
             aria-label="Nuova parola bloccata"
-            className="h-10 flex-1 rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm"
+            className="h-10 min-w-0 flex-1 rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm"
           />
           <button
             type="button"

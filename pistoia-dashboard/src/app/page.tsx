@@ -8,6 +8,7 @@ import {
   MessagesSquare,
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/dal";
+import { PROGETTO_NAV } from "@/components/app/nav-items";
 import { Crest } from "@/components/brand/crest";
 import { PreviewBadge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
@@ -111,9 +112,45 @@ export default async function LandingPage() {
         </section>
       </main>
 
-      <footer className="mx-auto w-full max-w-6xl px-5 py-8 text-sm text-muted-2 sm:px-8">
-        Progetto dimostrativo · i dati mostrati sono di esempio e non
-        rappresentano fonti ufficiali.
+      {/*
+        La porta d'ingresso adesso porta anche i link (decisione di Lorenzo,
+        2026-08-06). Fino a ieri qui c'era una riga di testo e **zero
+        collegamenti**: da questa pagina — la prima che vede chi arriva senza
+        account — `/privacy`, `/cookie` e le regole della community **non erano
+        raggiungibili**.
+
+        Una riga e non il footer intero, che pure esiste ed è condiviso da tutto
+        il resto: quel footer porta anche la colonna «La città», cioè quattro
+        voci che chiedono un account. Metterla qui significherebbe far dire alla
+        città, come prima cosa a un visitatore, «per queste ti serve entrare».
+        Qui stanno **solo le pagine che si aprono davvero a chiunque** — ed è
+        per questo che non c'è nessun lucchetto.
+
+        L'elenco viene da `PROGETTO_NAV`, condiviso col footer: due elenchi
+        paralleli sarebbero due risposte diverse alla stessa domanda.
+      */}
+      <footer className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-5 gap-y-2 px-5 py-8 text-sm text-muted-2 sm:px-8">
+        <span>
+          Progetto dimostrativo · i dati mostrati sono di esempio e non
+          rappresentano fonti ufficiali.
+        </span>
+        <nav
+          aria-label="Pagine pubbliche"
+          className="flex flex-wrap gap-x-4 gap-y-1"
+        >
+          <Link href="/valutazioni" className="transition-colors hover:text-foreground">
+            Valutazioni dei servizi
+          </Link>
+          {PROGETTO_NAV.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className="transition-colors hover:text-foreground"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </nav>
       </footer>
     </div>
   );

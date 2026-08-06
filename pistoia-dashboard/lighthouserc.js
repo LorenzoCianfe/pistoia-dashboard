@@ -1,13 +1,37 @@
 /*
   Lighthouse CI — traccia «Qualità continua» (ROADMAP).
 
-  **Questo file MISURA e non giudica, ed è voluto.** Non c'è nessuna soglia
-  perché non ne abbiamo ancora una misurata: una soglia inventata prima del
-  primo numero è la scala a tacche di `/promesse` applicata alla performance —
-  un intervallo che nessuno ha fissato, che però si legge come una promessa.
-  Le soglie si scrivono qui sotto (`assert`) dopo aver guardato le prime
-  passate, e solo allora il job in CI diventa bloccante. È lo stesso percorso
-  del job E2E, nato `continue-on-error` «finché non rodato».
+  **Le soglie ci sono dal 2026-08-06, e sono misurate — non inventate.**
+
+  Fino a quel giorno questo file diceva «misura e non giudica», in attesa di
+  guardare le prime passate. **Le passate non si potevano guardare**, e per due
+  difetti indipendenti scoperti insieme: `.lighthouseci` comincia con un punto,
+  e `upload-artifact@v4` esclude i file nascosti per default — dodici referti
+  scritti, zero caricati, job verde; e senza un blocco `assert` qui sotto,
+  `lhci autorun` si ferma a `collect` e **non stampa nessuna tabella**. Il
+  meccanismo per leggere i numeri era rotto da entrambe le parti, quindi la
+  condizione «si scrivono dopo aver guardato» non poteva avverarsi da sola.
+
+  Prima misura vera (CI, 2026-08-06, mediana di tre passate):
+
+  | URL | perf | a11y | best | seo |
+  |---|---|---|---|---|
+  | `/login` | 100 | 100 | 96 | 100 |
+  | `/valutazioni` | 100 | 100 | 100 | 100 |
+  | `/valutazioni/pulizia` | **95** | 100 | 100 | 100 |
+  | `/metodologia` | **95** | 100 | 100 | 100 |
+
+  Le soglie stanno **cinque punti sotto il minimo osservato**, e il margine è
+  la parte importante: una soglia messa a 95 perché 95 è il minimo misurato
+  diventa rossa al primo rumore della macchina condivisa, e un cancello che
+  lampeggia smette di essere letto — la stessa ragione per cui si fanno tre
+  passate e si prende la mediana. Se un giorno si vorrà più stretto, **la leva
+  è alzare il numero, non togliere la soglia.**
+
+  Su `accessibility` la soglia è deliberatamente **bassa rispetto al reale**:
+  il cancello vero dell'accessibilità è `tests/e2e/accessibilita.spec.ts`
+  (axe-core, 11 pagine × 2 temi, WCAG AA), molto più severo di questa
+  categoria. Qui serve solo ad accorgersi di un crollo.
 
   **`@lhci/cli` non è una dipendenza del progetto**, e non è una dimenticanza:
   installarlo costa **285 pacchetti** e cinque avvisi propri (`tmp` è high), e
@@ -50,6 +74,16 @@ module.exports = {
       // oscilla abbastanza da far sembrare regressione il rumore.
       numberOfRuns: 3,
       settings: { preset: "desktop" },
+    },
+    assert: {
+      // Sulla MEDIANA delle tre passate, che è l'aggregazione predefinita di
+      // `lhci`: asserire su ogni singola corsa vanificherebbe le tre passate.
+      assertions: {
+        "categories:performance": ["error", { minScore: 0.9 }],
+        "categories:accessibility": ["error", { minScore: 0.95 }],
+        "categories:best-practices": ["error", { minScore: 0.9 }],
+        "categories:seo": ["error", { minScore: 0.95 }],
+      },
     },
     upload: {
       target: "filesystem",

@@ -29,6 +29,11 @@ Fuori dal menu, con casa dichiarata: avvisi (banner in home + footer),
 organigramma, FAQ e glossario nel footer; notifiche, profilo e impostazioni
 nella barra in alto; area Comune nel menu avatar per i soli ADMIN.
 
+**`/pagella` sta sotto Trasparenza, e la porta si apre da sé** (2026-08-06):
+la voce compare quando `EDIZIONI` smette di essere vuoto — finché lo è, un menu
+manderebbe un cittadino su una pagina che dichiara di non avere ancora niente da
+dire, e il giorno della prima edizione nessuno deve ricordarsene.
+
 **Il footer** (ridisegnato il 2026-08-05) è una **scheda di vetro** appoggiata
 sulla tela, non un'area sotto una linea. Due colonne col titolo **visibile**:
 «La città» (avvisi, organigramma, FAQ, glossario) e «Il progetto» (metodologia,
@@ -36,7 +41,14 @@ privacy, cookie, regole community) — la divisione non è di comodo, è che la
 seconda è tutta a lettura pubblica e la prima chiede un account. **A chi non ha
 una sessione** una pastiglia in fondo lo dice una volta sola, invece di offrire
 quattro porte che si chiudono in faccia; chi è dentro non la incontra affatto.
-Ogni voce è un bersaglio da **44px** (prima erano 16).
+Ogni voce è un bersaglio da **44px** (prima erano 16). Dal 2026-08-06 sta
+**fuori da `<main>`**, quindi è un `contentinfo` saltabile da chi naviga a punti
+di riferimento — prima non lo era su nessuna pagina.
+
+**La porta d'ingresso `/`** ha una riga sua con le pagine che si aprono davvero a
+chiunque (valutazioni, metodologia, privacy, cookie, regole): non il footer
+intero, perché quello porta anche le voci col lucchetto e la prima cosa che la
+città dice a un visitatore non deve essere «per queste ti serve entrare».
 
 ## 1. Sezioni civiche
 
@@ -52,7 +64,7 @@ Ogni voce è un bersaglio da **44px** (prima erano 16).
 | **Comunità** | `/comunita` | ✅ 👤 | Cifra display sulla quota di **domande con risposta ufficiale** (contata sulle sole domande). Stanze tematiche a griglia col numero di conversazioni. Composer con tipo post e quartiere, feed con badge autore, like/commenti ottimistici, risposte ufficiali con ufficio, "questa risposta è utile?", segnala commento |
 | **Eventi** | `/eventi` | ✅ | Calendario mensile, pubblicazione dal Comune, proposta dalle associazioni verificate con approvazione |
 | **Quartieri** | `/quartieri` · `/[slug]` | ✅ | Ogni scheda porta una fascia `MeshSurface` la cui tinta è il **tasso di risoluzione di quell'area** — lo slot dove una fotografia entrerà (`DISCOVERY` D7). Sotto il campione minimo la scheda resta neutra e lo dichiara. Il dettaglio aggrega segnalazioni, opere, eventi, proposte, discussioni; follow. **Transizione a elemento condiviso** |
-| **Organigramma** | `/organigramma` | ✅ 🔗 | **Le nove persone reali della giunta**, ognuna con la scheda del Comune che la dichiara e la data in cui è stata aggiornata. Apre sull'indice delle **57 deleghe** in ordine alfabetico, ognuna col nome di chi la tiene. Recapiti letti dalle schede, mai dedotti. Nessun numero di preferenze: per cinque persone su nove non esiste in nessuna fonte (`docs/fonti-organigramma.md`). Follow degli assessori |
+| **Organigramma** | `/organigramma` | ✅ 🔗 | **Le nove persone reali della giunta**, ognuna con la scheda del Comune che la dichiara e la data in cui è stata aggiornata. Apre sull'indice delle **57 deleghe** in ordine alfabetico, ognuna col nome di chi la tiene, **con un filtro sopra** (2026-08-06) che cerca fra materie *e* nomi e annuncia l'esito in una live region — chi non scrive nulla vede l'indice intero. Recapiti letti dalle schede, mai dedotti. Nessun numero di preferenze: per cinque persone su nove non esiste in nessuna fonte (`docs/fonti-organigramma.md`). Follow degli assessori |
 
 ## 2. Trasparenza
 
@@ -292,7 +304,7 @@ su una persona reale non è un dato dimostrativo»):
 | `DEMO_MODE` con zero-state onesti | ✅ |
 | Provenienza dati dichiarata (`SourceBadge`) | ✅ |
 | Test unitari (Vitest) + E2E (Playwright) | ✅ |
-| **Cancello di accessibilità automatico** (axe-core negli E2E, 8 pagine × 2 temi, regole WCAG AA, nessuna esclusione) | ✅ 2026-08-05 — ha trovato un **debito di tavolozza preesistente**, corretto nella stessa sessione: `ROADMAP.md`, traccia «Qualità continua» |
+| **Cancello di accessibilità automatico** (axe-core negli E2E, **11 pagine × 2 temi**, regole WCAG **AA + 2.2**, nessuna esclusione) | ✅ 2026-08-05, esteso il 2026-08-06 — ha trovato un **debito di tavolozza preesistente** alla nascita, e altri **due difetti seri** quando `/admin/*` e `/redazione` vi sono entrate: `ROADMAP.md`, traccia «Qualità continua» |
 | **Lighthouse CI** sulla build di produzione | 🚧 impostato il 2026-08-05 — **misura, non giudica**: le soglie si scrivono dopo le prime passate |
 | **Audit dipendenze in CI** (`npm audit`) | ✅ 2026-08-05 — e `npm audit` riporta **zero vulnerabilità** (erano 12) |
 | Grafo di conoscenza del codice | ✅ `graphify-out/` |

@@ -169,8 +169,23 @@ export default async function AdminPage() {
         )}
       </Card>
 
+      {/*
+        `grid-cols-1` accanto a `lg:grid-cols-2` non è ridondante, ed è la
+        trappola 5 dell'ondata 7 (AGENTS.md §3). Sotto la soglia `lg` non
+        esiste alcun `grid-template-columns`, quindi la traccia implicita è
+        `auto` — e il minimo di `auto` è il **min-content**: la colonna non può
+        stringersi sotto la larghezza minima della card più larga, qualunque
+        cosa ci sia dentro. Misurato: /admin traboccava di **125px** a 360px in
+        modalità semplice, min-content della traccia **467px**. Con
+        `grid-cols-1` la traccia compila in `repeat(1, minmax(0, 1fr))`, che si
+        stringe, e l'eccesso va a zero.
+
+        Non si era mai visto perché /admin è entrata nel cancello delle
+        schermate solo il 2026-08-06 (Lavoro D §4): quando una pagina entra per
+        la prima volta in un cancello, i rossi possono essere suoi di nascita.
+      */}
       {/* Verifiche + Segnalazioni */}
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <Card>
           <div className="flex items-center gap-2">
             <BadgeCheck size={18} className="text-teal" />
@@ -232,7 +247,7 @@ export default async function AdminPage() {
         </div>
       </Card>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {/* Aggiorna cantieri */}
         <Card>
           <div className="flex items-center gap-2">
