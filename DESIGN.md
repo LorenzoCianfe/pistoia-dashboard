@@ -437,19 +437,34 @@ un'inversione.
 4. Live region per i cambi di stato asincroni.
 5. La modalità semplice è un cittadino di prima classe: ogni feature nuova si
    verifica anche lì.
-6. Target touch ≥ 44px. ⚠️ **Nessun cancello lo misura, e la regola come è
-   scritta qui non è trasformabile in uno.** Da 2026-08-06 il cancello axe
-   comprende `wcag22aa`, quindi `target-size` gira davvero (345 nodi, zero
-   violazioni) — ma quella regola chiede **24px con quattro eccezioni**
-   (spaziatura, inline, equivalente, essenziale), non 44 senza. I link del
-   footer erano alti **16px** e sarebbero passati lo stesso, perché ben
-   spaziati: li ha trovati una misura a mano, non un cancello.
+6. **Target touch ≥ 44px, con le quattro eccezioni di WCAG 2.5.8**
+   (riscritta il 2026-08-06, decisione di Lorenzo).
 
-   Misurati col metro crudo di questa riga, sulle otto pagine del cancello ci
-   sono **246 elementi interattivi sotto i 44px** — e quasi tutti sono
-   legittimi: link dentro la prosa, che a 44px spaccherebbero il testo. Finché
-   questa riga non avrà le sue eccezioni, **non è un vincolo: è
-   un'aspirazione**, e va letta così. Decisione aperta in `ROADMAP.md`.
+   Un bersaglio dev'essere alto e largo **almeno 44px**, salvo che ricada in
+   una di queste, che sono le stesse di WCAG 2.5.8 — si adotta l'elenco delle
+   eccezioni, **non** la soglia, che qui resta 44 e non 24:
+
+   | Eccezione | Quando vale |
+   |---|---|
+   | **Spaziatura** | Il bersaglio è più piccolo ma **isolato**: un cerchio da 44px centrato su di lui non tocca nessun altro bersaglio |
+   | **Inline** | È dentro una frase, e la sua dimensione è vincolata dall'interlinea del testo attorno — un link nella prosa |
+   | **Equivalente** | La stessa azione è raggiungibile da un altro comando sulla pagina che i 44px li rispetta |
+   | **Essenziale** | La dimensione è imposta dalla natura di ciò che si tocca (un punto su una mappa, una parola dentro un testo legale) |
+
+   **Perché la riscrittura.** Prima diceva «≥ 44px» e basta, e con quel metro
+   sulle otto pagine del cancello risultavano **246 elementi fuori norma** —
+   quasi tutti legittimi: link dentro la prosa, che a 44px spaccherebbero il
+   testo. Una regola violata 246 volte a ragione non è un vincolo, è
+   un'aspirazione, e infatti i link del footer sono stati alti **16px** per
+   mesi senza che nulla lo dicesse. Con le eccezioni la regola torna a
+   descrivere ciò che davvero si pretende — **e diventa scrivibile come
+   cancello**, che è il punto.
+
+   ⚠️ **Il cancello non esiste ancora.** `target-size` di axe (nel cancello dal
+   2026-08-06 col tag `wcag22aa`) applica le stesse eccezioni ma con la soglia
+   di **24px**, quindi non difende i 44: i 16px del footer sarebbero passati
+   anche adesso, perché ben spaziati. Il controllo va scritto — è il primo
+   lavoro in coda in `ROADMAP.md`, traccia «Qualità continua».
 7. **Ogni grafico ha un equivalente testuale** e, dove possibile, è
    attraversabile da tastiera.
 8. Nessun contenuto può restare invisibile perché un'animazione non è partita

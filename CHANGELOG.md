@@ -5,6 +5,18 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.30.0] — 2026-08-06 · Chiusura del Lavoro D — l'ultimo cancello e la regola riscritta
+
+### Modificato
+- **Il job E2E in CI è BLOCCANTE.** Nasceva `continue-on-error` «finché la suite non è stata rodata in CI»: è rodata — 48 test verdi in locale, verde in CI su ogni passata da settimane. È l'ultimo della famiglia chiusa oggi insieme ad `npm audit` e Lighthouse: **un cancello dichiarato non bloccante «per ora» che ci era rimasto**, mentre è l'unico che prova i percorsi veri — login, voto, moderazione — e non poteva essere quello che valeva meno di tutti.
+- **`DESIGN.md` §11.6 riscritta con le quattro eccezioni di WCAG 2.5.8** (decisione di Lorenzo): spaziatura, inline, equivalente, essenziale. Si adotta **l'elenco delle eccezioni, non la soglia** — resta 44px, non 24. Prima diceva «≥ 44px» e basta, e con quel metro sulle otto pagine del cancello risultavano **246 elementi fuori norma**, quasi tutti legittimi: link dentro la prosa, che a 44px spaccherebbero il testo. Una regola violata 246 volte a ragione **non è un vincolo, è un'aspirazione** — ed è per questo che i 16px del footer sono sopravvissuti per mesi. Con le eccezioni la regola torna a descrivere ciò che davvero si pretende, **e diventa scrivibile come cancello**.
+- Le intestazioni di data dei documenti vivi (`FEATURES`, `DOCUMENTATION`, `SECURITY`, `ROADMAP`, `DESIGN`) tornano alla data vera: portavano giugno e luglio pur essendo state modificate oggi.
+
+### Resta aperto, col lavoro che lo chiude
+- **Il cancello dei 44px va scritto.** `target-size` di axe applica le stesse eccezioni ma con la soglia di **24px**: i 16px del footer sarebbero passati anche adesso, perché ben spaziati. Primo lavoro in coda.
+
+---
+
 ## [0.29.0] — 2026-08-06 · Lavoro D — le quattro decisioni di forma
 
 > Quattro domande che aspettavano una scelta di Lorenzo, portate su facsimile e

@@ -1,6 +1,6 @@
 # CI della Dashboard di Pistoia (Fase 0).
 # lint → typecheck → unit test → drift delle migrazioni → build.
-# Gli E2E Playwright girano in un job separato (non bloccante per ora).
+# Gli E2E Playwright girano in un job separato, bloccante dal 2026-08-06.
 name: CI
 
 on:
@@ -77,8 +77,13 @@ jobs:
     name: E2E (Playwright)
     runs-on: ubuntu-latest
     needs: quality
-    # Non bloccante finché la suite non è stata rodata in CI.
-    continue-on-error: true
+    # BLOCCANTE dal 2026-08-06. Nasceva `continue-on-error` «finché la suite non
+    # è stata rodata in CI»: è rodata — 48 test verdi in locale, e verde in CI su
+    # ogni passata da settimane. La riga è l'ultima della famiglia chiusa oggi
+    # (audit, Lighthouse): un cancello dichiarato non bloccante «per ora» che ci
+    # è rimasto, e che intanto lasciava passare un E2E rotto senza fermare
+    # nessuno. È l'unico cancello che prova i percorsi veri — login, voto,
+    # moderazione — e non può essere quello che vale meno di tutti.
     steps:
       - uses: actions/checkout@v4
 
