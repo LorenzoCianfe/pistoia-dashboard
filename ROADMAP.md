@@ -1,7 +1,7 @@
 # Roadmap — Dashboard di Pistoia
 
 > Documento strategico e operativo del progetto: visione, obiettivi, piano a ondate e catalogo completo delle idee.
-> **Ultimo aggiornamento:** 2026-07-29 — **Fase A e Fase B chiuse**, il consolidamento è finito e la **Fase C è sbloccata**. Il piano delle due fasi è in [`docs/roadmap-consolidamento.md`](docs/roadmap-consolidamento.md); il dettaglio tecnico di quanto già costruito è in [DOCUMENTATION.md](DOCUMENTATION.md).
+> **Ultimo aggiornamento:** 2026-08-06 — **Lavoro D chiuso**: footer rifatto, quattro decisioni di forma prese, cancelli estesi alle superfici staff, `npm audit` e Lighthouse resi bloccanti. Restano due decisioni aperte nella traccia «Qualità continua» (§4). Fase A e Fase B chiuse, **Fase C sbloccata** dal 2026-07-29. Il piano delle due fasi è in [`docs/roadmap-consolidamento.md`](docs/roadmap-consolidamento.md); il dettaglio tecnico di quanto già costruito è in [DOCUMENTATION.md](DOCUMENTATION.md).
 
 ---
 

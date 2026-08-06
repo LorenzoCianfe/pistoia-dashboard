@@ -4,7 +4,7 @@
 > Questo documento descrive cosa è già implementato, cosa è deliberatamente
 > fuori portata, e come segnalare un problema.
 >
-> Aggiornato: 2026-07-25
+> Aggiornato: 2026-08-06 (§7: `npm audit` è bloccante in CI)
 
 ---
 

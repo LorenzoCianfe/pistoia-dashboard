@@ -1,7 +1,7 @@
 # Dashboard di Pistoia — Documentazione
 
 > Documento vivo. Viene aggiornato a ogni cambiamento rilevante del progetto.
-> Ultimo aggiornamento: 2026-06-12
+> Ultimo aggiornamento: 2026-08-06 (Lavoro D)
 
 ---
 

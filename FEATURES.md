@@ -7,7 +7,7 @@
 > Legenda: ✅ completa · 🚧 in corso · 🔒 richiede verifica · 👤 richiede login ·
 > 🔗 **dati reali, ogni riga con la propria fonte** (non dimostrativi)
 >
-> Aggiornato: 2026-08-03 (Fase C)
+> Aggiornato: 2026-08-06 (Fase C · Lavoro D chiuso)
 
 ---
 

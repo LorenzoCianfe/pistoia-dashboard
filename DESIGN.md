@@ -5,6 +5,10 @@
 > coerente con quanto scritto qui, o si corregge la scelta o si aggiorna
 > (consapevolmente) questo documento.
 >
+> Ultime revisioni: **2026-08-06** (§4 corollario dei tre centesimi, §6 la
+> chiusura è un oggetto, §11.6 dichiara la propria inapplicabilità come
+> cancello) · **2026-08-05** (§4 tavolozza chiara scurita per AA).
+>
 > **Revisione 2026-07-25 — direzione ibrida.** Struttura visiva dai riferimenti
 > in `refs/`, significato dall'identità civica di Pistoia. Le decisioni sono
 > tracciate in `DISCOVERY.md`; le fonti in `REFERENCES.md`.
