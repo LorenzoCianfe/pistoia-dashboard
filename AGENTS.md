@@ -875,14 +875,32 @@ lancia a mano, dall'interfaccia di Coolify o via API.
 > `02-applicazioni.md`). Esiste anche `ssh homeserver`, con la chiave dedicata
 > in `~/.ssh/vm-coolify`.
 >
-> ⚠️ **«finché non dà `finished`» può non succedere mai.** Visto il 2026-08-07
-> sul deploy `fisxkg5is35tziwf2f565byd`: il record ha risposto `in_progress` per
-> **dodici giri** e poi ha cominciato a rispondere `{"message":"Server Error"}`,
-> senza mai passare da `finished` — mentre il deploy **era riuscito**. È
-> intermittente: il deploy precedente della stessa giornata era arrivato a
-> `finished` regolarmente. Un ciclo che aspetta quella parola aspetta
-> all'infinito, e la conclusione naturale — «è appeso, rilancio» — porta a un
-> secondo deploy inutile.
+> ⚠️ **IL PIANO DI CONTROLLO PUÒ CADERE, E L'APPLICAZIONE RESTA IN PIEDI.**
+> Visto il 2026-08-07: i container **`coolify` e `coolify-db` vanno
+> `unhealthy`** e da quel momento **ogni** endpoint dell'API risponde
+> `{"message":"Server Error"}` — `/applications`, `/deployments`, `/version`,
+> `/teams` e anche `/deploy`. Non si può né lanciare un deploy né sapere com'è
+> andato quello di prima.
+>
+> **La Dashboard però continua a girare**: il suo container non ha niente a che
+> vedere con la salute di Coolify, il sito serve, e `npm run produzione` passa.
+> Coolify malato è un problema di *deploy*, non di *servizio*.
+>
+> Il primo controllo, prima di qualunque diagnosi:
+>
+> ```bash
+> ssh homeserver "sudo -n docker ps --filter name=coolify --format '{{.Names}}|{{.Status}}'"
+> ```
+>
+> Il sintomo che inganna, e che il 2026-08-07 ha prodotto una diagnosi
+> sbagliata: **la caduta si vede prima nel polling di un deploy in corso.** Il
+> record risponde `in_progress` per un po' e poi comincia a dare `Server Error`
+> **senza mai passare da `finished`**, mentre il deploy — che gira in un
+> container suo — **arriva in fondo lo stesso**. Chi aspetta quella parola
+> aspetta all'infinito, conclude «è appeso» e rilancia. La prima lettura fu «il
+> record del deploy smette di rispondere»: era vero e troppo stretto.
+>
+> La domanda giusta non si fa mai al deployer ma al **processo vivo**.
 >
 > La domanda giusta non si fa al deployer ma al **processo vivo**:
 >
