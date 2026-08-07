@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { rivalidaAreaComune } from "@/lib/rivalida-admin";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireUser, requireStaff } from "@/lib/auth/dal";
@@ -56,7 +57,7 @@ export async function requestVerificationAction(
     },
   });
   revalidatePath("/profilo");
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true };
 }
 
@@ -142,7 +143,7 @@ export async function reviewVerificationAction(
     href: "/profilo",
   });
 
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   revalidatePath("/profilo");
   revalidatePath("/", "layout");
   return { ok: true };

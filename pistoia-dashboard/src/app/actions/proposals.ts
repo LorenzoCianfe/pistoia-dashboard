@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { rivalidaAreaComune } from "@/lib/rivalida-admin";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireUser, requireStaff } from "@/lib/auth/dal";
@@ -219,6 +220,6 @@ export async function reviewProposalAction(
 
   revalidatePath(`/proposte/${proposal.id}`);
   revalidatePath("/proposte");
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true };
 }

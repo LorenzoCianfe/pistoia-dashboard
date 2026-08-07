@@ -1,6 +1,6 @@
 {
   "name": "pistoia-dashboard",
-  "version": "0.10.0",
+  "version": "0.39.0",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

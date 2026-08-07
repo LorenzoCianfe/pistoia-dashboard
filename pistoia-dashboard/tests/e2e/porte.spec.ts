@@ -93,3 +93,98 @@ for (const { ruolo, conto, voce, url } of PORTE) {
     await expect(page).toHaveURL(new RegExp(`${url}$`));
   });
 }
+
+/*
+  LE PORTE INTERNE DELL'AREA COMUNE (2026-08-07, taglio di `/admin` in sette).
+
+  Stessa domanda delle porte qui sopra, un livello più in basso: `rotte.mjs`
+  aprirà le sei sottopagine **per indirizzo** e le troverà sane anche il giorno
+  in cui nessun collegamento ci porta più. È la metà che nessun altro cancello
+  misura.
+
+  ⚠️ **Nessuna seconda lista.** Le sei si leggono dal cruscotto stesso: il
+  cancello prova la REGOLA — *ogni porta del cruscotto si apre cliccando, dice
+  dove sei, e riporta indietro* — quindi una superficie aggiunta domani entra
+  in questo cancello da sé, invece di doverci essere ricopiata. Una tabella qui
+  sarebbe la seconda definizione di `superfici.ts`, e due liste divergono al
+  primo inserimento (`AGENTS.md` §3, ondata 7, nota finale).
+*/
+const CRUSCOTTO = "Le aree di lavoro del Comune";
+const AREE = "Aree del Comune";
+
+test("Comune: ogni porta del cruscotto si apre cliccando, e riporta indietro", async ({
+  page,
+}) => {
+  /*
+    Tre navigazioni per porta — apri, controlla, torna — e le porte sono sei:
+    **12,3s misurati** su un server già caldo, cioè il 41% dei 30s di default.
+    Un runner di CI è più lento e le rotte annidate possono compilare a freddo,
+    e in questo repository i rossi da compilazione a freddo hanno già prodotto
+    due diagnosi sbagliate (`AGENTS.md` §3). `test.slow()` triplica il tetto:
+    costa nulla quando va bene, e toglie un rosso che non verrebbe dal codice.
+  */
+  test.slow();
+  await login(page, ADMIN);
+  await page.goto("/admin");
+
+  const porte = page.getByRole("navigation", { name: CRUSCOTTO }).getByRole("link");
+  const indirizzi = await porte.evaluateAll((links) =>
+    links.map((l) => l.getAttribute("href") ?? ""),
+  );
+
+  expect(
+    indirizzi.length,
+    "il cruscotto non offre nessuna porta: le sei aree esistono ma ci si arriva " +
+      "solo digitando l'indirizzo",
+  ).toBeGreaterThan(0);
+
+  for (const href of indirizzi) {
+    await page.goto("/admin");
+    await page.getByRole("navigation", { name: CRUSCOTTO }).locator(`a[href="${href}"]`).click();
+    await expect(page).toHaveURL(new RegExp(`${href}$`));
+
+    // Arrivati, la navigazione dell'area deve sapere DOVE siamo — è la metà
+    // del difetto del 2026-08-07 che si vedeva a schermo, e `aria-current` è
+    // anche ciò che sente chi la pastiglia non la vede.
+    const aree = page.getByRole("navigation", { name: AREE });
+    await expect(
+      aree.locator(`a[href="${href}"]`),
+      `su ${href} la navigazione dell'area non segna la pagina corrente`,
+    ).toHaveAttribute("aria-current", "page");
+
+    // E si torna al cruscotto senza il tasto indietro del browser.
+    await aree.getByRole("link", { name: "Cruscotto", exact: true }).click();
+    await expect(page).toHaveURL(/\/admin$/);
+  }
+});
+
+/*
+  E le stesse porte A 375px, dove la barra laterale non esiste.
+
+  Non è una ripetizione della precedente: la navigazione dell'area è nel flusso
+  della pagina, quindi *dovrebbe* esserci a ogni larghezza — ma «dovrebbe» è
+  ciò che si diceva anche della voce «Redazione» prima del 2026-08-07. Qui il
+  rischio concreto è una riga di pastiglie che a 375px va a capo male o esce
+  dallo schermo: il traboccamento lo misura `shots`, la raggiungibilità la
+  misura questo.
+*/
+test("Comune: a 375px la navigazione dell'area porta a un'altra coda", async ({ page }) => {
+  await login(page, ADMIN);
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto("/admin/segnalazioni");
+
+  const aree = page.getByRole("navigation", { name: AREE });
+  // Il nome accessibile di una coda porta anche il proprio contatore
+  // («Proposte 4 in attesa»), quindi qui si àncora all'inizio invece di
+  // pretendere l'uguaglianza — che è ciò che il numero renderebbe fragile.
+  const altra = aree.getByRole("link", { name: /^Proposte/ });
+
+  await expect(
+    altra,
+    "a 375px non si passa da una coda all'altra: la barra laterale non esiste " +
+      "a questa larghezza, quindi la navigazione dell'area è l'unica strada",
+  ).toBeVisible();
+
+  await altra.click();
+  await expect(page).toHaveURL(/\/admin\/proposte$/);
+});

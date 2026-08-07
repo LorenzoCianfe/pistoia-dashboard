@@ -5,6 +5,33 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.39.0] — 2026-08-07 · `/admin` era un cassetto: dieci mestieri in una colonna sola
+
+> L'esecuzione del piano deciso poche ore prima ([`docs/piano-admin.md`](docs/piano-admin.md)). Il taglio non si è ridiscusso: le sette pagine erano già state scelte dalle misure.
+
+### Aggiunto
+- **Sei rotte nuove sotto `/admin`** — `valutazioni`, `proposte`, `domande`, `segnalazioni`, `cittadini`, `pubblica` — e `/admin` diventa il **cruscotto**: i quattro numeri, le sei porte, il foglio dei QR, il registro delle azioni. `/admin/codici-qr` non è stata toccata.
+- **La navigazione dell'area**, con **il contatore sulle code e nessun pallino sugli strumenti**. Non è una convenzione da ricordare: `SuperficieAdmin` è un'unione discriminata, e «uno strumento con un contatore» **non è scrivibile**.
+- **Un cancello sulle porte interne** (`porte.spec.ts`, due casi in più): ogni porta del cruscotto si apre cliccando, la pagina di arrivo dice dove sei (`aria-current`), e si torna indietro senza il tasto del browser. Legge le sei **dal cruscotto stesso** — nessuna seconda lista da tenere allineata a `superfici.ts`.
+
+### Cambiato
+- **`getAdminData()` era un `Promise.all` unico con dieci query**: senza spezzarlo ogni sottopagina le avrebbe pagate tutte per mostrarne una. Adesso una funzione per superficie, e i **contatori con `count`** — mai contando le righe che una pagina mostra (`AGENTS.md` §3, ondata 7, 2).
+- **Le 23 `revalidatePath("/admin")` diventano `rivalidaAreaComune()`**, che rinfresca tutto il sottoalbero: i contatori delle code si vedono da ogni pagina dell'area, quindi una mappa azione → rotta sarebbe una seconda mappa da tenere allineata a quella vera.
+
+### Misurato
+- **Il massimo passa da 7.558px a 1.894px** (`/admin/proposte`). Il cruscotto fa **822**. Ogni pagina paga ~190px di testata e navigazione che prima esistevano una volta sola: è il costo dichiarato del taglio.
+- **Il riquadro che scorre dentro «Segnalazioni» doveva restare**, e la prima stesura l'aveva tolto ragionando che «adesso a scorrere è la pagina». Misurato subito dopo: **5.000px** con le 14 segnalazioni aperte del seed — da sola più alta di quanto il piano preveda per l'intera area. Rimesso.
+- **La navigazione va dentro ogni pagina, non in un `layout.tsx`**: nell'App Router un layout condiviso **non si ri-renderizza** navigando fra due sue figlie, quindi i contatori resterebbero quelli del primo caricamento. «3 domande in attesa» ancora lì dopo averle chiuse tutte e tre — e un contatore che mente è peggio di nessun contatore.
+
+### Corretto
+- **`npm run shots` fotografava una 404 e usciva 0.** Il controllo che difende le pagine per ruolo confronta l'**indirizzo**, e una 404 di Next *sta* sull'indirizzo chiesto: `admin-domande` è stata catturata come «Errore 404 · Pagina non trovata» e la revisione visiva è stata dichiarata riuscita. ⚠️ Il momento in cui capita è quello **standard**: `npm run test:e2e` cancella `.next`, il server di Playwright la ricostruisce altrove, e il primo `npm run dev` successivo riparte in ricostruzione incrementale — lo stato in cui le rotte **annidate** rispondono 404. Chi lancia i cancelli nell'ordine naturale ci passa ogni volta. Portato in `shots.mjs` il controllo che `rotte.mjs` ha da sempre: si guarda se il **testo d'errore è in pagina**, e il messaggio dice cosa fare invece di lasciar cercare nel diff.
+
+### Note
+- **`package.json` sale da 0.10.0 a 0.39.0** (decisione di Lorenzo, 2026-08-07). Le due numerazioni non erano **mai** state allineate: il manifesto è rimasto a 0.10.0 mentre il CHANGELOG arrivava a 0.38, e il debito era registrato con la formula «se dà fastidio, è una decisione». Verificato prima di toccare: **nessuno legge quel numero** — né `Dockerfile`, né `docker-entrypoint.sh`, né uno script, né il codice. Non serve a nessuno oggi; serve il giorno di un tag o di un referto, ed è lì che due numeri diversi per la stessa cosa diventano il difetto che questo progetto chiama per nome. Da qui in avanti si muovono insieme.
+- **Il contatore ha trovato un buco al primo caricamento**: «Valutazioni» mostra **6** recensioni e ne aspettano **32**. La lista è troncata a sei da sempre; nessuno lo sapeva perché nessuno contava, e le altre 26 non sono raggiungibili da lì. Il rimedio è lo stesso delle code lunghe — **lista + dettaglio** — che il piano tiene fuori di proposito; nel frattempo la pagina **dichiara** di mostrare le più recenti invece di lasciar credere che siano tutte.
+- **La condizione che apre il debito delle code impilate è già soddisfatta**: «Segnalazioni» ne ha **14**, oltre le ~10 scritte nel piano.
+- **Le sei sottopagine entrano tutte e sei nei cancelli a11y e dei bersagli** (11 pagine → 17, quindi 34 casi per cancello). Non è zelo: sono i componenti che quei cancelli già misuravano ieri dentro l'unica `/admin`. Sceglierne due «rappresentative» non avrebbe risparmiato una verifica nuova, avrebbe **tolto copertura che esiste**.
+
 ## [0.38.0] — 2026-08-07 · Un controllo che si riconosce solo al passaggio del mouse, su un telefono non si riconosce mai
 
 ### Corretto

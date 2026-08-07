@@ -6,7 +6,7 @@
 >
 > **Leggilo per intero all'inizio di ogni sessione, prima di toccare codice.**
 >
-> Aggiornato: 2026-08-07 (Fase C · cancello dei 44px, poi cancello della produzione)
+> Aggiornato: 2026-08-07 (Fase C · cancello dei 44px · cancello della produzione · `/admin` spezzata in sette)
 
 ---
 
@@ -61,7 +61,7 @@ L'app vive in `pistoia-dashboard/`. La documentazione vive nella radice.
 
 ## 3. Design system — le regole che si sbagliano più spesso
 
-> §3 raccoglie **ventotto trappole già pagate**. Sono raggruppate per ondata
+> §3 raccoglie **trentacinque trappole già pagate**. Sono raggruppate per ondata
 > solo perché è così che sono emerse: leggile tutte, valgono tutte ancora.
 
 **Prima di tutto: Astryx è la sorgente dei TOKEN, non lo strato di primitive.**
@@ -532,6 +532,71 @@ spiega perché nessun cancello poteva trovarla.
    accorto perché «Area Comune» sta **anche** nel menu del profilo, che vive
    nella barra in alto a ogni larghezza — ed è l'unica porta possibile a 375px.
 
+### Quattro trappole del taglio di `/admin` (2026-08-07)
+
+Tutte e quattro trovate **misurando o guardando dopo aver scritto il codice**,
+non prima: nessuna produce un errore, e in due casi il ragionamento che le aveva
+introdotte suonava giusto ad alta voce.
+
+1. **Un contatore dentro un `layout.tsx` non si aggiorna, e mente.** Nell'App
+   Router un layout condiviso **non si ri-renderizza** quando si naviga fra due
+   sue figlie: il server manda solo i segmenti cambiati. Una navigazione con i
+   contatori delle code messa nel layout di `/admin` mostrerebbe quindi i numeri
+   del **primo** caricamento — «3 domande in attesa» ancora lì dopo averle chiuse
+   tutte e tre — e il difetto non somiglia a un problema di cache: somiglia a un
+   contatore sbagliato. Sta **dentro ogni pagina**, che è dinamica e si rifà a
+   ogni navigazione. Il prezzo è una riga ripetuta in sette file, e si vede.
+
+   Corollario sulle azioni: dopo il taglio, `revalidatePath("/admin")` è muto per
+   sei rotte su sette. Serve **il sottoalbero** —
+   `revalidatePath("/admin", "layout")`, incapsulato in `rivalidaAreaComune()` —
+   perché i contatori si vedono da ogni pagina dell'area: elencare a mano quali
+   rotte tocca ciascuna azione sarebbe una seconda mappa da tenere allineata a
+   quella vera.
+
+2. **Togliere un riquadro che scorre non sposta lo scorrimento: lo moltiplica.**
+   Il triage delle segnalazioni viveva in un `max-h-[36rem] overflow-y-auto`, e
+   la prima stesura del taglio l'ha tolto ragionando che «adesso la pagina è sua,
+   e a scorrere è la pagina». Misurato subito dopo: **5.000px** con le 14
+   segnalazioni aperte del seed, cioè quella pagina da sola più alta di quanto il
+   piano prevedesse per l'intera area, e più del triplo della coda peggiore. Il
+   riquadro è tornato. La regola generale: **un contenitore che limita l'altezza
+   non è un ripiego da eliminare quando si guadagna spazio — è ciò che rende
+   lineare una lista che cresce**, e va tolto solo insieme al rimedio vero
+   (lista + dettaglio), mai da solo.
+
+3. **Un contatore onesto rivela una lista troncata, ed è il suo secondo mestiere.**
+   Il primo caricamento della pagina delle valutazioni ha detto **32** dove la
+   lista ne mostra **6**: `getRecensioniRecenti()` tronca a sei da sempre, e le
+   altre 26 non erano raggiungibili da lì. Nessuno lo sapeva perché **nessuno
+   contava** — la stessa asimmetria della trappola 2 dell'ondata 7, presa
+   dall'altro verso: là il conteggio veniva dalla lista e mentiva, qui il
+   conteggio è vero e ha smascherato la lista. Quando si aggiunge un contatore a
+   una superficie che mostra un `take`, **il primo numero che esce è una
+   diagnosi**, non una conferma.
+
+4. **`shots` fotografava una 404 e usciva 0**, perché l'atterraggio non la vede.
+   Il controllo che difende le pagine per ruolo confronta l'**indirizzo**: una
+   404 di Next però *sta* sull'indirizzo chiesto, quindi passava. Visto dal vivo
+   subito dopo aver portato le sei sottopagine nella lista: `admin-domande` è
+   stata catturata come «Errore 404 · Pagina non trovata», e lo script ha
+   dichiarato la revisione visiva riuscita.
+
+   ⚠️ **E il momento in cui capita non è raro: è quello standard.**
+   `npm run test:e2e` **cancella `.next`** (`pretest:e2e`) e il server di
+   Playwright la ricostruisce sulla 3939; il primo `npm run dev` successivo
+   riparte in ricostruzione incrementale, ed è lo stato in cui le rotte
+   **annidate** rispondono 404 (trappola 4 della Fase A/B). Chi lancia i
+   cancelli nell'ordine naturale — E2E, poi dev, poi `shots` — ci passa in
+   mezzo **ogni volta**.
+
+   Chiuso portando in `shots.mjs` il controllo che `rotte.mjs` ha da sempre: non
+   basta lo stato, non basta l'indirizzo — **si guarda se il testo d'errore è in
+   pagina**. La regola generale è quella di §3 (Fase A/B, 3), che qui torna da
+   una terza porta: *un cancello deve distinguere «verificato e a posto» da «non
+   verificato»*. E il messaggio dice cosa fare, perché la diagnosi è sempre la
+   stessa: cancella `.next` e rilancia **prima** di cercare nel diff.
+
 E una **ripagata**, che era già scritta qui sopra (ondata 7, 1): passare
 `ADMIN_NAV`/`REDAZIONE_NAV` da `AppShell` (Server Component) a `SideNav`
 (client) significa passare `icon`, che è **un componente React**, attraverso il
@@ -551,13 +616,13 @@ npm run typecheck      # tsc --noEmit — sempre prima di dire "fatto"
 npm run lint
 npm test               # vitest
 npm run test:e2e       # playwright (comprende il cancello di accessibilità)
-npm run a11y           # SOLO il cancello a11y: axe, 11 pagine × 2 temi, WCAG AA + 2.2
-npm run bersagli       # SOLO il cancello dei 44px: 11 pagine × 2 viewport (1280 e 360)
+npm run a11y           # SOLO il cancello a11y: axe, 17 pagine × 2 temi, WCAG AA + 2.2
+npm run bersagli       # SOLO il cancello dei 44px: 17 pagine × 2 viewport (1280 e 360)
 npm run lighthouse     # Lighthouse sulla build di produzione — misura, non giudica
 npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
 npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
 node scripts/shots.mjs --simple --width=360   # modalità semplice, viewport minima
-npm run rotte          # tutte le rotte rispondono e rendono contenuto? (56 al 2026-08-05)
+npm run rotte          # tutte le rotte rispondono e rendono contenuto? (62 al 2026-08-07)
 npm run produzione     # il sito DEPLOYATO si monta davvero? — dopo ogni deploy, §8
 npm run db:reset       # ricrea il DB e ripopola i dati dimostrativi
 
@@ -775,7 +840,7 @@ Una modifica è finita quando **tutte** queste sono vere:
 - [ ] `npm run lint` passa
 - [ ] I test esistenti passano
 - [ ] `npm run rotte` è verde — **0 con problemi**, qualunque sia il totale
-      (56 al 2026-08-05; il numero cresce a ogni rotta nuova, e va letto dallo
+      (62 al 2026-08-07; il numero cresce a ogni rotta nuova, e va letto dallo
       script, non da qui). È l'unico cancello che risponde
       alla domanda «abbiamo perso una funzionalità?», e l'unico che apre le
       rotte annidate per indirizzo invece che cliccandole. Da R-5 le passate
@@ -785,15 +850,15 @@ Una modifica è finita quando **tutte** queste sono vere:
       scuro. Un typecheck verde non è una prova visiva.
 - [ ] Funziona da tastiera e il focus è visibile. **Il cancello axe non basta**:
       da 2026-08-05 `npm run test:e2e` comprende `accessibilita.spec.ts` (WCAG
-      AA e 2.2, **11 pagine × 2 temi = 22 casi**, su **74** E2E totali — comprese `/admin/*` e `/redazione` dal
-      2026-08-06 — nessuna regola esclusa), ma axe copre ~30–40% delle
+      AA e 2.2, **17 pagine × 2 temi = 34 casi**, su **100** E2E totali — comprese le sette
+      superfici di `/admin/*` e `/redazione` dal 2026-08-06 — nessuna regola esclusa), ma axe copre ~30–40% delle
       barriere reali — le meccaniche. Ordine di lettura, trappole di focus e
       sensatezza degli annunci restano da provare a mano.
       ⚠️ Se aggiungi un colore, **misura la coppia colore/`-soft`**: è lì che il
       contrasto è caduto, e non si vede guardando
 - [ ] I bersagli reggono i **44px** di `DESIGN.md` §11.6: dal 2026-08-07
-      `npm run test:e2e` comprende `bersagli.spec.ts` (**11 pagine × 2
-      viewport = 22 casi**), che è un cancello **diverso** da `target-size` di
+      `npm run test:e2e` comprende `bersagli.spec.ts` (**17 pagine × 2
+      viewport = 34 casi**), che è un cancello **diverso** da `target-size` di
       axe — quello difende i 24. L'elenco delle esenzioni «essenziali» è
       **vuoto**, e un'aggiunta va scritta con la condizione che la chiude.
       ⚠️ Le due liste di pagine sono una sola: `tests/e2e/pagine-cancello.ts`

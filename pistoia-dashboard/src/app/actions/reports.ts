@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { rivalidaAreaComune } from "@/lib/rivalida-admin";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireUser, requireStaff } from "@/lib/auth/dal";
@@ -283,7 +284,7 @@ export async function updateReportStatusAction(
 
   revalidatePath(`/segnalazioni/${report.id}`);
   revalidatePath("/segnalazioni");
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true };
 }
 
@@ -385,7 +386,7 @@ export async function confirmResolutionAction(
 
   revalidatePath(`/segnalazioni/${report.id}`);
   revalidatePath("/segnalazioni");
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true as const, outcome, invito };
 }
 
@@ -465,7 +466,7 @@ export async function validateUrgencyAction(
 
   revalidatePath(`/segnalazioni/${report.id}`);
   revalidatePath("/segnalazioni");
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true };
 }
 

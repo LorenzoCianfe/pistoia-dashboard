@@ -61,6 +61,11 @@ const ROTTE = [
   "/v/promemoria/link-non-valido",
   // R-3: il foglio dei QR da stampare, ANNIDATA sotto /admin.
   "/admin/codici-qr",
+  // O7: le sei superfici in cui `/admin` è stata spezzata il 2026-08-07
+  // (`docs/piano-admin.md`). Tutte ANNIDATE, quindi fra le prime a cadere
+  // quando `.next` è stantio — che è esattamente ciò che questo script trova.
+  "/admin/valutazioni", "/admin/proposte", "/admin/domande",
+  "/admin/segnalazioni", "/admin/cittadini", "/admin/pubblica",
   "/avvisi", "/organigramma", "/faq", "/glossario",
   "/notifiche", "/profilo", "/impostazioni",
   "/admin",

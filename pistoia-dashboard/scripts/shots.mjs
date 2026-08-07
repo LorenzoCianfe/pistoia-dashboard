@@ -161,6 +161,19 @@ const PAGES = [
   */
   { name: "admin", url: "/admin", ruolo: "admin" },
   { name: "admin-codici-qr", url: "/admin/codici-qr", ruolo: "admin" },
+  /*
+    O7, 2026-08-07: `/admin` spezzata in sette (`docs/piano-admin.md`). Le sei
+    sottopagine entrano **insieme alla modifica**, come vuole la regola
+    dell'ondata 7 — una superficie ridisegnata e non elencata qui risulterebbe
+    "verificata" senza essere mai stata aperta, e il traboccamento orizzontale
+    a 360px si misura solo sulle pagine che questo script apre.
+  */
+  { name: "admin-valutazioni", url: "/admin/valutazioni", ruolo: "admin" },
+  { name: "admin-proposte", url: "/admin/proposte", ruolo: "admin" },
+  { name: "admin-domande", url: "/admin/domande", ruolo: "admin" },
+  { name: "admin-segnalazioni", url: "/admin/segnalazioni", ruolo: "admin" },
+  { name: "admin-cittadini", url: "/admin/cittadini", ruolo: "admin" },
+  { name: "admin-pubblica", url: "/admin/pubblica", ruolo: "admin" },
   { name: "redazione", url: "/redazione", ruolo: "moderatore" },
   { name: "faq", url: "/faq" },
   { name: "glossario", url: "/glossario" },
@@ -326,6 +339,37 @@ async function capture(ctx, theme, ruolo) {
       // non ha ancora prodotto nulla e l'altezza sarebbe quella del viewport.
       await page.waitForLoadState("networkidle").catch(() => {});
       await page.waitForTimeout(400);
+
+      /*
+        E NON DEV'ESSERE UNA PAGINA D'ERRORE, che l'atterraggio non vede.
+
+        Pagato il 2026-08-07, portando qui le sei sottopagine di `/admin`: con
+        `.next` stantio — lo stato in cui `npm run test:e2e` lascia sempre la
+        cartella, perché la cancella e il server di Playwright la ricostruisce
+        altrove — le rotte **annidate** rispondono «Errore 404 · Pagina non
+        trovata». L'indirizzo però resta quello chiesto, quindi il controllo
+        dell'atterraggio è soddisfatto: lo script ha fotografato la 404 e **è
+        uscito 0**, cioè ha certificato come rivista una pagina che non si era
+        aperta.
+
+        È la stessa asimmetria che ha fatto nascere `rotte.mjs` (`AGENTS.md` §3,
+        Fase A/B, 4), e il controllo è il suo: non basta lo stato, non basta
+        l'indirizzo — si guarda se il testo d'errore è in pagina. Qui serve **di
+        più** che là, perché `shots` è il cancello che si lancia subito dopo gli
+        E2E, cioè esattamente quando `.next` è stantio.
+      */
+      const testo = await page.locator("body").innerText();
+      if (
+        /Pagina non trovata|Qualcosa è andato storto|Application error|Unhandled Runtime Error/i.test(
+          testo,
+        )
+      ) {
+        throw new Error(
+          `${p.url} rende una pagina d'errore invece del proprio contenuto. ` +
+            `Se è una rotta annidata, il primo sospetto è \`.next\` stantio: ` +
+            `cancellala e rilancia PRIMA di cercare nel diff (AGENTS.md §3).`,
+        );
+      }
 
       if (p.apriPrima) {
         await page.locator(p.apriPrima).first().click();

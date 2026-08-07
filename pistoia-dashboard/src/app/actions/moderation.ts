@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { rivalidaAreaComune } from "@/lib/rivalida-admin";
 import { prisma } from "@/lib/db";
 import { requireUser, requireModerator } from "@/lib/auth/dal";
 import { invalidateBlockedWords } from "@/lib/moderation";
@@ -32,7 +33,7 @@ export async function hidePostAction(postId: string, reason?: string) {
   ]);
 
   revalidatePath("/comunita");
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true as const };
 }
 
@@ -58,7 +59,7 @@ export async function reportCommentAction(commentId: string, reason?: string) {
     create: { commentId, reporterId: user.id, reason: reason?.slice(0, 200) || null },
     update: { reason: reason?.slice(0, 200) || null, status: "open" },
   });
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true as const };
 }
 
@@ -79,7 +80,7 @@ export async function hideCommentAction(commentId: string) {
     }),
   ]);
   revalidatePath("/comunita");
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true as const };
 }
 
@@ -87,7 +88,7 @@ export async function hideCommentAction(commentId: string) {
 export async function dismissCommentReportsAction(commentId: string) {
   await requireModerator();
   await prisma.commentReport.updateMany({ where: { commentId }, data: { status: "dismissed" } });
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true as const };
 }
 
@@ -108,7 +109,7 @@ export async function suspendUserAction(userId: string, days: number) {
       },
     }),
   ]);
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true as const };
 }
 
@@ -122,7 +123,7 @@ export async function banUserAction(userId: string) {
       data: { actorId: mod.id, action: "ban_user", targetType: "user", targetId: userId },
     }),
   ]);
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true as const };
 }
 
@@ -138,7 +139,7 @@ export async function liftUserSanctionAction(userId: string) {
       data: { actorId: mod.id, action: "lift_sanction", targetType: "user", targetId: userId },
     }),
   ]);
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true as const };
 }
 
@@ -153,7 +154,7 @@ export async function addBlockedWordAction(word: string) {
     update: {},
   });
   invalidateBlockedWords();
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true as const };
 }
 
@@ -162,7 +163,7 @@ export async function removeBlockedWordAction(id: string) {
   await requireModerator();
   await prisma.blockedWord.delete({ where: { id } }).catch(() => {});
   invalidateBlockedWords();
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true as const };
 }
 
@@ -219,6 +220,6 @@ export async function mergeReportsAction(sourceId: string, targetId: string) {
   revalidatePath("/segnalazioni");
   revalidatePath(`/segnalazioni/${sourceId}`);
   revalidatePath(`/segnalazioni/${targetId}`);
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true as const };
 }

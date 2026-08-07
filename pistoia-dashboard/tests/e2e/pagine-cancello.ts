@@ -50,12 +50,31 @@ export const PAGINE_AUTENTICATE: PaginaCancello[] = [
  * modera ciò che lo riguarda.
  */
 export const PAGINE_STAFF: PaginaCancello[] = [
-  { nome: "area Comune (admin)", url: "/admin", conto: ADMIN },
+  { nome: "area Comune (admin, cruscotto)", url: "/admin", conto: ADMIN },
   { nome: "codici QR (admin, da stampare)", url: "/admin/codici-qr", conto: ADMIN },
+  /*
+    LE SEI SOTTOPAGINE DEL COMUNE, entrate il 2026-08-07 col taglio di `/admin`
+    (`docs/piano-admin.md`).
+
+    Entrano **tutte e sei**, e non è zelo: sono i componenti che questo cancello
+    già misurava ieri dentro l'unica `/admin` — triage, verifiche, moderazione,
+    risposte, i tre strumenti. Sceglierne due «rappresentative» non
+    risparmierebbe una verifica nuova: **toglierebbe copertura che esiste**, e
+    §2 dice che l'accessibilità non si regredisce.
+
+    Il costo, dichiarato: ~4s per pagina, per tema e per viewport, sui due
+    cancelli che leggono questa lista.
+  */
+  { nome: "admin · valutazioni", url: "/admin/valutazioni", conto: ADMIN },
+  { nome: "admin · proposte", url: "/admin/proposte", conto: ADMIN },
+  { nome: "admin · domande", url: "/admin/domande", conto: ADMIN },
+  { nome: "admin · segnalazioni (triage)", url: "/admin/segnalazioni", conto: ADMIN },
+  { nome: "admin · cittadini (verifiche + moderazione)", url: "/admin/cittadini", conto: ADMIN },
+  { nome: "admin · pubblica (i tre strumenti)", url: "/admin/pubblica", conto: ADMIN },
   { nome: "redazione (moderatore)", url: "/redazione", conto: MODERATORE },
 ];
 
-/** Tutte e undici, nell'ordine in cui si attraversano. */
+/** Tutte e diciassette, nell'ordine in cui si attraversano. */
 export const PAGINE_CANCELLO: PaginaCancello[] = [
   ...PAGINE_ANONIME,
   ...PAGINE_AUTENTICATE,

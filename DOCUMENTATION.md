@@ -343,7 +343,7 @@ applicate: `community_mvp`, `community_v2`, **`provenance`**, `ondata2_semplicit
 | Notifiche | ✅ | Lista per tipo (incl. segnalazione/proposta/verifica/evento), segna-come-letta, badge nel TopBar |
 | Profilo | ✅ | Dati, **badge** e stato verifica, **richiesta verifica**, statistiche, nome pubblico |
 | Impostazioni | ✅ | Preferenze notifiche, tema, cambio password, logout globale; **Privacy e dati** (consenso geo, **export JSON**, **cancellazione account**, link a privacy/cookie/regole) |
-| Area Comune | ✅ | Coda verifiche, triage segnalazioni, revisione proposte, risposte, broadcast, registro azioni; **moderazione community** (commenti segnalati, ban/sospensione, parole bloccate, **unione duplicati**); **approvazione eventi** |
+| Area Comune | ✅ | **Sette rotte dal 2026-08-07** (`docs/piano-admin.md`): cruscotto + `valutazioni`, `proposte`, `domande`, `segnalazioni`, `cittadini` (verifiche **+** moderazione), `pubblica` (i tre strumenti). Coda verifiche, triage segnalazioni, revisione proposte, risposte, broadcast, registro azioni; **moderazione community** (commenti segnalati, ban/sospensione, parole bloccate, **unione duplicati**); **approvazione eventi**. Contatore su ogni coda, `count` sul database; gli strumenti non ne hanno, e il tipo lo impedisce |
 | Decisioni | ✅ | **Archivio decisioni `/decisioni`** (O3): esito + motivo in semplice, "perché non si può fare" evidenziato sulle respinte, link al percorso |
 | Promesse | ✅ | **Tracker `/promesse`** (O3): impegni per stato con riepilogo a pill, origine, scadenza comunicata e nota di aggiornamento |
 | Avvisi urgenti | ✅ | **Bacheca `/avvisi`** (O3): severità, "cosa cambia per me" a punti, mini-mappa dei geolocalizzati, archivio conclusi; **banner in home** e **layer dedicato su /mappa** |
@@ -1050,6 +1050,63 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   mentre il deploy è riuscito. Intermittente. La domanda giusta si fa al processo
   vivo — il tag dell'immagine che il container esegue — cioè al controllo 0 di
   `npm run produzione`.
+
+- **2026-08-07 (`/admin` spezzata in sette)** — Eseguito il piano deciso poche
+  ore prima ([`docs/piano-admin.md`](docs/piano-admin.md), consuntivo in §7). Il
+  taglio non si è ridiscusso: le sette pagine erano già state scelte dalle
+  misure.
+
+  **Il dato prima della forma.** `getAdminData()` era un `Promise.all` unico con
+  dieci query: senza spezzarlo ogni sottopagina le avrebbe pagate tutte per
+  mostrarne una. Adesso una funzione per superficie, le condizioni di filtro in
+  costanti condivise — la lista e il contatore della stessa coda **devono** porre
+  la stessa domanda al database — e i contatori con `count`, mai contando le
+  righe che una pagina mostra.
+
+  **La navigazione sta dentro ogni pagina, non in un `layout.tsx`**, e la ragione
+  è tecnica e non stilistica: nell'App Router un layout condiviso **non si
+  ri-renderizza** navigando fra due sue figlie, quindi i contatori resterebbero
+  quelli del primo caricamento. Stessa famiglia il rinfresco dopo un'azione: le
+  23 `revalidatePath("/admin")` diventano `rivalidaAreaComune()`, cioè
+  `revalidatePath("/admin", "layout")`, perché i contatori delle code si vedono
+  da **ogni** pagina dell'area.
+
+  **«Uno strumento non ha un pallino» è ora un vincolo di tipo.**
+  `SuperficieAdmin` è un'unione discriminata: la chiave del contatore esiste solo
+  sul ramo `natura: "coda"`. La regola di `DESIGN.md` §6 smette di essere una
+  convenzione da ricordare alla prossima pagina.
+
+  **Le misure, e le due correzioni che hanno prodotto.** Il massimo passa da
+  **7.558px a 1.894** (`/admin/proposte`), il cruscotto fa **822**, e ogni pagina
+  paga ~190px di testata e navigazione che prima esistevano una volta sola.
+  Misurando: (1) il riquadro che scorre dentro «Segnalazioni» **doveva restare** —
+  toglierlo, con l'argomento «adesso a scorrere è la pagina», faceva **5.000px**
+  con le 14 segnalazioni del seed; (2) il contatore ha rivelato che «Valutazioni»
+  mostra **6** recensioni mentre ne aspettano **32**, buco preesistente che
+  nessuno vedeva perché nessuno contava. Entrambi hanno lo stesso rimedio —
+  lista + dettaglio — che il piano tiene fuori di proposito, e **la condizione
+  che lo apre (una coda oltre le ~10 voci) è già soddisfatta**.
+
+  **I cancelli**: `rotte` da 56 a **62**, 0 con problemi · `shots` +6 pagine per
+  regime, zero traboccamento a 360px · `pagine-cancello` da 11 a **17**, quindi
+  a11y e bersagli **34 casi** ciascuno — le sei entrano *tutte*, perché sono i
+  componenti che quei cancelli già misuravano dentro l'unica `/admin`, e
+  sceglierne due «rappresentative» avrebbe **tolto copertura esistente** ·
+  `porte.spec.ts` guadagna due casi che leggono le sei porte **dal cruscotto
+  stesso**, senza una seconda lista da tenere allineata.
+
+  **E un cancello riparato per strada: `shots` fotografava una 404 e usciva 0.**
+  Il controllo che difende le pagine per ruolo confronta l'**indirizzo**, e una
+  404 di Next *sta* sull'indirizzo chiesto — quindi passava. Visto dal vivo su
+  `admin-domande`, catturata come «Errore 404 · Pagina non trovata» con la
+  revisione visiva dichiarata riuscita. ⚠️ Il momento in cui capita è quello
+  **standard**: `npm run test:e2e` cancella `.next`, il server di Playwright la
+  ricostruisce sulla 3939, e il primo `npm run dev` successivo riparte in
+  ricostruzione incrementale — lo stato in cui le rotte **annidate** rispondono
+  404. Portato in `shots.mjs` il controllo che `rotte.mjs` ha da sempre: si
+  guarda se il **testo d'errore è in pagina**, e il messaggio dice cosa fare
+  invece di lasciar cercare nel diff. È §3 (Fase A/B, 3) da una terza porta —
+  *un cancello deve distinguere «verificato e a posto» da «non verificato»*.
 
 ## 11. Roadmap
 

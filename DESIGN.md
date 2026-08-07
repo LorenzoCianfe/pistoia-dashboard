@@ -5,7 +5,10 @@
 > coerente con quanto scritto qui, o si corregge la scelta o si aggiorna
 > (consapevolmente) questo documento.
 >
-> Ultime revisioni: **2026-08-07** (§11.6 **diventa un cancello bloccante** e
+> Ultime revisioni: **2026-08-07** (§6 le quattro nature messe alla prova
+> eseguendo il taglio di `/admin`: il cruscotto non ripete la navigazione delle
+> figlie, e una riga che va a capo costa 96px a 1280 e 200 a 375) · **2026-08-07**
+> (§11.6 **diventa un cancello bloccante** e
 > corregge la propria motivazione misurandola) · **2026-08-06** (§4 corollario
 > dei tre centesimi, §6 la chiusura è un oggetto, §11.6 riscritta con le
 > quattro eccezioni) · **2026-08-05** (§4 tavolozza chiara scurita per AA).
@@ -285,6 +288,31 @@ l'opposto della regola precedente ed è voluto.
   quella coda** (un `/admin/impostazioni` riforma il cassetto altrove), e **il
   contatore si chiede al database**, mai contando le righe che la pagina mostra
   (`AGENTS.md` §3, ondata 7, 2).
+
+  **Eseguita il 2026-08-07**, e la resa ha aggiunto due regole misurate.
+
+  *Il cruscotto non ripete la navigazione delle sue figlie.* Sulle sei
+  sottopagine la navigazione è una riga di pastiglie; sul cruscotto **sono le
+  sei schede**, con la descrizione e il contatore. Metterci anche le pastiglie
+  sarebbe stato due elenchi della stessa cosa nella stessa schermata, e il
+  secondo non avrebbe aggiunto una destinazione.
+
+  *Una riga che va a capo costa, e il costo si dichiara* (decisione di Lorenzo,
+  2026-08-07, presa sulle schermate). Sette pastiglie da ~120px non stanno negli
+  852 della colonna di `main`: **96px su due righe** a 1280, **200px su quattro**
+  a 375, **sette righe** a 360 in modalità semplice. Togliere le icone non basta
+  a guadagnare una riga (859px contro 852, misurato) — è il numero di voci, non
+  l'ornamento.
+
+  Si paga, e la ragione non è la rinuncia: su telefono quei 200px **non sono solo
+  navigazione**. I cinque contatori si leggono tutti insieme senza scorrere,
+  quindi la riga è anche il riepilogo di quanto lavoro c'è — che su una
+  superficie di lavoro è metà dell'informazione. Le due alternative misurate e
+  scartate, perché nessuno le riproponga: una **striscia che scorre di lato**
+  (44px invece di 200, ma due o tre destinazioni fuori schermo *coi loro
+  contatori*), e **togliere «Cruscotto» dalle pastiglie** portandolo a un
+  «← Area Comune» sopra il titolo (da 200 a 148px, cioè poco per una porta in
+  meno).
 
 ---
 

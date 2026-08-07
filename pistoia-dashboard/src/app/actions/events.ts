@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
+import { rivalidaAreaComune } from "@/lib/rivalida-admin";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { TAGS } from "@/lib/cache";
@@ -129,6 +130,6 @@ export async function reviewEventAction(eventId: string, approve: boolean) {
 
   revalidateTag(TAGS.eventi, "max");
   revalidatePath("/eventi");
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true as const };
 }

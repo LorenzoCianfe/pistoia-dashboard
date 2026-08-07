@@ -4,7 +4,8 @@
 > prossima sessione **esegua** invece di ridecidere: la scelta del taglio è già
 > stata fatta, e il ragionamento che ci ha portati è qui sotto.
 >
-> Stato: **piano scritto, esecuzione da fare.**
+> Stato: **✅ eseguito il 2026-08-07.** Il consuntivo, con le misure vere e le
+> due cose che il piano non aveva previsto, è in fondo (§7).
 
 ---
 
@@ -139,3 +140,67 @@ per una pagina.
 
 Non si fa insieme al taglio: sono due lavori con due rischi diversi, e il taglio
 è utile da solo.
+
+---
+
+## 7. Consuntivo — che cosa è successo eseguendolo (2026-08-07)
+
+### Le misure vere, a 1280px
+
+| Rotta | Stimata | **Misurata** |
+|---|---:|---:|
+| `/admin` (cruscotto) | ~500 | **822** |
+| `/admin/valutazioni` | 865 | **1.114** |
+| `/admin/proposte` | 1.710 | **1.894** |
+| `/admin/domande` | 1.308 | **1.492** |
+| `/admin/segnalazioni` | 710 | **896** |
+| `/admin/cittadini` | 1.290 | **1.457** |
+| `/admin/pubblica` | 1.508 | **1.252** |
+
+Ogni pagina paga ~190px di testata e navigazione che prima esistevano una volta
+sola: è il costo del taglio, ed è dichiarato. **Il massimo passa da 7.558 a
+1.894px**, cioè il quarto della pagina peggiore.
+
+### Le due cose che il piano non aveva previsto
+
+1. **Il riquadro che scorre dentro «Segnalazioni» doveva restare.** La prima
+   stesura l'aveva tolto ragionando che «adesso a scorrere è la pagina».
+   Misurato subito: **5.000px**, cioè una pagina più alta di quanto il piano
+   preveda per l'intera area. Rimesso. Il rimedio vero è lista + dettaglio, e
+   **la condizione che lo apre è già soddisfatta**: 14 segnalazioni aperte,
+   oltre le ~10 di §6.
+
+2. **«Valutazioni» mostra 6 recensioni e ne aspettano 32.** Il contatore lo ha
+   rivelato al primo caricamento — la lista è troncata a sei da sempre, e
+   nessuno lo sapeva perché nessuno contava. Le altre 26 non sono raggiungibili
+   da quella pagina. Stesso rimedio, stessa condizione; nel frattempo la pagina
+   **dichiara** di mostrare le più recenti invece di lasciar credere che siano
+   tutte.
+
+### Due decisioni tecniche che valgono oltre questo taglio
+
+- **La navigazione sta dentro ogni pagina, non in un `layout.tsx`.** Nell'App
+  Router un layout condiviso non si ri-renderizza navigando fra due sue figlie:
+  i contatori resterebbero quelli del primo caricamento. Un contatore che mente
+  è peggio di nessun contatore.
+- **Le azioni rinfrescano tutto il sottoalbero** (`rivalidaAreaComune()`,
+  `revalidatePath("/admin", "layout")`), perché i contatori delle code si vedono
+  da ogni pagina dell'area. Elencare a mano quali rotte tocca ogni azione
+  sarebbe una seconda mappa da tenere allineata.
+
+### Un cancello riparato per strada
+
+**`shots` fotografava una 404 e usciva 0.** Il controllo dell'atterraggio
+confronta l'*indirizzo*, e una 404 di Next sta sull'indirizzo chiesto: la
+schermata di `admin-domande` era la pagina d'errore, e la revisione visiva
+risultava riuscita. Il momento in cui capita è quello standard — dopo gli E2E,
+che cancellano `.next` — quindi valeva per qualunque rotta annidata, non solo
+per queste. Chiuso portando in `shots.mjs` il controllo del testo d'errore che
+`rotte.mjs` ha da sempre.
+
+### I cancelli, dopo
+
+`rotte` **62** (da 56), 0 con problemi · `shots` **+6 pagine** per regime, zero
+traboccamento a 360px · `pagine-cancello` **17** (da 11), quindi a11y e bersagli
+**34 casi** ciascuno · `porte.spec.ts` guadagna due casi che leggono le sei
+porte **dal cruscotto stesso**, senza una seconda lista.

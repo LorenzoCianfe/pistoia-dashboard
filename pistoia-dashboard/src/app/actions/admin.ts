@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
+import { rivalidaAreaComune } from "@/lib/rivalida-admin";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { TAGS } from "@/lib/cache";
@@ -68,7 +69,7 @@ export async function answerPostAction(
   }
 
   revalidatePath("/comunita");
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true };
 }
 
@@ -119,7 +120,7 @@ export async function updateOperaProgressAction(
 
   revalidateTag(TAGS.opere, "max");
   revalidatePath("/opere");
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true };
 }
 
@@ -170,7 +171,7 @@ export async function createPollAction(
   });
 
   revalidatePath("/sondaggi");
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true };
 }
 
@@ -206,6 +207,6 @@ export async function broadcastNotificationAction(
   });
 
   revalidatePath("/", "layout");
-  revalidatePath("/admin");
+  rivalidaAreaComune();
   return { ok: true };
 }
