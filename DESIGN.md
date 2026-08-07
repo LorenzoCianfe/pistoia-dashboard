@@ -224,10 +224,30 @@ l'opposto della regola precedente ed è voluto.
   effetto misurabile sulla leggibilità: sul vetro il testo secondario guadagna
   quasi un punto di contrasto rispetto alla tela.
 
-  Da qui una regola di innesto: **il footer non si centra e non si impagina da
-  sé.** Decide il contenitore che lo ospita — dentro `AppShell` e `(pubblico)`
-  è la colonna di `main`, in `(legal)` un involucro apposta. Rimetterci dentro
-  un `mx-auto max-w-6xl px-4` raddoppierebbe il padding degli antenati.
+  Da qui una regola di innesto: **la scheda non si centra e non si impagina da
+  sé.** Decide il contenitore che la ospita — in `(legal)` un involucro
+  apposta. Rimetterci dentro un `mx-auto max-w-6xl px-4` raddoppierebbe il
+  padding degli antenati.
+
+  **Il contenuto invece ha un tetto di 850px, deciso il 2026-08-07 e misurato.**
+  Portando il footer fuori da `<main>` (2026-08-06, forma «a tutta larghezza»)
+  la scheda è passata a ~1100px dentro `AppShell`: una larghezza a cui il
+  footer **non era mai stato guardato**, e a cui `justify-between` apriva
+  **446px di vuoto** fra l'identità — tetto di 320px, che è la misura di
+  lettura scelta il 05/08 — e le colonne dei link appese al bordo destro. Su
+  ogni pagina della piattaforma.
+
+  850px non è scelto a occhio: è **la colonna di `main` dentro `AppShell`**,
+  cioè la larghezza a cui questo footer è stato disegnato e verificato quando
+  ci viveva dentro. Il tetto sta sulle due righe interne e non sulla scheda,
+  così il vetro resta a tutta larghezza come deciso e la composizione torna
+  dove funzionava: vuoto da 446 a **258px**, e sulle pagine legali (640px) non
+  cambia nulla, perché il tetto è più largo del contenitore.
+
+  **La regola generale, che è costata due volte in tre giorni:** quando si
+  cambia *dove* vive un componente, cambia la sua larghezza — e le larghezze a
+  cui è stato verificato non valgono più. `@container` risolve il *come* si
+  adatta, non il *se* qualcuno l'ha guardato a quella misura.
 
 ---
 

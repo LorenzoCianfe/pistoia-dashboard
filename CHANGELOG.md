@@ -5,6 +5,16 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.36.0] — 2026-08-07 · Il footer a una larghezza che nessuno aveva guardato
+
+### Corretto
+- **446px di vuoto nel footer, su ogni pagina della piattaforma.** Portandolo fuori da `<main>` il 2026-08-06 — forma «a tutta larghezza», decisione presa allora — la scheda è passata da ~850px a **~1100** dentro `AppShell`: una larghezza a cui il footer **non era mai stato guardato**. Lì `@3xl:justify-between` spingeva le colonne dei link contro il bordo destro e apriva il vuoto. Chiuso con un **tetto di 850px alle due righe interne**, non alla scheda: il vetro resta a tutta larghezza come deciso, e la composizione torna dove funzionava. Vuoto da 446 a **258px**, misurato.
+- **850px non è scelto a occhio**: è la colonna di `main` dentro `AppShell` (`max-w-6xl` meno padding, barra laterale e gap), cioè la larghezza a cui questo footer è stato disegnato e verificato quando ci viveva dentro.
+
+### Note
+- **Verificato nei tre contesti in cui il footer vive**, più la viewport minima: `AppShell` 1104px · pubblico 1104px · legale 640px · 360px. Sulle pagine legali non cambia nulla — il tetto è più largo del contenitore — e il traboccamento orizzontale è **zero** ovunque.
+- **La regola che è costata due volte in tre giorni**: quando si cambia *dove* vive un componente, cambia la sua larghezza, e le larghezze a cui è stato verificato non valgono più. `@container` risolve il *come* si adatta, non il *se* qualcuno l'ha guardato a quella misura. La prima volta fu il 05/08 con `lg:` al posto di `@container`; questa è la stessa famiglia dall'altro lato.
+
 ## [0.35.0] — 2026-08-07 · La Redazione aveva una stanza e nessuna porta
 
 > Trovato guardando `/admin` e `/redazione` una per una — cosa che non era mai stata fatta. Tre cancelli erano verdi sopra questo difetto.

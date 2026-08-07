@@ -30,10 +30,26 @@ import { DEMO_MODE } from "@/lib/demo";
  * che con un ornamento**: il footer è una scheda di vetro appoggiata sulla
  * tela, come ogni altra superficie dell'applicazione (`DESIGN.md` §4 e §6).
  *
- * ⚠️ **Non si centra e non si impagina da sé.** Il contenitore che lo ospita
- * decide larghezza e margini: dentro `AppShell` e `(pubblico)` è già la colonna
- * di `main`, in `(legal)` c'è un involucro apposta. Rimettere qui dentro un
- * `mx-auto max-w-6xl px-4` raddoppierebbe il padding degli antenati.
+ * ⚠️ **La SCHEDA non si centra e non si impagina da sé.** Il contenitore che la
+ * ospita decide larghezza e margini: in `(legal)` c'è un involucro apposta.
+ * Rimettere qui dentro un `mx-auto max-w-6xl px-4` raddoppierebbe il padding
+ * degli antenati.
+ *
+ * ⚠️ **Il CONTENUTO invece ha un tetto di 850px, e viene da una misura.** Dal
+ * 2026-08-06 la scheda sta fuori da `<main>` e va a **tutta larghezza**
+ * (decisione di Lorenzo): dentro `AppShell` questo la porta a ~1100px, cioè a
+ * una larghezza a cui il footer **non era mai stato guardato**. Lì
+ * `@3xl:justify-between` apriva **446px di vuoto** fra l'identità (tetto
+ * `max-w-xs`, 320px) e le colonne dei link appese al bordo destro. Misurato il
+ * 2026-08-07, e visibile su ogni pagina della piattaforma.
+ *
+ * 850px non è un numero scelto a occhio: è la colonna di `main` dentro
+ * `AppShell` — `max-w-6xl` meno il padding, la barra laterale e il gap — cioè
+ * **la larghezza a cui questo footer è stato disegnato e verificato** quando
+ * ci viveva dentro. Il tetto sta sulle due righe interne e non sulla scheda,
+ * così il vetro resta a tutta larghezza come deciso e la composizione torna
+ * dove funzionava. Sulle pagine legali (640px) non cambia niente: il tetto è
+ * più largo del contenitore.
  *
  * ⚠️ **Le soglie sono `@container`, non `sm:`/`lg:`, e non è un vezzo.** Le
  * varianti normali guardano la FINESTRA, e questo footer vive in due colonne di
@@ -48,7 +64,7 @@ import { DEMO_MODE } from "@/lib/demo";
 export function Footer({ autenticato = false }: { autenticato?: boolean }) {
   return (
     <footer className="card @container mt-8 px-6 py-8 sm:px-8 sm:py-9 print:hidden">
-      <div className="flex flex-col gap-9 @3xl:flex-row @3xl:items-start @3xl:justify-between">
+      <div className="mx-auto flex w-full max-w-[850px] flex-col gap-9 @3xl:flex-row @3xl:items-start @3xl:justify-between">
         <div className="flex min-w-0 max-w-xs flex-col gap-3">
           <span className="flex items-center gap-2.5">
             <span className="grid size-8 shrink-0 place-items-center rounded-full bg-white shadow-sm ring-1 ring-border">
@@ -79,7 +95,7 @@ export function Footer({ autenticato = false }: { autenticato?: boolean }) {
         </div>
       </div>
 
-      <div className="mt-7 flex flex-col gap-3 border-t border-border pt-5 @2xl:flex-row @2xl:items-center @2xl:justify-between">
+      <div className="mx-auto mt-7 flex w-full max-w-[850px] flex-col gap-3 border-t border-border pt-5 @2xl:flex-row @2xl:items-center @2xl:justify-between">
         {/* La dichiarazione sta QUI e non sulle colonne (forma «iii»): chi ha
             già un account non la incontra affatto, e le colonne restano
             pulite. Il `?next=` verso la pagina che interessa lo mette il
