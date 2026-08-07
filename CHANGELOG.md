@@ -5,6 +5,14 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.37.0] — 2026-08-07 · In «Proposte cittadine» il macchinario pesava più del merito
+
+> Due dei quattro difetti estetici trovati rivedendo `/admin` una schermata per volta. Gli altri due — la pagina da 7.300px e le azioni senza affordance — sono coppia e vanno decisi insieme.
+
+### Corretto
+- **La gerarchia era rovesciata.** Pastiglia e conteggio stavano in cima, e il **titolo della proposta** — la cosa che un cittadino ha scritto e che il Comune deve giudicare — sotto, a `text-sm`: più piccolo dei controlli del modulo che lo circondano. Adesso il titolo viene **primo** e a `text-base`, con lo stato sotto come metadato. Il macchinario non può pesare più del merito.
+- **Lo stato era detto tre volte** sulla stessa scheda: la pastiglia («Risposta del Comune»), la coda «· risposta pubblicata» a due centimetri, e il valore del `<select>` sotto. La coda ora compare **solo quando la pastiglia non lo dice già** — negli altri stati non è una ripetizione ma un'informazione in più, perché una proposta ancora «Pubblicata» può avere già una risposta scritta. Restano due: il segnale da scorrere e il valore del controllo, che è funzionale e non si toglie.
+
 ## [0.36.0] — 2026-08-07 · Il footer a una larghezza che nessuno aveva guardato
 
 ### Corretto

@@ -51,18 +51,37 @@ function ReviewItem({ item }: { item: Item }) {
 
   return (
     <div className="rounded-[var(--radius-sm)] border border-border bg-surface-2/40 p-4">
-      <div className="flex flex-wrap items-center gap-2">
+      {/*
+        LA PROPOSTA PRIMA, il suo stato dopo (revisione 2026-08-07).
+
+        Era il contrario: pastiglia e conteggio in cima, e il titolo — cioè la
+        cosa che un cittadino ha scritto e che il Comune deve giudicare — sotto,
+        a `text-sm`, più piccolo dei controlli del modulo che lo circondano. La
+        gerarchia diceva «uno stato, e per inciso una proposta». Il macchinario
+        non può pesare più del merito.
+      */}
+      <p className="text-base font-semibold leading-snug">{item.title}</p>
+      <div className="mt-1.5 flex flex-wrap items-center gap-2">
         <Badge color={proposalStatus(item.status).color}>
           {proposalStatus(item.status).label}
         </Badge>
         <span className="text-xs font-semibold tabular-nums">
           {formatNumber(item.supports)} sostegni
         </span>
-        {item.hasReply ? (
+        {/*
+          «risposta pubblicata» SOLO quando la pastiglia non lo dice già.
+
+          Con stato `risposta` la pastiglia legge «Risposta del Comune» e questa
+          coda ripeteva la stessa cosa a due centimetri di distanza — con il
+          valore del `<select>` qui sotto che la diceva una terza volta. Negli
+          altri stati non è una ripetizione ma un'informazione in più: una
+          proposta ancora «Pubblicata» può avere già una risposta scritta, e
+          quello va detto.
+        */}
+        {item.hasReply && item.status !== "risposta" ? (
           <span className="text-xs text-muted-2">· risposta pubblicata</span>
         ) : null}
       </div>
-      <p className="mt-1.5 text-sm font-semibold">{item.title}</p>
 
       {state?.ok ? (
         <Alert variant="success" className="mt-3">
