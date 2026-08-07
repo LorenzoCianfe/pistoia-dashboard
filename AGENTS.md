@@ -832,6 +832,7 @@ lancia a mano, dall'interfaccia di Coolify o via API.
 >
 > | Che cosa pretende | Il guasto che difende |
 > |---|---|
+> | **La VERSIONE giusta**, e viene per prima | «Ho lanciato il deploy e sto guardando la versione di prima». Si chiede al server quale immagine sta eseguendo il container vivo, e il tag di quell'immagine **è** lo SHA del commit: `docker build -t <uuid>:<sha>`, lo mette Coolify. Se non combacia, dice **di quanti commit** la produzione è indietro. È un fatto sul processo in esecuzione, non una dichiarazione di chi ha deployato — e **non dipende da come il deploy è stato lanciato** |
 > | `main` sopra una soglia **per pagina**, su pagine di contenuto | La demo cieca: HTML giusto, `main` fermo a ~183 caratteri sul «Caricamento in corso». ⚠️ Su `/login` `main` ha **228** caratteri anche quando è sana (misurato), perché è solo il modulo: lì il cancello chiede invece che **il modulo ci sia** |
 > | L'**atterraggio** sull'indirizzo chiesto | I guard qui reindirizzano invece di rifiutare: una pagina pubblica finita al login risponderebbe 200, con `<h1>` e `main` pieno |
 > | Accesso, poi **due** rotte protette di seguito | Il cookie con `Secure` su un sito in HTTP: il login riusciva e ogni navigazione tornava al login. Un controllo che si ferma all'accesso non lo vede |
@@ -842,14 +843,42 @@ lancia a mano, dall'interfaccia di Coolify o via API.
 > cancello che esce 0 quando non ha verificato niente non è un cancello (§3,
 > Fase A/B, 3) — ed è esattamente il difetto che `shots` aveva.
 >
+> ⚠️ **Il cancello SCRIVE nel database dimostrativo, ed è dichiarato.** Accede
+> come `cittadino@` e atterra su `/la-mia-citta`, dove `CampagnaHome` registra
+> la sollecitazione al montaggio — e in produzione `npm run db:seed` **non si
+> può rilanciare** (`docker-entrypoint.sh` lo traccia con `/data/.seeded`).
+> Misurato il 2026-08-07, ed è più piccolo di quanto sembri: la card **resta a
+> schermo** (conta una volta sola finché non rispondi), quindi la dimostrazione
+> non si degrada, e il fatto registrato — «la campagna è stata mostrata» — è
+> **vero**: un browser vero l'ha mostrata davvero. Non vale un conto dedicato
+> oggi. **La condizione che lo cambia:** il giorno in cui quella base dati
+> smetterà di essere dimostrativa, il cancello vuole un conto suo.
+>
 > **Non è in CI, e non è una dimenticanza**: l'indirizzo è un IP privato in rete
 > locale, che i runner di GitHub non raggiungono — la stessa ragione per cui non
 > c'è auto-deploy sul push. Si lancia da questa macchina, dopo il deploy.
 >
-> **Che cosa NON prova, dichiarato:** *quale versione* sia in produzione. Il
-> marcatore della tavolozza parla solo quando la tavolozza cambia. Un marcatore
-> vero vorrebbe lo SHA del commit portato dentro l'immagine, che è una decisione
-> di deploy e non di script.
+> **Serve `ssh homeserver`** (chiave in `~/.ssh/vm-coolify`) e `sudo -n docker`
+> là sopra, che è configurato senza password. Se manca, il cancello dice
+> **«versione NON verificata»** e va rosso: non è mai verde per omissione.
+>
+> **Tre strade scartate per portare lo SHA dentro l'immagine**, misurate il
+> 2026-08-07 e scritte perché nessuno le riprovi:
+>
+> 1. *Come argomento di build.* **Coolify non lo passa**: gli unici build-arg
+>    sono `COOLIFY_URL`, `COOLIFY_FQDN`, `COOLIFY_BRANCH`,
+>    `COOLIFY_RESOURCE_UUID` e le variabili dell'applicazione.
+> 2. *Calcolandolo nel build da `.git`.* Il contesto è
+>    `/artifacts/<deploy>/pistoia-dashboard`; `.git` sta **un livello sopra**.
+> 3. *Scrivendolo in una variabile di Coolify da un comando di deploy.* Regge
+>    solo finché ogni deploy passa da quel comando: al primo lancio
+>    dall'interfaccia la variabile resta indietro e **il marcatore mente**, che
+>    è peggio di non averlo.
+>
+> **Il limite che resta, dichiarato:** si verifica il **tag** dell'immagine
+> viva, e chi lo assegna è Coolify al checkout. Se Coolify prendesse un commit e
+> ne scrivesse un altro, il marcatore ripeterebbe il suo errore. È molto più
+> stretto del buco di prima e non si chiude dall'esterno.
 >
 > **Se il deploy fallisce con `exit code 137`, è l'OOM killer, non il codice.**
 > Visto il 2026-08-05 su un commit di sola documentazione: `next build` non ci

@@ -47,19 +47,46 @@
  *    vere: vedi `richiestaDavveroFallita`). È la *causa* accanto al sintomo —
  *    quando il conteggio dei caratteri cade, questi due dicono perché.
  *
- * ## Che cosa NON prova, dichiarato
+ * ## E quale VERSIONE sta girando
  *
- * Non dice **quale versione** è in produzione. Il marcatore della tavolozza
- * (§8 di `AGENTS.md`) è l'unico segnale di freschezza disponibile senza toccare
- * il build, ed è debole per costruzione: parla solo quando la tavolozza cambia.
- * Un marcatore vero vorrebbe lo SHA del commit portato dentro l'immagine —
- * decisione di deploy, non di script.
+ * Il controllo 0, e viene per primo perché se la versione è sbagliata tutti
+ * gli altri stanno misurando la cosa sbagliata. Nasce dal 2026-08-07: il
+ * cancello era verde, la previsione sul conteggio dei caratteri era smentita,
+ * e per sapere se il deploy avesse preso sono servite **tre sonde a mano**.
+ *
+ * Si chiede al server **quale immagine sta eseguendo il container vivo**, e il
+ * tag di quell'immagine è lo SHA del commit (`docker build -t <uuid>:<sha>`,
+ * lo mette Coolify). È un fatto sul processo in esecuzione, non una
+ * dichiarazione di chi ha lanciato il deploy — e soprattutto **non dipende da
+ * come il deploy è stato lanciato**: vale identico dall'interfaccia di Coolify
+ * e dall'API.
+ *
+ * Le tre strade scartate, perché la ragione serve a chi le riproverà:
+ *
+ * 1. *Lo SHA come argomento di build.* **Coolify non lo passa**: gli unici
+ *    build-arg sono `COOLIFY_URL`, `COOLIFY_FQDN`, `COOLIFY_BRANCH`,
+ *    `COOLIFY_RESOURCE_UUID` più le variabili dell'applicazione (misurato sul
+ *    log del deploy `xslgv91gji97flg209drdurx`).
+ * 2. *Calcolarlo nel build da `.git`.* Il contesto è
+ *    `/artifacts/<deploy>/pistoia-dashboard` e `.git` sta **un livello sopra**:
+ *    non è nel contesto.
+ * 3. *Scriverlo in una variabile di Coolify da un comando di deploy.* Funziona
+ *    solo finché il deploy passa da quel comando: al primo lancio
+ *    dall'interfaccia la variabile resta indietro e **il marcatore mente**, che
+ *    è peggio di non averlo.
+ *
+ * Il limite che resta, dichiarato: si verifica il **tag** dell'immagine viva,
+ * e chi lo assegna è Coolify al momento del checkout. Se Coolify prendesse un
+ * commit e ne scrivesse un altro, il marcatore lo ripeterebbe. È molto più
+ * stretto del buco di prima, e non c'è modo di chiuderlo dall'esterno.
  *
  * Uso:
  *   npm run produzione
  *
- * Variabili: `PROD_BASE_URL`, `PROD_EMAIL`, `PROD_PASSWORD`.
+ * Variabili: `PROD_BASE_URL`, `PROD_EMAIL`, `PROD_PASSWORD`, `PROD_SSH_HOST`,
+ * `PROD_APP_UUID`.
  */
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 
@@ -71,6 +98,9 @@ const CONTO = {
   email: process.env.PROD_EMAIL ?? "cittadino@pistoia.it",
   password: process.env.PROD_PASSWORD ?? "Pistoia2026",
 };
+/** L'host SSH e l'UUID dell'applicazione su Coolify (`AGENTS.md` §8). */
+const SSH_HOST = process.env.PROD_SSH_HOST ?? "homeserver";
+const APP_UUID = process.env.PROD_APP_UUID ?? "w148lovopnak9eshxuy13b1i";
 
 /**
  * Le soglie sono **la metà del valore misurato**, arrotondata in giù.
@@ -123,6 +153,58 @@ const ERRORE_IN_PAGINA =
  * `net::ERR_CERT_AUTHORITY_INVALID` su ogni script — e non passa da qui.
  */
 const richiestaDavveroFallita = (r) => (r.failure()?.errorText ?? "") !== "net::ERR_ABORTED";
+
+/** Lo SHA che ho qui, e se resta lavoro fuori dai commit. */
+function statoLocale() {
+  const sha = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+  const sporco =
+    execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" }).trim().length > 0;
+  return { sha, sporco };
+}
+
+/**
+ * Gli SHA delle immagini che i container VIVI stanno eseguendo.
+ *
+ * `docker ps` vuole il socket, e l'utente di `homeserver` non ce l'ha: serve
+ * `sudo -n`, che là è configurato senza password. Il `-n` è deliberato — se un
+ * giorno la password servisse, questo deve fallire **subito** invece di restare
+ * appeso su un prompt che nessuno vedrà mai.
+ *
+ * Torna una lista e non un valore perché durante un deploy i container vivi
+ * possono essere due, e «quale versione gira» in quel momento non ha una
+ * risposta sola: dirlo è più utile che sceglierne una.
+ */
+function shaInEsecuzione() {
+  return execFileSync(
+    "ssh",
+    [
+      "-o",
+      "BatchMode=yes",
+      "-o",
+      "ConnectTimeout=15",
+      SSH_HOST,
+      `sudo -n docker ps --filter name=${APP_UUID} --format '{{.Image}}'`,
+    ],
+    { encoding: "utf8", timeout: 60_000, stdio: ["ignore", "pipe", "pipe"] },
+  )
+    .split("\n")
+    .map((riga) => riga.trim())
+    .filter(Boolean)
+    .map((immagine) => immagine.split(":").pop());
+}
+
+/** «indietro di N commit», quando si può dire; altrimenti si dice che non si può. */
+function distanzaDa(remoto) {
+  try {
+    execFileSync("git", ["merge-base", "--is-ancestor", remoto, "HEAD"], { stdio: "ignore" });
+    const n = execFileSync("git", ["rev-list", "--count", `${remoto}..HEAD`], {
+      encoding: "utf8",
+    }).trim();
+    return `, indietro di ${n} commit`;
+  } catch {
+    return ", e non è un antenato del tuo HEAD (commit che non conosci? `git fetch`)";
+  }
+}
 
 /** Le due tinte d'accento del tema compilato: `light-dark(#chiaro, #scuro)`. */
 function accentiDelTema() {
@@ -201,6 +283,55 @@ async function apri(page, { url, minimo, misurato }, etichetta) {
 }
 
 console.log(`Cancello della produzione — ${BASE}\n`);
+
+// ---------------------------------------------------------------------------
+// 0. Quale versione sta girando. Per PRIMA: se è sbagliata, tutto il resto sta
+//    misurando qualcos'altro — ed è precisamente ciò che è successo il
+//    2026-08-07, con un cancello verde e una previsione smentita.
+// ---------------------------------------------------------------------------
+let versioneGiusta = false;
+try {
+  const { sha, sporco } = statoLocale();
+  const vivi = shaInEsecuzione();
+
+  if (vivi.length === 0) {
+    rosso(`versione: nessun container vivo di nome ${APP_UUID} sul server`);
+  } else if (vivi.length > 1) {
+    rosso(
+      `versione: ${vivi.length} container vivi (${vivi.map((v) => v.slice(0, 7)).join(", ")}) — ` +
+        `un deploy è in corso? rilancia quando ne resta uno`,
+    );
+  } else if (!/^[0-9a-f]{40}$/.test(vivi[0])) {
+    rosso(`versione: il tag dell'immagine non è uno SHA (${vivi[0]}), quindi non è confrontabile`);
+  } else if (vivi[0] === sha) {
+    versioneGiusta = true;
+    console.log(
+      `  ok  ${"versione".padEnd(16)} [container]  ${sha.slice(0, 7)} — è il commit che hai qui`,
+    );
+  } else {
+    rosso(
+      `versione: la produzione esegue ${vivi[0].slice(0, 7)}, il tuo HEAD è ` +
+        `${sha.slice(0, 7)}${distanzaDa(vivi[0])}`,
+    );
+  }
+
+  // Non è un rosso: il deploy porta commit, non la cartella di lavoro. Ma un
+  // verde qui, da solo, si legge «la produzione ha ciò che sto guardando» — e
+  // con l'albero sporco è falso. Si dice SOLO quando il verde può ingannare:
+  // se la versione è già rossa, questa riga è rumore.
+  if (sporco && versioneGiusta) {
+    console.log(
+      `      ⚠ hai modifiche non committate: la produzione ha il commit giusto, non la tua cartella di lavoro`,
+    );
+  }
+} catch (e) {
+  // NON verificata ≠ a posto. Vale la regola di `AGENTS.md` §3 (Fase A/B, 3).
+  // Si stampa lo stderr, non il comando: la ragione vera («Could not resolve
+  // hostname», «Permission denied») è là dentro, e ripetere il comando che ha
+  // fallito non ha mai detto a nessuno perché.
+  const dettaglio = e.stderr?.toString().trim().split("\n")[0] || e.message.split("\n")[0];
+  rosso(`versione NON verificata: ${dettaglio}`);
+}
 
 const browser = await chromium.launch();
 
@@ -321,14 +452,21 @@ if (!accenti) {
 }
 
 // ---------------------------------------------------------------------------
-const controlli = PAGINE_ANONIME.length + PAGINE_AUTENTICATE.length + 3; // +login +accesso +tavolozza
+// +versione +login +accesso +tavolozza
+const controlli = PAGINE_ANONIME.length + PAGINE_AUTENTICATE.length + 4;
 console.log(`\n${controlli} controlli, ${problemi} con problemi.`);
 if (problemi > 0) {
   console.error(
-    `\n✗ la produzione non è a posto. Se il testo di ogni pagina è crollato ` +
-      `insieme, guarda la CSP e la console del browser prima del codice: il ` +
-      `precedente (2026-08-05) era una direttiva che faceva fallire tutti gli ` +
-      `script su un sito servito in HTTP, e l'HTML arrivava intatto.`,
+    versioneGiusta
+      ? `\n✗ la produzione esegue il commit giusto ma non è a posto. Se il ` +
+          `testo di ogni pagina è crollato insieme, guarda la CSP e la console ` +
+          `del browser prima del codice: il precedente (2026-08-05) era una ` +
+          `direttiva che faceva fallire tutti gli script su un sito servito in ` +
+          `HTTP, e l'HTML arrivava intatto.`
+      : `\n✗ la produzione non è a posto. **Comincia dalla versione**: finché ` +
+          `non è quella giusta, gli altri controlli stanno misurando un'altra ` +
+          `applicazione — e un verde lì sotto non dice niente sul codice che ` +
+          `hai in mano.`,
   );
   process.exitCode = 1;
 }

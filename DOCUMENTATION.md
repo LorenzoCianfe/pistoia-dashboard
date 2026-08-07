@@ -944,6 +944,38 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   7, sito sbagliato 7 su 7, accesso fallito 3 su 7, tutti con uscita 1. Un
   accesso mancato conta le pagine protette come rosse **invece di saltarle**.
 
+- **2026-08-07 (il marcatore della versione)** — Il limite dichiarato la sera
+  prima — «il cancello non dice *quale* versione è in produzione» — **ha morso
+  al primo uso vero**, poche ore dopo: cancello verde, previsione sul conteggio
+  dei caratteri smentita, e per sapere se il deploy avesse preso sono servite
+  **tre sonde a mano** (nome del chunk CSS, `.btn-sm` a 44px, fermate di
+  tabulazione a zero). Chiuso nella stessa giornata.
+
+  **Come**: si chiede al server quale immagine sta eseguendo il **container
+  vivo** (`ssh homeserver` + `sudo -n docker ps`), e il tag di quell'immagine
+  *è* lo SHA del commit — `docker build -t <uuid>:<sha>`, lo mette Coolify. È un
+  fatto sul processo in esecuzione, non una dichiarazione di chi ha lanciato il
+  deploy, e **non dipende da come il deploy è stato lanciato**: vale identico
+  dall'interfaccia di Coolify e dall'API. Requisito esplicito di Lorenzo, e ha
+  escluso da solo la soluzione più ovvia.
+
+  **Tre strade scartate, misurate invece che immaginate** (in `AGENTS.md` §8,
+  perché nessuno le riprovi): lo SHA come argomento di build — **Coolify non lo
+  passa**, gli unici sono `COOLIFY_URL`, `COOLIFY_FQDN`, `COOLIFY_BRANCH`,
+  `COOLIFY_RESOURCE_UUID` e le variabili dell'app; calcolarlo nel build da
+  `.git` — il contesto è `/artifacts/<deploy>/pistoia-dashboard` e `.git` sta un
+  livello sopra; scriverlo in una variabile di Coolify da un comando di deploy —
+  regge finché ogni deploy passa da quel comando, e al primo lancio
+  dall'interfaccia **il marcatore mente**, che è peggio di non averlo.
+
+  Quando non combacia, dice di **quanti commit** la produzione è indietro. Se
+  `ssh` non risponde dice «versione NON verificata» ed è **rosso**: mai verde
+  per omissione. Provato rosso su tutte e cinque le strade.
+
+  **Il limite che resta, dichiarato**: si verifica il *tag* dell'immagine viva,
+  e chi lo assegna è Coolify al checkout. Se Coolify prendesse un commit e ne
+  scrivesse un altro, il marcatore ripeterebbe il suo errore.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.

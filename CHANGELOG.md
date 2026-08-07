@@ -5,6 +5,22 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.34.0] — 2026-08-07 · Il cancello impara a dire QUALE versione sta girando
+
+> Il limite dichiarato ieri sera ha morso stamattina, al primo uso vero. Ora è chiuso.
+
+### Aggiunto
+- **Il controllo della versione, per primo fra tutti** — perché se la versione è sbagliata, ogni altro controllo sta misurando un'altra applicazione. Si chiede al server **quale immagine sta eseguendo il container vivo** (`docker ps`), e il tag di quell'immagine **è** lo SHA del commit: `docker build -t <uuid>:<sha>`, lo mette Coolify. È un fatto sul processo in esecuzione, non una dichiarazione di chi ha lanciato il deploy — e **non dipende da come il deploy è stato lanciato**: vale identico dall'interfaccia di Coolify e dall'API.
+- **Quando non combacia, dice di quanti commit la produzione è indietro** (`git merge-base --is-ancestor` + `rev-list --count`), e se lo SHA vivo non è un antenato del proprio `HEAD` lo dice invece di fingere una distanza.
+- **Un avviso quando l'albero di lavoro è sporco**, e solo quando la versione è giusta: è lì che un verde si legge «la produzione ha ciò che sto guardando», ed è falso. Se la versione è già rossa, la stessa riga sarebbe rumore.
+
+### Note
+- **Tre strade scartate, misurate invece che immaginate.** *(a)* Lo SHA come argomento di build: **Coolify non lo passa** — gli unici sono `COOLIFY_URL`, `COOLIFY_FQDN`, `COOLIFY_BRANCH`, `COOLIFY_RESOURCE_UUID` e le variabili dell'app. *(b)* Calcolarlo nel build da `.git`: il contesto è `/artifacts/<deploy>/pistoia-dashboard` e `.git` sta un livello sopra. *(c)* Scriverlo in una variabile di Coolify da un comando di deploy: regge finché ogni deploy passa da quel comando, e al primo lancio dall'interfaccia **il marcatore mente** — peggio che non averlo. Sono in `AGENTS.md` §8 perché nessuno le riprovi.
+- **`ssh` che non risponde è ROSSO, non «saltato»**: «versione NON verificata» è un problema contato, mai un verde per omissione. E si stampa lo stderr di `ssh` (`Could not resolve hostname`, `Permission denied`) invece del comando fallito, che non ha mai detto a nessuno perché.
+- **Provato rosso su tutte e cinque le strade**: commit diverso e non antenato · tag che non è uno SHA (`0.0.21`) · nessun container col nome cercato · `ssh` irraggiungibile · e la distanza «indietro di N commit» verificata contro un antenato vero.
+- **Il limite che resta, dichiarato**: si verifica il *tag* dell'immagine viva, e chi lo assegna è Coolify al checkout. Se Coolify prendesse un commit e ne scrivesse un altro, il marcatore ripeterebbe il suo errore.
+- **Il cancello scrive nel database dimostrativo, ed è ora dichiarato in `AGENTS.md` §8.** Accede come `cittadino@` e atterra su `/la-mia-citta`, dove `CampagnaHome` registra la sollecitazione al montaggio — e in produzione il seed non si può rilanciare. Misurato: è più piccolo di quanto sembrasse. La card **resta a schermo** (conta una volta sola finché non rispondi), quindi la dimostrazione non si degrada, e il fatto registrato — «la campagna è stata mostrata» — è **vero**: un browser vero l'ha mostrata. Non vale un conto dedicato oggi; la condizione che lo cambia è scritta accanto — il giorno in cui quella base dati smetterà di essere dimostrativa.
+
 ## [0.33.0] — 2026-08-07 · Il cancello sulla produzione
 
 > Il primo cancello che guarda il **sito deployato** invece di `localhost`. Era l'ultima voce aperta della traccia «Qualità continua» ([ROADMAP.md](ROADMAP.md) §4); il perché di ogni controllo è in [AGENTS.md](AGENTS.md) §8.
