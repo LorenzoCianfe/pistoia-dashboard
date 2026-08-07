@@ -875,6 +875,47 @@ lancia a mano, dall'interfaccia di Coolify o via API.
 > `02-applicazioni.md`). Esiste anche `ssh homeserver`, con la chiave dedicata
 > in `~/.ssh/vm-coolify`.
 >
+> 🔴 **OGNI DEPLOY COSTA 2,82GB DI DISCO, E IL DISCO È DA 40GB.** È la causa
+> vera dietro al paragrafo qui sotto, trovata il 2026-08-07 dopo essere partiti
+> da una diagnosi sbagliata. Coolify **non cancella** l'immagine vecchia: dopo
+> tre deploy in una giornata la Dashboard da sola occupava **5 × 2,82 = 14,1GB**,
+> il disco è arrivato a `40G 38G 0 100%`, e Postgres è andato in
+> `PANIC: could not write to file … No space left on device`.
+>
+> Da lì la catena: `coolify-db` in recovery a ciclo → `coolify` e `coolify-db`
+> **`unhealthy`** → **ogni** endpoint dell'API risponde `Server Error`, `/deploy`
+> compreso. Nessun deploy possibile, e le scritture del database dimostrativo a
+> rischio (il volume sta sullo stesso disco).
+>
+> **Si ripara liberando spazio, e si riprende DA SOLO** — nessun riavvio: appena
+> Postgres può scrivere finisce il recovery e in ~20s tutto torna `healthy`.
+>
+> ```bash
+> ssh homeserver "sudo -n docker system df; df -h /"        # prima si misura
+> ssh homeserver "sudo -n docker builder prune -a -f"        # 9,39GB, e qui è spazio BUTTATO
+> ```
+>
+> La cache di build **su questo progetto non serve a niente**: Coolify costruisce
+> con `--no-cache`. È quindi la prima cosa da liberare, ed è innocua.
+>
+> Se non basta, si tolgono le immagini vecchie **una per tag**, tenendo quella in
+> esecuzione **e la precedente per il rollback**:
+>
+> ```bash
+> ssh homeserver "sudo -n docker rmi w148lovopnak9eshxuy13b1i:<sha-vecchio>"
+> ```
+>
+> ⚠️ **Mai `docker image prune -a`**: sullo stesso server vivono Umami, Homepage
+> e Uptime Kuma. Il 2026-08-07 cache + tre immagini hanno riportato il disco da
+> **100% a 66%** (13G liberi).
+>
+> **Il debito che resta, con la condizione che lo chiude:** l'immagine pesa
+> 2,82GB perché le devDependencies restano installate (vincolo 2 qui sotto:
+> `next build` le richiede e il seed gira con `tsx`). Un build **multi-stage** —
+> costruire con le dev, copiare in un'immagine di esecuzione senza — le
+> toglierebbe dal peso finale. Si valuta **quando il disco tornerà sopra l'80%
+> nonostante la potatura**, che è un fatto misurabile con `df -h /`.
+>
 > ⚠️ **IL PIANO DI CONTROLLO PUÒ CADERE, E L'APPLICAZIONE RESTA IN PIEDI.**
 > Visto il 2026-08-07: i container **`coolify` e `coolify-db` vanno
 > `unhealthy`** e da quel momento **ogni** endpoint dell'API risponde
