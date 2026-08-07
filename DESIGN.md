@@ -249,6 +249,30 @@ l'opposto della regola precedente ed è voluto.
   cui è stato verificato non valgono più. `@container` risolve il *come* si
   adatta, non il *se* qualcuno l'ha guardato a quella misura.
 
+- **Le quattro nature di una superficie di lavoro** (decisa 2026-08-07, piano in
+  [`docs/piano-admin.md`](docs/piano-admin.md)). `/admin` era diventata un
+  cassetto — **dieci mestieri, 7.300px, nessun indice** — e la regola che lo
+  impedisce d'ora in poi è:
+
+  > **Una coda, una pagina · gli strumenti insieme · le letture sul cruscotto,
+  > finché ci stanno · il registro è una lettura anche lui.**
+
+  Non è una tassonomia per il gusto di averla: **una coda** (il lavoro arriva e
+  tu lo smaltisci) vuole un **contatore** e vuole essere controllata; **uno
+  strumento** (sei tu che decidi di usarlo) vuole essere **trovato**, e non deve
+  mai avere un pallino. Metterli sulla stessa pagina è il motivo per cui `/admin`
+  non sapeva dire se ci fosse qualcosa da fare.
+
+  La quarta natura — **le letture** — è nata provando la regola contro l'Ondata
+  8, non per completezza: *analytics operative* e il *monitor della pipeline*
+  non sono né code né strumenti, e senza una casa dichiarata sarebbero finiti
+  «dove capita», che è come il cassetto si era formato la prima volta.
+
+  Due corollari vincolanti: **le impostazioni di una coda stanno sulla pagina di
+  quella coda** (un `/admin/impostazioni` riforma il cassetto altrove), e **il
+  contatore si chiede al database**, mai contando le righe che la pagina mostra
+  (`AGENTS.md` §3, ondata 7, 2).
+
 ---
 
 ## 7. Motion
