@@ -482,6 +482,45 @@ tutte e tre riguardano ciò che un cancello verde *non* stava guardando.
    `accediDalModulo()`, una volta. Accessi reali per esecuzione: **da ~45 a 4**.
    La suite ci ha anche guadagnato un minuto e venti.
 
+### Due trappole delle porte (2026-08-07)
+
+Trovate **guardando le pagine una per una**, non da un cancello — e la prima
+spiega perché nessun cancello poteva trovarla.
+
+1. **Tutti i cancelli arrivano alle pagine PER INDIRIZZO, nessuno cliccando.**
+   `rotte.mjs` fa `goto()`, `accessibilita.spec.ts` e `bersagli.spec.ts` pure.
+   Quindi `/redazione` è vissuta senza **nessun collegamento in tutta
+   l'applicazione** — zero `href`, solo il prefisso nel proxy e tre
+   `revalidatePath` — con tre cancelli verdi sopra. Il moderatore doveva
+   digitare l'indirizzo per aprire la propria unica superficie di lavoro, e una
+   volta lì la barra non aveva **nessuna voce attiva**.
+
+   È lo specchio esatto della trappola 4 della Fase A/B: là `shots` non vedeva
+   le rotte annidate rotte *perché ci arrivava cliccando*, e `rotte` è nato per
+   aprirle per indirizzo. Qui mancava l'altro verso. Da qui
+   `tests/e2e/porte.spec.ts`, che prova la **regola** — ogni ruolo con una
+   superficie riservata ha una voce che ce lo porta — e non le due rotte di
+   oggi.
+
+   La regola generale: **«la pagina risponde» e «si può arrivare alla pagina»
+   sono due domande diverse**, e finora ne misuravamo una sola.
+
+2. **Una voce di navigazione non è «aggiunta» finché non dichiari a quali
+   larghezze esiste.** La barra laterale è `lg:block`: sotto i 1024px non c'è, e
+   la barra in basso porta solo le cinque destinazioni pubbliche. Una voce messa
+   lì e basta lascia il telefono esattamente com'era. L'admin non se n'era
+   accorto perché «Area Comune» sta **anche** nel menu del profilo, che vive
+   nella barra in alto a ogni larghezza — ed è l'unica porta possibile a 375px.
+
+E una **ripagata**, che era già scritta qui sopra (ondata 7, 1): passare
+`ADMIN_NAV`/`REDAZIONE_NAV` da `AppShell` (Server Component) a `SideNav`
+(client) significa passare `icon`, che è **un componente React**, attraverso il
+confine RSC. React rifiuta a runtime — «Functions cannot be passed directly to
+Client Components», con `render: function PenLine` nel messaggio — mentre
+**typecheck e lint restano verdi tutti e due**. Prima non capitava perché
+`ADMIN_NAV` era importato *dentro* il componente client. Si passa il **ruolo**,
+una stringa, e la superficie si ricava di là.
+
 ---
 
 ## 4. Comandi
@@ -726,7 +765,7 @@ Una modifica è finita quando **tutte** queste sono vere:
       scuro. Un typecheck verde non è una prova visiva.
 - [ ] Funziona da tastiera e il focus è visibile. **Il cancello axe non basta**:
       da 2026-08-05 `npm run test:e2e` comprende `accessibilita.spec.ts` (WCAG
-      AA e 2.2, **11 pagine × 2 temi = 22 casi**, su **70** E2E totali — comprese `/admin/*` e `/redazione` dal
+      AA e 2.2, **11 pagine × 2 temi = 22 casi**, su **74** E2E totali — comprese `/admin/*` e `/redazione` dal
       2026-08-06 — nessuna regola esclusa), ma axe copre ~30–40% delle
       barriere reali — le meccaniche. Ordine di lettura, trappole di focus e
       sensatezza degli annunci restano da provare a mano.

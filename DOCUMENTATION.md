@@ -976,6 +976,44 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   e chi lo assegna è Coolify al checkout. Se Coolify prendesse un commit e ne
   scrivesse un altro, il marcatore ripeterebbe il suo errore.
 
+- **2026-08-07 (la Redazione aveva una stanza e nessuna porta)** — Prima
+  revisione di `/admin` e `/redazione` **una per una**: non era mai stata fatta.
+
+  **`/redazione` non era raggiungibile da nessun collegamento**: zero `href` in
+  tutta l'applicazione, solo il prefisso nel proxy e tre `revalidatePath`. Il
+  moderatore doveva digitare l'indirizzo per aprire la propria unica superficie
+  di lavoro, e una volta lì la barra laterale non aveva nessuna voce attiva —
+  mentre l'admin, sulla stessa barra, aveva «Area Comune» da sempre.
+
+  **Perché tre cancelli verdi non lo vedevano**, ed è il punto che vale oltre il
+  caso: `rotte.mjs`, `accessibilita.spec.ts` e `bersagli.spec.ts` aprono le
+  pagine **tutti per indirizzo**, con `goto()`. «La pagina risponde» e «si può
+  arrivare alla pagina» sono due domande diverse, e ne misuravamo una sola. È lo
+  specchio della trappola 4 della Fase A/B, dove `shots` non vedeva le rotte
+  annidate rotte *perché ci arrivava cliccando*.
+
+  **Chiuso su due larghezze, e la seconda è emersa implementando**: la barra
+  laterale è `lg:block`, quindi una voce messa solo lì avrebbe lasciato il
+  telefono com'era. La porta mobile è il menu del profilo — dove l'admin aveva
+  già la sua, ed è la ragione per cui l'asimmetria non si era mai vista.
+  Corollario: **una voce di navigazione non è «aggiunta» finché non dichiari a
+  quali larghezze esiste.**
+
+  **Modellazione**: `SideNav` riceve il **ruolo** e non più `isAdmin: boolean` —
+  quel booleano è metà della ragione del difetto, perché un secondo booleano
+  accanto avrebbe lasciato scrivibile «admin e moderatore insieme», che per
+  disegno non esiste (R-4). `staffNav(ruolo)` è l'unica lista di superfici
+  riservate, e la tinta dell'icona vive sul `NavItem` perché il menu del profilo
+  non ne diventi una seconda.
+
+  **Una lezione ripagata** (`AGENTS.md` §3, ondata 7, 1): la prima stesura
+  passava il `NavItem` da `AppShell` (Server Component) a `SideNav` (client),
+  cioè `icon` — un componente React — attraverso il confine RSC. Typecheck e
+  lint verdi tutti e due, pagina sull'error boundary, `render: function PenLine`
+  nel messaggio.
+
+  Nuovo cancello: `tests/e2e/porte.spec.ts`, quattro casi. Suite da 70 a **74**.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.

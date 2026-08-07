@@ -5,6 +5,22 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.35.0] — 2026-08-07 · La Redazione aveva una stanza e nessuna porta
+
+> Trovato guardando `/admin` e `/redazione` una per una — cosa che non era mai stata fatta. Tre cancelli erano verdi sopra questo difetto.
+
+### Corretto
+- **`/redazione` non era raggiungibile da nessun collegamento.** Zero `href` in tutta l'applicazione: solo il prefisso nel proxy e tre `revalidatePath`. Il moderatore doveva **digitare l'indirizzo** per aprire la propria unica superficie di lavoro, e una volta lì la barra laterale non aveva nessuna voce attiva — mentre l'admin, sulla stessa barra, aveva «Area Comune» da sempre. Adesso la Redazione ha la sua voce, con la pastiglia attiva, **e la stessa voce nel menu del profilo**, che a 375px è l'unica porta possibile (la barra laterale è `lg:block`, e quella in basso porta solo le cinque destinazioni pubbliche).
+- **`SideNav` riceve il RUOLO, non un booleano.** Era `isAdmin: boolean`, ed è metà della ragione per cui la Redazione è rimasta fuori: un secondo booleano accanto avrebbe lasciato scrivibile «admin e moderatore insieme», che per disegno non esiste (R-4). La superficie riservata si ricava da `staffNav(ruolo)`, in **un posto solo** — e la tinta dell'icona vive sul `NavItem`, così il menu del profilo non diventa una seconda lista di superfici di staff.
+
+### Aggiunto
+- **`tests/e2e/porte.spec.ts` — il cancello che mancava**, quattro casi: due ruoli × due larghezze (barra laterale a 1280, menu del profilo a 375). Prova la **regola** — ogni ruolo con una superficie riservata ha una voce che ce lo porta, ci si arriva **cliccando**, e la voce risulta attiva — non le due rotte di oggi. La suite passa da 70 a **74**.
+
+### Note
+- **Perché nessun cancello lo vedeva, e vale oltre questo caso.** `rotte.mjs`, `accessibilita.spec.ts` e `bersagli.spec.ts` aprono le pagine **tutti per indirizzo**, con `goto()`. «La pagina risponde» e «si può arrivare alla pagina» sono due domande diverse, e finora ne misuravamo una sola. È lo specchio della trappola 4 della Fase A/B, dove `shots` non vedeva le rotte annidate rotte *perché ci arrivava cliccando*.
+- **Una lezione ripagata**, già in `AGENTS.md` §3 (ondata 7, 1): la prima stesura passava il `NavItem` da `AppShell` (Server Component) a `SideNav` (client), cioè `icon` — **un componente React** — attraverso il confine RSC. `render: function PenLine`, pagina sull'error boundary, **typecheck e lint verdi tutti e due**.
+- **Una voce di navigazione non è «aggiunta» finché non dichiari a quali larghezze esiste.** La prima versione era desktop-only e lasciava il telefono com'era; il difetto si vedeva solo misurando a 375px.
+
 ## [0.34.0] — 2026-08-07 · Il cancello impara a dire QUALE versione sta girando
 
 > Il limite dichiarato ieri sera ha morso stamattina, al primo uso vero. Ora è chiuso.

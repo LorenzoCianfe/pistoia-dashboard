@@ -5,9 +5,9 @@ import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
 import {
   DESTINATIONS,
-  ADMIN_NAV,
   findDestination,
   isPathActive,
+  staffNav,
   type NavItem,
 } from "./nav-items";
 import { cn } from "@/lib/utils";
@@ -78,7 +78,24 @@ function NavLink({
   );
 }
 
-export function SideNav({ isAdmin }: { isAdmin: boolean }) {
+/**
+ * Riceve il **RUOLO**, una stringa, e si ricava qui la superficie riservata.
+ *
+ * Era `isAdmin: boolean`, e quel booleano è stato la ragione per cui la
+ * Redazione è rimasta senza porta: un secondo booleano accanto avrebbe lasciato
+ * scrivibile «admin e moderatore insieme», che non esiste (R-4).
+ *
+ * ⚠️ **La prop non può essere il `NavItem`**, ed è una trappola già pagata
+ * (`AGENTS.md` §3, ondata 7, 1). `AppShell` è un Server Component: passargli
+ * l'oggetto significa passare `icon`, che è un **componente React** — cioè una
+ * funzione — attraverso il confine RSC, e React rifiuta a runtime con
+ * «Functions cannot be passed directly to Client Components». Typecheck e lint
+ * restano verdi tutti e due; il primo segno è la pagina sull'error boundary.
+ * Prima del 2026-08-07 il problema non esisteva perché `ADMIN_NAV` veniva
+ * importato **qui dentro**, e l'icona non attraversava niente.
+ */
+export function SideNav({ ruolo }: { ruolo: string }) {
+  const staff = staffNav(ruolo);
   const pathname = usePathname();
   const openDestination = findDestination(pathname);
 
@@ -119,13 +136,10 @@ export function SideNav({ isAdmin }: { isAdmin: boolean }) {
         );
       })}
 
-      {isAdmin ? (
+      {staff ? (
         <>
           <div className="my-2 h-px bg-border" />
-          <NavLink
-            item={ADMIN_NAV}
-            active={isPathActive(pathname, ADMIN_NAV.href)}
-          />
+          <NavLink item={staff} active={isPathActive(pathname, staff.href)} />
         </>
       ) : null}
     </nav>

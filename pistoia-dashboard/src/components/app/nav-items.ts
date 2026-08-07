@@ -31,15 +31,29 @@ import {
   FolderKanban,
   Star,
   Award,
+  PenLine,
   type LucideIcon,
 } from "lucide-react";
 
 import { EDIZIONI } from "@/lib/pagella";
+// Modulo neutro (né `"use client"` né `server-only`): importabile da qui, che
+// finisce dentro componenti client. La regola sta in testa a `lib/redazione.ts`.
+import { isRedazione } from "@/lib/redazione";
 
 export type NavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
+  /**
+   * La tinta dell'icona dove la voce va distinta dalle altre — oggi il solo
+   * menu del profilo, dove una superficie riservata sta in mezzo alle voci
+   * dell'account. Vive **qui** e non nel menu perché altrimenti nascerebbe una
+   * seconda lista di superfici di staff accanto a `staffNav()`, e due liste
+   * della stessa cosa divergono al primo inserimento (`AGENTS.md` §3, nota
+   * finale dell'ondata 7). La barra laterale la ignora: lì le icone sono
+   * uniformi per disegno.
+   */
+  tinta?: string;
 };
 
 /**
@@ -194,7 +208,38 @@ export const ADMIN_NAV: NavItem = {
   href: "/admin",
   label: "Area Comune",
   icon: Shield,
+  tinta: "var(--red)",
 };
+
+/** Viola come il titolo della sua pagina: la Redazione non è il Comune. */
+export const REDAZIONE_NAV: NavItem = {
+  href: "/redazione",
+  label: "Redazione",
+  icon: PenLine,
+  tinta: "var(--viola)",
+};
+
+/**
+ * La superficie riservata di un ruolo, se ne ha una.
+ *
+ * **Perché una funzione e non due booleani.** Le due superfici sono
+ * mutuamente esclusive per disegno (R-4): `/redazione` respinge l'admin —
+ * il Comune non modera ciò che lo riguarda — e `/admin` respinge il
+ * moderatore. Due `isAdmin`/`isModeratore` accanto lascerebbero scrivibile lo
+ * stato «tutti e due», che non esiste.
+ *
+ * Nasce il 2026-08-07 da un difetto che nessun cancello poteva vedere:
+ * `/redazione` **non era raggiungibile da nessun collegamento** — zero `href`
+ * in tutta l'applicazione — quindi il moderatore doveva digitare l'indirizzo,
+ * e sulla sua unica superficie di lavoro la barra non aveva nessuna voce
+ * attiva. `rotte`, il cancello axe e quello dei bersagli ci arrivano **tutti
+ * per indirizzo**, mai cliccando: una porta che non c'è resta verde ovunque.
+ */
+export function staffNav(ruolo: string): NavItem | null {
+  if (ruolo === "ADMIN") return ADMIN_NAV;
+  if (isRedazione(ruolo)) return REDAZIONE_NAV;
+  return null;
+}
 
 /** Tutte le pagine navigabili, piatte: la palette di ricerca le vuole così. */
 export const ALL_PAGES: NavItem[] = [

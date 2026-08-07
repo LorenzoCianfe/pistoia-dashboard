@@ -2,22 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import {
-  User,
-  Settings,
-  Shield,
-  LogOut,
-  Network,
-  ChevronDown,
-} from "lucide-react";
+import { User, Settings, LogOut, Network, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { Avatar } from "@/components/ui/avatar";
+import { staffNav } from "@/components/app/nav-items";
 import { logoutAction } from "@/app/actions/auth";
 import type { CurrentUser } from "@/lib/auth/dal";
 
 export function ProfileMenu({ user }: { user: CurrentUser }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  // Il ruolo si risolve QUI, in un componente client: `staff.icon` è un
+  // componente React, e da un Server Component non attraverserebbe il confine
+  // (`AGENTS.md` §3, ondata 7, 1 — ripagata su `SideNav` lo stesso giorno).
+  const staff = staffNav(user.role);
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -90,13 +88,24 @@ export function ProfileMenu({ user }: { user: CurrentUser }) {
               </Link>
             ))}
 
-            {user.role === "ADMIN" ? (
+            {/*
+              La superficie riservata del ruolo, se ne ha una.
+
+              Era il solo `role === "ADMIN"` con `/admin` scritto a mano, ed è
+              metà della ragione per cui la Redazione è rimasta senza porta
+              (2026-08-07): la barra laterale non ce l'aveva, e qui nemmeno.
+              Questa voce è quella che vale **su telefono**, dove la barra
+              laterale non esiste (`lg:block`) e la barra in basso porta solo le
+              cinque destinazioni pubbliche.
+            */}
+            {staff ? (
               <Link
-                href="/admin"                onClick={() => setOpen(false)}
+                href={staff.href}
+                onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 rounded-[var(--radius-sm)] px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-surface-2"
               >
-                <Shield size={17} className="text-[var(--red)]" />
-                Area Comune
+                <staff.icon size={17} style={{ color: staff.tinta }} />
+                {staff.label}
               </Link>
             ) : null}
 
