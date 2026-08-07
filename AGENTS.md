@@ -855,6 +855,26 @@ lancia a mano, dall'interfaccia di Coolify o via API.
 > `02-applicazioni.md`). Esiste anche `ssh homeserver`, con la chiave dedicata
 > in `~/.ssh/vm-coolify`.
 >
+> ⚠️ **«finché non dà `finished`» può non succedere mai.** Visto il 2026-08-07
+> sul deploy `fisxkg5is35tziwf2f565byd`: il record ha risposto `in_progress` per
+> **dodici giri** e poi ha cominciato a rispondere `{"message":"Server Error"}`,
+> senza mai passare da `finished` — mentre il deploy **era riuscito**. È
+> intermittente: il deploy precedente della stessa giornata era arrivato a
+> `finished` regolarmente. Un ciclo che aspetta quella parola aspetta
+> all'infinito, e la conclusione naturale — «è appeso, rilancio» — porta a un
+> secondo deploy inutile.
+>
+> La domanda giusta non si fa al deployer ma al **processo vivo**:
+>
+> ```bash
+> ssh homeserver "sudo -n docker ps --filter name=w148lovopnak9eshxuy13b1i --format '{{.Image}}|{{.Status}}'"
+> ```
+>
+> Il tag di quell'immagine **è** lo SHA del commit. È lo stesso controllo che fa
+> `npm run produzione` come controllo 0, quindi in pratica basta lanciare il
+> cancello: se dice «è il commit che hai qui», il deploy è finito comunque
+> l'API abbia deciso di raccontarlo.
+>
 > ⚠️ **Un deploy non è finito quando risponde 200.** Il 2026-08-05 la demo
 > rispondeva 200 e serviva l'HTML giusto, ma **nessun browser riusciva a
 > montarla**: `upgrade-insecure-requests` nella CSP promuoveva ogni script a
