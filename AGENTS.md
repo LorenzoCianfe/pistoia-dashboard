@@ -600,6 +600,26 @@ invalid config only=...`). Il sintomo è muto — lo script gira in modalità
 normale e scrive in `screenshots/wave` invece che in `screenshots/wave-semplice`
 — quindi si crede di aver verificato la viewport minima senza averla mai aperta.
 
+**`perl -0pi -e` con gli escape `\x{…}` DISTRUGGE la codifica di tutto il
+file.** Pagata il 2026-08-07 su `ROADMAP.md`: **1208 sequenze di caratteri
+rovinate** in un colpo solo, accenti e trattini lunghi compresi, con un solo
+`Wide character in print` come avviso. La causa: un `\x{2014}` nella stringa di
+sostituzione fa passare Perl alla semantica dei *caratteri*, e senza il livello
+`:utf8` in uscita il resto del file — che era UTF-8 valido — viene riletto come
+latin-1 e ricodificato. **Doppia codifica su tutto, non solo sulla riga
+toccata.**
+
+Le vie d'uscita, in ordine: usa lo **strumento di modifica** invece di `perl`
+per i file di testo; se proprio serve `perl`, scrivi i caratteri **letterali**
+(`—`, non `\x{2014}`) e non usare escape numerici; oppure aggiungi
+`-CSD`/`use open qw(:std :utf8)`.
+
+Il danno **si inverte senza perdere il lavoro**: si legge il file come UTF-8 e
+si riscrive carattere per carattere prendendo `bytes([ord(c)])` sotto 256 e
+`c.encode('utf-8')` sopra — così i pezzi doppiamente codificati tornano ai byte
+originali e quelli scritti bene passano intatti. Verificalo cercando `Ã` o `Â`
+seguiti da un byte di continuazione: devono uscire **zero**.
+
 **Gli E2E vogliono la directory libera.** Next rifiuta due dev server sullo
 stesso progetto, quindi con un `npm run dev` aperto l'avvio automatico di
 Playwright fallisce sempre. **Spegni il dev server** e lancia `npm run test:e2e`:
