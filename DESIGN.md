@@ -249,6 +249,19 @@ l'opposto della regola precedente ed è voluto.
   cui è stato verificato non valgono più. `@container` risolve il *come* si
   adatta, non il *se* qualcuno l'ha guardato a quella misura.
 
+- **Il `:hover` non è un canale, è un rinforzo** (2026-08-07). Tutto ciò che dice
+  «questo si può premere» deve esserci **a riposo**: su un telefono il passaggio
+  del mouse non avviene mai. `.btn-ghost` era il solo `color: var(--muted)`,
+  cioè indistinguibile da del testo muto — **13 controlli su `/admin`**, fra cui
+  le due azioni principali della lista delle valutazioni, tutti **già alti 44px**.
+  Non era dimensione, era riconoscibilità: una categoria che nessun cancello
+  automatico misura, e che si trova solo guardando.
+
+  La scala delle varianti resta a **tre gradini** — primary pieno · secondary
+  superficie + `--border-strong` · ghost trasparente + `--border` — perché
+  alzarne uno non deve far collassare quello sopra. È la stessa lezione di
+  `.btn-sm` salito a 44px, applicata alle varianti invece che alle taglie.
+
 - **Le quattro nature di una superficie di lavoro** (decisa 2026-08-07, piano in
   [`docs/piano-admin.md`](docs/piano-admin.md)). `/admin` era diventata un
   cassetto — **dieci mestieri, 7.300px, nessun indice** — e la regola che lo

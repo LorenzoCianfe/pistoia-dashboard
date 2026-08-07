@@ -482,6 +482,26 @@ tutte e tre riguardano ciò che un cancello verde *non* stava guardando.
    `accediDalModulo()`, una volta. Accessi reali per esecuzione: **da ~45 a 4**.
    La suite ci ha anche guadagnato un minuto e venti.
 
+### L'affordance affidata all'`:hover` (2026-08-07)
+
+**Un controllo che si riconosce solo al passaggio del mouse, su un telefono non
+si riconosce mai.** `.btn-ghost` era il solo `color: var(--muted)`: a riposo
+identica a del testo muto, e il segnale che fosse un pulsante arrivava con
+l'`:hover`. Su `/admin` erano **13 controlli**, fra cui «Rispondi» e «Segnala
+alla redazione» — le due azioni principali della lista delle valutazioni.
+
+**Nessun cancello lo misura, e nemmeno può.** Quei 13 erano **già alti 44px**:
+il cancello dei bersagli li vedeva e li approvava, correttamente, perché misura
+la *dimensione*. Axe non ha una regola per «sembra un controllo». È una
+categoria che oggi si trova solo guardando — ed è stata trovata così.
+
+La regola: **il `:hover` non è un canale, è un rinforzo.** Tutto ciò che dice
+«questo si può premere» deve esserci a riposo. Il corollario di scala:
+quando si alza un gradino (qui `ghost` prende un bordo tenue), si controlla
+che non collassi su quello sopra — `secondary` tiene `--border-strong`, `ghost`
+`--border`. Stessa lezione di `.btn-sm` salito a 44px, applicata alle varianti
+invece che alle taglie.
+
 ### Due trappole delle porte (2026-08-07)
 
 Trovate **guardando le pagine una per una**, non da un cancello — e la prima

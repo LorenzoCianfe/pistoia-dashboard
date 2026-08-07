@@ -574,11 +574,30 @@
     background-color: var(--surface-2);
   }
 
+  /*
+    IL BORDO A RIPOSO NON È UN ORNAMENTO (2026-08-07).
+
+    Prima qui c'era il solo `color: var(--muted)`: a riposo un `.btn-ghost` era
+    **indistinguibile da del testo muto**, e l'unico segno che fosse un
+    controllo arrivava con l'`:hover` — che su un telefono **non esiste mai**.
+    Misurato su `/admin`: 13 controlli senza sfondo né bordo, fra cui «Rispondi»
+    e «Segnala alla redazione», che sono le due azioni principali della lista
+    delle valutazioni. Non era un problema di dimensione — erano già alti 44px:
+    erano invisibili *come controlli*.
+
+    Il bordo usa `--border` e non `--border-strong`, e la scala resta a tre
+    gradini: **primary** pieno · **secondary** superficie + bordo forte ·
+    **ghost** trasparente + bordo tenue. È la lezione di `.btn-sm` di stamattina
+    applicata alle varianti invece che alle taglie: alzare un gradino non deve
+    far collassare quello sopra.
+  */
   .btn-ghost {
     color: var(--muted);
+    border: 1px solid var(--border);
   }
   .btn-ghost:hover:not(:disabled) {
     background-color: var(--surface-2);
+    border-color: var(--border-strong);
     color: var(--foreground);
   }
 

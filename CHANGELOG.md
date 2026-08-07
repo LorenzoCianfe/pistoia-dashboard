@@ -5,6 +5,18 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.38.0] — 2026-08-07 · Un controllo che si riconosce solo al passaggio del mouse, su un telefono non si riconosce mai
+
+### Corretto
+- **`.btn-ghost` non aveva nessun segno a riposo.** Era il solo `color: var(--muted)`: un pulsante *ghost* fermo era **indistinguibile da del testo muto**, e l'unico segnale che fosse un controllo arrivava con l'`:hover` — che **su un telefono non esiste**. Misurato su `/admin`: **13 controlli** senza sfondo né bordo, fra cui «Rispondi» e «Segnala alla redazione», che sono le due azioni principali della lista delle valutazioni. Adesso `ghost` ha un bordo tenue a riposo: **da 13 a 1**, in tutti e due i temi, e la pagina non cresce di un pixel (7.300 prima e dopo).
+- **L'unico rimasto senza bordo è «Ignora»**, e va bene così: congedare deve pesare meno che bannare, e lì accanto ci sono tre pulsanti contornati che danno il contesto.
+
+### Note
+- **Non era un problema di dimensione.** I 13 controlli erano **già alti 44px** — il cancello dei bersagli li vedeva e li approvava, giustamente. Erano invisibili *come controlli*, che è una categoria che nessun cancello automatico misura oggi.
+- **La scala delle varianti resta a tre gradini**: primary pieno · secondary superficie + `--border-strong` · ghost trasparente + `--border`. È la lezione di `.btn-sm` di stamattina applicata alle varianti invece che alle taglie — alzare un gradino non deve far collassare quello sopra.
+- **Raggio d'azione misurato prima di toccare**: `ghost` è usata in **sei punti**, cinque dei quali in `controlli-staff.tsx` (cioè proprio quelli del difetto) e uno in `proposal-wizard.tsx` («indietro» di un passo, dove un bordo tenue non disturba).
+- **`AGENTS.md` §8 — «finché non dà `finished`» può non succedere mai.** Il record del deploy `fisxkg5is35tziwf2f565byd` ha risposto `in_progress` per dodici giri e poi `{"message":"Server Error"}`, senza mai passare da `finished` — mentre il deploy **era riuscito**. È intermittente (quello precedente della stessa giornata ci era arrivato), il che lo rende peggio: chi lo incontra conclude «è appeso» e rilancia. La domanda giusta si fa al **processo vivo** — il tag dell'immagine che il container esegue — cioè al controllo 0 di `npm run produzione`.
+
 ## [0.37.0] — 2026-08-07 · In «Proposte cittadine» il macchinario pesava più del merito
 
 > Due dei quattro difetti estetici trovati rivedendo `/admin` una schermata per volta. Gli altri due — la pagina da 7.300px e le azioni senza affordance — sono coppia e vanno decisi insieme.

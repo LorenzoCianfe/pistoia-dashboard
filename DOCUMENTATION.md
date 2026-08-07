@@ -1014,6 +1014,43 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
 
   Nuovo cancello: `tests/e2e/porte.spec.ts`, quattro casi. Suite da 70 a **74**.
 
+- **2026-08-07 (il resto della revisione di `/admin`)** — Nella stessa passata,
+  altri tre esiti.
+
+  **Il footer aveva 446px di vuoto** a ~1100px, la larghezza a cui è arrivato il
+  2026-08-06 uscendo da `<main>` e a cui **non era mai stato guardato**. Chiuso
+  con un tetto di **850px alle righe interne** — la colonna di `main` dentro
+  `AppShell`, cioè la larghezza a cui era stato disegnato — lasciando la scheda
+  a tutta larghezza come deciso. Da 446 a **258px**, verificato nei tre contesti
+  in cui il footer vive più la viewport minima, traboccamento zero.
+
+  **In «Proposte cittadine» la gerarchia era rovesciata**: pastiglia e conteggio
+  in cima, il titolo della proposta sotto a `text-sm`, più piccolo dei controlli
+  del modulo. E lo stato era detto **tre volte** (pastiglia, coda «· risposta
+  pubblicata», valore del `<select>`). Titolo primo e a `text-base`; la coda solo
+  quando la pastiglia non lo dice già.
+
+  **`.btn-ghost` non aveva segno a riposo** — solo `color: var(--muted)` — quindi
+  un pulsante *ghost* fermo era indistinguibile da del testo, e l'affordance
+  arrivava con l'`:hover`, che **su un telefono non esiste**. 13 controlli su
+  `/admin`, tutti **già alti 44px**: non era dimensione, era riconoscibilità, ed
+  è una categoria che nessun cancello automatico misura. Bordo tenue a riposo:
+  da 13 a **1**, e quella che resta è «Ignora», che deve pesare meno che
+  «Banna». Raggio misurato prima di toccare: `ghost` è usata in sei punti.
+
+  **Il taglio di `/admin` in sette pagine è deciso e scritto**
+  ([`docs/piano-admin.md`](docs/piano-admin.md)), esecuzione da fare. Le misure
+  hanno deciso il taglio — «Proposte» da sola fa 1.710px, quindi dieci pagine
+  non sono meglio di sette — e ne è uscita una regola vincolante in `DESIGN.md`
+  §6: *una coda una pagina · gli strumenti insieme · le letture sul cruscotto ·
+  il registro è una lettura anche lui*.
+
+  **E una trappola dell'ambiente**: il record di un deploy Coolify può passare da
+  `in_progress` a `{"message":"Server Error"}` **senza mai dire `finished`**,
+  mentre il deploy è riuscito. Intermittente. La domanda giusta si fa al processo
+  vivo — il tag dell'immagine che il container esegue — cioè al controllo 0 di
+  `npm run produzione`.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.
