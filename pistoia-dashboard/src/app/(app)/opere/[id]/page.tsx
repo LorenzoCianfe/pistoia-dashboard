@@ -111,7 +111,11 @@ export default async function OperaDetailPage({
             </span>
             <span className="text-lg font-bold tabular-nums">{opera.progress}%</span>
           </div>
-          <ProgressBar value={opera.progress} height={10} />
+          <ProgressBar
+            value={opera.progress}
+            etichetta={`Avanzamento del cantiere ${opera.name}`}
+            height={10}
+          />
           {/*
             La stessa lettura della lista, in una riga: la percentuale da sola
             non dice se il cantiere sta rispettando i tempi. Qui basta il testo —

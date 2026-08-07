@@ -1,7 +1,7 @@
 # Roadmap — Dashboard di Pistoia
 
 > Documento strategico e operativo del progetto: visione, obiettivi, piano a ondate e catalogo completo delle idee.
-> **Ultimo aggiornamento:** 2026-08-06 — **Lavoro D chiuso**: footer rifatto, quattro decisioni di forma prese, cancelli estesi alle superfici staff, `npm audit` e Lighthouse resi bloccanti. Restano due decisioni aperte nella traccia «Qualità continua» (§4). Fase A e Fase B chiuse, **Fase C sbloccata** dal 2026-07-29. Il piano delle due fasi è in [`docs/roadmap-consolidamento.md`](docs/roadmap-consolidamento.md); il dettaglio tecnico di quanto già costruito è in [DOCUMENTATION.md](DOCUMENTATION.md).
+> **Ultimo aggiornamento:** 2026-08-07 — **backlog riordinato e piano riscritto fino all'Ondata 11.** L'Ondata 8 portava due tesi e metà voci acerbe: adesso tiene l'intelligenza operativa, le maturità del backlog e la pipeline degli atti. Poi **O9** i quattro strumenti con cui il progetto si racconta (roadmap pubblica, voto, changelog, idee e problemi, in `/progetto/*` a firma della Redazione), **O10** il rifacimento visivo, **O11** l'archivio pubblico delle delibere. Il criterio del riordino, il perimetro del rifacimento, il parcheggio e le voci tenute ferme sono in fondo a §4. Prima, lo stesso giorno: **il cancello dei 44px scritto e bloccante** (`bersagli.spec.ts`, 11 pagine × 2 viewport, zero esenzioni), che chiudendosi ha portato via sette componenti fuori norma più tre difetti che nessun cancello guardava — le fermate di tabulazione che Motion aggiunge da sé, e due violazioni axe che vivevano dentro un `<details>` chiuso. Prima ancora, **Lavoro D chiuso**: footer rifatto, quattro decisioni di forma prese, cancelli estesi alle superfici staff, `npm audit` e Lighthouse resi bloccanti. Resta **una** decisione aperta nella traccia «Qualità continua» (§4): il cancello sulla produzione. Fase A e Fase B chiuse, **Fase C sbloccata** dal 2026-07-29. Il piano delle due fasi è in [`docs/roadmap-consolidamento.md`](docs/roadmap-consolidamento.md); il dettaglio tecnico di quanto già costruito è in [DOCUMENTATION.md](DOCUMENTATION.md).
 
 ---
 
@@ -16,10 +16,11 @@
 | Simbolo | Significato |
 |---|---|
 | ✅ | Completato e verificato |
-| 🔜 `O0…O5` | Pianificato nell'ondata indicata |
+| 🔜 `O0…O11` | Pianificato nell'ondata indicata |
+| 🅿️ | **Parcheggio** (dal 2026-08-07): utile ma non matura per l'ondata corrente — la ragione è scritta accanto, e in §4 sotto «Il parcheggio» |
 | 📋 | Backlog: utile, non ancora assegnato a un'ondata |
 | 💡 | Futuro / sperimentale |
-| 🧊 | In pausa: dipende da mailer, Postgres, dati reali o LLM |
+| 🧊 | Ferma per decisione: dipende da un LLM, da dati reali, o dalla fiducia istituzionale |
 | 🆕 | Nuova proposta della revisione 2026-06-11 |
 
 **Legenda livello** — ogni idea dichiara su quali strati del prodotto incide:
@@ -282,7 +283,11 @@ dell'ondata 6, nessuno produceva un errore:
 «+4 nuovi questo mese»: un numero inventato accanto a numeri veri li fa sembrare
 tutti inventati.
 
-### Ondata 8 — Admin intelligence & nuovi pubblici ▶️ *(scongelata — 2026-07-29)*
+### Ondata 8 — Il Comune che legge la città ▶️ *(scongelata 2026-07-29 · riordinata 2026-08-07)*
+
+> Si chiamava «Admin intelligence & nuovi pubblici». I nuovi pubblici sono
+> usciti: erano la seconda tesi di un'ondata che ne può avere una sola, e
+> nessuno dei tre superava la prova dell'onestà o quella della maturità.
 
 > **Era congelata dal 2026-07-26**, perché prima di aggiungere altro la
 > piattaforma andava riorganizzata: 25 voci di menu erano diventate una
@@ -299,19 +304,87 @@ tutti inventati.
 > operative — è anche la ragione per cui `/admin` è stato **escluso** dalla
 > Fase B. Comporlo prima di riscriverlo sarebbe stato pagarlo due volte.
 
-**Obiettivo (→ OB-1, OB-4):** strumenti decisionali per il Comune e apertura a turisti, commercianti, scuole.
+> **Riordinata il 2026-08-07.** L'ondata portava dentro due tesi — strumenti
+> per il Comune *e* nuovi pubblici — e metà delle voci non era matura. Il
+> criterio del riordino è in fondo a questa sezione («Il criterio del riordino»);
+> le voci uscite sono nel «Parcheggio»
+> qui sotto, ognuna con la ragione.
+
+**Obiettivo (→ OB-1, OB-5):** dare al Comune gli strumenti per leggere la città
+che la piattaforma ha già raccolto, e chiudere le voci del backlog che si
+reggono da sole.
+
+**Il nucleo — l'intelligenza operativa.** Tutto poggia su dati che il database
+ha già: nessuna fonte nuova, nessuna dipendenza esterna.
 
 | Voce | Livello | Fonte |
 |---|---|---|
-| Dashboard admin con analytics operative (KPI per categoria/quartiere/ufficio, trend) | `FE` `BE` `DES` | `A1 §27` |
+| Dashboard admin con analytics operative (KPI per categoria/quartiere/ufficio, tempi, trend) | `FE` `BE` `DES` | `A1 §27` |
 | Alert trend anomalo (euristiche, niente AI) | `BE` | `A2 §21` |
-| Sentiment civico per tema (mock/euristiche) | `FE` `BE` | `A2 §20` |
 | Moderazione assistita (euristiche: spam, duplicati, suggerimento categoria) | `BE` | `A1 §28` |
-| Modalità turista | `FE` `UX` | `A2 §28` |
-| Commercio locale — il modello `OrganizationProfile` esiste già | `FE` `BE` | `A2 §29` |
-| Vetrina aziende di Pistoia & sponsorizzazioni: le attività verificate si presentano (profilo ricco, iniziative) e possono sponsorizzare in modo dichiarato spazi non civici della piattaforma | `FE` `BE` | 🆕 richiesta 2026-06-11 |
-| Storie della città + "Pistoia racconta" | `FE` `DES` | `A2 §17–18` |
-| Servizi quotidiani / scorciatoie ai servizi comunali (link mock) | `FE` `UX` | `A1 §22` + idea esistente |
+
+**Le maturità del backlog.** Erano 📋 senza ondata, o 🔜 su un'ondata già
+chiusa. Entrano perché sono definite, fattibili e non chiedono di inventare
+niente.
+
+| Voce | Livello | Perché è matura |
+|---|---|---|
+| Collegamento proposte ↔ opere ↔ bilancio | `FE` `BE` | **Orfana**: era 🔜 O3, e l'ondata 3 è chiusa dal 2026-06-12 |
+| Open data out (export CSV/JSON + API read-only) | `BE` | Zero dipendenze, e chiude il cerchio della trasparenza sui dati che pubblichiamo |
+| QR territoriali (QR su cantieri e bacheche, modalità totem) | `FE` | La macchina dei QR è in piedi da R-3: `/v/`, `/admin/codici-qr`, il generatore |
+| Bilancio partecipativo simulato | `FE` `UX` | Autoconsistente e dichiaratamente dimostrativo |
+| Scorciatoie da tastiera + pannello «?» | `UX` `A11Y` | La command palette esiste dall'ondata 0 |
+| OG image dinamiche | `FE` | Next la fa nativamente (`opengraph-image`) |
+| Alto contrasto + font grande | `FE` `A11Y` | Catena del tema e modalità semplice già in piedi. **Senza la lettura audio**, che è un'altra funzione |
+
+**La pipeline degli atti** — la metà rischiosa di *Delibere*, anticipata qui
+apposta: il rischio non sta nel disegno ma nel sapere **se quel portale si
+lascia leggere**, e quella risposta costa poco se la si cerca presto e
+moltissimo se la si scopre dopo tre ondate.
+
+| Voce | Livello | Nota |
+|---|---|---|
+| Lettura automatica dell'albo pretorio + modello `Atto` + categoria civica dedotta + legami a quartiere/opera/bilancio + **cancello di freschezza** + superficie minima da amministratore | `BE` `ENG` | Le pagine pubbliche dell'archivio **non** sono qui: nascono in Ondata 11, dopo il rifacimento |
+
+### Ondata 9 — Il progetto si racconta 🔜
+
+**Obiettivo (→ OB-4, OB-5):** le quattro superfici con cui il prodotto parla di
+sé stesso. Vivono in `/progetto/*` e portano la firma della **Redazione della
+Dashboard di Pistoia**, non quella del Comune (decisione del 2026-08-07):
+lettura pubblica, account per agire. Il footer ha già la colonna «Il progetto»
+dove attaccarle.
+
+| Voce | Livello | Nota di fattibilità |
+|---|---|---|
+| **Roadmap pubblica** — proposto · pianificato · in sviluppo · rilasciato · rimandato, su una linea del tempo con un modello d'interazione da progettare, non un elenco cronologico | `FE` `DES` `BE` | Elenco **curato** in un modello suo, con legame esplicito alla voce interna di `ROADMAP.md` e un cancello che pretende quel legame: il piano vero non si pubblica per intero |
+| **Voto alle funzionalità** | `FE` `BE` | Riusa `Proposal` + sostegni + `ThresholdBar`; le difese dai voti ripetuti hanno già un precedente in `Sollecitazione` e nel voto riservato ai verificati |
+| **Changelog** | `FE` `BE` | `CHANGELOG.md` esiste dalla Fase 0 e ha già versioni e date |
+| **Idee e problemi** (proposta, segnalazione errore, stato tracciabile) | `FE` `BE` `UX` | Riusa `Report`: categorie, stati, triage, moderazione e registro firmato sono già costruiti e provati |
+
+> ⚠️ **Una collisione da sciogliere quando si costruisce**: «segnalazioni» sono
+> già i problemi della città. «Segnala un problema del sito» userebbe lo stesso
+> verbo per un'altra cosa, sulla stessa piattaforma. La distinzione va fatta nel
+> nome, non nella spiegazione.
+
+### Ondata 10 — Il rifacimento visivo 🔜
+
+**Obiettivo (→ OB-2):** non un ritocco, ma una revisione completa di UX, UI e
+identità visiva, fatta **dopo** che tutte le superfici esistono — così si
+disegna una volta sola. Il perimetro chiesto da Lorenzo il 2026-08-07 è in
+fondo a questa sezione, sotto «Il perimetro del rifacimento».
+
+### Ondata 11 — L'archivio pubblico degli atti 🔜
+
+**Obiettivo (→ OB-1):** le pagine con cui il cittadino legge le delibere,
+costruite sulla pipeline dell'Ondata 8 e **nate nel linguaggio visivo nuovo**
+invece di essere disegnate due volte.
+
+**Comprensibile per struttura, non per riscrittura** (decisione del
+2026-08-07): nessuna frase generata. L'atto si capisce dall'oggetto ufficiale —
+che il Comune scrive già — più organo, numero, data, importo, allegati,
+categoria civica, i legami a quartiere/opera/bilancio, i filtri, la ricerca e i
+conteggi derivati, che sono fatti. La riscrittura in italiano semplice resta
+«Spiegamelo semplice», e resta ferma.
 
 ### Traccia trasversale — Qualità continua ♾️
 
@@ -321,7 +394,7 @@ tutti inventati.
 |---|---|---|
 | Review "lenti mancanti": sicurezza, correttezza cache, idiomi Next 16 (saltate il 2026-06-11) | `SEC` `ENG` | 📋 consigliata presto |
 | Test a11y automatici (axe-core dentro gli E2E Playwright) | `ENG` `A11Y` | ✅ **2026-08-05** — `tests/e2e/accessibilita.spec.ts`: 8 pagine × 2 temi, regole WCAG **AA**, **nessuna regola esclusa**. Ha trovato un **debito preesistente di tavolozza**, corretto nella stessa sessione: vedi sotto |
-| Lighthouse CI con performance budget | `ENG` | 🚧 **impostato il 2026-08-05** (`lighthouserc.js` + job in CI): **misura, non giudica**. Le soglie si scrivono dopo le prime passate; solo allora il job smette di essere `continue-on-error`. **Zero dipendenze nuove**: `@lhci/cli` gira con `npx` pinnato — installarlo costava **+285 pacchetti** e 5 avvisi, e il `Dockerfile` (`npm ci --include=dev`) se li porterebbe in produzione |
+| Lighthouse CI con performance budget | `ENG` | ✅ **2026-08-06 — soglie scritte e job BLOCCANTE** (perf ≥ 0,90 · a11y ≥ 0,95 · best-practices ≥ 0,90 · SEO ≥ 0,95, in `lighthouserc.js`). Nato il 2026-08-05 come «misura, non giudica», con la condizione «le soglie si scrivono dopo aver guardato le prime passate» — che **non poteva avverarsi da sola**, perché il meccanismo per leggere i numeri era rotto da due parti indipendenti: `.lighthouseci` comincia con un punto e `upload-artifact@v4` esclude i file nascosti (dodici referti scritti, **zero caricati**, job verde), e senza `assert` `lhci autorun` si ferma a `collect` e non stampa nessuna tabella. Le soglie stanno cinque punti sotto il minimo osservato: se i numeri salgono, la leva è **alzarle**, mai toglierle. **Zero dipendenze nuove**: `@lhci/cli` gira con `npx` pinnato — installarlo costava **+285 pacchetti** e 5 avvisi, e il `Dockerfile` (`npm ci --include=dev`) se li porterebbe in produzione |
 | Audit dipendenze in CI (`npm audit` / osv-scanner) | `SEC` `ENG` | ✅ **2026-08-06 — ora BLOCCANTE**: `npm audit --audit-level=high`, senza `|| true`. Nato informativo il 2026-08-05 perché restavano avvisi in attesa di decisione; caduti quelli, la ragione è caduta con loro. La soglia agisce sul **codice di uscita**, non sul referto: un `moderate` resta visibile nei log senza far cadere la pipeline. `SECURITY.md` §7 dice perché la condizione «qualche settimana» è stata scavalcata dopo un giorno |
 | Estensione test Vitest/E2E a ogni ondata | `ENG` | regola fissa |
 | **Il job E2E in CI è BLOCCANTE** | `ENG` | ✅ **2026-08-06** — nasceva `continue-on-error` «finché la suite non è stata rodata»: è rodata, 48 test verdi in locale e verde in CI su ogni passata. Ultimo della famiglia chiusa lo stesso giorno (audit, Lighthouse): un cancello dichiarato non bloccante «per ora» che ci era rimasto, mentre è **l'unico che prova i percorsi veri** — login, voto, moderazione |
@@ -329,7 +402,7 @@ tutti inventati.
 | **Il footer per chi non ha un account** | `UX` `A11Y` | ✅ **2026-08-05** — era una decisione mai presa (Lavoro D, punto 1): quattro delle sette voci portavano a `/login`, e tre di quelle **perdevano anche la destinazione**. Misurando è emerso che il problema non era la scelta ma il footer: sei difetti, fra cui bersagli da **16px** contro i ≥44 di `DESIGN.md` §11.6. Ridisegnato a **scheda di vetro**, colonne con titolo visibile, e una pastiglia che dice il patto una volta sola a chi è anonimo. Il `?next=` chiuso nel proxy |
 | **Il footer non è un punto di riferimento** | `A11Y` | ✅ **2026-08-06** — spostato fuori da `<main>` in `AppShell` e nel layout pubblico (decisione di Lorenzo, forma «a tutta larghezza»): adesso è un `contentinfo` vero e saltabile. Era un difetto **preesistente** su ogni pagina della piattaforma, e la regola axe che lo direbbe (`landmark-contentinfo-is-top-level`) è taggata `best-practice`, quindi restava fuori dal cancello — l'ha rivelato un test che lo cercava come `contentinfo` e ne trovava zero. Prezzo dichiarato: dentro `AppShell` non è più allineato alla colonna di `main`, parte da sinistra sotto la barra laterale |
 | **WCAG 2.2 nel cancello axe** | `A11Y` `ENG` | ✅ **2026-08-06** — `wcag22a`/`wcag22aa` aggiunti a `accessibilita.spec.ts` **dopo averli misurati**: zero violazioni su 8 pagine × 2 temi, e `target-size` passa su **345 nodi** (quindi lo zero è «pulito», non «la regola non gira»). Costo nullo, e la prossima regressione 2.2 diventa rossa |
-| **Il cancello dei 44px** | `A11Y` `ENG` | 🚧 **prossimo lavoro.** `DESIGN.md` §11.6 è stata riscritta il 2026-08-06 con le **quattro eccezioni di WCAG 2.5.8** (spaziatura, inline, equivalente, essenziale) tenendo però la soglia a **44px** e non 24: prima diceva «≥44 senza eccezioni» ed era violata **246 volte**, quasi sempre a ragione — una regola così non è un vincolo ma un'aspirazione, ed è per questo che i 16px del footer sono sopravvissuti per mesi. Adesso la regola è scrivibile e **il controllo va scritto**: `target-size` di axe applica le stesse eccezioni ma a 24px, quindi non difende i 44 |
+| **Il cancello dei 44px** | `A11Y` `ENG` | ✅ **2026-08-07 — scritto, e BLOCCANTE a zero esenzioni.** `tests/e2e/bersagli.spec.ts`, 11 pagine × **2 viewport** (1280 e 360), che è la copertura minima: la barra laterale esiste solo a 1280, e a 360 vengono avanti controlli che a 1280 stanno larghi — 158 rossi contro 147, e le due liste non si contengono. Misurando prima di decidere (il metodo che ha funzionato tre volte nel Lavoro D): i 158 rossi erano **sette componenti**, non 158 problemi, e cinque stavano a 4–8px dalla soglia. Chiusi tutti, quindi l'elenco delle esenzioni «essenziali» nasce **vuoto**. Costo dichiarato: la barra laterale si allunga di ~95px e `.btn-sm` sale a 44, cioè «sm» vuol dire ormai *stretto* e non *basso* |
 | **Un cancello che guardi se la PRODUZIONE si monta** | `ENG` | 🔴 aperto il 2026-08-05. `rotte` e `shots` girano solo contro lo sviluppo: nessun controllo apriva il sito deployato, ed è per questo che una demo cieca è rimasta cieca senza che nessuno lo sapesse. Il minimo utile: dopo ogni deploy, caricare una pagina pubblica in un browser vero e pretendere che `main` abbia più di N caratteri di testo |
 
 > **Il debito che axe ha trovato — e che è stato chiuso (2026-08-05).** Non
@@ -353,6 +426,85 @@ tutti inventati.
 > ScrollTimeline: risalendo torna scura per disegno, ed è la resa ridotta quella
 > che deve essere leggibile — `DESIGN.md` §8 e §11.8). E il tetto di tempo va
 > alzato: axe su `/bilancio` supera da solo i 30s di default.
+
+---
+
+### Il criterio del riordino (2026-08-07)
+
+Una voce entra nell'ondata corrente se supera tutte e tre le prove. Ne manca
+una sola e va nel parcheggio, con la ragione scritta accanto.
+
+1. **Definita** — so che cosa costruire senza inventare la metà che manca.
+2. **Fattibile** — i dati o la macchina esistono già, o si fanno senza aprire
+   un fronte nuovo.
+3. **Onesta** — non chiede di inventare fatti su persone o enti reali. È la
+   prova che ha escluso *modalità turista* e *servizi quotidiani*, che sembrano
+   innocue e invece richiedono orari di musei veri e link a servizi veri.
+
+### Il perimetro del rifacimento (Ondata 10)
+
+Chiesto da Lorenzo il 2026-08-07. Non un ritocco: una revisione completa.
+
+- Design system più rifinito e coerente; identità visiva più forte e senso di
+  maturità del prodotto.
+- Architettura dell'informazione, navigazione, gerarchia delle pagine.
+- Spaziature, allineamenti, proporzioni, contrasto, tipografia, ritmo visivo.
+- Dettagli più distintivi ed espressivi sui singoli componenti; card, pulsanti,
+  filtri, tag e grafici più coinvolgenti.
+- Micro-interazioni e animazioni **intenzionali**; transizioni fluide fra
+  pagine, sezioni e stati; animazioni di riscontro che dicono cosa è successo.
+- Emoji o badge animati dove hanno senso, senza costare leggibilità o velocità.
+- Icone SVG di qualità, con peso visivo coerente.
+- Tutti gli stati curati: riposo, hover, fuoco, attivo, caricamento, vuoto,
+  successo, errore.
+- Responsive su scrivania, tablet e telefono; accessibilità, prestazioni,
+  usabilità.
+
+**I limiti non sono opinabili, e sono già cancelli.** Questa ondata è l'unica
+del piano che può romperli tutti insieme, quindi vanno letti prima di
+cominciare, non dopo:
+
+| Limite | Dove vive |
+|---|---|
+| Niente sfondi WebGL, cursori animati, parallax — deve girare su Android vecchi | `AGENTS.md` §2 · `REFERENCES.md` §6 |
+| Nessun contenuto invisibile perché un'animazione non è partita | `DESIGN.md` §11.8 |
+| `prefers-reduced-motion` è uno stato di prima classe, non un ripiego | `DESIGN.md` §8 · misurato dai due cancelli |
+| Prestazioni: Lighthouse è **bloccante** con soglie scritte (perf ≥ 0,90) | `.github/workflows/ci.yml` |
+| Ogni bersaglio ≥ 44px — **anche un badge animato è un bersaglio** | `bersagli.spec.ts`, 11 pagine × 2 viewport |
+| Contrasto AA nei due temi, zero violazioni axe | `accessibilita.spec.ts` |
+| Nessun traboccamento orizzontale a 360px in modalità semplice | `shots --simple --width=360` |
+
+Il risultato deve restare **professionale, intuitivo, veloce e facile**: le
+decorazioni servono l'esperienza o non entrano.
+
+### Il parcheggio — rinviate, con la ragione
+
+| Voce | Perché non ora |
+|---|---|
+| **Audit cittadino** | Aspetta che la pagella abbia edizioni vere: non prima del 27/08/2026 |
+| **Storie della città** · **Pistoia racconta** | Chiedono contenuto editoriale, non codice — e si sposano col rifacimento |
+| **Commercio locale** · **Vetrina aziende & sponsor** | Portano dentro un modello di business, non una schermata; e toccano la regola §7.9 «gli sponsor sono ospiti, non padroni» |
+| **Sentiment civico per tema** | Serve prima una definizione: *il conteggio è un fatto, la sintesi è un giudizio*. Senza, è un'etichetta che sembra una misura |
+| **PWA + offline + Web Push** | Pesante, e tocca CSP e service worker: meglio dopo il rifacimento, non durante |
+| **Proposta collaborativa** · **Co-firmatari** · **Banca del tempo civica** | Definite a metà |
+| **«Spiegamelo semplice» redazionale** · **Newsletter civica in-app** | Richiedono contenuto continuo, cioè un impegno che non finisce col rilascio |
+| **Lettura audio** | Separata da «alto contrasto + font grande», che entra: è una funzione diversa con una macchina diversa |
+| **Spazio scuole** · **Versione bambini** | Nuovo pubblico intero, non una vista |
+
+### Tenute ferme per decisione (2026-08-07)
+
+Non sono rinviate: sono **fuori** finché la decisione non cambia.
+
+| Categoria | Voci |
+|---|---|
+| **Dipendono da un LLM** | Tutta la sezione 🤖 AI civica · categoria da foto · «Spiegamelo semplice» generativo · moderazione AI piena · assistente FAQ · riassunto delle discussioni |
+| **Dipendono da dati reali o di produzione** | §8 Dati reali per intero · modalità turista · servizi quotidiani · digest email · mailer transazionale · switch a Postgres |
+| **Dipendono dalla fiducia istituzionale** | §9 per intero: SPID/CIE · 2FA · HIBP · GDPR completo · dichiarazione AgID · rotazione del `SESSION_SECRET` |
+
+**L'unica eccezione concessa è Delibere**, ed è entrata in forma dichiarata:
+archivio **vero** (gli atti sono già pubblici per legge), lettura **tutta
+automatizzata**, comprensibilità **per struttura e non per riscrittura** — che
+è ciò che la tiene fuori dalla categoria LLM.
 
 ---
 
@@ -399,7 +551,7 @@ tutti inventati.
 | Empty state & illustrazioni custom | Identità visiva anche dove non ci sono dati | `DES` | 🆕 | ✅ O0 (2026-06-12) |
 | Data-viz bilancio next-gen | Treemap missioni, confronti leggibili anno su anno | `FE` `DES` | 🆕 | ✅ O0 (2026-06-12) |
 | "Stato della città" hero | Indicatori sintetici con sparkline in home | `FE` `DES` | 🆕 | ✅ O3 (2026-06-12) |
-| OG image dinamiche | Anteprima curata dei link condivisi | `FE` | 🆕 | 📋 |
+| OG image dinamiche | Anteprima curata dei link condivisi | `FE` | 🆕 | 🔜 O8 |
 | Restyling continuo | Ogni ondata rifinisce le pagine toccate | `DES` | direttrice Estetica | trasversale |
 
 ### 🛠️ Segnalazioni
@@ -423,9 +575,9 @@ tutti inventati.
 | Creazione guidata | Wizard a domande: problema, dove, chi beneficia | `FE` `UX` | `A1 §14` | ✅ O2 (2026-06-11) |
 | Impatto stimato + budget impact | Costo €€, impatto, fattibilità, tempo (badge sintetici) | `FE` `BE` | `A1 §15` + `A2 §10` | ✅ O2 (2026-06-11) |
 | Categorie di cittadini impattate | Residenti, studenti, commercianti, anziani… | `FE` `BE` | `A2 §26` | ✅ O2 (2026-06-11) |
-| Collegamento proposte ↔ opere ↔ bilancio | Link manuale a progetti/voci esistenti | `FE` `BE` | `A1 §16` | 🔜 O3 |
-| Co-firmatari | Cittadini, associazioni e attività firmano insieme | `FE` `BE` | `A2 §25` | 💡 |
-| Proposta collaborativa | Bozza pubblica → suggerimenti → versione finale | `FE` `BE` `UX` | `A2 §24` | 💡 |
+| Collegamento proposte ↔ opere ↔ bilancio | Link manuale a progetti/voci esistenti | `FE` `BE` | `A1 §16` | 🔜 O8 (orfana dell'O3) |
+| Co-firmatari | Cittadini, associazioni e attività firmano insieme | `FE` `BE` | `A2 §25` | 🅿️ parcheggio — definita a metà |
+| Proposta collaborativa | Bozza pubblica → suggerimenti → versione finale | `FE` `BE` `UX` | `A2 §24` | 🅿️ parcheggio — definita a metà |
 
 ### 🔍 Osservatorio civico *(richiesta 2026-07-26 — Fase C)*
 
@@ -441,7 +593,7 @@ tutti inventati.
 | **Dossier persona** | Scheda pubblica per assessore: curriculum dichiarato, indennità dal portale trasparenza, esperienza nel settore di delega, dichiarazioni vs azioni | `FE` `BE` | richiesta 2026-07-26 | 💡 Fase C |
 | **Audit cittadino** | PDF trimestrale di 5–6 pagine in forma di mini-audit: executive summary, 5 indicatori con trend, 3 promesse, 3 spese, 3 domande senza risposta | `FE` `BE` `DES` | richiesta 2026-07-26 | 💡 Fase C |
 | **Il costo dell'amministrazione** | Quanto la legge prevede per sindaco, giunta e presidente del consiglio, con l'atto primario dietro ogni cifra | `FE` `BE` | richiesta 2026-07-26 | ✅ 2026-07-31 — `/trasparenza/costo-amministrazione` |
-| **Valutazioni dei servizi** *(già «Rating dei servizi — Pistoia Index»)* | Stelle 1–5 e recensioni scritte su servizi allo sportello **e** condizioni della città, in due tabelloni mai fusi. Media solo sopra soglia, composizione del campione sempre dichiarata, risposta del Comune nella stessa scheda | `FE` `BE` `DES` | richiesta 2026-07-26 · scoperta 2026-08-03 | 🚧 Fase C — **R-1…R-5 chiuse** (lettura, voto, moderazione **e i sei ingressi**: schede, QR pubblici `/v/`, conferma/revoca via email su file, risposte del Comune col timbro della carica, coda della Redazione su `/redazione`, registro firmato; da R-5 l'invito contestuale post-risoluzione, la campagna mensile su tutti i canali, il blocco nel digest, il pop-up armato dai voti — tutti dietro il **contatore unico** `Sollecitazione`, provato a date fisse — e la **lettura pubblica** di panoramica e schede, decisione W1). Il seed **dimostra la colonna dura** (mediane su tutte e cinque le condizioni). Resta R-6. Piano in [`docs/piano-rating-servizi.md`](../docs/piano-rating-servizi.md) |
+| **Valutazioni dei servizi** *(già «Rating dei servizi — Pistoia Index»)* | Stelle 1–5 e recensioni scritte su servizi allo sportello **e** condizioni della città, in due tabelloni mai fusi. Media solo sopra soglia, composizione del campione sempre dichiarata, risposta del Comune nella stessa scheda | `FE` `BE` `DES` | richiesta 2026-07-26 · scoperta 2026-08-03 | ✅ **2026-08-05 — R-1…R-6 tutte chiuse** (lettura, voto, moderazione **e i sei ingressi**: schede, QR pubblici `/v/`, conferma/revoca via email su file, risposte del Comune col timbro della carica, coda della Redazione su `/redazione`, registro firmato; la **metodologia pubblica** con versione e registro, R-6; da R-5 l'invito contestuale post-risoluzione, la campagna mensile su tutti i canali, il blocco nel digest, il pop-up armato dai voti — tutti dietro il **contatore unico** `Sollecitazione`, provato a date fisse — e la **lettura pubblica** di panoramica e schede, decisione W1). Il seed **dimostra la colonna dura** (mediane su tutte e cinque le condizioni). Piano in [`docs/piano-rating-servizi.md`](../docs/piano-rating-servizi.md) |
 
 **Prerequisiti — nessuna delle cinque parte senza questi.**
 
@@ -771,10 +923,11 @@ documento. Dice la stessa cosa a chi legge, e regge in tribunale.
 | Bacheca avvisi urgenti | Allerte, chiusure, emergenze in evidenza + geolocalizzate | `FE` `BE` | `A1 §21` + idea 2026-06-11 | ✅ O3 (2026-06-12) |
 | FAQ della città | Domande ricorrenti → risposte ufficiali con badge | `FE` `BE` | `A1 §11` | ✅ O3 (2026-06-12) |
 | Civic digest pubblico mensile | Pagina-report mensile della città + export PDF 🆕 | `FE` `BE` | `A2 §19` | ✅ O3 (2026-06-12) |
-| "Spiegamelo semplice" | Traduzione in linguaggio cittadino di atti/voci di bilancio | `FE` `UX` | `A2 §11` | 🔜 O3 (redazionale) · 💡 versione AI |
+| "Spiegamelo semplice" | Traduzione in linguaggio cittadino di atti/voci di bilancio | `FE` `UX` | `A2 §11` | 🅿️ parcheggio (redazionale: contenuto continuo) · 🧊 versione AI |
 | Sistema fonti + freschezza | Fonte, data aggiornamento, tipo dato su ogni numero | `BE` | `A1 §25` | ✅ Fase 1 |
 | Modalità demo / ufficiale | Badge "dati non ufficiali" in demo | `FE` `BE` | `A1 §26` | ✅ Fase 0 |
-| Open data out | Export CSV/JSON + API read-only dei dati piattaforma | `BE` | `A1 §31` + idea esistente | 📋 |
+| Open data out | Export CSV/JSON + API read-only dei dati piattaforma | `BE` | `A1 §31` + idea esistente | 🔜 O8 |
+| **Delibere — archivio degli atti** | Albo pretorio letto in automatico e reso navigabile: organo, numero, data, oggetto ufficiale, importo, allegati, categoria civica, legami a quartiere/opera/bilancio | `BE` `ENG` `FE` | §9 — scongelata 2026-08-07 | 🔜 pipeline in O8 · superfici pubbliche in O11 |
 
 ### 🗺️ Quartieri & territorio
 
@@ -786,7 +939,7 @@ documento. Dice la stessa cosa a chi legge, e regge in tribunale.
 | Da segnalazione a progetto | Cluster di segnalazioni → progetto pubblico tracciato | `FE` `BE` | `A2 §8` | ✅ O4 (2026-06-13) |
 | Adotta un luogo | Cittadini/associazioni si prendono cura di parchi, aiuole… | `FE` `BE` | `A2 §16` + Patti collaborazione | ✅ O4 (2026-06-13) |
 | Patti digitali di quartiere | Obiettivi condivisi per quartiere con aggiornamenti | `FE` `BE` | `A2 §31` | ✅ O4 (2026-06-13) |
-| QR territoriali | QR su cantieri/bacheche → scheda con CTA follow; modalità totem | `FE` | idea 2026-06-11 | 📋 |
+| QR territoriali | QR su cantieri/bacheche → scheda con CTA follow; modalità totem | `FE` | idea 2026-06-11 | 🔜 O8 |
 
 ### 🗳️ Partecipazione & dialogo
 
@@ -797,7 +950,7 @@ documento. Dice la stessa cosa a chi legge, e regge in tribunale.
 | Consultazioni con documenti | Documento + sintesi + domande guidate + risultati | `FE` `BE` | `A2 §23` | ✅ O4 (2026-06-13) |
 | Volontariato e iniziative | Bacheca iniziative di Comune e associazioni, adesioni | `FE` `BE` | `A2 §14` | ✅ O4 (2026-06-13) |
 | Stanze tematiche | Community organizzata anche per tema, non solo per quartiere | `FE` `BE` `UX` | `A1 §17` | ✅ O4 (2026-06-13) |
-| Bilancio partecipativo simulato | "Come spenderesti 100.000 €": slider per categoria | `FE` `UX` | idea §19 | 📋 (mock possibile) |
+| Bilancio partecipativo simulato | "Come spenderesti 100.000 €": slider per categoria | `FE` `UX` | idea §19 | 🔜 O8 |
 | Banca del tempo civica | Offro/cerco tempo e competenze; richiede moderazione forte | `FE` `BE` | `A2 §15` | 💡 |
 | Partecipazione aggregata, zero esposizione | Contatori aggregati, mai profili in vetrina | `BE` | `A1 §10` | ✅ regola di prodotto |
 
@@ -807,7 +960,7 @@ documento. Dice la stessa cosa a chi legge, e regge in tribunale.
 |---|---|---|---|---|
 | Civic ID Card + impatto civico | Passaporto civico personale: zona, segnalazioni, esiti | `FE` `BE` | `A2 §2` + Il mio impatto civico | ✅ O2 (2026-06-11) |
 | Preferenze civiche | Temi preferiti all'onboarding → feed e notifiche mirate | `FE` `BE` | `A2 §3` | ✅ O2 (2026-06-11) |
-| Newsletter civica in-app | Riepilogo personale settimanale dentro la piattaforma | `FE` `BE` | `A1 §20` | 📋 |
+| Newsletter civica in-app | Riepilogo personale settimanale dentro la piattaforma | `FE` `BE` | `A1 §20` | 🅿️ parcheggio — contenuto continuo |
 | Digest email settimanale | Stessa cosa via email (cron) | `BE` | idea esistente | 🧊 richiede mailer |
 
 ### 🧭 UX & semplicità
@@ -821,15 +974,16 @@ documento. Dice la stessa cosa a chi legge, e regge in tribunale.
 | Tour demo guidato | La piattaforma si presenta da sola, passo passo | `UX` | 🆕 | ✅ O0 (2026-06-12), persistito O4 |
 | Modalità semplice / anziani | Menu ridotto, pulsanti grandi, flussi guidati | `FE` `UX` `A11Y` | `A1 §19` | ✅ O2 (2026-06-11) |
 | Onboarding "primi passi in città" | Checklist progressiva delle prime azioni utili | `UX` | 🆕 | ✅ O4 (2026-06-13) |
-| Scorciatoie da tastiera + pannello "?" | Navigazione esperta scopribile | `UX` `A11Y` | 🆕 | 📋 |
+| Scorciatoie da tastiera + pannello "?" | Navigazione esperta scopribile | `UX` `A11Y` | 🆕 | 🔜 O8 |
 
 ### ♿ Accessibilità & inclusione
 
 | Idea | Cosa fa | Livello | Fonte | Stato |
 |---|---|---|---|---|
 | Base a11y (ARIA, contrasto, tastiera) | Review fatte e verificate | `A11Y` | `A1 §18` (parte) | ✅ |
-| Test a11y automatici | axe-core dentro gli E2E: l'a11y non regredisce | `ENG` `A11Y` | 🆕 | 📋 da impostare (prossima ondata) |
-| Alto contrasto, font grande, lettura audio | Preferenze di visualizzazione avanzate | `FE` `A11Y` | `A1 §18` | 📋 |
+| Test a11y automatici | axe-core dentro gli E2E: l'a11y non regredisce | `ENG` `A11Y` | 🆕 | ✅ 2026-08-05 (11 pagine × 2 temi, WCAG AA + 2.2) |
+| Alto contrasto + font grande | Preferenze di visualizzazione avanzate | `FE` `A11Y` | `A1 §18` | 🔜 O8 |
+| Lettura audio | Sintesi vocale dei contenuti | `FE` `A11Y` | `A1 §18` | 🅿️ parcheggio — macchina diversa dalle altre due |
 | Glossario termini amministrativi | Tooltip/pagina dei termini burocratici | `FE` `A11Y` | `A2 §27` (parte) | ✅ O3 (2026-06-12) |
 | Multilingua + easy-to-read ("Pistoia Facile") | EN, AL, RO, ZH, UK + linguaggio facilitato | `FE` `A11Y` | `A2 §27` + Fase 4 | 💡 pre-lancio |
 
@@ -837,17 +991,17 @@ documento. Dice la stessa cosa a chi legge, e regge in tribunale.
 
 | Idea | Cosa fa | Livello | Fonte | Stato |
 |---|---|---|---|---|
-| Storie della città | Memoria urbana: racconti, foto storiche, prima/dopo | `FE` `DES` | `A2 §17` | 🔜 O5 |
-| Pistoia racconta | Narrazione semplice di progetti e cambiamenti | `FE` `DES` | `A2 §18` | 🔜 O5 |
+| Storie della città | Memoria urbana: racconti, foto storiche, prima/dopo | `FE` `DES` | `A2 §17` | 🅿️ parcheggio — contenuto editoriale |
+| Pistoia racconta | Narrazione semplice di progetti e cambiamenti | `FE` `DES` | `A2 §18` | 🅿️ parcheggio — contenuto editoriale |
 
 ### 🎯 Nuovi pubblici
 
 | Idea | Cosa fa | Livello | Fonte | Stato |
 |---|---|---|---|---|
-| Modalità turista | Vista per visitatori: eventi, musei, ZTL, numeri utili | `FE` `UX` | `A2 §28` | 🔜 O5 |
-| Commercio locale | Sezione attività verificate: mercati, iniziative, cantieri | `FE` `BE` | `A2 §29` | 🔜 O5 |
-| Vetrina aziende & sponsor | Profili aziendali ricchi + sponsorizzazioni dichiarate di spazi non civici | `FE` `BE` | 🆕 richiesta 2026-06-11 | 🔜 O5 |
-| Servizi quotidiani | Scorciatoie a certificati, tributi, mense (link mock) | `FE` `UX` | `A1 §22` + idea esistente | 🔜 O5 |
+| Modalità turista | Vista per visitatori: eventi, musei, ZTL, numeri utili | `FE` `UX` | `A2 §28` | 🧊 ferma — chiede orari di musei veri |
+| Commercio locale | Sezione attività verificate: mercati, iniziative, cantieri | `FE` `BE` | `A2 §29` | 🅿️ parcheggio — porta un modello di business |
+| Vetrina aziende & sponsor | Profili aziendali ricchi + sponsorizzazioni dichiarate di spazi non civici | `FE` `BE` | 🆕 richiesta 2026-06-11 | 🅿️ parcheggio — regola §7.9 |
+| Servizi quotidiani | Scorciatoie a certificati, tributi, mense (link mock) | `FE` `UX` | `A1 §22` + idea esistente | 🧊 ferma — link finti a servizi veri |
 | Spazio scuole | Mini-aree per scuola: avvisi, progetti, eventi | `FE` `BE` | `A2 §13` | 💡 |
 | Versione bambini / scuola | Sezione educativa: come funziona il Comune, quiz civici | `FE` `UX` | `A2 §12` | 💡 |
 
@@ -855,10 +1009,10 @@ documento. Dice la stessa cosa a chi legge, e regge in tribunale.
 
 | Idea | Cosa fa | Livello | Fonte | Stato |
 |---|---|---|---|---|
-| Analytics operative | KPI: per categoria/quartiere/ufficio, tempi, trend | `FE` `BE` `DES` | `A1 §27` | 🔜 O5 |
-| Alert trend anomalo | Avviso su picchi improvvisi di segnalazioni | `BE` | `A2 §21` | 🔜 O5 (euristica) |
-| Sentiment civico per tema | Segnale qualitativo del clima per tema | `FE` `BE` | `A2 §20` | 🔜 O5 (mock) |
-| Moderazione assistita | Spam, duplicati, suggerimento categoria (euristiche) | `BE` | `A1 §28` | 🔜 O5 · 💡 versione AI |
+| Analytics operative | KPI: per categoria/quartiere/ufficio, tempi, trend | `FE` `BE` `DES` | `A1 §27` | 🔜 O8 |
+| Alert trend anomalo | Avviso su picchi improvvisi di segnalazioni | `BE` | `A2 §21` | 🔜 O8 (euristica) |
+| Sentiment civico per tema | Segnale qualitativo del clima per tema | `FE` `BE` | `A2 §20` | 🅿️ parcheggio — serve prima una definizione |
+| Moderazione assistita | Spam, duplicati, suggerimento categoria (euristiche) | `BE` | `A1 §28` | 🔜 O8 · 🧊 versione AI |
 
 ### 🤖 AI civica *(tutte richiedono un LLM: restano 💡 finché il progetto è mock/locale)*
 
@@ -870,15 +1024,41 @@ documento. Dice la stessa cosa a chi legge, e regge in tribunale.
 | Assistente FAQ civico | Chatbot sui servizi del Comune | `AI` | idea §20 | 💡 |
 | Moderazione AI piena | Tossicità, bozze di risposta (sempre con revisione umana) | `AI` | `A1 §28` | 💡 |
 
+### 🧰 Il progetto come prodotto *(richiesta 2026-08-07 — Ondata 9)*
+
+> Le quattro superfici con cui il prodotto parla di sé. Vivono in `/progetto/*`
+> e portano la firma della **Redazione della Dashboard di Pistoia**, non quella
+> del Comune: lettura pubblica, account per agire.
+
+| Idea | Cosa fa | Livello | Fonte | Stato |
+|---|---|---|---|---|
+| Roadmap pubblica | Linea del tempo delle funzionalità: proposto, pianificato, in sviluppo, rilasciato, rimandato | `FE` `DES` `BE` | richiesta 2026-08-07 | 🔜 O9 |
+| Voto alle funzionalità | I cittadini dicono quali funzioni vogliono; riusa `Proposal` + sostegni | `FE` `BE` | richiesta 2026-08-07 | 🔜 O9 |
+| Changelog pubblico | Che cosa è uscito, quando, e che cosa è cambiato | `FE` `BE` | richiesta 2026-08-07 | 🔜 O9 |
+| Idee e problemi | Proporre, segnalare un errore, seguire lo stato della propria segnalazione; riusa `Report` | `FE` `BE` `UX` | richiesta 2026-08-07 | 🔜 O9 |
+
+### 🧰 Il progetto come prodotto *(richiesta 2026-08-07 — Ondata 9)*
+
+> Le quattro superfici con cui il prodotto parla di sé. Vivono in `/progetto/*`
+> e portano la firma della **Redazione della Dashboard di Pistoia**, non quella
+> del Comune: lettura pubblica, account per agire.
+
+| Idea | Cosa fa | Livello | Fonte | Stato |
+|---|---|---|---|---|
+| Roadmap pubblica | Linea del tempo delle funzionalità: proposto, pianificato, in sviluppo, rilasciato, rimandato | `FE` `DES` `BE` | richiesta 2026-08-07 | 🔜 O9 |
+| Voto alle funzionalità | I cittadini dicono quali funzioni vogliono; riusa `Proposal` + sostegni | `FE` `BE` | richiesta 2026-08-07 | 🔜 O9 |
+| Changelog pubblico | Che cosa è uscito, quando, e che cosa è cambiato | `FE` `BE` | richiesta 2026-08-07 | 🔜 O9 |
+| Idee e problemi | Proporre, segnalare un errore, seguire lo stato della propria segnalazione; riusa `Report` | `FE` `BE` `UX` | richiesta 2026-08-07 | 🔜 O9 |
+
 ### ⚙️ Piattaforma & qualità
 
 | Idea | Cosa fa | Livello | Fonte | Stato |
 |---|---|---|---|---|
 | Review lenti mancanti | Sicurezza, correttezza cache, idiomi Next 16 (saltate il 2026-06-11) | `SEC` `ENG` | debito qualità | 📋 consigliata presto |
 | Mock data "vivo" | Seed temporale deterministico: la demo evolve nel tempo | `BE` `ENG` | 🆕 | ✅ O1 (2026-06-12) |
-| Lighthouse CI + performance budget | La velocità percepita non degrada | `ENG` | 🆕 | 📋 da impostare (prossima ondata) |
-| Audit dipendenze in CI | npm audit / osv-scanner sulla supply chain | `SEC` | 🆕 | 📋 da impostare (prossima ondata) |
-| PWA + offline + Web Push | App installabile, coda offline segnalazioni, push VAPID | `FE` `ENG` | idea esistente | 📋 |
+| Lighthouse CI + performance budget | La velocità percepita non degrada | `ENG` | 🆕 | ✅ 2026-08-06 (soglie scritte, job bloccante) |
+| Audit dipendenze in CI | npm audit sulla supply chain | `SEC` | 🆕 | ✅ 2026-08-06 (`--audit-level=high`, bloccante) |
+| PWA + offline + Web Push | App installabile, coda offline segnalazioni, push VAPID | `FE` `ENG` | idea esistente | 🅿️ parcheggio — tocca CSP e service worker, dopo il rifacimento |
 | Mailer transazionale | Verifica email, password dimenticata; sblocca digest email | `BE` | residuo Fase 1 | 🧊 su richiesta — la base d'invio esiste da R-3 (`src/lib/email.ts`: file in locale, `fetch` verso il provider quando ci sarà il dominio; decisione 2026-08-03 in [`docs/piano-rating-servizi.md`](docs/piano-rating-servizi.md) §8) |
 | Switch SQLite → Postgres/Neon | Necessario solo per deploy/dati reali; procedura documentata | `BE` `ENG` | residuo Fase 1 | 🧊 alla ripresa |
 

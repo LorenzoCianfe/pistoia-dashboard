@@ -591,8 +591,18 @@
     background-color: color-mix(in srgb, var(--red-soft) 88%, var(--red));
   }
 
+  /*
+    `sm` vuol dire STRETTO, non basso — e da qui in avanti è l'unica cosa che
+    può voler dire.
+
+    Era `2.25rem`, cioè 36px, contro i ≥44 che `DESIGN.md` §11.6 dichiara
+    vincolanti: un bottone è un bersaglio, e la soglia non ha una deroga per i
+    bottoni piccoli. Alzandolo a 2.75rem la scala perde un gradino in altezza
+    (`sm` e `md` ora coincidono) e ne tiene uno in larghezza: 1rem di respiro
+    orizzontale contro 1,25. È il prezzo dichiarato della soglia.
+  */
   .btn-sm {
-    height: 2.25rem;
+    height: 2.75rem;
     padding-inline: 1rem;
     font-size: 0.875rem;
   }

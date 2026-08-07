@@ -6,7 +6,7 @@
 >
 > **Leggilo per intero all'inizio di ogni sessione, prima di toccare codice.**
 >
-> Aggiornato: 2026-08-06 (Fase C · Lavoro D)
+> Aggiornato: 2026-08-07 (Fase C · cancello dei 44px)
 
 ---
 
@@ -61,7 +61,7 @@ L'app vive in `pistoia-dashboard/`. La documentazione vive nella radice.
 
 ## 3. Design system — le regole che si sbagliano più spesso
 
-> §3 raccoglie **venticinque trappole già pagate**. Sono raggruppate per ondata
+> §3 raccoglie **ventotto trappole già pagate**. Sono raggruppate per ondata
 > solo perché è così che sono emerse: leggile tutte, valgono tutte ancora.
 
 **Prima di tutto: Astryx è la sorgente dei TOKEN, non lo strato di primitive.**
@@ -431,6 +431,57 @@ diagnosi sbagliate con dati apparentemente solidi.
    finisce **da sola su una riga** e sembra un guasto. Dentro una frase le
    icone si scrivono `inline-block`, così scorrono come una parola.
 
+### Tre trappole del cancello dei bersagli (2026-08-07)
+
+Hanno in comune la stessa forma delle altre: **nessuna produce un errore**, e
+tutte e tre riguardano ciò che un cancello verde *non* stava guardando.
+
+1. **Motion mette `tabindex="0"` su qualunque elemento con `whileTap`**, perché
+   il gesto possa partire anche da tastiera. Se quell'elemento è un'icona
+   **dentro** un pulsante — come in `ConfirmButton`, `SupportButton` e
+   `PostCard` — il risultato è una **fermata di tabulazione in più, senza nome
+   accessibile**, per ogni scheda in lista: **42 su `/segnalazioni`**. Il
+   sorgente non ha traccia di `tabIndex`, quindi cercarlo nel proprio codice
+   non serve a niente; e axe non lo dice, perché uno `<span tabindex=0>` senza
+   ruolo non viola nessuna sua regola. Si chiude scrivendo `tabIndex={-1}`
+   esplicito: Motion lo rispetta.
+
+   La regola generale: **quando una libreria di animazione tocca un elemento,
+   chiediti quali attributi ci mette lei.** Il DOM reso non è il JSX scritto.
+
+2. **Un `<details>` chiuso è un pezzo di pagina che nessun cancello misura.**
+   Su `/admin` sono **42 bersagli su 222**; sul bilancio, dentro «Vedi le
+   proporzioni e l'elenco», ci vivevano **due violazioni axe serious**
+   preesistenti — sei barre di avanzamento senza nome accessibile e una
+   percentuale sotto il contrasto AA — che il cancello a11y non aveva mai
+   visto in tre mesi. Da qui `posata()` (in `tests/e2e/helpers.ts`) **apre
+   tutti i `<details>` prima di misurare**, e i due cancelli ci hanno guadagnato
+   copertura insieme.
+
+   È la stessa famiglia del corollario dell'ondata 7: **quando una superficie
+   entra per la prima volta in un cancello, i rossi possono essere suoi di
+   nascita.** Vale per le pagine e vale, identico, per gli stati.
+
+3. **Aggiungere test che fanno l'accesso può sfondare il tetto per IP, e il
+   sintomo somiglia a un guasto dell'autenticazione.** `loginAction` ha tre
+   limiti a finestra di 15 minuti; due si azzerano quando l'accesso riesce, ma
+   il terzo — **40 tentativi per indirizzo IP** — no. Entrando i 22 casi di
+   `bersagli.spec.ts`, la suite è passata da ~25 accessi a ~45 dallo stesso
+   127.0.0.1: **quindici test sono caduti insieme**, tutti dopo il quarantesimo,
+   tutti con «resto su /login».
+
+   Il segno che lo distingue: i rossi sono **contigui nell'ordine di
+   esecuzione** — moderazione e segnalazione passano, territorio in poi cade —
+   e nessuno afferma un contenuto sbagliato. Un guasto vero non aspetta il
+   quarantesimo accesso per manifestarsi.
+
+   **La risposta non è alzare il tetto**: è una difesa vera, e §2 dice di non
+   disattivare un controllo per far passare qualcosa. `login()` ora **riusa la
+   sessione** già ottenuta per quel conto (una `Map` in `helpers.ts`, che vive
+   quanto il worker); il percorso vero lo prova `auth.spec.ts` con
+   `accediDalModulo()`, una volta. Accessi reali per esecuzione: **da ~45 a 4**.
+   La suite ci ha anche guadagnato un minuto e venti.
+
 ---
 
 ## 4. Comandi
@@ -442,6 +493,7 @@ npm run lint
 npm test               # vitest
 npm run test:e2e       # playwright (comprende il cancello di accessibilità)
 npm run a11y           # SOLO il cancello a11y: axe, 11 pagine × 2 temi, WCAG AA + 2.2
+npm run bersagli       # SOLO il cancello dei 44px: 11 pagine × 2 viewport (1280 e 360)
 npm run lighthouse     # Lighthouse sulla build di produzione — misura, non giudica
 npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
 npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
@@ -653,12 +705,18 @@ Una modifica è finita quando **tutte** queste sono vere:
       scuro. Un typecheck verde non è una prova visiva.
 - [ ] Funziona da tastiera e il focus è visibile. **Il cancello axe non basta**:
       da 2026-08-05 `npm run test:e2e` comprende `accessibilita.spec.ts` (WCAG
-      AA e 2.2, **11 pagine × 2 temi = 22 casi**, su 48 E2E totali — comprese `/admin/*` e `/redazione` dal
+      AA e 2.2, **11 pagine × 2 temi = 22 casi**, su **70** E2E totali — comprese `/admin/*` e `/redazione` dal
       2026-08-06 — nessuna regola esclusa), ma axe copre ~30–40% delle
       barriere reali — le meccaniche. Ordine di lettura, trappole di focus e
       sensatezza degli annunci restano da provare a mano.
       ⚠️ Se aggiungi un colore, **misura la coppia colore/`-soft`**: è lì che il
       contrasto è caduto, e non si vede guardando
+- [ ] I bersagli reggono i **44px** di `DESIGN.md` §11.6: dal 2026-08-07
+      `npm run test:e2e` comprende `bersagli.spec.ts` (**11 pagine × 2
+      viewport = 22 casi**), che è un cancello **diverso** da `target-size` di
+      axe — quello difende i 24. L'elenco delle esenzioni «essenziali» è
+      **vuoto**, e un'aggiunta va scritta con la condizione che la chiude.
+      ⚠️ Le due liste di pagine sono una sola: `tests/e2e/pagine-cancello.ts`
 - [ ] Regge la **modalità semplice** — `npm run shots -- --simple --width=360`,
       che è anche il controllo del traboccamento orizzontale alla viewport minima
 - [ ] `prefers-reduced-motion` non lascia contenuto invisibile o inaccessibile

@@ -56,7 +56,19 @@ export function ConfirmButton({
             : "border-border-strong bg-surface text-foreground hover:bg-surface-2",
         )}
       >
-        <motion.span whileTap={{ scale: 0.85 }} className="grid place-items-center">
+        {/*
+          `tabIndex={-1}` NON è decorativo: senza, Motion mette da sé
+          `tabindex="0"` su qualunque elemento con `whileTap`, perché il gesto
+          possa partire anche da tastiera. Qui l'elemento è un'icona DENTRO il
+          pulsante, quindi il risultato è una fermata di tabulazione in più,
+          senza nome accessibile, per ogni scheda in lista: 42 su
+          /segnalazioni. Il gesto da tastiera ce l'ha già il pulsante.
+        */}
+        <motion.span
+          tabIndex={-1}
+          whileTap={{ scale: 0.85 }}
+          className="grid place-items-center"
+        >
           {state.confirmed ? <Check size={16} strokeWidth={2.5} /> : <Users size={16} />}
         </motion.span>
         {state.confirmed ? "Anche tu confermi" : "Anche io"}

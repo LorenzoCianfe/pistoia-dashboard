@@ -5,9 +5,10 @@
 > coerente con quanto scritto qui, o si corregge la scelta o si aggiorna
 > (consapevolmente) questo documento.
 >
-> Ultime revisioni: **2026-08-06** (§4 corollario dei tre centesimi, §6 la
-> chiusura è un oggetto, §11.6 dichiara la propria inapplicabilità come
-> cancello) · **2026-08-05** (§4 tavolozza chiara scurita per AA).
+> Ultime revisioni: **2026-08-07** (§11.6 **diventa un cancello bloccante** e
+> corregge la propria motivazione misurandola) · **2026-08-06** (§4 corollario
+> dei tre centesimi, §6 la chiusura è un oggetto, §11.6 riscritta con le
+> quattro eccezioni) · **2026-08-05** (§4 tavolozza chiara scurita per AA).
 >
 > **Revisione 2026-07-25 — direzione ibrida.** Struttura visiva dai riferimenti
 > in `refs/`, significato dall'identità civica di Pistoia. Le decisioni sono
@@ -446,25 +447,49 @@ un'inversione.
 
    | Eccezione | Quando vale |
    |---|---|
-   | **Spaziatura** | Il bersaglio è più piccolo ma **isolato**: un cerchio da 44px centrato su di lui non tocca nessun altro bersaglio |
+   | **Spaziatura** | Il bersaglio è più piccolo ma **isolato**: un cerchio da 44px centrato su di lui non tocca nessun altro bersaglio, né il cerchio di un altro bersaglio sottodimensionato. Due bersagli che si **sovrappongono** non sono mai isolati |
    | **Inline** | È dentro una frase, e la sua dimensione è vincolata dall'interlinea del testo attorno — un link nella prosa |
    | **Equivalente** | La stessa azione è raggiungibile da un altro comando sulla pagina che i 44px li rispetta |
    | **Essenziale** | La dimensione è imposta dalla natura di ciò che si tocca (un punto su una mappa, una parola dentro un testo legale) |
 
    **Perché la riscrittura.** Prima diceva «≥ 44px» e basta, e con quel metro
    sulle otto pagine del cancello risultavano **246 elementi fuori norma** —
-   quasi tutti legittimi: link dentro la prosa, che a 44px spaccherebbero il
-   testo. Una regola violata 246 volte a ragione non è un vincolo, è
-   un'aspirazione, e infatti i link del footer sono stati alti **16px** per
-   mesi senza che nulla lo dicesse. Con le eccezioni la regola torna a
-   descrivere ciò che davvero si pretende — **e diventa scrivibile come
+   quasi tutti legittimi. Una regola violata 246 volte a ragione non è un
+   vincolo, è un'aspirazione, e infatti i link del footer sono stati alti
+   **16px** per mesi senza che nulla lo dicesse. Con le eccezioni la regola
+   torna a descrivere ciò che davvero si pretende — **e diventa scrivibile come
    cancello**, che è il punto.
 
-   ⚠️ **Il cancello non esiste ancora.** `target-size` di axe (nel cancello dal
-   2026-08-06 col tag `wcag22aa`) applica le stesse eccezioni ma con la soglia
-   di **24px**, quindi non difende i 44: i 16px del footer sarebbero passati
-   anche adesso, perché ben spaziati. Il controllo va scritto — è il primo
-   lavoro in coda in `ROADMAP.md`, traccia «Qualità continua».
+   ⚠️ **Una correzione a questa stessa nota, scritta misurando (2026-08-07).**
+   Qui sopra c'era scritto che i 246 erano legittimi perché «link dentro la
+   prosa, che a 44px spaccherebbero il testo». **Non è vero, ed è utile
+   saperlo**: applicando le eccezioni una per una, l'inline ne salva **14 su
+   436**. Quello che li salva quasi tutti è la **spaziatura** — 264 —, cioè
+   l'isolamento, non la prosa. La conclusione regge, la ragione no; e la
+   differenza conta, perché indica dove guardare quando un bersaglio piccolo
+   diventa rosso: nove volte su dieci non è la sua dimensione, è che gli si è
+   avvicinato qualcosa.
+
+   ✅ **Il cancello esiste dal 2026-08-07**: `tests/e2e/bersagli.spec.ts`,
+   undici pagine × due viewport (1280 e 360), **bloccante**, e con l'elenco
+   delle esenzioni «essenziali» **vuoto** — nessun bersaglio della piattaforma
+   ha bisogno di stare sotto i 44. Resta vero che il `target-size` di axe non
+   lo sostituisce: applica le stesse eccezioni ma alla soglia di **24px**, e i
+   16px del footer sarebbero passati anche lì, perché ben spaziati.
+
+   **I due viewport, e perché nessuno dei due basta.** A 1280 esiste la barra
+   laterale, che a 360 è sostituita da quella inferiore: ventuno bersagli che
+   l'altra passata non vede mai. A 360 i moduli si impilano e vengono avanti
+   controlli che a 1280 stanno larghi. Misurata la differenza: 158 rossi a 1280
+   contro 147 a 360, e le due liste **non si contengono**.
+
+   **Che cosa è costato metterla in regola** (i sette componenti che la
+   violavano, chiusi tutti lo stesso giorno): la barra laterale ha allungato la
+   colonna di ~95px, `.btn-sm` è salito a 44 e quindi «sm» vuol dire ormai
+   *stretto* e non *basso*, i moduli di `/admin` sono tutti a `h-11`. E un
+   difetto che non era di dimensione: Motion mette `tabindex="0"` su qualunque
+   elemento con `whileTap`, e ne usciva una fermata di tabulazione senza nome
+   dentro ogni pulsante «Anche io» — **42 su una sola pagina**.
 7. **Ogni grafico ha un equivalente testuale** e, dove possibile, è
    attraversabile da tastiera.
 8. Nessun contenuto può restare invisibile perché un'animazione non è partita

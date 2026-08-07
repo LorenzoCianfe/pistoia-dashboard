@@ -264,6 +264,7 @@ export default async function BilancioPage() {
                   </div>
                   <ProgressBar
                     value={(c.amount / maxCategory) * 100}
+                    etichetta={`${c.label}: ${formatEuroCompact(c.amount)}, in rapporto alla missione più finanziata`}
                     gradient={false}
                     delay={i * 0.08}
                     height={8}

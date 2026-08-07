@@ -7,7 +7,7 @@
 > Legenda: ✅ completa · 🚧 in corso · 🔒 richiede verifica · 👤 richiede login ·
 > 🔗 **dati reali, ogni riga con la propria fonte** (non dimostrativi)
 >
-> Aggiornato: 2026-08-06 (Fase C · Lavoro D chiuso)
+> Aggiornato: 2026-08-07 (Fase C · cancello dei 44px)
 
 ---
 
@@ -44,6 +44,14 @@ quattro porte che si chiudono in faccia; chi è dentro non la incontra affatto.
 Ogni voce è un bersaglio da **44px** (prima erano 16). Dal 2026-08-06 sta
 **fuori da `<main>`**, quindi è un `contentinfo` saltabile da chi naviga a punti
 di riferimento — prima non lo era su nessuna pagina.
+
+**E i 44px valgono ovunque, non solo qui.** Dal 2026-08-07 un cancello li
+misura a ogni esecuzione dei test, su undici pagine e a due larghezze di
+schermo — così la regola non dipende più dal fatto che qualcuno se ne ricordi.
+Nel metterla in regola si sono alzati i comandi dei moduli del Comune, i filtri
+delle segnalazioni, il mostra-password, e le voci del **menu laterale**, che
+adesso sono righe più alte e un po' più distanti: la colonna si allunga, e su
+uno schermo basso può scorrere.
 
 **La porta d'ingresso `/`** ha una riga sua con le pagine che si aprono davvero a
 chiunque (valutazioni, metodologia, privacy, cookie, regole): non il footer

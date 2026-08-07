@@ -19,6 +19,7 @@ import { cn, clamp } from "@/lib/utils";
  */
 export function ProgressBar({
   value,
+  etichetta,
   color,
   gradient = false,
   delay = 0,
@@ -27,6 +28,19 @@ export function ProgressBar({
   trackClassName,
 }: {
   value: number;
+  /**
+   * Il nome accessibile della barra. **Obbligatorio, e non per pedanteria.**
+   *
+   * `role="progressbar"` senza nome è una regola violata (`aria-progressbar-name`,
+   * WCAG 4.1.2): chi legge lo schermo sente «indicatore di avanzamento, 62%» e
+   * non sa di cosa. Era così su tutte e quattro le chiamate, e nessun cancello
+   * lo diceva: la barra vive dentro un `<details>` sul bilancio — invisibile ad
+   * axe finché il pannello resta chiuso — e le altre tre pagine non sono fra le
+   * undici misurate. Trovato il 2026-08-07, quando `posata()` ha cominciato ad
+   * aprire i pannelli. Obbligatoria nel tipo perché la prossima chiamata non
+   * possa dimenticarsene.
+   */
+  etichetta: string;
   color?: string;
   gradient?: boolean;
   delay?: number;
@@ -53,6 +67,7 @@ export function ProgressBar({
       )}
       style={{ height }}
       role="progressbar"
+      aria-label={etichetta}
       aria-valuenow={Math.round(v)}
       aria-valuemin={0}
       aria-valuemax={100}

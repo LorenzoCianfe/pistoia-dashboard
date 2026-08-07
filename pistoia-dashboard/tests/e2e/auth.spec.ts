@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { CITTADINO, login } from "./helpers";
+import { CITTADINO, accediDalModulo } from "./helpers";
 
 test("le rotte protette redirigono al login con ?next=", async ({ page }) => {
   await page.goto("/bilancio");
@@ -18,7 +18,9 @@ test("credenziali errate mostrano un errore e non fanno entrare", async ({
 });
 
 test("login valido → La mia città, logout → login", async ({ page }) => {
-  await login(page);
+  // `accediDalModulo` e non `login`: questo è IL test dell'accesso, e `login`
+  // riusa la sessione già ottenuta invece di compilare il modulo (helpers.ts).
+  await accediDalModulo(page);
   await expect(page).toHaveURL(/\/la-mia-citta/);
 
   // La pagina richiesta prima del login viene rispettata via ?next=.

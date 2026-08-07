@@ -1,7 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-import { ADMIN, MODERATORE, login } from "./helpers";
+import { login, posata, pretendiAtterraggio } from "./helpers";
+import { PAGINE_ANONIME, PAGINE_AUTENTICATE, PAGINE_STAFF } from "./pagine-cancello";
 
 /*
   Cancello di accessibilità automatico (traccia «Qualità continua», ROADMAP).
@@ -48,47 +49,13 @@ test.describe.configure({ timeout: 90_000 });
  * **246** sotto i 44px sulle stesse otto pagine — quasi tutti legittimi:
  * link dentro la prosa, che a 44px spaccherebbero il testo. La regola §11.6
  * come è scritta oggi **non è trasformabile in un cancello**: prima le
- * servono le eccezioni. Decisione aperta in `ROADMAP.md`.
+ * servono le eccezioni.
+ *
+ * **Chiuso il 2026-08-07**: le eccezioni ci sono, e il cancello dei 44px è
+ * `bersagli.spec.ts`. Questa nota resta perché la distinzione vale ancora —
+ * `target-size` qui dentro difende i 24, non i 44.
  */
 const REGOLE = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
-
-/**
- * Le pagine sono scelte per **famiglia di composizione**, non per importanza:
- * una per ciascun impianto visivo, così una regressione di sistema si vede
- * almeno una volta. Aggiungerne una qui costa ~4s per tema.
- */
-const PAGINE_ANONIME = [
-  { nome: "login", url: "/login" },
-  { nome: "valutazioni (barra anonima)", url: "/valutazioni" },
-  { nome: "metodologia (documento lungo)", url: "/metodologia" },
-];
-
-const PAGINE_AUTENTICATE = [
-  { nome: "la mia città (hero + mesh)", url: "/la-mia-citta" },
-  { nome: "bilancio (dati e grafici)", url: "/bilancio" },
-  { nome: "segnalazioni (lista)", url: "/segnalazioni" },
-  { nome: "quartieri (mesh coropletica)", url: "/quartieri" },
-  { nome: "pagella (osservatorio)", url: "/pagella" },
-];
-
-/**
- * **Le superfici di lavoro dello staff, entrate il 2026-08-06** (Lavoro D §4).
- *
- * Erano fuori, e dichiarate: `login()` entra come cittadino, che su quelle
- * rotte **viene reindirizzato** — `requireAdmin()` non risponde 403, manda a
- * /la-mia-citta con stato 200 — quindi il cancello avrebbe misurato la home
- * col nome della pagina admin. Adesso ognuna entra col proprio ruolo, e la
- * trappola è chiusa da `pretendiAtterraggio()`: se il redirect ci porta
- * altrove il test fallisce invece di analizzare la pagina sbagliata.
- *
- * `/redazione` vuole MODERATORE e non admin, per disegno (R-4): il Comune non
- * modera ciò che lo riguarda.
- */
-const PAGINE_STAFF = [
-  { nome: "area Comune (admin)", url: "/admin", conto: ADMIN },
-  { nome: "codici QR (admin, da stampare)", url: "/admin/codici-qr", conto: ADMIN },
-  { nome: "redazione (moderatore)", url: "/redazione", conto: MODERATORE },
-];
 
 /**
  * next-themes legge da `localStorage`, e va impostato PRIMA della navigazione:
@@ -133,76 +100,8 @@ function raccontaViolazioni(
     .join("\n\n");
 }
 
-/**
- * **Si misura solo a pagina POSATA, e non è un dettaglio.** L'ingresso di
- * `(app)/template.tsx` parte da `opacity: 0` e dura fino a ~2,2s (`AGENTS.md`
- * §5): axe interrogato prima legge colori a metà transizione e restituisce
- * rapporti impossibili — la prima stesura di questo file dichiarava 1,07:1 nel
- * tema scuro, cioè testo invisibile, su pagine che le schermate mostrano
- * perfettamente leggibili. Numeri plausibili e sbagliati: la categoria di
- * difetti che qui costa di più.
- */
-async function posata(page: Page) {
-  /*
-    Attesa **fissa**, e due strade più furbe scartate perché non funzionavano:
-
-    - *sondare l'opacità di ogni nodo sotto `<main>`* finché non sono fermi:
-      su `/bilancio` quel giro costa più dell'analisi di axe, e i due casi
-      pesanti morivano per timeout a 90s;
-    - *`waitForLoadState("networkidle")`*: sul dev server la connessione di
-      HMR tiene la rete occupata, quindi l'attesa non finisce mai — la stessa
-      trappola per cui Playwright sconsiglia quello stato.
-
-    Il tetto delle animazioni d'ingresso lo dichiara già `AGENTS.md` §5 —
-    ~2,2s — e aspettarlo e basta è deterministico, gratis e leggibile.
-  */
-  await page.waitForTimeout(2_500);
-
-  /*
-    E poi si SCORRE tutta la pagina, come fa `scripts/shots.mjs`.
-
-    Le rivelazioni allo scroll (`[data-motion-reveal]`, la sezione narrata del
-    bilancio) partono smorzate e si accendono quando entrano nel viewport. Chi
-    misura senza scorrere legge il colore a metà dissolvenza: su `/bilancio`
-    axe dichiarava `#b5b5b5` su `#f9f8f7`, cioè 1,93:1, su un testo che a
-    schermo è nero. È la trappola di `AGENTS.md` §3 (Fase A, 1) — ciò che
-    dipende da IntersectionObserver non si giudica leggendo il DOM fermo.
-  */
-  await page.evaluate(async () => {
-    const passo = window.innerHeight * 0.8;
-    for (let y = 0; y < document.body.scrollHeight; y += passo) {
-      window.scrollTo(0, y);
-      await new Promise((r) => setTimeout(r, 120));
-    }
-    window.scrollTo(0, 0);
-  });
-  // Tornati in cima, le rivelazioni appena innescate hanno la loro durata:
-  // con un'attesa più corta axe leggeva ancora la cifra display a metà
-  // dissolvenza (`#b5b5b5` a 36px, cioè 1,93:1 su un numero che è nero).
-  await page.waitForTimeout(2_500);
-}
-
 async function analizza(page: Page) {
   return new AxeBuilder({ page }).withTags(REGOLE).analyze();
-}
-
-/**
- * Pretende di essere ATTERRATI dove si voleva andare.
- *
- * Serve solo alle rotte per ruolo, ma il costo è nullo e la ragione vale
- * ovunque: i guard di questo progetto **reindirizzano**, non rifiutano. Una
- * pagina aperta col ruolo sbagliato risponde 200 con contenuto valido — e un
- * cancello che analizza quel contenuto dichiara accessibile una superficie che
- * non ha mai visto. È la stessa trappola per cui `shots` fotografava la home
- * chiamandola `/admin/codici-qr` (AGENTS.md §4).
- */
-async function pretendiAtterraggio(page: Page, url: string) {
-  const dove = new URL(page.url()).pathname;
-  expect(
-    dove,
-    `atterrata su ${dove} invece che su ${url}: il ruolo non basta per questa ` +
-      `rotta, e analizzare la pagina d'arrivo certificherebbe qualcos'altro`,
-  ).toBe(url);
 }
 
 for (const tema of ["light", "dark"] as const) {

@@ -76,7 +76,14 @@ export function SupportButton({
             : "gradient-teal-viola text-white",
         )}
       >
-        <motion.span whileTap={{ scale: 0.85 }} className="grid place-items-center">
+        {/* `tabIndex={-1}`: vedi `segnalazioni/confirm-button.tsx`. Senza,
+            Motion rende focalizzabile l'icona e aggiunge una fermata di
+            tabulazione senza nome dentro il pulsante. */}
+        <motion.span
+          tabIndex={-1}
+          whileTap={{ scale: 0.85 }}
+          className="grid place-items-center"
+        >
           {state.supported ? <Check size={15} strokeWidth={2.5} /> : <Heart size={15} />}
         </motion.span>
         {state.supported ? "Sostieni" : "Sostieni"}

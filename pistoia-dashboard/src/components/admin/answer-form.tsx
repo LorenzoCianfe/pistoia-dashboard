@@ -48,7 +48,8 @@ export function AnswerForm({
             name="department"
             defaultValue=""
             aria-label="Ufficio responsabile"
-            className="h-9 w-full rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm focus-visible:border-teal focus-visible:outline-none"
+            /* `h-11` sono i 44px di `DESIGN.md` §11.6: era `h-9`, cioè 36. */
+            className="h-11 w-full rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm focus-visible:border-teal focus-visible:outline-none"
           >
             <option value="">Ufficio responsabile (facoltativo)…</option>
             {DEPARTMENTS.map((d) => (

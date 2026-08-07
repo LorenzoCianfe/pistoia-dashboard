@@ -266,7 +266,12 @@ function OperaCard({
             {opera.progress}%
           </span>
         </div>
-        <ProgressBar value={opera.progress} delay={index * 0.05} height={8} />
+        <ProgressBar
+          value={opera.progress}
+          etichetta={`Avanzamento del cantiere ${opera.name}`}
+          delay={index * 0.05}
+          height={8}
+        />
         <div className="mt-2 flex items-center justify-between gap-2">
           {/* Va a capo invece di troncare: a 360px l'ellissi mangerebbe la
               data di fine prevista, che è il pezzo che vale di più. */}

@@ -53,7 +53,14 @@ export function PasswordField({
           type="button"
           onClick={() => setShow((s) => !s)}
           aria-label={show ? "Nascondi password" : "Mostra password"}
-          className="absolute right-1.5 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-muted hover:text-foreground"
+          /*
+            `size-11` sono i 44px di `DESIGN.md` §11.6: era `size-8`, cioè
+            32×32. L'eccezione della spaziatura non lo copre — sta **dentro**
+            il campo, che è un bersaglio anche lui. Il campo è alto 44 e il
+            testo è già rientrato di `pr-11`, quindi il quadrato pieno entra
+            senza togliere spazio a nulla.
+          */
+          className="absolute right-0.5 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-[var(--radius-sm)] text-muted hover:text-foreground"
         >
           {show ? <EyeOff size={17} /> : <Eye size={17} />}
         </button>

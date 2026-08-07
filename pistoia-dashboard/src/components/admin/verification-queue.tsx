@@ -67,7 +67,7 @@ function QueueItem({ item }: { item: Item }) {
           name="note"
           maxLength={300}
           placeholder="Nota (facoltativa)…"
-          className="h-9 w-full rounded-pill border border-border-strong bg-surface px-3.5 text-sm placeholder:text-muted-2 focus-visible:border-teal focus-visible:outline-none"
+          className="h-11 w-full rounded-pill border border-border-strong bg-surface px-3.5 text-sm placeholder:text-muted-2 focus-visible:border-teal focus-visible:outline-none"
         />
         <div className="flex gap-2">
           <button
@@ -83,7 +83,7 @@ function QueueItem({ item }: { item: Item }) {
             type="submit"
             name="decision"
             value="REJECTED"
-            className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-pill border border-border-strong bg-surface text-sm font-semibold text-muted hover:text-[var(--red)] active:scale-[0.98]"
+            className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-pill border border-border-strong bg-surface text-sm font-semibold text-muted hover:text-[var(--red)] active:scale-[0.98]"
           >
             <X size={15} strokeWidth={2.5} />
             Rifiuta

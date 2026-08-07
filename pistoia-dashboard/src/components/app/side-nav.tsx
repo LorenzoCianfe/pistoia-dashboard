@@ -41,7 +41,21 @@ function NavLink({
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative flex items-center rounded-[var(--radius-sm)] transition-colors",
+        /*
+          `min-h-11` sono i 44px di `DESIGN.md` §11.6, e qui il prezzo si paga
+          in altezza di colonna: le righe erano **31,5px** annidate e **40** al
+          primo livello, cioè la superficie di navigazione era l'unica della
+          piattaforma con bersagli sotto la soglia su ogni pagina.
+
+          Non c'era una via più economica. L'eccezione della spaziatura chiede
+          che un cerchio da 44px centrato su una riga non tocchi la riga
+          accanto: fra due voci sottodimensionate significa un passo di 44px,
+          cioè **esattamente lo spazio che costa farle alte 44**. Misurato: la
+          colonna passa da 423 a ~517px con Trasparenza aperta, e con la
+          sezione più lunga (Partecipa, nove sezioni) sfiora i 744px, quindi
+          su uno schermo da 720 scorre. È il costo dichiarato della scelta.
+        */
+        "group relative flex min-h-11 items-center rounded-[var(--radius-sm)] transition-colors",
         nested
           ? "gap-2.5 py-1.5 pl-3 pr-3 text-[13px]"
           : "gap-3 px-3.5 py-2.5 text-sm font-medium",

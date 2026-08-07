@@ -24,7 +24,15 @@ export function ThresholdBar({ supports }: { supports: number }) {
           {next ? NEXT_LABEL[next] : "soglia massima raggiunta 🎉"}
         </span>
       </div>
-      <ProgressBar value={pct} height={8} />
+      <ProgressBar
+        value={pct}
+        etichetta={
+          next
+            ? `${formatNumber(supports)} sostegni su ${formatNumber(next)} ${NEXT_LABEL[next]}`
+            : `${formatNumber(supports)} sostegni, soglia massima raggiunta`
+        }
+        height={8}
+      />
     </div>
   );
 }

@@ -37,8 +37,9 @@ const ASSESS_FIELDS = [
   { name: "feasibility", label: "Fattibilità", scale: FEASIBILITY_SCALE },
 ] as const;
 
+// `h-11` sono i 44px di `DESIGN.md` §11.6: era `h-10`, cioè 40.
 const selectClass =
-  "h-10 w-full rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm focus-visible:border-teal focus-visible:outline-none";
+  "h-11 w-full rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm focus-visible:border-teal focus-visible:outline-none";
 
 const SETTABLE = ["pubblicata", "in_valutazione", "risposta", "approvata", "respinta"];
 

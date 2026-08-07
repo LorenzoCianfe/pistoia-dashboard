@@ -1,7 +1,7 @@
 # Dashboard di Pistoia — Documentazione
 
 > Documento vivo. Viene aggiornato a ogni cambiamento rilevante del progetto.
-> Ultimo aggiornamento: 2026-08-06 (Lavoro D)
+> Ultimo aggiornamento: 2026-08-07 (cancello dei 44px · riordino del backlog)
 
 ---
 
@@ -838,6 +838,76 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   **Nuova trappola in `AGENTS.md` §3 (22)**: uccidere `npm run dev` non uccide
   `next dev`, e il superstite avvelena gli E2E con **timeout** che sembrano
   regressioni.
+
+- **2026-08-07 (Fase C — «Qualità continua», il cancello dei 44px)** — Scritto
+  `tests/e2e/bersagli.spec.ts`: **11 pagine × 2 viewport** (1280 e 360),
+  **bloccante**, esenzioni «essenziali» **vuote**. La suite E2E passa da 48 a
+  **70**. Il metro applica le quattro eccezioni di `DESIGN.md` §11.6 una per
+  una e non è sostituibile con `target-size` di axe, che applica le stesse
+  eccezioni **a 24px**.
+
+  **Il metodo, prima del codice**: misurare e portare il numero. Il metro crudo
+  dava **436** elementi sotto i 44px su 11 pagine; applicando le eccezioni ne
+  restavano **158** a 1280 e **147** a 360 — ma erano **sette componenti**, non
+  158 problemi, e cinque stavano a 4–8px dalla soglia. Con quel numero in mano
+  la decisione (di Lorenzo) è stata: chiuderli tutti, poi bloccante.
+
+  Tre scelte di metro, tutte scritte nel file: due bersagli **sovrapposti** non
+  sono mai «isolati» (WCAG dà la geometria per bersagli affiancati, e senza
+  quella riga uno `<span>` da 16px *dentro* un pulsante da 34 risultava
+  isolato); i bersagli in `position: fixed` stanno in un **piano a parte**,
+  altrimenti la barra inferiore risulta vicina a qualunque cosa le scorra sotto
+  e il cancello dice cose diverse a ogni passata; l'etichetta di un controllo
+  `sr-only` è il bersaglio vero e va misurata al posto suo.
+
+  **Tre difetti trovati che non erano di dimensione.** (1) Motion mette
+  `tabindex="0"` su qualunque elemento con `whileTap`: in `ConfirmButton`,
+  `SupportButton` e `PostCard` è un'icona *dentro* il pulsante, cioè **42
+  fermate di tabulazione senza nome su `/segnalazioni`**, invisibili ad axe e
+  assenti dal sorgente. (2) e (3) Facendo aprire a `posata()` tutti i
+  `<details>` prima di misurare, il **cancello axe** ha guadagnato copertura e
+  ha trovato due violazioni `serious` **preesistenti** dentro «Vedi le
+  proporzioni e l'elenco» del bilancio: sei `ProgressBar` senza nome
+  accessibile — chiusa rendendo `etichetta` una prop **obbligatoria**, così
+  anche le altre tre chiamate hanno smesso di essere mute — e la percentuale
+  del treemap in `text-muted-2` sotto l'AA su cella tinta.
+
+  **Nuove trappole in `AGENTS.md` §3 (26, 27, 28)**: gli attributi che una
+  libreria di animazione aggiunge da sé; un `<details>` chiuso è un pezzo di
+  pagina che nessun cancello misura; **aggiungere test che fanno l'accesso può
+  sfondare il tetto di 40 tentativi per IP** — l'unico dei tre limiti di
+  `loginAction` che non si azzera al successo. Quindici test caduti insieme,
+  tutti dopo il quarantesimo, tutti con «resto su /login». Risolto **non**
+  alzando il tetto ma facendo riusare la sessione a `login()`: accessi reali
+  per esecuzione da ~45 a **4**, e la suite dura un minuto e venti in meno.
+
+- **2026-08-07 (riordino del backlog e piano fino all'Ondata 11)** — Nessun
+  codice: una ricognizione di tutte le voci non chiuse, un criterio scritto e
+  quattro decisioni prese prima di riscrivere il piano (in `DISCOVERY.md`,
+  P1–P4).
+
+  **Il criterio**: una voce entra nell'ondata corrente se è **definita**,
+  **fattibile** e **onesta** — quest'ultima intesa come «non chiede di
+  inventare fatti su persone o enti reali», ed è la prova che ha escluso
+  *modalità turista* e *servizi quotidiani*.
+
+  **Il piano**: **O8** «Il Comune che legge la città» (analytics operative,
+  alert su trend anomali, moderazione assistita, sette voci recuperate dal
+  limbo e la pipeline degli atti) · **O9** i quattro strumenti con cui il
+  progetto si racconta, in `/progetto/*` a firma della Redazione · **O10** il
+  rifacimento visivo, col perimetro e **i limiti che sono già cancelli** ·
+  **O11** l'archivio pubblico delle delibere.
+
+  **Delibere scongelata**, unica eccezione alle tre categorie tenute ferme.
+  Misurata la fonte prima di pianificare: l'albo di Pistoia gira su un Liferay
+  di terze parti senza API né RSS, e **risponde 403** a chi non sembra un
+  browser — da cui la scelta di spezzarla, pipeline in O8 e superfici in O11.
+
+  Nuovo stato **🅿️ parcheggio** nel piano: dodici voci rinviate, ognuna con la
+  ragione scritta accanto. E cinque righe riallineate ai fatti, trovate durante
+  la ricognizione (Lighthouse e `npm audit` erano dati per «da impostare»
+  mentre sono bloccanti dal 6; R-6 risultava aperta ed era chiusa dal 5; il
+  catalogo portava etichette `O5` di quando le ondate erano cinque).
 
 ## 11. Roadmap
 

@@ -7,8 +7,8 @@
 > proposal, write `ok` — that is enough. Where you don't, overwrite it.
 > Proposals are *suggestions to react to*, never assumptions I will act on silently.
 >
-> **Status:** 8 decisioni dell'ondata 5 + 4 dell'ondata 6 · sezioni A B G I K M risposte
-> **Created:** 2026-07-25 · **Aggiornato:** 2026-07-25 (ondata 6)
+> **Status:** 8 decisioni dell'ondata 5 + 4 dell'ondata 6 + 4 del riordino del backlog · sezioni A B G I K M risposte
+> **Created:** 2026-07-25 · **Aggiornato:** 2026-08-07 (riordino del backlog)
 
 ---
 
@@ -27,6 +27,28 @@ riflesse in `DESIGN.md`, `ARCHITECTURE.md` e `REFERENCES.md`.
 | F1 | Tipografia | **Schibsted Grotesk** + **JetBrains Mono** |
 | H-primitive | Le 16 primitive | **Restano Pistoia.** Alla prova dei fatti non conviene migrarle ai componenti Astryx: la motivazione è per singola primitiva in `ROADMAP.md` ondata 5 e in testa a ciascun file. Da rivalutare quando Astryx esce dalla Beta ed emette le classi stabili `.astryx-*` |
 | J-firma | Componenti-firma | **Tutti e quattro**: matrice di punti, mesh, timeline a punti, sezione narrata |
+
+### Decisioni del riordino del backlog (2026-08-07)
+
+Quattro biforcazioni sciolte **prima** di riscrivere il piano, perché ognuna
+portava a un lavoro diverso. Il piano che ne esce è in `ROADMAP.md` §4.
+
+| # | Domanda | Decisione |
+|---|---|---|
+| P1 | Con quale voce parlano roadmap pubblica, voto, changelog e feedback | **Sezione `/progetto/*` a firma della Redazione della Dashboard di Pistoia**, non del Comune. Lettura pubblica, account per agire. Lo stemma resta dov'è: **la strada del marchio separato non si riapre** (già chiusa due volte, 2026-07-26 e 2026-07-29) |
+| P2 | Che cosa alimenta la roadmap pubblica | **Elenco curato in un modello suo**, con legame esplicito alla voce interna di `ROADMAP.md` e un cancello che pretende quel legame. Il piano vero **non si pubblica per intero**: contiene voci politicamente cariche e giudizi sul Comune |
+| P3 | Delibere: in che forma | **Archivio vero e tutto automatizzato** (gli atti sono già pubblici per legge), **comprensibile per struttura e non per riscrittura**: nessuna frase generata — è ciò che la tiene fuori dalla categoria LLM. L'«oggetto» ufficiale che il Comune scrive già è la riga che il cittadino legge |
+| P4 | Dove cade Delibere nella sequenza | **Spezzata**: la pipeline (lettura, modello, legami, cancello di freschezza) in **O8**, le superfici pubbliche in **O11**, dopo il rifacimento, così nascono nel linguaggio nuovo invece di essere disegnate due volte |
+
+**Perché la pipeline va anticipata.** Il rischio di Delibere non è il disegno:
+è **se il portale si lascia leggere**. Misurato il 2026-08-07: l'albo di
+Pistoia gira su un Liferay di terze parti
+(`pistoia.trasparenza-valutazione-merito.it`), senza API, senza RSS, senza
+endpoint di dati aperti, e **risponde 403 a chi non sembra un browser**. Quindi
+si legge guidando un browser vero — cosa che il progetto sa già fare — e la
+lettura diventa una dipendenza da un portale che può cambiare senza avvisare.
+Da qui il cancello di freschezza: un archivio fermo a tre mesi fa è peggio di
+nessun archivio.
 
 ### Decisioni dell'ondata 6 (2026-07-25) — applicazione alle pagine
 

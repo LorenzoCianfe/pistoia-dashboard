@@ -57,7 +57,14 @@ export function OperaProgressForm({ opere }: { opere: Opera[] }) {
           max={100}
           value={progress}
           onChange={(e) => setProgress(Number(e.target.value))}
-          className="w-full accent-[var(--teal)]"
+          /*
+            `h-11` non ingrossa il cursore — la barra e il pomello li disegna
+            il browser — ma porta a 44px la SCATOLA che riceve il tocco, che
+            senza era alta 16. È il caso che WCAG 2.5.8 esenta come «controllo
+            del browser»: `DESIGN.md` §11.6 non ha adottato quell'eccezione, e
+            qui non serve, perché la scatola si allarga senza toccare l'aspetto.
+          */
+          className="h-11 w-full accent-[var(--teal)]"
         />
       </Field>
 

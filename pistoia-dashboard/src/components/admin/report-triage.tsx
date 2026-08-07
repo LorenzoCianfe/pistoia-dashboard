@@ -33,8 +33,10 @@ type Item = {
   confirmations: number;
 };
 
+// `h-11` sono i 44px di `DESIGN.md` §11.6: era `h-10`, cioè 40 — quattro pixel
+// sotto la soglia, su ogni riga di ogni modulo di questa pagina.
 const selectClass =
-  "h-10 w-full rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm focus-visible:border-teal focus-visible:outline-none";
+  "h-11 w-full rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm focus-visible:border-teal focus-visible:outline-none";
 
 // Statuses an operator can set (flow + side states).
 const SETTABLE = [
@@ -117,7 +119,10 @@ function PhasePhotoForm({ reportId }: { reportId: string }) {
 
   return (
     <details className="mt-2">
-      <summary className="cursor-pointer text-xs font-semibold text-teal hover:underline">
+      {/* `<summary>` è un bersaglio a tutti gli effetti, e questo era alto
+          **16px**: il testo e basta. `min-h-11` gli dà i 44 di §11.6 senza
+          cambiare l'aspetto della riga, che resta una sola parola cliccabile. */}
+      <summary className="inline-flex min-h-11 cursor-pointer items-center text-xs font-semibold text-teal hover:underline">
         Aggiungi foto durante/dopo
       </summary>
       <form action={action} className="mt-2 space-y-2">
@@ -127,13 +132,15 @@ function PhasePhotoForm({ reportId }: { reportId: string }) {
           <p className="text-xs font-medium text-[var(--red)]">{state.error}</p>
         ) : null}
         <div className="flex flex-wrap items-center gap-2">
-          <select name="phase" defaultValue="durante" className={selectClass + " !h-9 !w-auto"} aria-label="Fase">
+          <select name="phase" defaultValue="durante" className={selectClass + " !w-auto"} aria-label="Fase">
             <option value="durante">Durante i lavori</option>
             <option value="dopo">A intervento concluso</option>
           </select>
           <label
             htmlFor={`phase-photo-${reportId}`}
-            className="inline-flex cursor-pointer items-center gap-1.5 rounded-pill border border-border-strong px-3 py-1.5 text-xs font-medium transition-colors hover:border-teal hover:text-teal"
+            /* L'`<input type=file>` è `sr-only`: il bersaglio VERO è questa
+               etichetta, quindi i 44px di §11.6 vanno qui. */
+            className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-pill border border-border-strong px-3 py-1.5 text-xs font-medium transition-colors hover:border-teal hover:text-teal"
           >
             {busy ? <Loader2 size={13} className="animate-spin" /> : <ImagePlus size={13} />}
             {photo ? "Cambia foto" : "Scegli foto"}
@@ -146,16 +153,23 @@ function PhasePhotoForm({ reportId }: { reportId: string }) {
             className="sr-only"
           />
           {photo ? (
-            <span className="relative inline-block">
+            /*
+              La pastiglia d'angolo è sparita, e non per gusto: era un
+              bersaglio da **20px** appiccicato a una miniatura da 40, cioè un
+              caso in cui i 44px di §11.6 non ci stanno per costruzione. Un
+              comando accanto, con la sua parola, li rispetta e per giunta si
+              legge — in uno strumento di redazione una «X» minuscola è la
+              forma peggiore per un'azione distruttiva.
+            */
+            <span className="inline-flex items-center gap-1.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={photo} alt="Anteprima" className="h-10 rounded border border-border object-cover" />
               <button
                 type="button"
                 onClick={() => setPhoto(null)}
-                aria-label="Rimuovi foto"
-                className="absolute -right-2 -top-2 grid size-5 place-items-center rounded-full bg-surface shadow ring-1 ring-border hover:text-[var(--red)]"
+                className="inline-flex min-h-11 items-center gap-1 rounded-pill px-2.5 text-xs font-medium text-muted-2 hover:text-[var(--red)]"
               >
-                <X size={11} />
+                <X size={13} /> Rimuovi foto
               </button>
             </span>
           ) : null}
@@ -164,7 +178,7 @@ function PhasePhotoForm({ reportId }: { reportId: string }) {
           name="caption"
           maxLength={160}
           placeholder="Didascalia (facoltativa)"
-          className="h-9 w-full rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-xs placeholder:text-muted-2 focus-visible:border-teal focus-visible:outline-none"
+          className="h-11 w-full rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-xs placeholder:text-muted-2 focus-visible:border-teal focus-visible:outline-none"
         />
         <SubmitButton size="sm" pendingText="Carico…" disabled={!photo || busy}>
           Pubblica foto

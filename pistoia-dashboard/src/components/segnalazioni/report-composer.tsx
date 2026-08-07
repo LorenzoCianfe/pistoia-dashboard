@@ -232,7 +232,15 @@ export function ReportComposer({
         />
       </Field>
 
-      <label className="flex items-center gap-2 text-sm text-muted">
+      {/*
+        `min-h-11` sull'ETICHETTA, non sul quadratino: il bersaglio vero di una
+        casella è la riga intera — cliccare il testo la spunta — e quella riga
+        era alta **20px**. Il quadratino da 16 lo disegna il browser e non si
+        tocca: è il caso che WCAG 2.5.8 esenta come «controllo del browser» e
+        che `DESIGN.md` §11.6 **non** ha adottato, quindi qui i 44 si prendono
+        allargando la riga.
+      */}
+      <label className="flex min-h-11 items-center gap-2 text-sm text-muted">
         <input
           type="checkbox"
           name="anonymous"
@@ -242,7 +250,7 @@ export function ReportComposer({
       </label>
 
       {/* Urgenza con validazione del moderatore (A1 §8) */}
-      <label className="flex items-start gap-2 text-sm text-muted">
+      <label className="flex min-h-11 items-start gap-2 py-1 text-sm text-muted">
         <input
           type="checkbox"
           name="urgent"

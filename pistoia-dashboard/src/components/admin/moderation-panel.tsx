@@ -83,7 +83,7 @@ export function ModerationPanel({
                       onClick={() => run(() => hideCommentAction(c.commentId), () =>
                         setFlagged((l) => l.filter((x) => x.commentId !== c.commentId)),
                       )}
-                      className="inline-flex items-center gap-1 rounded-pill border border-border px-2.5 py-1 text-xs font-semibold hover:text-[var(--red)] disabled:opacity-60"
+                      className="inline-flex min-h-11 items-center gap-1 rounded-pill border border-border px-2.5 py-1 text-xs font-semibold hover:text-[var(--red)] disabled:opacity-60"
                     >
                       <EyeOff size={13} /> Nascondi
                     </button>
@@ -94,7 +94,7 @@ export function ModerationPanel({
                         type="button"
                         disabled={pending}
                         onClick={() => run(() => suspendUserAction(c.authorId!, 7))}
-                        className="inline-flex items-center gap-1 rounded-pill border border-border px-2.5 py-1 text-xs font-semibold hover:text-[var(--amber)] disabled:opacity-60"
+                        className="inline-flex min-h-11 items-center gap-1 rounded-pill border border-border px-2.5 py-1 text-xs font-semibold hover:text-[var(--amber)] disabled:opacity-60"
                       >
                         <Clock size={13} /> Sospendi 7gg
                       </button>
@@ -102,7 +102,7 @@ export function ModerationPanel({
                         type="button"
                         disabled={pending}
                         onClick={() => run(() => banUserAction(c.authorId!))}
-                        className="inline-flex items-center gap-1 rounded-pill border border-border px-2.5 py-1 text-xs font-semibold hover:text-[var(--red)] disabled:opacity-60"
+                        className="inline-flex min-h-11 items-center gap-1 rounded-pill border border-border px-2.5 py-1 text-xs font-semibold hover:text-[var(--red)] disabled:opacity-60"
                       >
                         <Ban size={13} /> Banna
                       </button>
@@ -114,7 +114,7 @@ export function ModerationPanel({
                     onClick={() => run(() => dismissCommentReportsAction(c.commentId), () =>
                       setFlagged((l) => l.filter((x) => x.commentId !== c.commentId)),
                     )}
-                    className="inline-flex items-center gap-1 rounded-pill px-2.5 py-1 text-xs font-semibold text-muted-2 hover:text-foreground disabled:opacity-60"
+                    className="inline-flex min-h-11 items-center gap-1 rounded-pill px-2.5 py-1 text-xs font-semibold text-muted-2 hover:text-foreground disabled:opacity-60"
                   >
                     <X size={13} /> Ignora
                   </button>
@@ -152,7 +152,7 @@ export function ModerationPanel({
             value={source}
             onChange={(e) => setSource(e.target.value)}
             aria-label="Segnalazione duplicata"
-            className="h-10 min-w-0 rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm"
+            className="h-11 min-w-0 rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm"
           >
             <option value="">Duplicata…</option>
             {openReports.map((r) => (
@@ -165,7 +165,7 @@ export function ModerationPanel({
             value={target}
             onChange={(e) => setTarget(e.target.value)}
             aria-label="Segnalazione principale"
-            className="h-10 min-w-0 rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm"
+            className="h-11 min-w-0 rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm"
           >
             <option value="">Da unire a…</option>
             {openReports.map((r) => (
@@ -212,7 +212,7 @@ export function ModerationPanel({
             onChange={(e) => setNewWord(e.target.value)}
             placeholder="Aggiungi un termine…"
             aria-label="Nuova parola bloccata"
-            className="h-10 min-w-0 flex-1 rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm"
+            className="h-11 min-w-0 flex-1 rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3 text-sm"
           />
           <button
             type="button"
@@ -229,7 +229,7 @@ export function ModerationPanel({
                 () => setNewWord(""),
               )
             }
-            className="inline-flex items-center gap-1 rounded-pill border border-border-strong px-3 py-2 text-xs font-semibold disabled:opacity-50"
+            className="inline-flex min-h-11 items-center gap-1 rounded-pill border border-border-strong px-3 py-2 text-xs font-semibold disabled:opacity-50"
           >
             <Plus size={13} /> Aggiungi
           </button>
@@ -237,9 +237,16 @@ export function ModerationPanel({
         {words.length > 0 ? (
           <ul className="mt-3 flex flex-wrap gap-2">
             {words.map((w) => (
+              /*
+                La pastiglia è alta 44 e il comando di rimozione è un quadrato
+                pieno da 44, invece della «X» nuda da 12px che era il bersaglio
+                più piccolo dell'intera pagina. Sì, la pastiglia diventa larga:
+                è il prezzo di un comando distruttivo che si deve poter
+                centrare col pollice.
+              */
               <li
                 key={w.id}
-                className="inline-flex items-center gap-1.5 rounded-pill bg-surface-2 px-2.5 py-1 text-xs"
+                className="inline-flex min-h-11 items-center gap-1 rounded-pill bg-surface-2 py-1 pl-3 pr-1 text-xs"
               >
                 {w.word}
                 {!w.id.startsWith("tmp-") ? (
@@ -250,7 +257,7 @@ export function ModerationPanel({
                     onClick={() => run(() => removeBlockedWordAction(w.id), () =>
                       setWords((l) => l.filter((x) => x.id !== w.id)),
                     )}
-                    className="text-muted-2 hover:text-[var(--red)]"
+                    className="grid size-11 shrink-0 place-items-center rounded-full text-muted-2 hover:text-[var(--red)]"
                   >
                     <X size={12} />
                   </button>
@@ -288,7 +295,7 @@ export function ModerationPanel({
                   onClick={() => run(() => liftUserSanctionAction(u.id), () =>
                     setPeople((l) => l.filter((x) => x.id !== u.id)),
                   )}
-                  className="rounded-pill border border-border px-2.5 py-1 text-xs font-semibold hover:text-teal disabled:opacity-60"
+                  className="inline-flex min-h-11 shrink-0 items-center rounded-pill border border-border px-2.5 py-1 text-xs font-semibold hover:text-teal disabled:opacity-60"
                 >
                   Revoca
                 </button>

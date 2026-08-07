@@ -23,6 +23,7 @@
     "pretest:e2e": "node -e \"require('node:fs').rmSync('.next',{recursive:true,force:true})\"",
     "test:e2e": "playwright test",
     "a11y": "playwright test accessibilita",
+    "bersagli": "playwright test bersagli",
     "lighthouse": "npx --yes @lhci/cli@0.15.1 autorun",
     "shots": "node scripts/shots.mjs",
     "rotte": "node scripts/rotte.mjs",

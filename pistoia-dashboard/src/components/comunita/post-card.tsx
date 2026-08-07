@@ -221,7 +221,10 @@ export function PostCard({
             like.liked ? "text-[var(--red)]" : "text-muted hover:text-foreground",
           )}
         >
-          <motion.span whileTap={{ scale: 0.8 }}>
+          {/* `tabIndex={-1}`: vedi `segnalazioni/confirm-button.tsx`. Senza,
+              Motion rende focalizzabile l'icona e aggiunge una fermata di
+              tabulazione senza nome dentro il pulsante. */}
+          <motion.span tabIndex={-1} whileTap={{ scale: 0.8 }}>
             <Heart size={18} className={cn(like.liked && "fill-[var(--red)]")} />
           </motion.span>
           {formatNumber(like.count)}

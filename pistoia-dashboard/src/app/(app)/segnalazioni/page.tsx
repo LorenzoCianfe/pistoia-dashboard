@@ -199,7 +199,10 @@ function FilterChip({
     <Link
       href={href}
       className={cn(
-        "whitespace-nowrap rounded-pill border px-3.5 py-1.5 text-sm font-medium transition-colors",
+        // `min-h-11`: i 44px di `DESIGN.md` §11.6. Erano 34, e l'eccezione
+        // della spaziatura non li copriva — la riga va a capo su `sm:flex-wrap`
+        // e le due file si avvicinano abbastanza da toccarsi.
+        "inline-flex min-h-11 items-center whitespace-nowrap rounded-pill border px-3.5 py-1.5 text-sm font-medium transition-colors",
         active
           ? "border-transparent bg-teal-soft text-teal"
           : "border-border-strong bg-surface text-muted hover:text-foreground",

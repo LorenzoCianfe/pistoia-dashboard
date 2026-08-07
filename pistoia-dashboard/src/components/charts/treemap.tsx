@@ -164,7 +164,15 @@ export function Treemap({
                   <span className="block truncate text-sm font-bold tabular-nums">
                     {format(d.value)}
                   </span>
-                  <span className="text-[11px] font-medium text-muted-2 tabular-nums">
+                  {/* E la percentuale segue l'importo, per la STESSA ragione
+                      scritta qui sopra: `text-muted-2` è tarato sulla tela, e
+                      su una cella tinta al 34% di accento scende sotto l'AA
+                      (misurato dal cancello axe il 2026-08-07, `serious`). È il
+                      corollario di `DESIGN.md` §4 — un token che passa per tre
+                      centesimi non sopravvive a nessuno sfondo tinto. La
+                      gerarchia qui la portano la dimensione e il peso, non il
+                      colore: 11px medium contro 14px bold. */}
+                  <span className="text-[11px] font-medium tabular-nums">
                     {pct}%
                   </span>
                 </p>
