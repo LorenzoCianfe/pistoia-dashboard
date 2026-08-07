@@ -6,7 +6,7 @@
 >
 > **Leggilo per intero all'inizio di ogni sessione, prima di toccare codice.**
 >
-> Aggiornato: 2026-08-07 (Fase C · cancello dei 44px)
+> Aggiornato: 2026-08-07 (Fase C · cancello dei 44px, poi cancello della produzione)
 
 ---
 
@@ -499,6 +499,7 @@ npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
 npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
 node scripts/shots.mjs --simple --width=360   # modalità semplice, viewport minima
 npm run rotte          # tutte le rotte rispondono e rendono contenuto? (56 al 2026-08-05)
+npm run produzione     # il sito DEPLOYATO si monta davvero? — dopo ogni deploy, §8
 npm run db:reset       # ricrea il DB e ripopola i dati dimostrativi
 
 python scripts/pdftext.py documento.pdf              # testo di un PDF
@@ -746,6 +747,13 @@ rivelano allo scroll. Uno screenshot troppo presto, o senza scorrere la pagina,
 fotografa grafici a metà o vuoti e sembra un bug che non c'è. `scripts/shots.mjs`
 gestisce già entrambe le cose.
 
+**Tutte queste caselle parlano dello SVILUPPO, e nessuna della produzione.** Non
+è una svista ma il confine del capitolo: una modifica è finita prima che il
+deploy esista. Il difetto del 2026-08-05 — la demo che nessun browser riusciva
+ad aprire — è vissuto per mesi sotto una fila di cancelli verdi proprio perché
+tutti guardavano `localhost`. Il sito deployato ha il proprio cancello,
+`npm run produzione`, e si lancia **dopo il deploy**: §8.
+
 ---
 
 ## 6. Stile del codice
@@ -815,24 +823,33 @@ lancia a mano, dall'interfaccia di Coolify o via API.
 > `ERR_CERT_AUTHORITY_INVALID`. Difetto **preesistente dalla Fase 0**, mai visto
 > da nessun cancello perché `rotte` e `shots` girano contro lo sviluppo.
 >
-> Dopo ogni deploy, quindi, **due controlli**: il marcatore della tavolozza —
+> Dopo ogni deploy, quindi, **un cancello**: `npm run produzione`.
 >
-> ```bash
-> B=http://pistoia.192.168.50.173.sslip.io
-> for c in $(curl -s $B/login | grep -oE '/_next/static/[^"]+\.css' | sort -u); do curl -s $B$c | grep -oE '0e9f92|0a756b'; done | sort | uniq -c
-> ```
+> Fino al 2026-08-07 erano tre controlli da fare a mano, e una voce a mano non è
+> una garanzia — nessuno la rispunta. Adesso `scripts/produzione.mjs` apre il
+> sito deployato in un **browser vero** (è il punto: `curl` vedeva un sito sano),
+> e ogni cosa che pretende difende un guasto già pagato:
 >
-> (`0a756b` = versione nuova viva) — **e l'apertura in un browser vero**, dove
-> `document.querySelector('main').innerText.length` deve dare migliaia di
-> caratteri. Se dà ~183, la pagina è ferma sul proprio «Caricamento in corso» e
-> il deploy **non** è a posto. Attenzione a `/login`: lì `main` ha ~228
-> caratteri **anche quando è sana**, perché è solo il modulo — misura una
-> pagina di contenuto, non quella.
+> | Che cosa pretende | Il guasto che difende |
+> |---|---|
+> | `main` sopra una soglia **per pagina**, su pagine di contenuto | La demo cieca: HTML giusto, `main` fermo a ~183 caratteri sul «Caricamento in corso». ⚠️ Su `/login` `main` ha **228** caratteri anche quando è sana (misurato), perché è solo il modulo: lì il cancello chiede invece che **il modulo ci sia** |
+> | L'**atterraggio** sull'indirizzo chiesto | I guard qui reindirizzano invece di rifiutare: una pagina pubblica finita al login risponderebbe 200, con `<h1>` e `main` pieno |
+> | Accesso, poi **due** rotte protette di seguito | Il cookie con `Secure` su un sito in HTTP: il login riusciva e ogni navigazione tornava al login. Un controllo che si ferma all'accesso non lo vede |
+> | Zero errori JavaScript e zero richieste fallite | È la *causa* accanto al sintomo. I prelievi RSC annullati (`net::ERR_ABORTED`, fino a **26** su una pagina sana) sono esclusi, altrimenti il cancello nascerebbe rosso |
+> | Il marcatore della **tavolozza** | «Ho lanciato il deploy e sto guardando la versione di prima». Le due tinte si leggono dal tema compilato, non sono cucite nello script |
 >
-> E **da autenticati**: il 2026-08-05 il login riusciva e ogni navigazione
-> successiva tornava al login, perché il cookie di sessione aveva `Secure` su un
-> sito servito in HTTP. Il controllo giusto è: accedi, apri `/bilancio`, e
-> pretendi di restare su `/bilancio`.
+> **Un accesso mancato non salta le pagine protette: le conta rosse.** Un
+> cancello che esce 0 quando non ha verificato niente non è un cancello (§3,
+> Fase A/B, 3) — ed è esattamente il difetto che `shots` aveva.
+>
+> **Non è in CI, e non è una dimenticanza**: l'indirizzo è un IP privato in rete
+> locale, che i runner di GitHub non raggiungono — la stessa ragione per cui non
+> c'è auto-deploy sul push. Si lancia da questa macchina, dopo il deploy.
+>
+> **Che cosa NON prova, dichiarato:** *quale versione* sia in produzione. Il
+> marcatore della tavolozza parla solo quando la tavolozza cambia. Un marcatore
+> vero vorrebbe lo SHA del commit portato dentro l'immagine, che è una decisione
+> di deploy e non di script.
 >
 > **Se il deploy fallisce con `exit code 137`, è l'OOM killer, non il codice.**
 > Visto il 2026-08-05 su un commit di sola documentazione: `next build` non ci

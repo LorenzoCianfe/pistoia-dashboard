@@ -5,6 +5,26 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.33.0] — 2026-08-07 · Il cancello sulla produzione
+
+> Il primo cancello che guarda il **sito deployato** invece di `localhost`. Era l'ultima voce aperta della traccia «Qualità continua» ([ROADMAP.md](ROADMAP.md) §4); il perché di ogni controllo è in [AGENTS.md](AGENTS.md) §8.
+
+### Aggiunto
+- **`npm run produzione` (`scripts/produzione.mjs`)** — un browser vero contro il sito deployato, **sette controlli**, da lanciare dopo ogni deploy. Colma un buco vecchio quanto il progetto: dodici cancelli verdi non dicevano niente su ciò che vede chi apre l'indirizzo pubblico, perché **`rotte` e `shots` girano contro lo sviluppo**. È il motivo per cui il 2026-08-05 una demo che nessun browser riusciva a montare — `upgrade-insecure-requests` faceva fallire ogni script su un sito servito in HTTP — è rimasta così **dalla Fase 0**, rispondendo 200 e servendo l'HTML giusto per mesi.
+- **La soglia sui caratteri è per pagina, e scritta sotto il valore misurato.** `/metodologia` 17.140 → 8.000 · `/valutazioni` 1.826 → 900 · `/bilancio` 2.695 → 1.300 · `/segnalazioni` 10.121 → 5.000. Il margine è **la metà**, molto più largo dei cinque punti di Lighthouse, e la ragione è dichiarata nel file: il testo di una pagina cambia coi contenuti — la produzione può essere indietro di commit, il seed cresce, e il footer è uscito da `<main>` il 2026-08-06 — mentre il guasto che il cancello cerca porta `main` a ~183 caratteri, cioè a un ordine di grandezza da qualunque soglia.
+- **`/login` è fuori dal conteggio, di proposito.** Misurato in produzione: `main` ha **228 caratteri anche quando è sana**, perché è solo il modulo. Una soglia che regga per `/login` non distinguerebbe una pagina sana da una ferma sul «Caricamento in corso». Lì il cancello chiede l'unica cosa che conta: **il modulo c'è e si può compilare**.
+- **All'accesso seguono due rotte protette, non una.** Il 2026-08-05 il login riusciva e ogni navigazione successiva tornava al login, perché il cookie di sessione aveva `Secure` su un sito in HTTP: un controllo che si ferma all'accesso non lo vede.
+- **Il marcatore della tavolozza si legge dal tema compilato**, non è cucito nello script: `--color-accent: light-dark(#0A756B, #2FD0BD)` deve comparire nei fogli serviti. Controllo debole e dichiarato tale — parla solo quando la tavolozza cambia — ma il caso in cui parla è quello grosso, «ho lanciato il deploy e sto guardando la versione di prima».
+
+### Corretto
+- **I tre controlli post-deploy di `AGENTS.md` §8 erano voci da spuntare a mano**, e una voce a mano non è una garanzia: nessuno la rispunta. Adesso sono un comando.
+
+### Note
+- **Non è in CI, e il file lo dichiara.** L'indirizzo del deploy è un IP privato in rete locale (`sslip.io`): i runner di GitHub non lo raggiungono — la stessa ragione per cui non c'è auto-deploy sul push. Un job che ci provasse fallirebbe sempre, o verrebbe scritto tollerante e diventerebbe un cancello che non guarda niente.
+- **Provato rosso prima di dichiararlo verde**, che è l'unica prova che un cancello funzioni: host irraggiungibile (7 controlli su 7 rossi), sito sbagliato (7 su 7, con `stato 404 · nessun <main> in pagina`) e accesso fallito (3 su 7) escono tutti con codice **1**. Un accesso mancato **conta le pagine protette come rosse invece di saltarle**: uscire 0 senza aver verificato niente è il difetto che `shots` aveva, e che aveva prodotto una «revisione visiva» della sola pagina di login.
+- **I prelievi RSC annullati non sono guasti.** Next preleva in anticipo le rotte vicine e annulla quando si naviga altrove: fino a **26** `net::ERR_ABORTED` su una pagina sana. Contarli avrebbe fatto nascere il cancello rosso, cioè inutile. Il guasto vero ha un'altra firma — `net::ERR_CERT_AUTHORITY_INVALID` — e passa.
+- **Che cosa non prova, dichiarato**: *quale versione* sia in produzione. Un marcatore vero vorrebbe lo SHA del commit dentro l'immagine, che è una decisione di deploy e non di script.
+
 ## [0.32.0] — 2026-08-07 · Il backlog riordinato, e il piano fino all'Ondata 11
 
 > Nessun codice: è un riordino del piano. Il dettaglio delle quattro decisioni che l'hanno guidato è in [DISCOVERY.md](DISCOVERY.md), il piano in [ROADMAP.md](ROADMAP.md) §4.

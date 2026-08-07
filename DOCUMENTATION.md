@@ -909,6 +909,41 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   mentre sono bloccanti dal 6; R-6 risultava aperta ed era chiusa dal 5; il
   catalogo portava etichette `O5` di quando le ondate erano cinque).
 
+- **2026-08-07 (il cancello sulla produzione)** — `npm run produzione`
+  (`scripts/produzione.mjs`): il primo cancello che apre il **sito deployato**
+  invece di `localhost`. Ultima voce aperta della traccia «Qualità continua».
+
+  **Il buco che colma è vecchio quanto il progetto.** `rotte` e `shots` girano
+  contro lo sviluppo, quindi dodici cancelli verdi non dicevano niente su ciò
+  che vede chi apre l'indirizzo pubblico: il 2026-08-05 la demo rispondeva 200
+  e serviva l'HTML giusto, ma nessun browser riusciva a montarla —
+  `upgrade-insecure-requests` promuoveva ogni script a `https://` su un sito in
+  HTTP — e ci era rimasta **dalla Fase 0**.
+
+  **Misurato prima di scegliere le soglie**, e la misura ha cambiato il piano
+  due volte. Primo: `main` su `/login` dà **228 caratteri anche da sana**
+  (perché è solo il modulo), quindi una soglia unica per tutte le pagine
+  dovrebbe stare sotto quel valore e non distinguerebbe più niente — le soglie
+  sono **per pagina**, ciascuna alla metà del valore misurato
+  (`/metodologia` 17.140 → 8.000, `/valutazioni` 1.826 → 900, `/bilancio`
+  2.695 → 1.300, `/segnalazioni` 10.121 → 5.000), e `/login` è fuori dal
+  conteggio: lì si chiede che **il modulo ci sia**. Secondo: una pagina sana
+  produce fino a **26 richieste fallite** — sono prelievi RSC annullati
+  (`net::ERR_ABORTED`) — quindi «zero richieste fallite» andava scritto
+  escludendoli, o il cancello sarebbe nato rosso.
+
+  **All'accesso seguono due rotte protette**, non una: il guasto del cookie
+  `Secure` su un sito in HTTP si vedeva solo alla navigazione successiva.
+
+  **Non è in CI**, e il file lo dichiara invece di tacerlo: l'indirizzo è un IP
+  privato in rete locale, che i runner di GitHub non raggiungono. Un job che ci
+  provasse fallirebbe sempre, o verrebbe scritto tollerante — cioè diventerebbe
+  un cancello che non guarda niente.
+
+  **Provato rosso prima di dichiararlo verde**: host irraggiungibile 7 rossi su
+  7, sito sbagliato 7 su 7, accesso fallito 3 su 7, tutti con uscita 1. Un
+  accesso mancato conta le pagine protette come rosse **invece di saltarle**.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.

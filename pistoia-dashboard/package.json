@@ -27,6 +27,7 @@
     "lighthouse": "npx --yes @lhci/cli@0.15.1 autorun",
     "shots": "node scripts/shots.mjs",
     "rotte": "node scripts/rotte.mjs",
+    "produzione": "node scripts/produzione.mjs",
     "typecheck": "tsc --noEmit"
   },
   "browserslist": [
