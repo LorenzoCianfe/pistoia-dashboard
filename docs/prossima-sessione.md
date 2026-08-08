@@ -33,7 +33,7 @@ Leggi prima, in quest'ordine:
 
 ## Stato
 
-`main`, commit **`22ce8ab`**, pushato, **CI verde su tre job bloccanti**.
+`main`, commit **`1d38a3d`** (il lavoro è `22ce8ab`), pushato, **CI verde su tre job bloccanti**.
 
 - typecheck · lint · **247 unit** · **`rotte` 66, 0 con problemi** ·
   **116/116 E2E** (26 di merito + **42 a11y** + **42 bersagli** + 6 di porte) ·
@@ -45,10 +45,12 @@ Leggi prima, in quest'ordine:
   `graphify` aggiornato, albero **pulito**.
 - **`package.json` allineato al CHANGELOG: 0.40.0.** Si muovono insieme.
 
-**PRODUZIONE: `67a94fb`, indietro di TRE commit** (misurato:
-`git rev-list --count 67a94fb..main`). Il cancello dirà «indietro di 3» ed è
-corretto. ⚠️ Ogni deploy costa **2,82GB di disco** e il disco è da 40GB: prima
-di lanciarlo, `ssh homeserver "df -h /"`. **Il deploy lo lancia Lorenzo.**
+**PRODUZIONE: `67a94fb`, indietro di QUATTRO commit** — due di lavoro
+(`22ce8ab` le code, `e589d67` il taglio) e due di sola documentazione.
+Misurato con `git rev-list --count 67a94fb..main`; il cancello dirà «indietro
+di 4» ed è corretto. ⚠️ Ogni deploy costa **2,82GB di disco** e il disco è da
+40GB: prima di lanciarlo, `ssh homeserver "df -h /"`.
+**Il deploy lo lancia Lorenzo, e non si lancia senza chiederglielo.**
 
 ## Che cosa è stato fatto oggi
 
