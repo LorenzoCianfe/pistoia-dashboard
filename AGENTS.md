@@ -61,7 +61,7 @@ L'app vive in `pistoia-dashboard/`. La documentazione vive nella radice.
 
 ## 3. Design system — le regole che si sbagliano più spesso
 
-> §3 raccoglie **trentanove trappole già pagate**. Sono raggruppate per ondata
+> §3 raccoglie **quaranta trappole già pagate**. Sono raggruppate per ondata
 > solo perché è così che sono emerse: leggile tutte, valgono tutte ancora.
 
 **Prima di tutto: Astryx è la sorgente dei TOKEN, non lo strato di primitive.**
@@ -628,6 +628,39 @@ introdotte suonava giusto ad alta voce.
    «tagliato». È la stessa famiglia dell'affordance affidata all'`:hover`: una
    categoria che oggi si trova **solo guardando**, e che varrebbe un cancello suo
    — *nessun controllo esce dal proprio contenitore*.
+
+### `undefined` in un `where` di Prisma non è «nessuna riga»: è «nessun filtro» (2026-08-08)
+
+Trovata dalla review «lenti mancanti». **Una Server Action è un endpoint HTTP
+pubblico**: chi conosce il suo id — sta nel bundle client — può invocarla con
+qualunque argomento, e la firma TypeScript non vale al confine di rete. Gli
+argomenti *legati* con `.bind()` Next li cifra, ma l'azione resta invocabile
+per conto proprio.
+
+Da sola sarebbe una nota da manuale. Diventa una trappola perché si incrocia
+con Prisma, che **lascia cadere i campi indefiniti** dal `where`. Misurato sul
+database di sviluppo, in una transazione ribaltata:
+
+```
+deleteMany({ where: { token: "non-esiste" } })  → cancellate 0
+deleteMany({ where: { token: undefined     } })  → cancellate 3 su 3
+```
+
+La seconda riga **non dà errore e non lascia traccia**. `rimuoviPromemoriaAction`
+— senza sessione, come tutte le azioni a token — bastava invocarla senza
+argomenti per svuotare l'intera tabella dei promemoria.
+
+⚠️ **Le sorelle non si comportano allo stesso modo, e questo confonde la
+diagnosi.** `findUnique({ where: { confermaToken: undefined } })` **rifiuta**
+con `PrismaClientValidationError`: lì lo stesso difetto è un 500, non una
+cancellazione. Chi provasse la famiglia partendo da `findUnique` concluderebbe
+che Prisma si difende da sé.
+
+La regola: **gli argomenti di una Server Action si guardano PRIMA della query,
+non dentro** (`lib/token.ts`: `tokenValido`, `idValido`). Vale per i token,
+per gli id nudi e per gli enum — `toggleFollowAction` accettava qualunque
+stringa come `targetType` perché `FollowTarget` è un tipo, e un tipo non
+attraversa la rete.
 
 ### La preferenza di movimento letta in fase di render (2026-08-08)
 

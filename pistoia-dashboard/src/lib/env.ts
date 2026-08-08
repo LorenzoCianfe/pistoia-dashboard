@@ -67,6 +67,26 @@ const schema = z
     // Origini extra ammesse per le Server Action dietro reverse proxy
     // (lista separata da virgole, es. "dashboard.pistoia.it").
     SERVER_ACTIONS_ALLOWED_ORIGINS: z.string().optional(),
+
+    /*
+      L'origine assoluta con cui il sito parla di sé nelle MAIL (es.
+      "https://dashboard.pistoia.it"). Quando c'è, i link di conferma e di
+      revoca si costruiscono da qui e non dagli header della richiesta.
+
+      ⚠️ Perché non basta leggere l'header: `Host` e `X-Forwarded-Host` li
+      scrive chi chiama. Chi lasciasse una valutazione con l'indirizzo di
+      un'altra persona e un host forgiato le farebbe arrivare una mail VERA,
+      dal mittente vero, con il link di conferma puntato al **proprio**
+      server — e quel link porta il token che conferma o cancella la
+      valutazione. È l'avvelenamento del reset password applicato all'unica
+      scrittura senza account della piattaforma (SECURITY.md §4).
+
+      Resta opzionale di proposito: in sviluppo l'host cambia (3000, 3939, la
+      rete locale) e imporla renderebbe il progetto scomodo senza guadagno.
+      Finché non è impostata in produzione il difetto resta aperto, ed è
+      scritto in ROADMAP con la condizione che lo chiude.
+    */
+    APP_ORIGIN: z.url().optional(),
   })
   .refine(
     (e) =>

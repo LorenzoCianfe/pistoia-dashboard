@@ -38,7 +38,7 @@ Leggi prima, in quest'ordine:
 `git log --oneline -1` — scritta così perché questa riga non invecchi a ogni
 commit, come ha già fatto due volte.
 
-- typecheck · lint · **247 unit** · **`rotte` 66, 0 con problemi** ·
+- typecheck · lint · **253 unit** · **`rotte` 66, 0 con problemi** ·
   **116/116 E2E** (26 di merito + **42 a11y** + **42 bersagli** + 6 di porte) ·
   `npm audit` 0 vulnerabilità · Lighthouse con soglie, bloccante.
 - `shots` **0 in tutti e due i regimi** (normale e `--simple --width=360`),
@@ -46,7 +46,7 @@ commit, come ha già fatto due volte.
 - Stack: **Next 16.3.0**, **Prisma 7.9.1**, React 19.2.4.
 - Dev server **spento**, porte 3000/3939 libere, seed **riseminato**,
   `graphify` aggiornato, albero **pulito**.
-- **`package.json` allineato al CHANGELOG: 0.40.0.** Si muovono insieme.
+- **`package.json` allineato al CHANGELOG: 0.41.0.** Si muovono insieme.
 
 **PRODUZIONE: `67a94fb`, indietro di QUATTRO commit** — due di lavoro
 (`22ce8ab` le code, `e589d67` il taglio) e due di sola documentazione.
@@ -121,10 +121,22 @@ rotte sondate con la preferenza attiva, **0 con errori**.
 Il sintomo si vedeva **solo con `prefers-reduced-motion` attivo**. Il debito 8
 qui sotto è stato riscritto: la sua premessa era falsa.
 
-### 2. La review «lenti mancanti»
+### 2. La review «lenti mancanti» — ✅ CHIUSA il 2026-08-08
 
-Saltata dall'11/06 e mai ripresa: **sicurezza, correttezza della cache, idiomi
-Next 16**. È l'unica voce della qualità continua che non ha mai avuto un giro.
+Tre lenti, e la più grossa non era dove ci si aspettava: **gli argomenti di una
+Server Action sono input non fidato**, perché l'azione è un endpoint HTTP
+pubblico e la firma TypeScript non vale al confine di rete. Incrociato con
+Prisma, che lascia cadere i campi indefiniti da un `where`, diventava
+`deleteMany({ where: { token: undefined } })` = **cancella tutto** (misurato: 3
+righe su 3, senza errore) su un'azione **senza sessione**. Dettaglio in
+`AGENTS.md` §3 e `SECURITY.md` §3; chiuso con `lib/token.ts` davanti alle query.
+
+Le altre due: l'origine dei link nelle mail veniva dagli header (debito 12 qui
+sotto) e le due rotte API non dicevano nulla sulla propria conservabilità
+(chiuso: `private, no-store` più `Vary: Cookie`).
+
+**Il resto ha retto**: 69 azioni censite, 66 rotte tutte dinamiche, `cachedShared`
+pulita, idiomi Next 16 già a posto tranne `unstable_cache` (debito 14).
 
 ### 3. Il P-3 della pagella e il censimento delle linee programmatiche
 
@@ -158,7 +170,8 @@ letture → sul cruscotto finché ci stanno.
    `.github/workflows/ci.yml`): si aggiornano insieme.
 5. **Le soglie Lighthouse stanno cinque punti sotto il minimo osservato.** Se i
    numeri salgono, la leva è **alzarle**, mai toglierle.
-6. **La review «lenti mancanti»** è il Lavoro 2 qui sopra.
+6. ✅ **La review «lenti mancanti» è stata fatta** (2026-08-08, Lavoro 2 qui
+   sopra). Ciò che ha lasciato aperto sono i debiti **12, 13 e 14**.
 7. **Il cancello della produzione SCRIVE nel database dimostrativo**: accede
    come `cittadino@` e atterra su `/la-mia-citta`, dove `CampagnaHome` registra
    la sollecitazione al montaggio; in produzione il seed non si rilancia.
@@ -192,6 +205,29 @@ letture → sul cruscotto finché ci stanno.
     una sessione passata, e `shots` non le rigenera più. Una revisione visiva che
     le apra guarderebbe una proposta morta. **Condizione: si cancellano al primo
     giro di revisione visiva della pagella.**
+12. 🆕 **`APP_ORIGIN` non è impostata in produzione**, quindi i link delle mail
+    si costruiscono ancora dagli header — `X-Forwarded-Host`, che scrive chi
+    chiama. Chi votasse con l'indirizzo di un'altra persona e un host forgiato
+    le farebbe arrivare una mail vera col link di conferma al proprio server.
+    La leva è già in codice (`src/lib/env.ts`, `.env.example`), manca solo il
+    valore. **Condizione: impostare `APP_ORIGIN` fra le variabili d'ambiente
+    su Coolify. Verifica: lasciare una valutazione mandando a mano un
+    `X-Forwarded-Host` inventato, e controllare che il link nella mail punti
+    comunque al dominio vero.**
+13. 🆕 **`MAX_PHOTO_CHARS` (1.500.000) sta sopra `bodySizeLimit` ("1mb").** Una
+    foto fra i due valori viene respinta da Next con il proprio errore di
+    dimensione prima che l'azione possa dare il messaggio cortese che ha già
+    scritto. Non è un buco — fallisce dal lato sicuro — è un messaggio che non
+    si vedrà mai. **Condizione: si allineano quando qualcuno incontra
+    l'errore generico caricando una foto, e la leva è abbassare
+    `MAX_PHOTO_CHARS`, non alzare il limite del corpo.**
+14. 🆕 **`unstable_cache` è dichiarato sostituito da `use cache`** dal doc della
+    versione installata (Next 16.3). Sono quattro usi soli, tutti in
+    `src/lib/cache.ts`, e funzionano — ma la migrazione vuole **Cache
+    Components**, che è un cambio architetturale e non una riga.
+    **Condizione: quando `use cache` uscirà dal regime di opt-in, o quando
+    servirà una cache che `unstable_cache` non sa fare (per-segmento,
+    `cacheLife` diversi nella stessa pagina).**
 
 ## Decisioni di forma lasciate aperte
 
@@ -387,7 +423,7 @@ account demo `cittadino@` e `lorenzo@`, `marco@` (in silenzio), `comune@`
 (admin), `moderatore@`; credenziali nel riquadro del login.
 Deploy: `sh "C:\Users\loren\.homelab\cf.sh"` (AGENTS §8), `ssh homeserver`.
 
-**VERIFICA (AGENTS §5):** typecheck, lint, vitest (247), `npm run rotte` a dev
+**VERIFICA (AGENTS §5):** typecheck, lint, vitest (253), `npm run rotte` a dev
 acceso («0 con problemi», **66** al 2026-08-08, TRE passate), `npm run test:e2e`
 a dev SPENTO (mai `E2E_BASE_URL`; **116/116**), e
 `node scripts/shots.mjs --simple --width=360` (le opzioni a `node`, MAI a `npm`).
@@ -401,6 +437,7 @@ le modifiche. Aggiorna FEATURES/CHANGELOG/ROADMAP/DESIGN/DOCUMENTATION §10
 **Non fare commit o push se non te lo chiedo. E NON lanciare il deploy senza
 chiedere.**
 
-Il **Lavoro 1 è chiuso** (2026-08-08): comincia dal **Lavoro 2 — la review
-«lenti mancanti»**, saltata dall'11/06 e l'unica voce della qualità continua che
-non ha mai avuto un giro.
+I **Lavori 1 e 2 sono chiusi** (2026-08-08): comincia dal **Lavoro 3 — il P-3
+della pagella e il censimento delle linee programmatiche**. L'art. 14 non prima
+del 27/08, ma P-3 e il censimento si possono fare; il piano è in
+`docs/piano-pagella.md`.

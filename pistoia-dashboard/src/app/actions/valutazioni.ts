@@ -10,6 +10,8 @@ import { getCurrentUser } from "@/lib/auth/dal";
 import { rateLimit } from "@/lib/auth/rate-limit";
 import { findBlockedWord } from "@/lib/moderation";
 import { emailConfigurata, sendEmail } from "@/lib/email";
+import { tokenValido } from "@/lib/token";
+import { env } from "@/lib/env";
 import {
   limiteConservazioneIp,
   periodoDi,
@@ -94,8 +96,18 @@ async function clientMeta() {
   return { ip, userAgent: h.get("user-agent") };
 }
 
-/** L'origine assoluta per i link nella mail (host del proxy se c'è). */
+/**
+ * L'origine assoluta per i link nella mail.
+ *
+ * ⚠️ **`APP_ORIGIN` per prima, e gli header solo come ripiego.** `Host` e
+ * `X-Forwarded-Host` li scrive chi chiama, e questo link porta il token che
+ * conferma o revoca la valutazione: chi votasse con l'indirizzo di un'altra
+ * persona e un host forgiato le farebbe arrivare una mail vera con un link al
+ * proprio server. Il perché per esteso sta in `lib/env.ts`, accanto alla
+ * variabile.
+ */
 async function baseUrl() {
+  if (env.APP_ORIGIN) return env.APP_ORIGIN.replace(/\/+$/, "");
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
   const proto = h.get("x-forwarded-proto") ?? "http";
@@ -274,6 +286,10 @@ export async function votaAction(
 */
 
 export async function confermaValutazioneAction(token: string): Promise<void> {
+  // Senza sessione, quindi l'argomento si guarda prima di arrivare a Prisma:
+  // qui `undefined` non cancella niente (findUnique rifiuta), ma produce un
+  // 500 al posto di una pagina. Stessa difesa, un gradino più in basso.
+  if (!tokenValido(token)) redirect("/valutazioni");
   const v = await prisma.valutazione.findUnique({
     where: { confermaToken: token },
     select: { id: true, emailConfermata: true, servizioId: true },
@@ -299,6 +315,7 @@ export async function confermaValutazioneAction(token: string): Promise<void> {
  * persona che ha appena detto «non sono stato io».
  */
 export async function revocaValutazioneAction(token: string): Promise<void> {
+  if (!tokenValido(token)) redirect("/valutazioni");
   const v = await prisma.valutazione.findUnique({
     where: { confermaToken: token },
     select: { id: true, servizioId: true },

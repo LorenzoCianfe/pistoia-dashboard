@@ -5,6 +5,30 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.41.0] — 2026-08-08 · Gli argomenti di una Server Action sono input non fidato
+
+> La review «lenti mancanti» — sicurezza, correttezza della cache, idiomi Next 16 — saltata l'11/06 e mai ripresa: era **l'ultima voce mai passata** della traccia «Qualità continua» ([`ROADMAP.md`](ROADMAP.md) §4). La cosa più grossa non era dove ci si aspettava.
+
+### Corretto
+- **`rimuoviPromemoriaAction` poteva svuotare l'intera tabella dei promemoria.** Una Server Action è un **endpoint HTTP pubblico** — il suo id sta nel bundle client — e la firma TypeScript non vale al confine di rete: Next cifra gli argomenti *legati* con `.bind()`, ma l'azione resta invocabile per conto proprio. Incrociato con Prisma, che **lascia cadere i campi indefiniti** da un `where`, `deleteMany({ where: { token: undefined } })` non cancella zero righe: **le cancella tutte**. E l'azione è **senza sessione**, come tutte quelle a token.
+- **L'origine dei link nelle mail veniva dagli header.** `baseUrl()` leggeva `X-Forwarded-Host`/`Host`, che li scrive chi chiama. La valutazione è l'unica scrittura aperta a chi non ha un account e l'email è un campo libero: chi votasse con l'indirizzo di un'altra persona e un host forgiato le farebbe arrivare una **mail vera, dal mittente vero**, col link di conferma puntato al proprio server — e quel link porta il token che conferma o cancella la valutazione.
+- **Le due rotte API non dicevano nulla sulla propria conservabilità.** Ora `Cache-Control: private, no-store` e `Vary: Cookie`. `/api/segnalazioni/simili` è **per-utente** (`findSimilarReports(user.id, …)`).
+- **`toggleFollowAction` accettava qualunque stringa come `targetType`**, perché `FollowTarget` è un tipo e un tipo non attraversa la rete. Niente di privilegiato: righe di spazzatura in una tabella che si legge per capire chi segue cosa.
+
+### Aggiunto
+- **`src/lib/token.ts`** — `tokenValido` e `idValido`, da mettere **prima** della query e non dentro. Sei casi coperti: le quattro azioni pubbliche a token, `chiediPromemoriaAction` e `toggleFollowAction`. Con i propri test (**253**, da 247).
+- **`APP_ORIGIN`** (`src/lib/env.ts`, `.env.example`): l'origine con cui il sito parla di sé nelle mail. Opzionale **di proposito** — in sviluppo l'host cambia (3000, 3939, la rete locale) e fissarla darebbe link che non si aprono.
+
+### Misurato
+- **`deleteMany` con `undefined`: 3 righe su 3**, in una transazione ribaltata sul database di sviluppo. Senza errore e senza traccia. ⚠️ `findUnique` con `undefined` invece **rifiuta** (`PrismaClientValidationError`): chi provasse la famiglia partendo da lì concluderebbe che Prisma si difende da sé.
+- **Le intestazioni, prima e dopo**: le pagine ricevono da Next `no-cache, must-revalidate`; le due rotte API ricevevano **niente**. Ora `private, no-store` più `Vary: Cookie`, verificato sulle risposte vere.
+- **69 Server Action censite una per una**: tutte guardate tranne le **7 dichiaratamente pubbliche** (3 di autenticazione, 4 a token). Nessun `try/catch` nelle azioni che possa ingoiare il `redirect()` di una guardia.
+- **66 rotte, tutte dinamiche** (`ƒ` nella tabella del build): nessun dato per-utente può finire in un prerender.
+
+### Note
+- **Il resto ha retto, e vale scriverlo**: `cachedShared` non porta dati per-utente in nessuno dei quattro usi e non legge `cookies()`/`headers()` dentro uno scope di cache; sessioni a 256 bit con HMAC a riposo; il cambio password verifica la vecchia e riemette la sessione; un solo `dangerouslySetInnerHTML`, su geometria SVG, già commentato con la condizione che lo rimetterebbe in discussione.
+- **Idiomi Next 16 già a posto**: `revalidateTag` è già nella forma a due argomenti che la 16 richiede, `middleware`→`proxy` è fatto, `params`/`searchParams`/`cookies()`/`headers()` tutti attesi, nessuna API deprecata, nessun `next/image` e nessuna rotta parallela da adeguare. Resta **`unstable_cache`**, che la 16 dichiara sostituito da `use cache`: è un cambio architetturale (Cache Components), non una riga — scritto fra i debiti con la sua condizione.
+
 ## [0.40.1] — 2026-08-08 · La preferenza di movimento non si legge in fase di render
 
 > `/bilancio` stampava due errori di idratazione a ogni caricamento, ma **solo con `prefers-reduced-motion` attivo** — cioè esattamente nello stato in cui girano `accessibilita.spec.ts` e `bersagli.spec.ts`, che li scrivevano nel proprio log quattro volte mentre uscivano verdi. Aprire la pagina in un browser normale non mostrava niente.

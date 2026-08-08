@@ -21,6 +21,8 @@ import {
 } from "@/lib/data/sollecitazioni";
 import { inviaPromemorieScadute } from "@/lib/promemoria";
 import { etichettaPeriodo } from "@/lib/redazione";
+import { idValido, tokenValido } from "@/lib/token";
+import { env } from "@/lib/env";
 
 /*
   Le azioni del contatore unico (R-5). Tre discipline, tutte già pagate
@@ -40,8 +42,10 @@ import { etichettaPeriodo } from "@/lib/redazione";
 /** L'origine assoluta per i link nelle mail. Stessa lettura — e stessa
  *  riserva — di `baseUrl` in `actions/valutazioni.ts`: copiata e non
  *  importata, perché esportare un helper da un file `"use server"` lo
- *  trasformerebbe in un endpoint invocabile. */
+ *  trasformerebbe in un endpoint invocabile. `APP_ORIGIN` per prima e gli
+ *  header solo come ripiego: il perché sta in `lib/env.ts`. */
 async function baseUrl() {
+  if (env.APP_ORIGIN) return env.APP_ORIGIN.replace(/\/+$/, "");
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
   const proto = h.get("x-forwarded-proto") ?? "http";
@@ -163,6 +167,10 @@ export type PromemoriaState = { ok?: boolean; error?: string } | undefined;
 export async function chiediPromemoriaAction(
   valutazioneId: string,
 ): Promise<PromemoriaState> {
+  // L'azione è invocabile senza sessione: l'argomento si guarda PRIMA di
+  // portarlo a Prisma (`lib/token.ts` dice perché).
+  if (!idValido(valutazioneId)) return { error: "Valutazione non trovata." };
+
   const h = await headers();
   const ip = (
     h.get("x-forwarded-for")?.split(",")[0] ??
@@ -203,6 +211,15 @@ export async function chiediPromemoriaAction(
  * in nessun archivio.
  */
 export async function rimuoviPromemoriaAction(token: string): Promise<void> {
+  /*
+    ⚠️ Questa riga di guardia vale l'intera tabella. `deleteMany` con un
+    `where` il cui unico campo è `undefined` non cancella zero righe: cancella
+    TUTTO, perché Prisma lascia cadere i campi indefiniti e resta un filtro
+    vuoto (misurato, `lib/token.ts`). L'azione non ha sessione, e una Server
+    Action è un endpoint pubblico: senza questo controllo bastava invocarla
+    senza argomenti per disiscrivere ogni persona in archivio, in silenzio.
+  */
+  if (!tokenValido(token)) redirect("/valutazioni");
   await prisma.promemoriaRinnovo.deleteMany({ where: { token } });
   redirect(`/v/promemoria/${token}?esito=rimosso`);
 }

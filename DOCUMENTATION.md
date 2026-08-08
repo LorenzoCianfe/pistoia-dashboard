@@ -1207,6 +1207,56 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   **Misura:** `/bilancio` da 2 errori a **0**; sonda su **16 rotte** che rendono
   i componenti toccati, **0 con errori**.
 
+- **2026-08-08 (la review «lenti mancanti»)** — Saltata l'11/06 e mai ripresa,
+  era l'ultima voce mai passata della traccia «Qualità continua». Tre lenti:
+  sicurezza, correttezza della cache, idiomi Next 16.
+
+  **La cosa più grossa non era dove ci si aspettava.** Gli argomenti di una
+  Server Action sono **input non fidato**: l'azione è un endpoint HTTP pubblico
+  — il suo id sta nel bundle client — e la firma TypeScript non vale al confine
+  di rete. Next cifra gli argomenti *legati* con `.bind()`, ma l'azione resta
+  invocabile per conto proprio.
+
+  Da sola sarebbe una nota da manuale. Diventa un difetto perché si incrocia con
+  Prisma, che **lascia cadere i campi indefiniti** da un `where`. Misurato sul
+  database di sviluppo in una transazione ribaltata:
+  `deleteMany({ where: { token: "non-esiste" } })` cancella 0 righe,
+  `deleteMany({ where: { token: undefined } })` ne cancella **3 su 3** — senza
+  errore e senza traccia. `rimuoviPromemoriaAction` è **senza sessione**, come
+  tutte le azioni a token: bastava invocarla senza argomenti.
+  ⚠️ `findUnique` con `undefined` invece **rifiuta**
+  (`PrismaClientValidationError`): chi provasse la famiglia partendo da lì
+  concluderebbe che Prisma si difende da sé. Chiuso con `src/lib/token.ts`
+  (`tokenValido`, `idValido`) messo **prima** delle query, su sei chiamanti.
+
+  **Seconda lente, sempre sicurezza: l'origine dei link nelle mail.**
+  `baseUrl()` leggeva `X-Forwarded-Host`/`Host`, che li scrive chi chiama. La
+  valutazione è l'unica scrittura aperta a chi non ha un account e l'email è un
+  campo libero del modulo: chi votasse con l'indirizzo di un'altra persona e un
+  host forgiato le farebbe arrivare una mail vera, dal mittente vero, col link
+  di conferma puntato al proprio server — e quel link porta il token che
+  conferma o cancella la valutazione. Leva: **`APP_ORIGIN`**, opzionale di
+  proposito (in sviluppo l'host cambia), quindi il debito resta finché non è
+  impostata in produzione.
+
+  **Terza, sulla cache.** Misurato: le pagine ricevono da Next
+  `no-cache, must-revalidate`, le due rotte API **niente** — e una risposta 200
+  senza istruzioni può essere conservata da una cache intermedia con la propria
+  euristica. `/api/segnalazioni/simili` è **per-utente**. Ora
+  `private, no-store` più `Vary: Cookie`.
+
+  **Il resto ha retto, ed è metà del risultato di una review.** 69 Server Action
+  censite una per una con uno script: tutte guardate tranne le 7 dichiaratamente
+  pubbliche (3 di autenticazione, 4 a token). Nessun `try/catch` nelle azioni che
+  possa ingoiare il `redirect()` di una guardia. **66 rotte tutte dinamiche**
+  nella tabella del build, quindi nessun dato per-utente prerenderizzabile.
+  `cachedShared` non porta dati per-utente in nessuno dei quattro usi. Idiomi
+  Next 16 già a posto: `revalidateTag` è già a due argomenti, `middleware`→
+  `proxy` è fatto, le API di richiesta sono tutte attese, nessuna API deprecata,
+  nessun `next/image` e nessuna rotta parallela da adeguare. Resta
+  `unstable_cache`, che la 16 dichiara sostituito da `use cache`: cambio
+  architetturale (Cache Components), scritto fra i debiti con la sua condizione.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.

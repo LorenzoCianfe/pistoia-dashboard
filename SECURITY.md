@@ -89,6 +89,48 @@ se Redis è irraggiungibile).
 Zod su client **e** server. Nessun input si fida del client. Policy password:
 minimo 10 caratteri, almeno una lettera e un numero.
 
+#### Gli argomenti delle Server Action sono input non fidato (2026-08-08)
+
+Trovato dalla review «lenti mancanti». Una Server Action è un **endpoint HTTP
+pubblico**: il suo id sta nel bundle client e chi lo conosce può invocarla con
+qualunque argomento. Next cifra gli argomenti *legati* con `.bind()`, ma
+l'azione resta invocabile per conto proprio, e **la firma TypeScript non vale
+al confine di rete**.
+
+Il difetto che ne è uscito non era teorico. Prisma **lascia cadere i campi
+indefiniti** da un `where`, quindi un `where` il cui unico campo è `undefined`
+diventa un filtro vuoto. Misurato in una transazione ribaltata:
+`deleteMany({ where: { token: undefined } })` ha cancellato **3 righe su 3**,
+senza errore. `rimuoviPromemoriaAction` è **senza sessione** — come tutte le
+azioni a token — quindi bastava invocarla senza argomenti per svuotare
+l'archivio dei promemoria.
+
+La difesa sta **prima** della query, in `src/lib/token.ts` (`tokenValido`,
+`idValido`), e copre le quattro azioni pubbliche a token
+(`conferma`/`revoca` valutazione, `chiedi`/`rimuovi` promemoria) più
+`toggleFollowAction`, che accettava qualunque stringa come `targetType`.
+
+⚠️ Nota di diagnosi: `findUnique` con `undefined` **rifiuta**
+(`PrismaClientValidationError`), `deleteMany` no. Chi provasse la famiglia
+partendo da `findUnique` concluderebbe che Prisma si difende da sé.
+
+#### L'origine dei link nelle mail non si prende dagli header (2026-08-08)
+
+`baseUrl()` costruiva i link di conferma e revoca da `X-Forwarded-Host` /
+`Host`, che li scrive **chi chiama**. Poiché la valutazione è l'unica scrittura
+aperta a chi non ha un account e l'email è un campo libero del modulo, chi
+votasse con l'indirizzo di un'altra persona e un host forgiato le farebbe
+arrivare una **mail vera, dal mittente vero**, col link puntato al proprio
+server — e quel link porta il token che conferma o cancella la valutazione. È
+l'avvelenamento del reset password applicato al nostro caso.
+
+La leva è **`APP_ORIGIN`** (`src/lib/env.ts`): quando c'è, i link si
+costruiscono da lì e gli header non si guardano. Resta **opzionale di
+proposito** — in sviluppo l'host cambia (3000, 3939, la rete locale) e fissarla
+darebbe link che non si aprono. **Finché non è impostata in produzione il
+difetto resta aperto**, ed è scritto in `ROADMAP.md` con la condizione che lo
+chiude.
+
 ---
 
 ## 4. Autorizzazione
