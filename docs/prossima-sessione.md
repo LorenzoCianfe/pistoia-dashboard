@@ -33,7 +33,10 @@ Leggi prima, in quest'ordine:
 
 ## Stato
 
-`main`, commit **`1d38a3d`** (il lavoro è `22ce8ab`), pushato, **CI verde su tre job bloccanti**.
+`main` pushato, **CI verde su tre job bloccanti**. Il commit del lavoro è
+**`22ce8ab`**; quelli dopo sono di sola documentazione, e la testa la dice
+`git log --oneline -1` — scritta così perché questa riga non invecchi a ogni
+commit, come ha già fatto due volte.
 
 - typecheck · lint · **247 unit** · **`rotte` 66, 0 con problemi** ·
   **116/116 E2E** (26 di merito + **42 a11y** + **42 bersagli** + 6 di porte) ·
