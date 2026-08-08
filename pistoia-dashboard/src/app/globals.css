@@ -813,9 +813,17 @@
 /*
   In stampa non c'è scroll, quindi gli elementi rivelati allo scroll non si
   rivelano mai: grafici e sezioni narrate finirebbero sul foglio vuoti.
-  Motion scrive l'opacità inline, perciò qui serve !important.
+  Con `prefers-reduced-motion` non devono rivelarsi affatto, ed è lo stesso
+  esito: fermi e a piena opacità. Motion scrive opacità e transform inline,
+  perciò qui serve !important.
+
+  ⚠️ La preferenza si legge QUI e non nel JSX. Il server non ha media query:
+  `useReducedMotion()` gli restituisce `null` e al browser che ha la preferenza
+  attiva `true`, quindi ogni ramo del render su quel valore serve un HTML
+  diverso da quello che verrà idratato. Costava due errori a ogni caricamento
+  di `/bilancio` (2026-08-08); `scroll-told.tsx` racconta il secondo.
 */
-@media print {
+@media print, (prefers-reduced-motion: reduce) {
   [data-motion-reveal],
   [data-motion-reveal] * {
     opacity: 1 !important;

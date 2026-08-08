@@ -364,10 +364,30 @@ sobria, mai giocosa. **Livello 3 su 5**: sicura e orchestrata, mai ambientale.
 | **Scroll** | Rivelazione una tantum. **Una sola** sezione narrata per pagina. Nessun parallax |
 | **Micro-interazioni** | Tre soli momenti di festa: invio segnalazione, firma proposta, segnalazione risolta |
 | **Dati** | I numeri contano da 0 una volta; i grafici si disegnano una volta sola |
-| **Reduced motion** | `prefers-reduced-motion` annulla tutto. Non negoziabile |
+| **Reduced motion** | `prefers-reduced-motion` annulla tutto. Non negoziabile. **Si applica in CSS o nella durata, mai in un ramo del markup** — vedi sotto |
 
 **Librerie.** Motion per tutto ciò che è React. Anime.js solo per lavoro
 nativamente SVG. Nessun GSAP, nessuno sfondo WebGL — vedi `REFERENCES.md` §6.
+
+### La preferenza di movimento non si legge in fase di render (2026-08-08)
+
+`useReducedMotion()` restituisce `null` sul server — che non ha media query — e
+`true` sul browser di chi ha la preferenza attiva. Qualunque **ramo del JSX** su
+quel valore fa quindi servire un HTML diverso da quello che verrà idratato, e
+React lo dice come errore di idratazione. Su `/bilancio` erano **due errori a
+ogni caricamento**, e nessun cancello li guardava.
+
+Le due leve che restano, e bastano tutte e due insieme:
+
+- **La durata** (`transition={{ duration: reduce ? 0 : 0.5 }}`): non finisce nel
+  DOM servito, quindi è sempre sicura. È ciò che rende l'ingresso istantaneo.
+- **Il CSS** (`@media (prefers-reduced-motion: reduce)`): il server serve la
+  stessa regola a tutti ed è il browser a decidere se applicarla. In
+  `globals.css` la regola su `[data-motion-reveal]` sta accanto a quella di
+  stampa, perché il problema è lo stesso — una rivelazione che non può o non
+  deve avvenire — e l'esito voluto è identico: fermo e a piena opacità.
+
+Quello che **non** si fa è `initial={reduce ? false : {…}}`: `initial` è markup.
 
 ### L'elemento condiviso non si fa con `layoutId` (revisione 2026-07-25)
 
@@ -513,7 +533,8 @@ frecce, con tabella equivalente sempre presente.
 ### `ScrollTold` / `ScrollStep`
 Sezione narrata dallo scroll, **una per pagina**, solo dove c'è un ragionamento
 da accompagnare (il bilancio). Usa la ScrollTimeline nativa via Motion. Con
-`prefers-reduced-motion` diventa statica e tutti i passaggi restano visibili.
+`prefers-reduced-motion` diventa statica e tutti i passaggi restano visibili —
+per via del CSS su `[data-motion-reveal]`, non di un ramo del JSX (§7).
 
 ---
 

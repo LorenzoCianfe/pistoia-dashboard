@@ -177,7 +177,11 @@ export function DotScatterTimeline({
                   cy={cy}
                   r={r}
                   fill={STATUS_FILL[p.status ?? "neutral"]}
-                  initial={reduce ? false : { opacity: 0, scale: 0.3 }}
+                  /* Come nel sankey: `initial` è markup e non si dirama su
+                     `reduce`, altrimenti il server rende un HTML diverso da
+                     quello che il browser idrata. La preferenza la applica
+                     [data-motion-reveal] in globals.css. */
+                  initial={{ opacity: 0, scale: 0.3 }}
                   animate={
                     inView
                       ? { opacity: isActive ? 1 : 0.85, scale: isActive ? 1.35 : 1 }

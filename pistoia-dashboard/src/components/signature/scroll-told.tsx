@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  motion,
-  useReducedMotion,
-  useScroll,
-  useSpring,
-  useTransform,
-} from "motion/react";
+import { motion, useScroll, useSpring, useTransform } from "motion/react";
 import { useRef, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -25,6 +19,16 @@ import { cn } from "@/lib/utils";
  *
  * Con `prefers-reduced-motion` la sezione diventa statica e tutti i passaggi
  * restano visibili: si perde la regia, non il contenuto.
+ *
+ * **La preferenza si legge in CSS, mai in fase di render.** Il server non ha
+ * media query: `useReducedMotion()` gli restituisce `null` e al browser che ha
+ * la preferenza attiva `true`, quindi qualunque ramo del JSX su quel valore
+ * serve un HTML diverso da quello che verrà idratato. Qui costava due errori a
+ * ogni caricamento di `/bilancio` — il mismatch di idratazione e, a cascata,
+ * «Target ref is defined but not hydrated», perché il ramo statico di
+ * `ScrollStep` non montava l'elemento a cui `useScroll` era già agganciato.
+ * La regola sta in `globals.css`, accanto a quella di stampa: sono lo stesso
+ * problema, cioè una rivelazione che non deve o non può avvenire.
  */
 
 export function ScrollTold({
@@ -35,7 +39,6 @@ export function ScrollTold({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end end"],
@@ -49,17 +52,18 @@ export function ScrollTold({
 
   return (
     <div ref={ref} className={cn("relative", className)}>
-      {!reduce ? (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none sticky top-0 z-10 h-0.5 w-full overflow-hidden"
-        >
-          <motion.div
-            className="h-full origin-left bg-[var(--color-accent)]"
-            style={{ scaleX: progress }}
-          />
-        </div>
-      ) : null}
+      {/* `motion-reduce:hidden` e non un ramo del JSX: la barra sparisce con la
+          preferenza attiva, ma il markup servito e quello idratato restano lo
+          stesso. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none sticky top-0 z-10 h-0.5 w-full overflow-hidden motion-reduce:hidden"
+      >
+        <motion.div
+          className="h-full origin-left bg-[var(--color-accent)]"
+          style={{ scaleX: progress }}
+        />
+      </div>
       {children}
     </div>
   );
@@ -77,7 +81,6 @@ export function ScrollStep({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start 0.85", "end 0.35"],
@@ -95,16 +98,16 @@ export function ScrollStep({
   const opacity = useTransform(scrollYProgress, [0, 0.25, 0.8, 1], [0.3, 1, 1, 0.45]);
   const y = useTransform(scrollYProgress, [0, 0.25], [24, 0]);
 
-  if (reduce) {
-    return <div className={cn("py-10", className)}>{children}</div>;
-  }
-
   return (
     <motion.div
       ref={ref}
       style={{ opacity, y }}
-      // In stampa l'elemento non entra mai in vista: la regola su
-      // [data-motion-reveal] in globals.css lo riporta a piena opacità.
+      // In stampa l'elemento non entra mai in vista, e con
+      // `prefers-reduced-motion` non deve entrarci: la regola su
+      // [data-motion-reveal] in globals.css lo riporta fermo e a piena opacità
+      // in tutti e due i regimi — ed è ciò che permette a questo `return` di
+      // essere l'unico, quindi al `ref` di essere sempre montato e a
+      // `useScroll` di trovarlo.
       data-motion-reveal=""
       className={cn("py-10", className)}
     >

@@ -1170,6 +1170,43 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   prima riga, perché l'id viene dal seed — `apriPrima` entra anche in
   `pagine-cancello.ts`, con `apriDettaglio()` in `helpers.ts`.
 
+- **2026-08-08 (la preferenza di movimento non si legge in fase di render)** —
+  `/bilancio` stampava **due errori di idratazione a ogni caricamento**, ma solo
+  con `prefers-reduced-motion` attivo: `useReducedMotion()` è `null` sul server —
+  che non ha media query — e `true` sul browser di chi ce l'ha, quindi ogni ramo
+  del **markup** su quel valore serve un HTML diverso da quello idratato.
+
+  Il secondo errore — «Target ref is defined but not hydrated» — non era un
+  difetto suo ma una **cascata** del primo: `ScrollStep` chiamava
+  `useScroll({ target: ref })` sempre, e con la preferenza attiva tornava presto
+  su un `<div>` semplice che quel `ref` non lo montava mai.
+
+  **I punti erano sei, non due**, in cinque componenti — `scroll-told`,
+  `sankey-flow`, `dot-scatter-timeline`, `line-chart`, `display-number`,
+  `cronoprogramma-chart` — tutti nella forma `initial={reduce ? false : {…}}`.
+  `initial` è markup: Motion lo scrive nello style servito. React riporta **un
+  solo** mismatch per albero, quindi ognuno era invisibile finché non si
+  chiudeva quello sopra: il modo di lavorare che ne esce è **rimisurare dopo
+  ogni correzione**, non fidarsi del conto iniziale.
+
+  Le due leve sicure sono **la durata** (`transition`, che nel DOM servito non
+  compare) e **il CSS**: la regola su `[data-motion-reveal]` in `globals.css`
+  passa da `@media print` a `@media print, (prefers-reduced-motion: reduce)`,
+  perché il problema è lo stesso — una rivelazione che non può o non deve
+  avvenire — e l'esito voluto è identico. L'eccezione dichiarata resta
+  `app/(app)/template.tsx`, che il mismatch se lo tiene e lo dice con
+  `suppressHydrationWarning`.
+
+  **Perché nessun cancello lo vedeva:** `accessibilita.spec.ts` e
+  `bersagli.spec.ts` girano già con `reducedMotion: reduce` e li scrivevano nel
+  proprio log **quattro volte** — ma nessun test guarda la console, e `rotte`,
+  `shots` e `produzione` non emulano la preferenza. È il buco che riscrive il
+  debito 8 di `docs/prossima-sessione.md`, la cui premessa («`produzione` non
+  apre `/bilancio`») era falsa: la apre da `d5b8a43`.
+
+  **Misura:** `/bilancio` da 2 errori a **0**; sonda su **16 rotte** che rendono
+  i componenti toccati, **0 con errori**.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.

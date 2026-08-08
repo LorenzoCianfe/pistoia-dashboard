@@ -268,7 +268,14 @@ export function SankeyFlow({
                 key={`${uid}-${r.key}`}
                 d={r.d}
                 fill={TONE_FILL[r.tone]}
-                initial={reduce ? false : { opacity: 0 }}
+                /* `initial` NON si dirama su `reduce`: è markup, e il server
+                   non ha media query — servirebbe un HTML diverso da quello
+                   idratato. A tenere fermo e visibile il grafico con la
+                   preferenza attiva è la regola su [data-motion-reveal] in
+                   globals.css, che vale anche quando la rivelazione non parte
+                   perché la scheda non è mai stata visibile. La durata invece
+                   può diramarsi: non finisce nel DOM servito. */
+                initial={{ opacity: 0 }}
                 animate={inView ? { opacity: 0.28 + r.weight * 0.4 } : {}}
                 transition={{
                   duration: reduce ? 0 : 0.5,
@@ -289,7 +296,7 @@ export function SankeyFlow({
                     height={Math.max(p.h, 2)}
                     rx={3}
                     fill={TONE_FILL[p.tone ?? "flow"]}
-                    initial={reduce ? false : { opacity: 0, scaleY: 0.2 }}
+                    initial={{ opacity: 0, scaleY: 0.2 }}
                     animate={inView ? { opacity: 1, scaleY: 1 } : {}}
                     transition={{
                       duration: reduce ? 0 : 0.45,

@@ -214,7 +214,12 @@ export function LineChart({
               x={0}
               y={0}
               height={height}
-              initial={{ width: reduce ? W : 0 }}
+              /* `initial` finisce nel DOM servito, e il server non ha media
+                 query: diramarlo su `reduce` gli fa rendere un HTML diverso da
+                 quello che il browser idrata. Con la preferenza attiva la
+                 tendina si apre lo stesso, ma in zero secondi — è la durata a
+                 portare la preferenza, e la durata non è markup. */
+              initial={{ width: 0 }}
               animate={inView ? { width: W } : {}}
               transition={{
                 duration: reduce ? 0 : 1.6,

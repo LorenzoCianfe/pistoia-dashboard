@@ -93,7 +93,11 @@ export function CronoprogrammaChart({ righe }: { righe: RigaCronoprogramma[] }) 
               <motion.span
                 aria-hidden
                 className="absolute inset-y-0 left-0 rounded-pill bg-[var(--teal)]"
-                initial={{ width: reduce ? `${avanti}%` : 0 }}
+                /* Costante di proposito: `initial` è markup, e un ramo su
+                   `reduce` fa divergere l'HTML servito da quello idratato — il
+                   server non ha media query. La preferenza la porta la durata,
+                   che nel DOM servito non compare. */
+                initial={{ width: 0 }}
                 animate={inView ? { width: `${avanti}%` } : {}}
                 transition={{
                   duration: reduce ? 0 : 0.55,
@@ -107,7 +111,7 @@ export function CronoprogrammaChart({ righe }: { righe: RigaCronoprogramma[] }) 
                 aria-hidden
                 className="absolute -top-1 h-[18px] w-[3px] rounded-pill bg-foreground"
                 style={{ left: `${Math.min(Math.max(calendario, 1), 99)}%` }}
-                initial={reduce ? false : { opacity: 0, scaleY: 0.3 }}
+                initial={{ opacity: 0, scaleY: 0.3 }}
                 animate={inView ? { opacity: 1, scaleY: 1 } : {}}
                 transition={{
                   duration: reduce ? 0 : 0.3,

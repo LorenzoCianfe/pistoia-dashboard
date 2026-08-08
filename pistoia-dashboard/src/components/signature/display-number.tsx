@@ -132,7 +132,10 @@ export function DisplayNumber({
               key={i}
               className="display-number__tick"
               data-active={i === activeTick ? "" : undefined}
-              initial={reduce ? false : { opacity: 0, scaleY: 0.4 }}
+              /* Costante di proposito: `initial` è markup, e un ramo su
+                 `reduce` fa divergere l'HTML servito da quello idratato — il
+                 server non ha media query. La preferenza la porta la durata. */
+              initial={{ opacity: 0, scaleY: 0.4 }}
               animate={inView ? { opacity: 1, scaleY: 1 } : {}}
               transition={{
                 duration: reduce ? 0 : 0.3,

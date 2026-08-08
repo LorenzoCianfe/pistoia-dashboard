@@ -61,7 +61,7 @@ L'app vive in `pistoia-dashboard/`. La documentazione vive nella radice.
 
 ## 3. Design system — le regole che si sbagliano più spesso
 
-> §3 raccoglie **trentotto trappole già pagate**. Sono raggruppate per ondata
+> §3 raccoglie **trentanove trappole già pagate**. Sono raggruppate per ondata
 > solo perché è così che sono emerse: leggile tutte, valgono tutte ancora.
 
 **Prima di tutto: Astryx è la sorgente dei TOKEN, non lo strato di primitive.**
@@ -628,6 +628,49 @@ introdotte suonava giusto ad alta voce.
    «tagliato». È la stessa famiglia dell'affordance affidata all'`:hover`: una
    categoria che oggi si trova **solo guardando**, e che varrebbe un cancello suo
    — *nessun controllo esce dal proprio contenitore*.
+
+### La preferenza di movimento letta in fase di render (2026-08-08)
+
+**`useReducedMotion()` è `null` sul server e `true` sul browser di chi ha la
+preferenza attiva**, perché il server non ha media query. Qualunque ramo del
+markup su quel valore serve quindi un HTML diverso da quello che verrà
+idratato. Su `/bilancio` erano **due errori a ogni caricamento**:
+
+1. Il **mismatch di idratazione** vero e proprio: `ScrollTold` rendeva la barra
+   di avanzamento con `{!reduce ? … : null}`, quindi il server la metteva
+   (`reduce` era `null`) e il browser no.
+2. **«Target ref is defined but not hydrated»**, che è il primo per **cascata**
+   e non per conto proprio: `ScrollStep` chiamava `useScroll({ target: ref })`
+   sempre, ma con `reduce` vero tornava presto su un `<div>` semplice che il
+   `ref` non lo montava. Motion aspetta un microtask, poi lancia.
+
+⚠️ **Il sintomo si vede SOLO con la preferenza attiva**, ed è lo stato in cui
+girano `accessibilita.spec.ts` e `bersagli.spec.ts` — che infatti li scrivevano
+nel proprio log, quattro volte, mentre uscivano verdi: **nessun test guarda la
+console**. Aprire `/bilancio` in un browser normale non mostra niente.
+
+Le due leve sicure, e servono tutte e due:
+
+- **La durata** (`transition={{ duration: reduce ? 0 : 0.5 }}`) non finisce nel
+  DOM servito. Sempre lecita, ed è ciò che rende l'ingresso istantaneo.
+- **Il CSS** (`@media (prefers-reduced-motion: reduce)`) lo serve identico a
+  tutti, ed è il browser a decidere se applicarlo. In `globals.css` la regola su
+  `[data-motion-reveal]` sta **accanto a quella di stampa**, perché il problema
+  è lo stesso — una rivelazione che non può o non deve avvenire.
+
+Ciò che non si fa è `initial={reduce ? false : {…}}`: **`initial` è markup.**
+Motion lo scrive nello style servito, e il ramo lo fa divergere. Erano sei
+punti in cinque componenti — `scroll-told`, `sankey-flow`,
+`dot-scatter-timeline`, `line-chart`, `display-number`, `cronoprogramma-chart` —
+e ognuno spegneva il successivo, perché React riporta **un solo** mismatch per
+albero: fissarne uno faceva comparire quello sotto. Il modo di lavorare che ne
+esce: quando chiudi un mismatch, **rimisura subito**, perché il secondo non era
+visibile finché c'era il primo.
+
+L'eccezione dichiarata è `app/(app)/template.tsx`, che il mismatch se lo tiene e
+lo dice con `suppressHydrationWarning`: lì l'animazione d'ingresso può
+completarsi prima dell'hydration, quindi lo style servito non coinciderebbe
+comunque.
 
 E una **ripagata**, che era già scritta qui sopra (ondata 7, 1): passare
 `ADMIN_NAV`/`REDAZIONE_NAV` da `AppShell` (Server Component) a `SideNav`

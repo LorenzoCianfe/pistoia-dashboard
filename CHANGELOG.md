@@ -5,6 +5,27 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.40.1] — 2026-08-08 · La preferenza di movimento non si legge in fase di render
+
+> `/bilancio` stampava due errori di idratazione a ogni caricamento, ma **solo con `prefers-reduced-motion` attivo** — cioè esattamente nello stato in cui girano `accessibilita.spec.ts` e `bersagli.spec.ts`, che li scrivevano nel proprio log quattro volte mentre uscivano verdi. Aprire la pagina in un browser normale non mostrava niente.
+
+### Corretto
+- **Il mismatch di idratazione di `/bilancio`.** `useReducedMotion()` è `null` sul server — che non ha media query — e `true` sul browser di chi ha la preferenza attiva: `ScrollTold` rendeva la barra di avanzamento con `{!reduce ? … : null}`, quindi il server la metteva e il browser no.
+- **«Target ref is defined but not hydrated».** Non era un secondo difetto ma il primo per **cascata**: `ScrollStep` chiamava `useScroll({ target: ref })` sempre, e con la preferenza attiva tornava su un `<div>` semplice che quel `ref` non lo montava mai. Ora l'elemento è uno solo e il `ref` è sempre agganciato.
+- **Altri quattro punti della stessa famiglia**, che il primo mismatch teneva nascosti: `sankey-flow`, `dot-scatter-timeline`, `line-chart`, `display-number`, `cronoprogramma-chart` diramavano `initial` su `reduce` — e **`initial` è markup**, Motion lo scrive nello style servito. React riporta **un solo** mismatch per albero, quindi ognuno si vedeva solo dopo aver chiuso quello sopra.
+- **Un ternario morto in `RingGauge`**: `strokeDashoffset: reduce ? offset : offset`. Leggeva come se la preferenza cambiasse il traguardo; cambia solo la durata.
+
+### Cambiato
+- **La preferenza di movimento si applica in CSS o nella durata, mai in un ramo del markup** (`DESIGN.md` §7, `AGENTS.md` §3). La regola su `[data-motion-reveal]` in `globals.css` passa da `@media print` a `@media print, (prefers-reduced-motion: reduce)`: il problema è lo stesso — una rivelazione che non può o non deve avvenire — e l'esito voluto è identico, fermo e a piena opacità. La barra di `ScrollTold` sparisce con `motion-reduce:hidden`, che è markup unico servito a tutti.
+
+### Misurato
+- **`/bilancio` con `prefers-reduced-motion: reduce`: da 2 errori a 0.** E la sonda su **16 rotte** che rendono i componenti toccati — bilancio, opere, segnalazioni, sondaggi, design-system, la-mia-citta, avvisi, comunità, decisioni, eventi, faq, patti, priorità, progetti, promesse, proposte — dà **0 con errori**.
+- **Il difetto era in sei punti, non in due.** Il conto vero si è visto solo rimisurando dopo ogni correzione.
+
+### Note
+- ⚠️ **Il debito 8 era scritto su un fatto sbagliato.** `npm run produzione` **apre** `/bilancio` da quando esiste (`d5b8a43`, `PAGINE_AUTENTICATE`). Il buco vero è un altro, e più largo: il cancello non emula `prefers-reduced-motion`, quindi non avrebbe potuto vedere questi errori nemmeno aprendo la pagina — e **nessun cancello guarda la console**. Riscritto in `docs/prossima-sessione.md` con la condizione che lo chiude.
+- L'eccezione dichiarata resta `app/(app)/template.tsx`, che il mismatch se lo tiene e lo dice con `suppressHydrationWarning`: lì l'animazione d'ingresso può completarsi prima dell'hydration.
+
 ## [0.40.0] — 2026-08-07 · Le code non reggevano la crescita, e una nascondeva 26 recensioni
 
 > Il debito che il taglio di `/admin` aveva lasciato aperto poche ore prima ([`docs/piano-admin.md`](docs/piano-admin.md) §6), con la sua condizione già soddisfatta: «Segnalazioni» aveva **14** voci in coda e «Valutazioni» **32**, oltre le ~10 scritte nel piano. La forma l'ha scelta Lorenzo sui mockup iniettati sull'applicazione vera.

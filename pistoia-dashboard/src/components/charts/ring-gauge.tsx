@@ -64,7 +64,9 @@ export function RingGauge({
             strokeLinecap="round"
             strokeDasharray={c}
             initial={{ strokeDashoffset: c }}
-            animate={inView ? { strokeDashoffset: reduce ? offset : offset } : {}}
+            // Il traguardo è lo stesso con o senza preferenza: a cambiare è
+            // solo quanto ci si mette ad arrivarci.
+            animate={inView ? { strokeDashoffset: offset } : {}}
             transition={{
               duration: reduce ? 0 : 1.5,
               delay,

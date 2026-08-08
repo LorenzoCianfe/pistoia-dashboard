@@ -108,16 +108,18 @@ Deciso da Lorenzo il 2026-08-08: **sgombera la pista, poi comincia O8**, in
 quest'ordine. Auto-ritmato (`/loop` senza intervallo): ci si risveglia quando un
 lavoro finisce, non a orologio.
 
-### 1. I due errori di idratazione di `/bilancio`
+### 1. I due errori di idratazione di `/bilancio` — ✅ CHIUSO il 2026-08-08
 
-**`/bilancio` stampa due errori di idratazione a ogni caricamento** — mismatch
-SSR più un `ref` di Motion non idratato (`useScroll`). **Quattro occorrenze**
-nel log degli E2E di oggi, sempre al caricamento di `/bilancio`. La suite passa
-lo stesso perché **nessun test guarda la console**.
+Erano **sei punti in cinque componenti**, non due, e il primo mismatch teneva
+nascosti gli altri: React ne riporta uno solo per albero. Causa unica: **la
+preferenza di movimento letta in fase di render.** `useReducedMotion()` è `null`
+sul server e `true` sul browser di chi ce l'ha attiva, quindi ogni ramo del
+markup su quel valore serve un HTML diverso da quello idratato. Dettaglio in
+`AGENTS.md` §3 e `DESIGN.md` §7; misura: `/bilancio` da 2 errori a **0**, e 16
+rotte sondate con la preferenza attiva, **0 con errori**.
 
-Quando è chiuso, chiude anche il **debito 8** qui sotto: `npm run produzione`
-potrà finalmente aprire `/bilancio`, e il suo controllo «zero errori
-JavaScript» smetterà di avere un buco. Aggiungerla PRIMA sarebbe nascere rossi.
+Il sintomo si vedeva **solo con `prefers-reduced-motion` attivo**. Il debito 8
+qui sotto è stato riscritto: la sua premessa era falsa.
 
 ### 2. La review «lenti mancanti»
 
@@ -163,10 +165,19 @@ letture → sul cruscotto finché ci stanno.
    Misurato: la card **resta a schermo** e il fatto registrato è **vero**.
    **Condizione: il giorno in cui quella base dati smetterà di essere
    dimostrativa, il cancello vuole un conto suo.**
-8. **`npm run produzione` non apre `/bilancio`**, quindi il suo controllo «zero
-   errori JavaScript» non vede i due errori di idratazione del Lavoro 1.
-   **Condizione: quando quegli errori saranno chiusi, aggiungere `/bilancio`
-   alle pagine che il cancello apre.**
+8. ⚠️ **RISCRITTO il 2026-08-08: la premessa era falsa.** `npm run produzione`
+   **apre** `/bilancio` da quando esiste (`d5b8a43`, in `PAGINE_AUTENTICATE`,
+   `scripts/produzione.mjs` ~riga 135). Il buco vero è un altro e più largo:
+   **nessun cancello guarda la console, e nessuno emula
+   `prefers-reduced-motion`.** I due errori di idratazione del Lavoro 1 si
+   vedevano *solo* con la preferenza attiva, e stavano scritti **quattro volte
+   nel log degli E2E** — che giravano già in quello stato e uscivano verdi.
+   **Condizione: il giorno in cui un cancello leggerà la console, il posto è
+   `rotte.mjs`** — è l'unico che apre tutte e 66 le rotte per indirizzo — **e
+   va aperto emulando `prefers-reduced-motion: reduce`**, che è lo stato che si
+   rompe di più e si verifica di meno. Misura di partenza, 2026-08-08: 16 rotte
+   sondate a mano, **0 con errori**. È un cancello nuovo, quindi lo decide
+   Lorenzo insieme a quello di «nessun controllo esce dal proprio contenitore».
 9. 🆕 **`getRecensioniRecenti()` è codice morto** (`src/lib/data/valutazioni.ts`,
    ~riga 328) da quando `/admin/valutazioni` mostra tutte e 32 le recensioni in
    attesa. Nessun test la copre; compare solo in due commenti storici.
@@ -390,5 +401,6 @@ le modifiche. Aggiorna FEATURES/CHANGELOG/ROADMAP/DESIGN/DOCUMENTATION §10
 **Non fare commit o push se non te lo chiedo. E NON lanciare il deploy senza
 chiedere.**
 
-Comincia dal **Lavoro 1 — i due errori di idratazione di `/bilancio`**, che è
-anche quello che sblocca il debito 8.
+Il **Lavoro 1 è chiuso** (2026-08-08): comincia dal **Lavoro 2 — la review
+«lenti mancanti»**, saltata dall'11/06 e l'unica voce della qualità continua che
+non ha mai avuto un giro.
