@@ -1108,6 +1108,68 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   invece di lasciar cercare nel diff. È §3 (Fase A/B, 3) da una terza porta —
   *un cancello deve distinguere «verificato e a posto» da «non verificato»*.
 
+- **2026-08-07 (lista + dettaglio sulle code)** — Chiuso il debito che il taglio
+  di `/admin` aveva lasciato aperto poche ore prima ([`docs/piano-admin.md`](docs/piano-admin.md)
+  §6, consuntivo in §8). La condizione — *una coda oltre le ~10 voci* — era
+  **già soddisfatta nel momento in cui è stata scritta**: 14 segnalazioni, 32
+  valutazioni.
+
+  **La forma l'ha scelta Lorenzo su mockup iniettati sull'applicazione vera** —
+  tre candidate misurate a 1280 e 375 con i dati del seed: riga espandibile
+  (1.823px), pagina di dettaglio (lista 1.426 + dettaglio 836), pagina di
+  dettaglio **più due colonne su desktop** (889). Ha preso la terza, che è la
+  seconda più un layout: sotto ~1024px le due colonne non esistono e la pagina
+  di dettaglio resta quella.
+
+  **La misura che decide non è un'altezza ma una derivata.** Il dettaglio fa
+  **656–913px** con quattordici voci in coda o con quattrocento; prima il massimo
+  era **1.894** e cresceva di ~320px per ogni voce in più. La riga di lista è
+  **69px** contro i 323 del modulo di lavoro. `/admin/proposte` passa da 1.894 a
+  **656**, `/admin/domande` da 1.492 a **656**.
+
+  **Due pagine crescono, ed è il prezzo dichiarato.** `/admin/segnalazioni` va da
+  896 a **1.416px** — ma gli 896 erano un riquadro da 576px su 4.680 di
+  contenuto, cioè **12 voci su 14 fuori vista** — e `/admin/valutazioni` da 1.114
+  a **2.539**, mostrando però **32 recensioni invece di 6**. Il riquadro che
+  scorre non è sparito: limita **la lista** nella colonna del dettaglio, mai il
+  lavoro.
+
+  **La ragione vera non era l'altezza.** La `description` della segnalazione era
+  **caricata e mai mostrata** — quattordici volte, una per voce, e non compariva
+  nemmeno nel tipo `Item` di `ReportTriage`: il Comune sceglieva lo stato,
+  assegnava l'ufficio e scriveva una **nota ufficiale visibile al cittadino**
+  avendo davanti il solo titolo. Vale identico per il testo della proposta, che
+  non era nemmeno caricato.
+
+  **Il dettaglio si prende per id, non dalla coda**, ed è la trappola principale
+  di questa forma: ogni azione riuscita toglie la voce dalla propria coda, quindi
+  un dettaglio filtrato risponderebbe **404 subito dopo un'azione andata a buon
+  fine**. La pagina resta e dichiara che la voce è uscita (`FuoriDallaCoda`).
+
+  **`@container`, non `sm:`/`lg:`**: la stessa riga vive a **804px** sull'indice e
+  a **304** nella colonna del dettaglio. È il caso del footer del 05/08, e la
+  regola sta in `DESIGN.md` §6.
+
+  **Un difetto preesistente chiuso per strada:** i due pulsanti dell'urgenza
+  affiancati fanno **301px** contro i 239 del proprio riquadro, e a 375px la card
+  ritagliava «Flusso ordinario» — 62px fuori. Nessun cancello poteva vederlo:
+  `shots` misura il traboccamento *della pagina* (zero), `bersagli` la
+  *dimensione* (a norma), axe non ha una regola per «tagliato».
+
+  **E uno strumento che mentiva:** la prima stesura dei mockup usava
+  `lg:grid-cols-[…]` e `max-h-[34rem]` iniettate a runtime. Tailwind v4 compila
+  solo le classi che trova nel **sorgente**: nessun CSS, nessun avviso, e la
+  variante a due colonne è stata fotografata **impilata** — cioè la schermata su
+  cui si stava per decidere mostrava un'altra cosa.
+
+  **I cancelli**: `rotte` da 62 a **66**, 0 con problemi · `shots` +4 pagine per
+  regime · `pagine-cancello` da 17 a **21**, quindi a11y e bersagli **42 casi**
+  ciascuno ed E2E **116**. Tutti e quattro i dettagli e non uno
+  «rappresentativo»: i moduli che quei cancelli misuravano ieri sulle liste
+  vivono adesso lì, e sono quattro moduli diversi. Ci si arriva **cliccando** la
+  prima riga, perché l'id viene dal seed — `apriPrima` entra anche in
+  `pagine-cancello.ts`, con `apriDettaglio()` in `helpers.ts`.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.

@@ -99,6 +99,29 @@ export async function pretendiAtterraggio(page: Page, url: string) {
 }
 
 /**
+ * Apre una rotta di DETTAGLIO cliccando la prima riga della propria lista.
+ *
+ * Gli id vengono dal seed e cambiano a ogni riseminata, quindi l'indirizzo non
+ * si può scrivere in `pagine-cancello.ts`. Si pretende comunque l'arrivo: senza
+ * `waitForURL` il cancello misurerebbe la lista **col nome del dettaglio** —
+ * la stessa famiglia di `pretendiAtterraggio` qui sopra.
+ */
+export async function apriDettaglio(
+  page: Page,
+  apriPrima: { selettore: string; attendi: RegExp },
+) {
+  const prima = page.locator(apriPrima.selettore).first();
+  await expect(
+    prima,
+    `nessuna riga che corrisponda a ${apriPrima.selettore}: la lista è vuota ` +
+      `o il selettore è invecchiato, e in tutti e due i casi il dettaglio non ` +
+      `viene misurato`,
+  ).toBeVisible({ timeout: 15_000 });
+  await prima.click();
+  await page.waitForURL(apriPrima.attendi, { timeout: 20_000 });
+}
+
+/**
  * **Si misura solo a pagina POSATA, e non è un dettaglio.**
  *
  * L'ingresso di `(app)/template.tsx` parte da `opacity: 0` e dura fino a ~2,2s

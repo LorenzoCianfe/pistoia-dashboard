@@ -6,7 +6,7 @@
 >
 > **Leggilo per intero all'inizio di ogni sessione, prima di toccare codice.**
 >
-> Aggiornato: 2026-08-07 (Fase C · cancello dei 44px · cancello della produzione · `/admin` spezzata in sette)
+> Aggiornato: 2026-08-07 (Fase C · cancello dei 44px · cancello della produzione · `/admin` spezzata in sette · lista + dettaglio sulle code)
 
 ---
 
@@ -61,7 +61,7 @@ L'app vive in `pistoia-dashboard/`. La documentazione vive nella radice.
 
 ## 3. Design system — le regole che si sbagliano più spesso
 
-> §3 raccoglie **trentacinque trappole già pagate**. Sono raggruppate per ondata
+> §3 raccoglie **trentotto trappole già pagate**. Sono raggruppate per ondata
 > solo perché è così che sono emerse: leggile tutte, valgono tutte ancora.
 
 **Prima di tutto: Astryx è la sorgente dei TOKEN, non lo strato di primitive.**
@@ -597,6 +597,38 @@ introdotte suonava giusto ad alta voce.
    verificato»*. E il messaggio dice cosa fare, perché la diagnosi è sempre la
    stessa: cancella `.next` e rilancia **prima** di cercare nel diff.
 
+### Tre trappole di «lista + dettaglio» (2026-08-07)
+
+1. **Un dettaglio che interroga la propria coda risponde 404 quando l'azione
+   RIESCE.** Ogni azione dell'area toglie la voce dalla coda — si risolve una
+   segnalazione, si risponde a una domanda, si approva una proposta, si replica
+   a una recensione — e `revalidatePath` ridisegna subito la pagina. Se
+   `getSegnalazioneDaTriare(id)` filtrasse per «aperta», l'operatore vedrebbe
+   una pagina d'errore **esattamente nel momento in cui ha fatto la cosa
+   giusta**, con un sintomo che somiglia a un guasto e non a un successo. I
+   dettagli si prendono **per id e senza filtro**; è la lista che filtra, e la
+   pagina dice da sé che la voce è uscita (`FuoriDallaCoda`).
+
+2. **Tailwind v4 compila solo le classi che trova nel SORGENTE, quindi un
+   mockup iniettato a runtime può mentire senza un errore.** Portando le tre
+   forme candidate sull'applicazione vera, `lg:grid-cols-[minmax(0,16rem)_…]` e
+   `max-h-[34rem]` non esistevano in nessun file: nessun CSS generato, nessun
+   avviso, e la variante a **due colonne è stata fotografata impilata** — cioè
+   la schermata su cui si stava per decidere mostrava una cosa diversa da quella
+   proposta. La regola: **nei mockup iniettati, tutto ciò che non è già nel
+   repository si scrive come stile in linea.** Vale anche per le sonde: una
+   classe arbitraria aggiunta da `javascript_tool` non ha effetto.
+
+3. **Un controllo può uscire dal proprio contenitore senza che nessun cancello
+   lo veda.** I due pulsanti dell'urgenza affiancati misurano **301px** contro i
+   239 del riquadro rosso che li ospita: «Flusso ordinario» sporgeva di **62px**
+   e la card lo ritagliava. `shots` misura il traboccamento **della pagina**, che
+   resta zero perché la card ha `overflow` nascosto; `bersagli` misura la
+   **dimensione**, e quei pulsanti sono a norma (44px); axe non ha una regola per
+   «tagliato». È la stessa famiglia dell'affordance affidata all'`:hover`: una
+   categoria che oggi si trova **solo guardando**, e che varrebbe un cancello suo
+   — *nessun controllo esce dal proprio contenitore*.
+
 E una **ripagata**, che era già scritta qui sopra (ondata 7, 1): passare
 `ADMIN_NAV`/`REDAZIONE_NAV` da `AppShell` (Server Component) a `SideNav`
 (client) significa passare `icon`, che è **un componente React**, attraverso il
@@ -616,13 +648,13 @@ npm run typecheck      # tsc --noEmit — sempre prima di dire "fatto"
 npm run lint
 npm test               # vitest
 npm run test:e2e       # playwright (comprende il cancello di accessibilità)
-npm run a11y           # SOLO il cancello a11y: axe, 17 pagine × 2 temi, WCAG AA + 2.2
-npm run bersagli       # SOLO il cancello dei 44px: 17 pagine × 2 viewport (1280 e 360)
+npm run a11y           # SOLO il cancello a11y: axe, 21 pagine × 2 temi, WCAG AA + 2.2
+npm run bersagli       # SOLO il cancello dei 44px: 21 pagine × 2 viewport (1280 e 360)
 npm run lighthouse     # Lighthouse sulla build di produzione — misura, non giudica
 npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
 npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
 node scripts/shots.mjs --simple --width=360   # modalità semplice, viewport minima
-npm run rotte          # tutte le rotte rispondono e rendono contenuto? (62 al 2026-08-07)
+npm run rotte          # tutte le rotte rispondono e rendono contenuto? (66 al 2026-08-07)
 npm run produzione     # il sito DEPLOYATO si monta davvero? — dopo ogni deploy, §8
 npm run db:reset       # ricrea il DB e ripopola i dati dimostrativi
 
@@ -840,7 +872,7 @@ Una modifica è finita quando **tutte** queste sono vere:
 - [ ] `npm run lint` passa
 - [ ] I test esistenti passano
 - [ ] `npm run rotte` è verde — **0 con problemi**, qualunque sia il totale
-      (62 al 2026-08-07; il numero cresce a ogni rotta nuova, e va letto dallo
+      (66 al 2026-08-07; il numero cresce a ogni rotta nuova, e va letto dallo
       script, non da qui). È l'unico cancello che risponde
       alla domanda «abbiamo perso una funzionalità?», e l'unico che apre le
       rotte annidate per indirizzo invece che cliccandole. Da R-5 le passate
@@ -850,15 +882,15 @@ Una modifica è finita quando **tutte** queste sono vere:
       scuro. Un typecheck verde non è una prova visiva.
 - [ ] Funziona da tastiera e il focus è visibile. **Il cancello axe non basta**:
       da 2026-08-05 `npm run test:e2e` comprende `accessibilita.spec.ts` (WCAG
-      AA e 2.2, **17 pagine × 2 temi = 34 casi**, su **100** E2E totali — comprese le sette
-      superfici di `/admin/*` e `/redazione` dal 2026-08-06 — nessuna regola esclusa), ma axe copre ~30–40% delle
+      AA e 2.2, **21 pagine × 2 temi = 42 casi**, su **116** E2E totali — comprese le sette
+      superfici di `/admin/*`, i quattro dettagli delle code e `/redazione` — nessuna regola esclusa), ma axe copre ~30–40% delle
       barriere reali — le meccaniche. Ordine di lettura, trappole di focus e
       sensatezza degli annunci restano da provare a mano.
       ⚠️ Se aggiungi un colore, **misura la coppia colore/`-soft`**: è lì che il
       contrasto è caduto, e non si vede guardando
 - [ ] I bersagli reggono i **44px** di `DESIGN.md` §11.6: dal 2026-08-07
-      `npm run test:e2e` comprende `bersagli.spec.ts` (**17 pagine × 2
-      viewport = 34 casi**), che è un cancello **diverso** da `target-size` di
+      `npm run test:e2e` comprende `bersagli.spec.ts` (**21 pagine × 2
+      viewport = 42 casi**), che è un cancello **diverso** da `target-size` di
       axe — quello difende i 24. L'elenco delle esenzioni «essenziali» è
       **vuoto**, e un'aggiunta va scritta con la condizione che la chiude.
       ⚠️ Le due liste di pagine sono una sola: `tests/e2e/pagine-cancello.ts`

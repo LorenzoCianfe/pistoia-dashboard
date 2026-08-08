@@ -7,7 +7,7 @@
 > Legenda: ✅ completa · 🚧 in corso · 🔒 richiede verifica · 👤 richiede login ·
 > 🔗 **dati reali, ogni riga con la propria fonte** (non dimostrativi)
 >
-> Aggiornato: 2026-08-07 (Fase C · `/admin` spezzata in sette)
+> Aggiornato: 2026-08-07 (Fase C · `/admin` spezzata in sette · lista + dettaglio sulle code)
 
 ---
 
@@ -129,18 +129,23 @@ colore che `DESIGN.md` §4 assegna al lato cittadino — e vive su filo e pallin
 ## 4. Area Comune
 
 > **Sette pagine dal 2026-08-07**, non più una colonna da 7.300px con dieci
-> mestieri dentro. Il taglio e la regola che lo governa stanno in
+> mestieri dentro — e **ogni coda è una lista con la propria pagina di lavoro**,
+> dallo stesso giorno. Il taglio e le due regole che lo governano stanno in
 > [`docs/piano-admin.md`](docs/piano-admin.md) e in `DESIGN.md` §6: *una coda una
 > pagina · gli strumenti insieme · le letture sul cruscotto · il registro è una
-> lettura*. Massimo per pagina: **1.894px**.
+> lettura*, e *una coda è una lista, e il lavoro è una pagina*.
+>
+> **La superficie di lavoro non dipende più da quanta coda c'è**: 656–913px con
+> quattordici voci o con quattrocento. Prima il massimo era 1.894px e cresceva di
+> ~320px per ogni voce in più.
 
 | Rotta | Contenuto | Natura |
 |---|---|---|
 | `/admin` | I quattro numeri · le sei porte · i fogli QR · il registro delle azioni | cruscotto |
-| `/admin/valutazioni` | Le recensioni dei servizi: rispondi o segnala alla redazione | coda |
-| `/admin/proposte` | Le proposte, ordinate per sostegno | coda |
-| `/admin/domande` | Le domande del question time senza risposta | coda |
-| `/admin/segnalazioni` | Il triage: stato, ufficio, nota ufficiale | coda |
+| `/admin/valutazioni` · `/[id]` | Le recensioni dei servizi: rispondi o segnala alla redazione | coda |
+| `/admin/proposte` · `/[id]` | Le proposte, ordinate per sostegno | coda |
+| `/admin/domande` · `/[id]` | Le domande del question time senza risposta | coda |
+| `/admin/segnalazioni` · `/[id]` | Il triage: stato, ufficio, nota ufficiale | coda |
 | `/admin/cittadini` | Richieste di verifica **+** moderazione della community | coda (due, un mestiere) |
 | `/admin/pubblica` | Aggiorna un cantiere · crea un sondaggio · invia una notifica | strumenti |
 | `/admin/codici-qr` | I fogli QR da stampare (R-3, non toccata dal taglio) | strumento |
@@ -155,6 +160,9 @@ colore che `DESIGN.md` §4 assegna al lato cittadino — e vive su filo e pallin
 | Unione dei duplicati | ✅ |
 | Approvazione eventi | ✅ |
 | **Contatore su ogni coda, `count` sul database** | ✅ 2026-08-07 — mai contando le righe che la pagina mostra. Gli **strumenti non ce l'hanno**, e non è una convenzione: `SuperficieAdmin` è un'unione discriminata, «uno strumento con un contatore» non è scrivibile |
+| **Lista + dettaglio sulle quattro code** | ✅ 2026-08-07 — riga da 69px (contro i 323 del modulo), lavoro su `/[id]`, e su desktop la lista resta a fianco. Il dettaglio si prende **per id e non dalla coda**: ogni azione riuscita toglie la voce, e un dettaglio filtrato risponderebbe 404 proprio dopo un'azione andata a buon fine |
+| **Il merito prima del macchinario** | ✅ 2026-08-07 — la **descrizione** della segnalazione e il **testo** della proposta compaiono per la prima volta: prima il Comune assegnava l'ufficio e scriveva la nota ufficiale visibile al cittadino avendo davanti il solo titolo |
+| **«Valutazioni» mostra tutte le recensioni in attesa** | ✅ 2026-08-07 — **32 invece di 6**. La lista era troncata da `getRecensioniRecenti()` mentre il contatore chiedeva al database: le altre 26 non erano raggiungibili da nessuna parte. Adesso lista e contatore pongono la stessa domanda |
 
 ---
 
@@ -330,7 +338,7 @@ su una persona reale non è un dato dimostrativo»):
 | `DEMO_MODE` con zero-state onesti | ✅ |
 | Provenienza dati dichiarata (`SourceBadge`) | ✅ |
 | Test unitari (Vitest) + E2E (Playwright) | ✅ |
-| **Cancello di accessibilità automatico** (axe-core negli E2E, **17 pagine × 2 temi**, regole WCAG **AA + 2.2**, nessuna esclusione) | ✅ 2026-08-05, esteso il 2026-08-06 e il 2026-08-07 — ha trovato un **debito di tavolozza preesistente** alla nascita, e altri **due difetti seri** quando `/admin/*` e `/redazione` vi sono entrate: `ROADMAP.md`, traccia «Qualità continua» |
+| **Cancello di accessibilità automatico** (axe-core negli E2E, **21 pagine × 2 temi**, regole WCAG **AA + 2.2**, nessuna esclusione) | ✅ 2026-08-05, esteso il 2026-08-06 e il 2026-08-07 — ha trovato un **debito di tavolozza preesistente** alla nascita, e altri **due difetti seri** quando `/admin/*` e `/redazione` vi sono entrate: `ROADMAP.md`, traccia «Qualità continua» |
 | **Lighthouse CI** sulla build di produzione | 🚧 impostato il 2026-08-05 — **misura, non giudica**: le soglie si scrivono dopo le prime passate |
 | **Audit dipendenze in CI** (`npm audit`) | ✅ 2026-08-05 — e `npm audit` riporta **zero vulnerabilità** (erano 12) |
 | Grafo di conoscenza del codice | ✅ `graphify-out/` |

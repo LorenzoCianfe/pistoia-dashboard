@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db";
 import { demoBaseline } from "@/lib/demo";
+import { SERVIZI, nomePubblico, testoVisibile } from "@/lib/valutazioni";
 
 /*
   I DATI DELL'AREA COMUNE, UNA FUNZIONE PER SUPERFICIE.
@@ -18,15 +19,15 @@ import { demoBaseline } from "@/lib/demo";
   *due definizioni dello stesso indicatore sono peggio di nessun indicatore.*
 */
 
+/** I quattro modi in cui una segnalazione si chiude. */
+const CHIUSE = ["risolta", "chiusa", "non_di_competenza", "duplicata"];
+
 /** Aperta = non ancora chiusa in nessuno dei quattro modi in cui si chiude. */
-const SEGNALAZIONE_APERTA = {
-  status: { notIn: ["risolta", "chiusa", "non_di_competenza", "duplicata"] },
-};
+const SEGNALAZIONE_APERTA = { status: { notIn: CHIUSE } };
 
 /** Le proposte che il Comune ha davanti: pubblicate, in valutazione, risposte. */
-const PROPOSTA_DA_VALUTARE = {
-  status: { in: ["pubblicata", "in_valutazione", "risposta"] },
-};
+const DA_VALUTARE = ["pubblicata", "in_valutazione", "risposta"];
+const PROPOSTA_DA_VALUTARE = { status: { in: DA_VALUTARE } };
 
 /** Una domanda del question time senza risposta ufficiale, e non nascosta. */
 const DOMANDA_SENZA_RISPOSTA = { answer: null, hidden: false };
@@ -99,8 +100,39 @@ export async function getContatoriAdmin() {
 export type ContatoriAdmin = Awaited<ReturnType<typeof getContatoriAdmin>>;
 
 // ---------------------------------------------------------------------------
-// Le code
+// Le code — una LISTA e un DETTAGLIO per ciascuna
 // ---------------------------------------------------------------------------
+
+/*
+  DUE FUNZIONI PER CODA, E LA SECONDA NON CHIEDE ALLA CODA.
+
+  Le liste filtrano con le costanti qui sopra; i dettagli prendono **per id e
+  senza filtro**, e non è una svista da "sistemare".
+
+  Ogni azione che riesce toglie la voce dalla propria coda: si risolve una
+  segnalazione, si risponde a una domanda, si approva una proposta, si replica a
+  una recensione. Un dettaglio che interrogasse la coda risponderebbe quindi
+  **404 subito dopo un'azione riuscita** — cioè esattamente nel momento in cui
+  l'operatore ha appena fatto la cosa giusta, e con un errore che somiglia a un
+  guasto invece che a un successo. La pagina resta, dice che la voce è uscita
+  dalla coda, e offre la strada di ritorno.
+
+  Le liste portano solo ciò che la riga mostra. Il resto — descrizione, testo
+  della proposta, valutazione sintetica — sta nel dettaglio, che è uno: prima
+  del taglio quei campi viaggiavano moltiplicati per il numero di voci, e la
+  `description` delle segnalazioni viaggiava **senza essere mostrata da
+  nessuna parte** (vedi `getSegnalazioneDaTriare`).
+
+  ⚠️ E «questa voce è ancora in coda?» **non si ricalcola qui**. La prima
+  stesura lo faceva, riscrivendo in JavaScript la stessa condizione delle
+  costanti qui sopra (`d.answer === null && !d.hidden` per
+  `DOMANDA_SENZA_RISPOSTA`, e quattro termini per `VALUTAZIONE_DA_ESAMINARE`):
+  due definizioni dello stesso indicatore, cioè esattamente ciò che questo file
+  esiste per evitare. La pagina di dettaglio **carica già la lista** — le serve
+  per la colonna di sinistra — quindi la risposta è `coda.some(v => v.id === id)`,
+  che viene dall'unico `where` che esiste. Nessuna lista ha un `take`, quindi è
+  esatta e non stimata.
+*/
 
 /** `/admin/cittadini`, prima metà: chi chiede di essere verificato. */
 export async function getVerifichePendenti() {
@@ -113,39 +145,92 @@ export async function getVerifichePendenti() {
   });
 }
 
-/**
- * `/admin/segnalazioni`: il triage.
- *
- * Le richieste di urgenza da validare (A1 §8) salgono in cima: sono l'unica
- * cosa in questa coda che ha una scadenza fuori dal Comune.
- */
+/** Le richieste di urgenza da validare (A1 §8) salgono in cima: sono l'unica
+ *  cosa in questa coda che ha una scadenza fuori dal Comune. */
+const rangoUrgenza = (u: string | null) =>
+  u === "richiesta" ? 0 : u === "confermata" ? 1 : 2;
+
+/** `/admin/segnalazioni`: la lista del triage. */
 export async function getSegnalazioniAperte() {
   const righe = await prisma.report.findMany({
     where: SEGNALAZIONE_APERTA,
     orderBy: [{ createdAt: "desc" }],
-    include: {
+    select: {
+      id: true,
+      title: true,
+      category: true,
+      status: true,
+      urgency: true,
+      baseConfirmations: true,
       neighborhood: { select: { name: true } },
       _count: { select: { confirmations: true } },
     },
   });
 
-  const rangoUrgenza = (u: string | null) =>
-    u === "richiesta" ? 0 : u === "confermata" ? 1 : 2;
-
   return righe
     .map((r) => ({
       id: r.id,
       title: r.title,
-      description: r.description,
       category: r.category,
       status: r.status,
       urgency: r.urgency,
       neighborhoodName: r.neighborhood?.name ?? null,
-      assignedDepartment: r.assignedDepartment,
       confirmations: demoBaseline(r.baseConfirmations) + r._count.confirmations,
-      createdAt: r.createdAt,
     }))
     .sort((a, b) => rangoUrgenza(a.urgency) - rangoUrgenza(b.urgency));
+}
+
+/**
+ * `/admin/segnalazioni/[id]`: la segnalazione su cui si sta lavorando.
+ *
+ * ⚠️ **La `description` non era mostrata da nessuna parte.** Fino al 2026-08-07
+ * la coda la caricava — quattordici volte, una per voce — e `ReportTriage` non
+ * l'aveva nemmeno nel proprio tipo: il Comune sceglieva lo stato, assegnava
+ * l'ufficio e scriveva una **nota ufficiale visibile al cittadino** vedendo il
+ * solo titolo. Il dettaglio nasce prima di tutto per questo; l'altezza della
+ * pagina è la seconda ragione, non la prima.
+ *
+ * Le foto restano sulla scheda pubblica, a un clic: nel regime dimostrativo
+ * sono gradienti dichiarati (`imageSeed`), quindi ridisegnarle qui aggiungerebbe
+ * un secondo posto da tenere allineato senza aggiungere informazione.
+ */
+export async function getSegnalazioneDaTriare(id: string) {
+  const r = await prisma.report.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      category: true,
+      status: true,
+      urgency: true,
+      authorName: true,
+      anonymous: true,
+      location: true,
+      assignedDepartment: true,
+      baseConfirmations: true,
+      createdAt: true,
+      neighborhood: { select: { name: true } },
+      _count: { select: { confirmations: true, photos: true } },
+    },
+  });
+  if (!r) return null;
+
+  return {
+    id: r.id,
+    title: r.title,
+    description: r.description,
+    category: r.category,
+    status: r.status,
+    urgency: r.urgency,
+    autore: r.anonymous ? null : r.authorName,
+    luogo: r.location,
+    assignedDepartment: r.assignedDepartment,
+    neighborhoodName: r.neighborhood?.name ?? null,
+    confirmations: demoBaseline(r.baseConfirmations) + r._count.confirmations,
+    foto: r._count.photos,
+    createdAt: r.createdAt,
+  };
 }
 
 /**
@@ -170,7 +255,14 @@ export async function getProposteDaValutare() {
   const righe = await prisma.proposal.findMany({
     where: PROPOSTA_DA_VALUTARE,
     orderBy: { createdAt: "desc" },
-    include: { _count: { select: { supports: true } } },
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      officialReply: true,
+      baseSupports: true,
+      _count: { select: { supports: true } },
+    },
   });
 
   return righe
@@ -180,23 +272,172 @@ export async function getProposteDaValutare() {
       status: p.status,
       hasReply: !!p.officialReply,
       supports: demoBaseline(p.baseSupports) + p._count.supports,
-      // Valutazione sintetica corrente (A1 §15): precompila il form di review.
-      estimatedImpact: p.estimatedImpact,
-      estimatedCost: p.estimatedCost,
-      estimatedTime: p.estimatedTime,
-      feasibility: p.feasibility,
-      createdAt: p.createdAt,
     }))
     .sort((a, b) => b.supports - a.supports);
 }
 
+/** `/admin/proposte/[id]`: la proposta da giudicare, col testo che l'ha scritta. */
+export async function getPropostaDaValutare(id: string) {
+  const p = await prisma.proposal.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      problem: true,
+      status: true,
+      officialReply: true,
+      authorName: true,
+      baseSupports: true,
+      createdAt: true,
+      neighborhood: { select: { name: true } },
+      _count: { select: { supports: true } },
+      // Valutazione sintetica corrente (A1 §15): precompila il form di review.
+      estimatedImpact: true,
+      estimatedCost: true,
+      estimatedTime: true,
+      feasibility: true,
+    },
+  });
+  if (!p) return null;
+
+  return {
+    id: p.id,
+    title: p.title,
+    descrizione: p.description,
+    problema: p.problem,
+    status: p.status,
+    hasReply: !!p.officialReply,
+    rispostaCorrente: p.officialReply,
+    autore: p.authorName,
+    quartiere: p.neighborhood?.name ?? null,
+    supports: demoBaseline(p.baseSupports) + p._count.supports,
+    estimatedImpact: p.estimatedImpact,
+    estimatedCost: p.estimatedCost,
+    estimatedTime: p.estimatedTime,
+    feasibility: p.feasibility,
+    createdAt: p.createdAt,
+  };
+}
+
 /** `/admin/domande`: le domande dei cittadini che aspettano una risposta. */
 export async function getDomandeSenzaRisposta() {
-  return prisma.communityPost.findMany({
+  const righe = await prisma.communityPost.findMany({
     where: DOMANDA_SENZA_RISPOSTA,
     orderBy: { createdAt: "desc" },
-    include: { neighborhood: { select: { name: true } } },
+    select: {
+      id: true,
+      authorName: true,
+      authorColor: true,
+      content: true,
+      createdAt: true,
+      neighborhood: { select: { name: true } },
+    },
   });
+  return righe.map((d) => ({
+    id: d.id,
+    authorName: d.authorName,
+    authorColor: d.authorColor,
+    content: d.content,
+    createdAt: d.createdAt,
+    quartiere: d.neighborhood?.name ?? null,
+  }));
+}
+
+/** `/admin/domande/[id]`: la domanda a cui si sta rispondendo. */
+export async function getDomandaSenzaRisposta(id: string) {
+  const d = await prisma.communityPost.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      authorName: true,
+      authorColor: true,
+      content: true,
+      createdAt: true,
+      hidden: true,
+      neighborhood: { select: { name: true } },
+      answer: { select: { body: true, department: true, createdAt: true } },
+    },
+  });
+  if (!d) return null;
+
+  return {
+    id: d.id,
+    authorName: d.authorName,
+    authorColor: d.authorColor,
+    content: d.content,
+    createdAt: d.createdAt,
+    quartiere: d.neighborhood?.name ?? null,
+    risposta: d.answer,
+  };
+}
+
+/** `/admin/valutazioni`: le recensioni che aspettano il Comune — **tutte**.
+ *
+ *  ⚠️ Fino al 2026-08-07 questa pagina chiamava `getRecensioniRecenti()`, che
+ *  tronca a sei: il contatore diceva **32** e la lista ne mostrava 6, e le altre
+ *  26 non erano raggiungibili da nessuna parte. Qui la domanda è la stessa del
+ *  contatore (`VALUTAZIONE_DA_ESAMINARE`), quindi i due numeri non possono
+ *  divergere — che è la regola scritta in testa a questo file. */
+export async function getValutazioniDaEsaminare() {
+  const righe = await prisma.valutazione.findMany({
+    where: VALUTAZIONE_DA_ESAMINARE,
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      servizioId: true,
+      stelle: true,
+      testo: true,
+      rimossaIl: true,
+      nomeVisualizzato: true,
+      mostraNomeIntero: true,
+      createdAt: true,
+    },
+  });
+  return righe.map((r) => ({
+    id: r.id,
+    servizio: SERVIZI.find((s) => s.id === r.servizioId)?.nome ?? r.servizioId,
+    servizioId: r.servizioId,
+    stelle: r.stelle,
+    testo: testoVisibile(r),
+    autore: nomePubblico(r.nomeVisualizzato, r.mostraNomeIntero),
+    quando: r.createdAt,
+  }));
+}
+
+/** `/admin/valutazioni/[id]`: la recensione a cui si sta rispondendo. */
+export async function getValutazioneDaEsaminare(id: string) {
+  const r = await prisma.valutazione.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      servizioId: true,
+      stelle: true,
+      testo: true,
+      rimossaIl: true,
+      nomeVisualizzato: true,
+      mostraNomeIntero: true,
+      createdAt: true,
+      segnalataIl: true,
+      risposte: { select: { id: true }, take: 1 },
+    },
+  });
+  if (!r) return null;
+
+  const segnalata = r.segnalataIl != null;
+  const haRisposta = r.risposte.length > 0;
+  return {
+    id: r.id,
+    servizio: SERVIZI.find((s) => s.id === r.servizioId)?.nome ?? r.servizioId,
+    servizioId: r.servizioId,
+    stelle: r.stelle,
+    testo: testoVisibile(r),
+    autore: nomePubblico(r.nomeVisualizzato, r.mostraNomeIntero),
+    quando: r.createdAt,
+    segnalata,
+    haRisposta,
+    rimossa: r.rimossaIl != null,
+  };
 }
 
 // ---------------------------------------------------------------------------

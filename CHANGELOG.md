@@ -5,6 +5,38 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.40.0] — 2026-08-07 · Le code non reggevano la crescita, e una nascondeva 26 recensioni
+
+> Il debito che il taglio di `/admin` aveva lasciato aperto poche ore prima ([`docs/piano-admin.md`](docs/piano-admin.md) §6), con la sua condizione già soddisfatta: «Segnalazioni» aveva **14** voci in coda e «Valutazioni» **32**, oltre le ~10 scritte nel piano. La forma l'ha scelta Lorenzo sui mockup iniettati sull'applicazione vera.
+
+### Aggiunto
+- **Quattro rotte di dettaglio** — `/admin/{segnalazioni,proposte,domande,valutazioni}/[id]` — e le quattro pagine indice diventano **liste**. Su desktop la lista resta a fianco del lavoro (due colonne); sotto ~1024px c'è solo il lavoro, col ritorno alla coda.
+- **Il guscio condiviso** (`components/admin/coda.tsx`): `CodaConDettaglio`, `VoceCoda`, `ElencoCoda`, `TornaAllaCoda`, `FuoriDallaCoda`.
+
+### Misurato
+- **La superficie di lavoro non dipende più da quanta coda c'è.** Il dettaglio fa **864px** (segnalazione e recensione), **913** (proposta), **656** (domanda) — con quattordici voci in coda o con quattrocento. Prima il massimo era **1.894px** e cresceva di ~320px per ogni voce in più.
+- **La riga di lista è 69px contro i 323 del modulo di lavoro**: 4,7 volte. `/admin/proposte` passa da 1.894 a **656**, `/admin/domande` da 1.492 a **656**.
+- **Due pagine crescono, ed è il prezzo dichiarato.** `/admin/segnalazioni` va da 896 a **1.416px** — ma gli 896 di prima erano un riquadro da 576px su 4.680 di contenuto, cioè **12 segnalazioni su 14 fuori vista**. `/admin/valutazioni` va da 1.114 a **2.539**, e mostra **32 voci invece di 6**.
+- **Le altre 26 recensioni adesso esistono.** La pagina chiamava `getRecensioniRecenti()`, che tronca a sei, mentre il contatore chiedeva al database: lista e contatore pongono ora **la stessa domanda** (`VALUTAZIONE_DA_ESAMINARE`), quindi non possono più divergere.
+
+### Cambiato
+- **La descrizione della segnalazione si vede, per la prima volta.** La coda la caricava — quattordici volte, una per voce — e `ReportTriage` non l'aveva nemmeno nel proprio tipo: il Comune sceglieva lo stato, assegnava l'ufficio e scriveva una **nota ufficiale visibile al cittadino** avendo davanti il solo titolo. Vale identico per il testo della proposta.
+- **Il merito è tornato a essere reso dal server.** Titolo, descrizione, autore e pastiglie viaggiavano al browser dentro i componenti client, moltiplicati per il numero di voci in coda. Ora i tre moduli (`report-triage`, `proposal-review`, `answer-form`) portano **solo il modulo**.
+- **Il dettaglio si prende per id, non dalla coda.** Ogni azione riuscita toglie la voce dalla propria coda: un dettaglio che interrogasse la coda risponderebbe **404 subito dopo un'azione riuscita**. La pagina resta, dice che la voce è uscita, e offre la strada di ritorno.
+
+- **«È ancora in coda?» si chiede alla lista, non a una seconda copia della condizione.** La prima stesura ricalcolava in JavaScript i `where` del database — `d.answer === null && !d.hidden`, e quattro termini per le valutazioni — cioè due definizioni dello stesso indicatore in un file che esiste per evitarle. La pagina di dettaglio la lista **ce l'ha già** (le serve per la colonna di sinistra), quindi la risposta è `coda.some(v => v.id === id)`. Su «Domande» la versione riscritta a mano aveva già dimenticato un caso: `hidden`.
+
+### Corretto
+- **«Flusso ordinario» era tagliato a 375px.** I due pulsanti dell'urgenza affiancati misurano **301px** contro i 239 del proprio riquadro: il secondo sporgeva di **62px** e la card lo ritagliava — un controllo che esiste e non si può premere. Difetto preesistente, chiuso col `flex-wrap` mentre il file veniva ristrutturato. ⚠️ **Nessun cancello poteva vederlo**: `shots` misura il traboccamento *della pagina* (zero), `bersagli` la *dimensione* (a norma, 44px), e axe non ha una regola per «tagliato».
+- **Le quattro tendine della valutazione sintetica erano tagliate a metà parola a 360px** — «Impatto: Med…», «Fattibilità: Da…»: il valore corrente, cioè l'unica cosa che un `<select>` comunica a riposo, illeggibile su tutte e quattro. Anche questo preesistente, anche questo invisibile ai cancelli (nessun traboccamento, dimensione a norma), anche questo trovato **guardando la schermata**. Adesso una colonna sola sotto i 384px di contenitore.
+- **I due moduli usavano `sm:` dove intendevano `@container`.** Da quando vivono sulla pagina della voce sono larghi **479px** nella colonna del dettaglio e ~303 su telefono: la finestra non c'entra più. Oggi l'esito coincide; smetterebbe di coincidere al primo cambio di larghezza della colonna.
+
+### Note
+- **Le quattro rotte entrano nei cancelli insieme alla modifica**: `rotte` **66** (da 62), `shots` +4 pagine per regime, `pagine-cancello` **21** (da 17) — quindi a11y e bersagli **42 casi** ciascuno, E2E **116**. Tutte e quattro e non una «rappresentativa»: i moduli che quei cancelli misuravano ieri sulle liste vivono adesso lì, e sono quattro moduli diversi.
+- **I cancelli ci arrivano cliccando**, perché l'id viene dal seed: `DETTAGLI` in `rotte.mjs`, `apriPrima` in `shots.mjs` e — nuovo — `apriPrima` in `pagine-cancello.ts` con `apriDettaglio()` in `helpers.ts`.
+- **`@container` e non `sm:`/`lg:`**: la stessa riga vive a **804px** sull'indice e a **304** nella colonna del dettaglio, ed è il caso che `DESIGN.md` §6 descrive dal footer del 05/08.
+- **La prima stesura dei mockup mentiva.** Tailwind v4 compila solo le classi che trova nel **sorgente**: `lg:grid-cols-[…]` e `max-h-[34rem]` iniettate a runtime non avevano CSS, e le due colonne sono uscite impilate senza un errore. I mockup a due colonne usano stili in linea.
+
 ## [0.39.0] — 2026-08-07 · `/admin` era un cassetto: dieci mestieri in una colonna sola
 
 > L'esecuzione del piano deciso poche ore prima ([`docs/piano-admin.md`](docs/piano-admin.md)). Il taglio non si è ridiscusso: le sette pagine erano già state scelte dalle misure.

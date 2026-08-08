@@ -5,42 +5,30 @@ import { Send } from "lucide-react";
 import { answerPostAction, type AdminState } from "@/app/actions/admin";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/alert";
-import { Avatar } from "@/components/ui/avatar";
-import { formatRelativeTime } from "@/lib/format";
 import { DEPARTMENTS } from "@/lib/community";
 
-export function AnswerForm({
-  post,
-}: {
-  post: { id: string; authorName: string; authorColor: string; content: string; createdAt: Date };
-}) {
+/*
+  IL MODULO DI RISPOSTA A **UNA** DOMANDA.
+
+  Chi ha chiesto e che cosa ha chiesto li rende la pagina: sono un Server
+  Component, e prima viaggiavano al browser dentro questo componente client una
+  volta per domanda in coda.
+*/
+export function AnswerForm({ postId }: { postId: string }) {
   const [state, action] = useActionState<AdminState, FormData>(
     answerPostAction,
     undefined,
   );
 
   return (
-    <div className="rounded-[var(--radius-sm)] border border-border bg-surface-2/40 p-4">
-      <div className="flex items-center gap-2.5">
-        <Avatar name={post.authorName} color={post.authorColor} size="sm" />
-        <div className="min-w-0">
-          <p className="text-sm font-semibold leading-tight">
-            {post.authorName}
-          </p>
-          <p className="text-xs text-muted-2" suppressHydrationWarning>
-            {formatRelativeTime(post.createdAt)}
-          </p>
-        </div>
-      </div>
-      <p className="mt-2 text-sm">{post.content}</p>
-
+    <div>
       {state?.ok ? (
         <Alert variant="success" className="mt-3">
           Risposta pubblicata.
         </Alert>
       ) : (
         <form action={action} className="mt-3 space-y-2">
-          <input type="hidden" name="postId" value={post.id} />
+          <input type="hidden" name="postId" value={postId} />
           {state?.error ? (
             <p className="text-xs font-medium text-[var(--red)]">{state.error}</p>
           ) : null}

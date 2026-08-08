@@ -5,7 +5,9 @@
 > coerente con quanto scritto qui, o si corregge la scelta o si aggiorna
 > (consapevolmente) questo documento.
 >
-> Ultime revisioni: **2026-08-07** (§6 le quattro nature messe alla prova
+> Ultime revisioni: **2026-08-07** (§6 *una coda è una lista, e il lavoro è una
+> pagina*: la riga compatta è 69px contro i 323 del modulo, e il dettaglio è
+> costante) · **2026-08-07** (§6 le quattro nature messe alla prova
 > eseguendo il taglio di `/admin`: il cruscotto non ripete la navigazione delle
 > figlie, e una riga che va a capo costa 96px a 1280 e 200 a 375) · **2026-08-07**
 > (§11.6 **diventa un cancello bloccante** e
@@ -313,6 +315,38 @@ l'opposto della regola precedente ed è voluto.
   contatori*), e **togliere «Cruscotto» dalle pastiglie** portandolo a un
   «← Area Comune» sopra il titolo (da 200 a 148px, cioè poco per una porta in
   meno).
+
+- **Una coda è una lista, e il lavoro è una pagina** (decisa 2026-08-07 da
+  Lorenzo sui mockup, eseguita lo stesso giorno). È la seconda metà della regola
+  qui sopra: *una coda una pagina* dice **dove** sta una coda, questa dice **di
+  che cosa è fatta**.
+
+  > **La riga porta alla voce, e il lavoro sta sulla pagina della voce.
+  > Su desktop la lista resta a fianco; sotto ~1024px c'è solo il lavoro, col
+  > ritorno alla coda.**
+
+  La ragione è una misura, non un gusto: una coda fatta di **moduli di lavoro
+  impilati** cresce di ~320px per ogni voce — il triage faceva **4.680px** con
+  le quattordici segnalazioni del seed — mentre la **riga compatta è 69px**, e
+  soprattutto **il dettaglio è costante**: 864px con quattordici voci in coda o
+  con quattrocento. È l'unica altezza dell'area che non dipende da quanto lavoro
+  c'è.
+
+  Il riquadro che scorre non sparisce, cambia mestiere: limita **la lista**, mai
+  il lavoro. Nel triage limitava i moduli, cioè teneva 12 voci su 14 fuori vista
+  facendo sembrare corta una pagina che non lo era.
+
+  **Due prezzi, dichiarati.** L'indice di una coda lunga *cresce*: le
+  segnalazioni passano da 896 a 1.416px e le valutazioni da 1.114 a 2.539 — ma
+  gli 896 nascondevano dodici voci e i 1.114 ne mostravano **6 su 32**. Una
+  lista lunga dice la verità sulla coda; un riquadro che scorre la nasconde.
+
+  Il corollario tecnico, che è già costato due volte: **la riga vive a due
+  larghezze** — ~804px sull'indice e **304** nella colonna del dettaglio —
+  quindi si adatta con `@container`, mai con `sm:`/`lg:`. È lo stesso caso del
+  footer (2026-08-05), e la regola generale è tre paragrafi più su: quando
+  cambia *dove* vive un componente, le larghezze a cui è stato verificato non
+  valgono più.
 
 ---
 

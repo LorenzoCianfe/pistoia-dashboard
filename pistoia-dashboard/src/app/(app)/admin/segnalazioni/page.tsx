@@ -5,24 +5,17 @@ import { getContatoriAdmin, getSegnalazioniAperte } from "@/lib/data/admin";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { NavAdmin } from "@/components/admin/nav-admin";
-import { ReportTriage } from "@/components/admin/report-triage";
+import { ListaSegnalazioni } from "@/components/admin/liste-code";
 
 export const metadata: Metadata = { title: "Segnalazioni · Area Comune" };
 
 /*
-  Il triage delle segnalazioni.
+  La coda del triage: **la lista**, e il lavoro su `[id]`.
 
-  ⚠️ **Il riquadro che scorre dentro la pagina resta**, e la prima stesura del
-  taglio l'aveva tolto ragionando che «adesso a scorrere è la pagina». Misurato
-  subito dopo: senza, questa pagina fa **5.000px** con le 14 segnalazioni
-  aperte del seed — cioè da sola più alta di quanto il piano preveda per
-  l'intera area, e più del triplo della coda peggiore. Il taglio serviva a non
-  avere pagine così.
-
-  Il vero rimedio non è il riquadro ma **lista + dettaglio**, e il piano lo
-  tiene fuori di proposito (`docs/piano-admin.md` §6): sono due lavori con due
-  rischi diversi. **La condizione che lo apre — una coda oltre le ~10 voci — è
-  già soddisfatta qui**, e questa nota esiste perché non serva rimisurarlo.
+  Fino al 2026-08-07 questa pagina era una pila di moduli da 323px tenuta a bada
+  da un riquadro che scorre: 4.680px di contenuto dentro una finestra da 576,
+  cioè **12 segnalazioni su 14 fuori vista**. Il riquadro era un cerotto, e il
+  piano lo diceva (`docs/piano-admin.md` §6). Il rimedio è questo.
 */
 export default async function SegnalazioniAdminPage() {
   await requireAdmin();
@@ -43,9 +36,12 @@ export default async function SegnalazioniAdminPage() {
       <NavAdmin contatori={contatori} />
 
       <Card>
-        <div className="max-h-[36rem] overflow-y-auto pr-1">
-          <ReportTriage items={segnalazioni} />
-        </div>
+        <p className="mb-3 text-sm text-muted">
+          {segnalazioni.length === 0
+            ? "Niente in coda."
+            : `${segnalazioni.length} aperte, dalla più urgente. Aprine una per lavorarci.`}
+        </p>
+        <ListaSegnalazioni voci={segnalazioni} />
       </Card>
     </div>
   );

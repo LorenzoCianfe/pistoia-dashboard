@@ -104,6 +104,16 @@ const DETTAGLI = [
   ["/proposte", "[data-proposta-card] a"],
   ["/quartieri", "[data-quartiere-card] a"],
   ["/comunita/stanze", 'a[href^="/comunita/stanze/"]'],
+  /*
+    O7, «lista + dettaglio» (2026-08-07): le quattro code dell'Area Comune
+    hanno adesso una rotta per voce. Sono ANNIDATE di due livelli — le più
+    fragili di tutte quando `.next` è stantio — e la passata principale entra
+    già come ADMIN, quindi si scoprono da qui senza una seconda sessione.
+  */
+  ["/admin/segnalazioni", 'a[href^="/admin/segnalazioni/"]'],
+  ["/admin/proposte", 'a[href^="/admin/proposte/"]'],
+  ["/admin/domande", 'a[href^="/admin/domande/"]'],
+  ["/admin/valutazioni", 'a[href^="/admin/valutazioni/"]'],
 ];
 
 const browser = await chromium.launch();

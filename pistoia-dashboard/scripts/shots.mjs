@@ -174,6 +174,42 @@ const PAGES = [
   { name: "admin-segnalazioni", url: "/admin/segnalazioni", ruolo: "admin" },
   { name: "admin-cittadini", url: "/admin/cittadini", ruolo: "admin" },
   { name: "admin-pubblica", url: "/admin/pubblica", ruolo: "admin" },
+  /*
+    O7, «lista + dettaglio» (2026-08-07). Le quattro pagine di lavoro entrano
+    insieme alla modifica: sono **il guscio a due colonne**, cioè la novità
+    visiva di questo lavoro, e a 360px sono anche l'unico posto dove la colonna
+    della lista sparisce — il regime che nessuna schermata a 1440 mostrerebbe.
+
+    Ci si arriva cliccando, come per i dettagli pubblici: l'id viene dal seed.
+  */
+  {
+    name: "admin-segnalazione-dettaglio",
+    url: "/admin/segnalazioni",
+    ruolo: "admin",
+    apriPrima: 'a[href^="/admin/segnalazioni/"]',
+    attendiUrl: /\/admin\/segnalazioni\/[^/]+$/,
+  },
+  {
+    name: "admin-proposta-dettaglio",
+    url: "/admin/proposte",
+    ruolo: "admin",
+    apriPrima: 'a[href^="/admin/proposte/"]',
+    attendiUrl: /\/admin\/proposte\/[^/]+$/,
+  },
+  {
+    name: "admin-domanda-dettaglio",
+    url: "/admin/domande",
+    ruolo: "admin",
+    apriPrima: 'a[href^="/admin/domande/"]',
+    attendiUrl: /\/admin\/domande\/[^/]+$/,
+  },
+  {
+    name: "admin-recensione-dettaglio",
+    url: "/admin/valutazioni",
+    ruolo: "admin",
+    apriPrima: 'a[href^="/admin/valutazioni/"]',
+    attendiUrl: /\/admin\/valutazioni\/[^/]+$/,
+  },
   { name: "redazione", url: "/redazione", ruolo: "moderatore" },
   { name: "faq", url: "/faq" },
   { name: "glossario", url: "/glossario" },

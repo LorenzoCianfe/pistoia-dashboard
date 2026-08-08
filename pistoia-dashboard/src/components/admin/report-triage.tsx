@@ -8,29 +8,28 @@ import {
   addReportPhotoAction,
   type ReportAdminState,
 } from "@/app/actions/reports";
-import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/alert";
-import {
-  REPORT_FLOW,
-  REPORT_STATUS,
-  DEPARTMENTS,
-  reportCategory,
-  reportStatus,
-  reportUrgency,
-} from "@/lib/community";
+import { REPORT_FLOW, REPORT_STATUS, DEPARTMENTS } from "@/lib/community";
 import { downscaleImage } from "@/lib/images";
-import { formatNumber } from "@/lib/format";
 
+/*
+  IL MODULO DI TRIAGE DI **UNA** SEGNALAZIONE.
+
+  Fino al 2026-08-07 questo file esportava anche la lista, e la coda era una
+  pila di questi moduli: 323px l'uno, 4.680px in quattordici. Adesso la lista è
+  fatta di righe da 69px (`components/admin/coda.tsx`) e qui resta il solo
+  lavoro, che vive su `/admin/segnalazioni/[id]`.
+
+  Il merito — titolo, descrizione, autore, luogo — lo rende la **pagina**, che è
+  un Server Component: è testo statico, e non c'è ragione di spedirlo al browser
+  dentro un componente client.
+*/
 type Item = {
   id: string;
-  title: string;
-  category: string;
   status: string;
   urgency: string | null;
-  neighborhoodName: string | null;
   assignedDepartment: string | null;
-  confirmations: number;
 };
 
 // `h-11` sono i 44px di `DESIGN.md` §11.6: era `h-10`, cioè 40 — quattro pixel
@@ -67,7 +66,15 @@ function UrgencyReview({ reportId }: { reportId: string }) {
       {state?.error ? (
         <p className="mt-1 text-xs font-medium text-[var(--red)]">{state.error}</p>
       ) : null}
-      <div className="mt-2 flex gap-2">
+      {/*
+        `flex-wrap` e non `flex`: i due pulsanti affiancati misurano 301px, e
+        nella colonna del dettaglio a 375px ce ne sono 239. Senza, «Flusso
+        ordinario» **sporge di 62px e la card lo ritaglia** — un controllo che
+        esiste e non si può premere. Nessun cancello lo vede: `shots` misura il
+        traboccamento *della pagina* (che resta zero), `bersagli` misura la
+        *dimensione* (che è a norma), e axe non ha una regola per «tagliato».
+      */}
+      <div className="mt-2 flex flex-wrap gap-2">
         <form action={action}>
           <input type="hidden" name="reportId" value={reportId} />
           <input type="hidden" name="outcome" value="confermata" />
@@ -188,29 +195,14 @@ function PhasePhotoForm({ reportId }: { reportId: string }) {
   );
 }
 
-function TriageItem({ item }: { item: Item }) {
+export function TriageSegnalazione({ item }: { item: Item }) {
   const [state, action] = useActionState<ReportAdminState, FormData>(
     updateReportStatusAction,
     undefined,
   );
-  const cat = reportCategory(item.category);
-  const urgency = reportUrgency(item.urgency);
 
   return (
-    <div className="rounded-[var(--radius-sm)] border border-border bg-surface-2/40 p-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge color={cat.color}>{cat.label}</Badge>
-        <Badge color={reportStatus(item.status).color}>
-          {reportStatus(item.status).label}
-        </Badge>
-        {urgency ? <Badge color={urgency.color}>{urgency.label}</Badge> : null}
-        <span className="text-xs text-muted-2">
-          {formatNumber(item.confirmations)} conferme
-          {item.neighborhoodName ? ` · ${item.neighborhoodName}` : ""}
-        </span>
-      </div>
-      <p className="mt-1.5 text-sm font-semibold">{item.title}</p>
-
+    <div>
       {item.urgency === "richiesta" ? <UrgencyReview reportId={item.id} /> : null}
 
       {state?.ok ? (
@@ -218,12 +210,21 @@ function TriageItem({ item }: { item: Item }) {
           Stato aggiornato.
         </Alert>
       ) : (
-        <form action={action} className="mt-3 space-y-2">
+        <form action={action} className="@container mt-3 space-y-2">
           <input type="hidden" name="reportId" value={item.id} />
           {state?.error ? (
             <p className="text-xs font-medium text-[var(--red)]">{state.error}</p>
           ) : null}
-          <div className="grid gap-2 sm:grid-cols-2">
+          {/*
+            `@sm:` e non `sm:`: da quando il triage vive sulla pagina della voce,
+            questo modulo è largo **479px** nella colonna del dettaglio e ~303 su
+            telefono — due larghezze, mai quella della finestra. Con `sm:` la
+            variante a due colonne scattava per il fatto che la *finestra* fosse
+            larga, che è la trappola del footer del 2026-08-05 (`DESIGN.md` §6).
+            Oggi darebbe lo stesso esito; smetterebbe di darlo al primo cambio di
+            larghezza della colonna.
+          */}
+          <div className="grid gap-2 @sm:grid-cols-2">
             <select name="status" defaultValue={item.status} className={selectClass} aria-label="Stato">
               {SETTABLE.map((s) => (
                 <option key={s} value={s}>
@@ -262,23 +263,6 @@ function TriageItem({ item }: { item: Item }) {
 
       {/* Foto durante/dopo (A1 §4) */}
       <PhasePhotoForm reportId={item.id} />
-    </div>
-  );
-}
-
-export function ReportTriage({ items }: { items: Item[] }) {
-  if (items.length === 0) {
-    return (
-      <p className="rounded-[var(--radius-sm)] border border-dashed border-border-strong px-4 py-8 text-center text-sm text-muted">
-        Nessuna segnalazione aperta. 🎉
-      </p>
-    );
-  }
-  return (
-    <div className="space-y-3">
-      {items.map((item) => (
-        <TriageItem key={item.id} item={item} />
-      ))}
     </div>
   );
 }

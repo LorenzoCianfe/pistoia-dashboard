@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { login, posata, pretendiAtterraggio } from "./helpers";
+import { apriDettaglio, login, posata, pretendiAtterraggio } from "./helpers";
 import { PAGINE_ANONIME, PAGINE_AUTENTICATE, PAGINE_STAFF } from "./pagine-cancello";
 
 /*
@@ -389,13 +389,16 @@ for (const [dove, viewport] of Object.entries(VIEWPORT)) {
       });
     }
 
-    for (const { nome, url, conto } of PAGINE_STAFF) {
+    for (const { nome, url, conto, apriPrima } of PAGINE_STAFF) {
       test(`${nome} non ha bersagli sotto i ${SOGLIA}px`, async ({ page }) => {
         await login(page, conto);
         await page.goto(url);
         await pretendiAtterraggio(page, url);
+        // Le rotte di dettaglio non hanno un indirizzo fisso: ci si arriva
+        // cliccando la prima riga della lista (`pagine-cancello.ts`).
+        if (apriPrima) await apriDettaglio(page, apriPrima);
         await posata(page);
-        await pretendiBersagli(page, url);
+        await pretendiBersagli(page, new URL(page.url()).pathname);
       });
     }
   });

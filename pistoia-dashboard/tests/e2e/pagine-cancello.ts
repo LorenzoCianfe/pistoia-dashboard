@@ -15,11 +15,23 @@ import { ADMIN, MODERATORE } from "./helpers";
  * una pagina per ciascun impianto visivo, così una regressione di sistema si
  * vede almeno una volta. Aggiungerne una costa ~4s per tema e per viewport.
  */
+/**
+ * Come si arriva a una rotta di DETTAGLIO, il cui indirizzo non è fisso.
+ *
+ * Gli id vengono dal seed e cambiano a ogni `db:seed`, quindi non si possono
+ * scrivere qui: si apre la lista (`url`) e si clicca la prima riga. È la stessa
+ * tecnica che `scripts/shots.mjs` usa da sempre per i dettagli pubblici e che
+ * `scripts/rotte.mjs` chiama `DETTAGLI`.
+ */
+export type ApriPrima = { selettore: string; attendi: RegExp };
+
 export type PaginaCancello = {
   nome: string;
   url: string;
   /** Assente = pagina anonima. */
   conto?: { email: string; password: string };
+  /** Presente = `url` è la lista, e la pagina da misurare è quella che si apre. */
+  apriPrima?: ApriPrima;
 };
 
 export const PAGINE_ANONIME: PaginaCancello[] = [
@@ -71,10 +83,59 @@ export const PAGINE_STAFF: PaginaCancello[] = [
   { nome: "admin · segnalazioni (triage)", url: "/admin/segnalazioni", conto: ADMIN },
   { nome: "admin · cittadini (verifiche + moderazione)", url: "/admin/cittadini", conto: ADMIN },
   { nome: "admin · pubblica (i tre strumenti)", url: "/admin/pubblica", conto: ADMIN },
+  /*
+    I QUATTRO DETTAGLI DELLE CODE, entrati il 2026-08-07 con «lista + dettaglio»
+    (`docs/piano-admin.md` §6).
+
+    Entrano tutti e quattro, e per la stessa ragione delle sei sottopagine: i
+    moduli che questo cancello misurava ieri sulle liste — triage, valutazione
+    della proposta, risposta alla domanda, controlli sulla recensione — **oggi
+    vivono qui**. Elencarne uno solo «rappresentativo» non risparmierebbe una
+    verifica nuova: toglierebbe copertura che esiste, su quattro moduli diversi.
+
+    Il guscio a due colonne è invece lo stesso per tutti e quattro, e questo il
+    cancello lo misura quattro volte: è il prezzo di non perdere i moduli.
+  */
+  {
+    nome: "admin · segnalazione (dettaglio)",
+    url: "/admin/segnalazioni",
+    conto: ADMIN,
+    apriPrima: {
+      selettore: 'a[href^="/admin/segnalazioni/"]',
+      attendi: /\/admin\/segnalazioni\/[^/]+$/,
+    },
+  },
+  {
+    nome: "admin · proposta (dettaglio)",
+    url: "/admin/proposte",
+    conto: ADMIN,
+    apriPrima: {
+      selettore: 'a[href^="/admin/proposte/"]',
+      attendi: /\/admin\/proposte\/[^/]+$/,
+    },
+  },
+  {
+    nome: "admin · domanda (dettaglio)",
+    url: "/admin/domande",
+    conto: ADMIN,
+    apriPrima: {
+      selettore: 'a[href^="/admin/domande/"]',
+      attendi: /\/admin\/domande\/[^/]+$/,
+    },
+  },
+  {
+    nome: "admin · recensione (dettaglio)",
+    url: "/admin/valutazioni",
+    conto: ADMIN,
+    apriPrima: {
+      selettore: 'a[href^="/admin/valutazioni/"]',
+      attendi: /\/admin\/valutazioni\/[^/]+$/,
+    },
+  },
   { nome: "redazione (moderatore)", url: "/redazione", conto: MODERATORE },
 ];
 
-/** Tutte e diciassette, nell'ordine in cui si attraversano. */
+/** Tutte e ventuno, nell'ordine in cui si attraversano. */
 export const PAGINE_CANCELLO: PaginaCancello[] = [
   ...PAGINE_ANONIME,
   ...PAGINE_AUTENTICATE,

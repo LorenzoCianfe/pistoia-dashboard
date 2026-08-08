@@ -4,8 +4,9 @@
 > prossima sessione **esegua** invece di ridecidere: la scelta del taglio è già
 > stata fatta, e il ragionamento che ci ha portati è qui sotto.
 >
-> Stato: **✅ eseguito il 2026-08-07.** Il consuntivo, con le misure vere e le
-> due cose che il piano non aveva previsto, è in fondo (§7).
+> Stato: **✅ eseguito il 2026-08-07**, e il debito che aveva lasciato aperto
+> (§6, lista + dettaglio) **chiuso lo stesso giorno**. Due consuntivi: §7 il
+> taglio, §8 le code.
 
 ---
 
@@ -141,6 +142,16 @@ per una pagina.
 Non si fa insieme al taglio: sono due lavori con due rischi diversi, e il taglio
 è utile da solo.
 
+> ### ✅ CHIUSO il 2026-08-07, poche ore dopo
+>
+> La condizione era **già soddisfatta al momento di scriverla**: «Segnalazioni»
+> 14 voci, «Valutazioni» 32. La forma l'ha scelta Lorenzo su tre mockup
+> iniettati sull'applicazione vera — riga espandibile, pagina di dettaglio,
+> pagina di dettaglio **più due colonne su desktop** — e ha preso la terza.
+>
+> Il consuntivo è in §8. La regola che ne è nata sta in `DESIGN.md` §6: *una
+> coda è una lista, e il lavoro è una pagina.*
+
 ---
 
 ## 7. Consuntivo — che cosa è successo eseguendolo (2026-08-07)
@@ -204,3 +215,72 @@ per queste. Chiuso portando in `shots.mjs` il controllo del testo d'errore che
 traboccamento a 360px · `pagine-cancello` **17** (da 11), quindi a11y e bersagli
 **34 casi** ciascuno · `porte.spec.ts` guadagna due casi che leggono le sei
 porte **dal cruscotto stesso**, senza una seconda lista.
+
+---
+
+## 8. Consuntivo di «lista + dettaglio» (2026-08-07, stessa giornata)
+
+### Le misure, a 1280px
+
+| Rotta | Prima | **Dopo** | Che cosa mostra adesso |
+|---|---:|---:|---|
+| `/admin/segnalazioni` | 896 | **1.416** | 14 righe su 14 (prima: 2 su 14 dentro un riquadro) |
+| `/admin/segnalazioni/[id]` | — | **864** | + la **descrizione**, che non si vedeva da nessuna parte |
+| `/admin/proposte` | 1.894 | **656** | 4 righe |
+| `/admin/proposte/[id]` | — | **913** | + il **problema** e il **testo** della proposta |
+| `/admin/domande` | 1.492 | **656** | 4 righe |
+| `/admin/domande/[id]` | — | **656** | la domanda per intero e il modulo |
+| `/admin/valutazioni` | 1.114 | **2.539** | **32 righe su 32** (prima: 6 su 32) |
+| `/admin/valutazioni/[id]` | — | **864** | la recensione e i due comandi |
+
+**Il numero che conta non è nessuno di questi**: è che le colonne «dopo» dei
+dettagli **non cambiano col numero di voci in coda**. Prima il massimo cresceva
+di ~320px per ogni voce in più; adesso la superficie di lavoro è quella con
+quattordici voci e con quattrocento. La riga di lista è **69px** contro i **323**
+del modulo di lavoro: 4,7 volte.
+
+### Le tre cose che il piano non aveva previsto
+
+1. **Due pagine crescono, e vanno dichiarate.** Segnalazioni da 896 a 1.416,
+   Valutazioni da 1.114 a 2.539. Non è una regressione: gli 896 erano un
+   riquadro da 576px su 4.680 di contenuto — **12 voci su 14 fuori vista** — e i
+   1.114 mostravano **6 recensioni su 32**. Una lista lunga dice la verità sulla
+   coda; un riquadro che scorre la nasconde. Il riquadro resta, ma limita **la
+   lista** nella colonna del dettaglio, mai il lavoro.
+
+2. **Il merito mancava, e non era un problema di impaginazione.** La descrizione
+   della segnalazione era **caricata e mai mostrata** — quattordici volte, una
+   per voce — e il testo della proposta nemmeno caricato: il Comune sceglieva lo
+   stato, assegnava l'ufficio e scriveva una nota ufficiale **visibile al
+   cittadino** avendo davanti il solo titolo. È la ragione vera del dettaglio;
+   l'altezza è la seconda.
+
+3. **Il dettaglio non può interrogare la propria coda.** Ogni azione riuscita
+   toglie la voce dalla coda, quindi un dettaglio filtrato risponderebbe **404
+   subito dopo un'azione riuscita** — un errore proprio quando l'operatore ha
+   fatto la cosa giusta. Si prende per id, senza filtro, e la pagina dice da sé
+   che la voce è uscita.
+
+### Due difetti preesistenti chiusi per strada, e sono la stessa categoria
+
+**«Flusso ordinario» era tagliato a 375px**: i due pulsanti dell'urgenza
+affiancati fanno 301px contro i 239 del proprio riquadro, e la card ritagliava
+il secondo. **Le quattro tendine della valutazione sintetica erano tagliate a
+metà parola a 360px**: «Impatto: Med…», «Fattibilità: Da…» — cioè il valore
+corrente, che è l'unica cosa che un `<select>` comunica a riposo.
+
+Nessuno dei due produce traboccamento, quindi `shots` esce 0; nessuno dei due è
+sottodimensionato, quindi `bersagli` li approva; e axe non ha una regola per
+«tagliato». Li ha trovati **guardare le schermate**, come l'affordance affidata
+all'`:hover` due lavori fa. È la terza volta che una categoria di difetto si
+rivela invisibile a tutti i cancelli, e adesso ha un nome: *un controllo esce
+dal proprio contenitore, o il suo testo ci esce dentro*.
+
+### I cancelli, dopo
+
+`rotte` **66** (da 62), 0 con problemi · `shots` **+4 pagine** per regime ·
+`pagine-cancello` **21** (da 17), quindi a11y e bersagli **42 casi** ciascuno,
+E2E **116**. Ai quattro dettagli i cancelli arrivano **cliccando** la prima riga
+della lista, perché l'id viene dal seed: `DETTAGLI` in `rotte.mjs`, `apriPrima`
+in `shots.mjs` e — nuovo — `apriPrima` in `pagine-cancello.ts`, con
+`apriDettaglio()` in `helpers.ts`.

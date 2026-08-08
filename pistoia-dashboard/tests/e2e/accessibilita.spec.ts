@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-import { login, posata, pretendiAtterraggio } from "./helpers";
+import { apriDettaglio, login, posata, pretendiAtterraggio } from "./helpers";
 import { PAGINE_ANONIME, PAGINE_AUTENTICATE, PAGINE_STAFF } from "./pagine-cancello";
 
 /*
@@ -134,12 +134,15 @@ for (const tema of ["light", "dark"] as const) {
       });
     }
 
-    for (const { nome, url, conto } of PAGINE_STAFF) {
+    for (const { nome, url, conto, apriPrima } of PAGINE_STAFF) {
       test(`${nome} non ha violazioni WCAG AA`, async ({ page }) => {
         await conTema(page, tema);
         await login(page, conto);
         await page.goto(url);
         await pretendiAtterraggio(page, url);
+        // Le rotte di dettaglio non hanno un indirizzo fisso: ci si arriva
+        // cliccando la prima riga della lista (`pagine-cancello.ts`).
+        if (apriPrima) await apriDettaglio(page, apriPrima);
         await posata(page);
         const esito = await analizza(page);
         expect(

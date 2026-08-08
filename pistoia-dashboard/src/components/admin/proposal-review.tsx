@@ -5,24 +5,27 @@ import {
   reviewProposalAction,
   type ProposalAdminState,
 } from "@/app/actions/proposals";
-import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/alert";
-import { PROPOSAL_STATUS, proposalStatus } from "@/lib/community";
+import { PROPOSAL_STATUS } from "@/lib/community";
 import {
   IMPACT_SCALE,
   COST_SCALE,
   TIME_SCALE,
   FEASIBILITY_SCALE,
 } from "@/lib/civic-topics";
-import { formatNumber } from "@/lib/format";
 
+/*
+  IL MODULO DI VALUTAZIONE DI **UNA** PROPOSTA.
+
+  Come per il triage, la lista è uscita di qui il 2026-08-07: erano quattro
+  moduli identici da 389px in colonna, e il piano li dava per il debito peggiore
+  dell'area (`docs/piano-admin.md` §6). Il merito — titolo, problema, testo,
+  sostegni — lo rende la pagina, che è un Server Component.
+*/
 type Item = {
   id: string;
-  title: string;
   status: string;
-  hasReply: boolean;
-  supports: number;
   estimatedImpact: string | null;
   estimatedCost: string | null;
   estimatedTime: string | null;
@@ -43,52 +46,20 @@ const selectClass =
 
 const SETTABLE = ["pubblicata", "in_valutazione", "risposta", "approvata", "respinta"];
 
-function ReviewItem({ item }: { item: Item }) {
+export function RevisioneProposta({ item }: { item: Item }) {
   const [state, action] = useActionState<ProposalAdminState, FormData>(
     reviewProposalAction,
     undefined,
   );
 
   return (
-    <div className="rounded-[var(--radius-sm)] border border-border bg-surface-2/40 p-4">
-      {/*
-        LA PROPOSTA PRIMA, il suo stato dopo (revisione 2026-08-07).
-
-        Era il contrario: pastiglia e conteggio in cima, e il titolo — cioè la
-        cosa che un cittadino ha scritto e che il Comune deve giudicare — sotto,
-        a `text-sm`, più piccolo dei controlli del modulo che lo circondano. La
-        gerarchia diceva «uno stato, e per inciso una proposta». Il macchinario
-        non può pesare più del merito.
-      */}
-      <p className="text-base font-semibold leading-snug">{item.title}</p>
-      <div className="mt-1.5 flex flex-wrap items-center gap-2">
-        <Badge color={proposalStatus(item.status).color}>
-          {proposalStatus(item.status).label}
-        </Badge>
-        <span className="text-xs font-semibold tabular-nums">
-          {formatNumber(item.supports)} sostegni
-        </span>
-        {/*
-          «risposta pubblicata» SOLO quando la pastiglia non lo dice già.
-
-          Con stato `risposta` la pastiglia legge «Risposta del Comune» e questa
-          coda ripeteva la stessa cosa a due centimetri di distanza — con il
-          valore del `<select>` qui sotto che la diceva una terza volta. Negli
-          altri stati non è una ripetizione ma un'informazione in più: una
-          proposta ancora «Pubblicata» può avere già una risposta scritta, e
-          quello va detto.
-        */}
-        {item.hasReply && item.status !== "risposta" ? (
-          <span className="text-xs text-muted-2">· risposta pubblicata</span>
-        ) : null}
-      </div>
-
+    <div>
       {state?.ok ? (
         <Alert variant="success" className="mt-3">
           Proposta aggiornata.
         </Alert>
       ) : (
-        <form action={action} className="mt-3 space-y-2">
+        <form action={action} className="@container mt-3 space-y-2">
           <input type="hidden" name="proposalId" value={item.id} />
           {state?.error ? (
             <p className="text-xs font-medium text-[var(--red)]">{state.error}</p>
@@ -107,8 +78,23 @@ function ReviewItem({ item }: { item: Item }) {
             placeholder="Risposta ufficiale del Comune (facoltativa)…"
             className="w-full resize-none rounded-[var(--radius-sm)] border border-border-strong bg-surface px-3.5 py-2 text-sm placeholder:text-muted-2 focus-visible:border-teal focus-visible:outline-none"
           />
-          <fieldset className="grid grid-cols-2 gap-2">
-            <legend className="col-span-2 pb-1 text-xs font-medium text-muted-2">
+          {/*
+            Due colonne solo dove ci stanno. A 360px in modalità semplice la
+            colonna faceva ~140px e le quattro tendine leggevano «Impatto:
+            Med…», «Fattibilità: Da…»: il valore corrente — cioè l'unica cosa
+            che quel controllo comunica a riposo — era **tagliato a metà
+            parola** su tutte e quattro. Non è un traboccamento, quindi `shots`
+            esce 0; ed è a norma di dimensione, quindi `bersagli` lo approva.
+            Visto guardando la schermata, come le altre di questa famiglia.
+
+            `@sm:` e non `sm:` per la ragione detta in `report-triage.tsx`: qui
+            si è larghi 479px nella colonna del dettaglio e ~303 su telefono, e
+            la finestra non c'entra. `grid-cols-1` esplicito perché una variante
+            con prefisso senza la sua base lascia la traccia a `auto`, cioè al
+            min-content (`AGENTS.md` §3, ondata 7, 5).
+          */}
+          <fieldset className="grid grid-cols-1 gap-2 @sm:grid-cols-2">
+            <legend className="pb-1 text-xs font-medium text-muted-2 @sm:col-span-2">
               Valutazione sintetica (facoltativa, indicativa)
             </legend>
             {ASSESS_FIELDS.map((f) => (
@@ -135,23 +121,6 @@ function ReviewItem({ item }: { item: Item }) {
           </div>
         </form>
       )}
-    </div>
-  );
-}
-
-export function ProposalReview({ items }: { items: Item[] }) {
-  if (items.length === 0) {
-    return (
-      <p className="rounded-[var(--radius-sm)] border border-dashed border-border-strong px-4 py-8 text-center text-sm text-muted">
-        Nessuna proposta da valutare.
-      </p>
-    );
-  }
-  return (
-    <div className="space-y-3">
-      {items.map((item) => (
-        <ReviewItem key={item.id} item={item} />
-      ))}
     </div>
   );
 }
