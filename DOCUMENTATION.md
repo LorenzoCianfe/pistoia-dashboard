@@ -1300,6 +1300,46 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   nuova, quindi `rotte` resta 66 e `/admin` era già dentro a11y e bersagli, dove
   le due card sono entrate da sole.
 
+- **2026-08-09 (Ondata 8 — la moderazione assistita, riscritta dalle misure)** —
+  Delle tre euristiche che la ROADMAP prevedeva — spam, duplicati, suggerimento
+  di categoria — ne è sopravvissuta una, e non dove doveva stare.
+
+  **I duplicati per somiglianza del testo: zero veri positivi.** Sopra il 50%
+  nessuna coppia; la sola sopra il 40% è «Lampione a intermittenza in Via
+  Dalmazia» contro «…in Via Bonellina» — due lampioni, due strade, due
+  quartieri. ⚠️ Il motivo vale oltre il seed: le segnalazioni comunali sono
+  **formulari**, quindi il testo si somiglia **proprio quando il luogo cambia**,
+  e il luogo è il segnale che distingue. Una somiglianza testuale tratta come
+  rumore l'unica cosa che conta, e l'azione che ne discende
+  (`mergeReportsAction`) fonde davvero.
+
+  Al triage è arrivata invece la lente che **esisteva già** e che era già
+  quella giusta: «altre N aperte, stessa categoria e stesso quartiere» — la
+  stessa di `findSimilarReports`, che il cittadino vedeva mentre scrive e il
+  moderatore no. **È un fatto, non una stima**, quindi non ha niente da tarare
+  né da dichiarare incerto.
+
+  **Il suggerimento di categoria è finito sul modulo del CITTADINO**, non su
+  quello del Comune. Il triage cambia stato, ufficio e nota; **la categoria la
+  sceglie il cittadino e nessuna superficie del Comune la modifica**. Sul triage
+  il blocco avrebbe mostrato una discrepanza che l'operatore non poteva
+  risolvere — da cui la regola in `AGENTS.md` §3: *un consiglio che non si può
+  seguire è peggio del silenzio*. Il sintomo, però, non somigliava alla causa:
+  si presentava come «il suggerimento non compare mai».
+
+  **Le quattro difese**, tutte negli unit: tace se non trova parole, tace se due
+  categorie pareggiano, tace se conferma la scelta già fatta, e **non
+  pre-seleziona niente** — la tendina cambia solo premendo «Usa «…»». Le prove
+  a schermo sono **le parole della persona** e non i token del codice: mostrare
+  «cassonett» invece di «cassonetto» è onesto e somiglia a un refuso, e su una
+  superficie pubblica un artefatto che pare un errore mina la fiducia che il
+  blocco vuole costruire. ⚠️ Correggendolo è entrato un difetto nuovo, trovato
+  **dal test**: `\p{L}\p{N}` non comprende i segni combinanti (`\p{M}`), quindi
+  un accento decomposto spezzava la parola e «velocità» usciva «velocita».
+
+  **Lo spam resta fuori** perché il seed non ne contiene: non c'è niente su cui
+  tarare, e un'euristica tarata sul nulla è una promessa.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.

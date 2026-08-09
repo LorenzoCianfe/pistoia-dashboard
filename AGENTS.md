@@ -61,7 +61,7 @@ L'app vive in `pistoia-dashboard/`. La documentazione vive nella radice.
 
 ## 3. Design system — le regole che si sbagliano più spesso
 
-> §3 raccoglie **quaranta trappole già pagate**. Sono raggruppate per ondata
+> §3 raccoglie **quarantuno trappole già pagate**. Sono raggruppate per ondata
 > solo perché è così che sono emerse: leggile tutte, valgono tutte ancora.
 
 **Prima di tutto: Astryx è la sorgente dei TOKEN, non lo strato di primitive.**
@@ -628,6 +628,40 @@ introdotte suonava giusto ad alta voce.
    «tagliato». È la stessa famiglia dell'affordance affidata all'`:hover`: una
    categoria che oggi si trova **solo guardando**, e che varrebbe un cancello suo
    — *nessun controllo esce dal proprio contenitore*.
+
+### Un consiglio che non si può seguire è peggio del silenzio (2026-08-09)
+
+Pagata costruendo la moderazione assistita. Il suggerimento di categoria era
+finito sul **triage del Comune**, che è dove sembrava servire: chi decide è lì.
+Ma quel modulo cambia **stato, ufficio e nota** — e basta: **la categoria la
+sceglie il cittadino e nessuna superficie del Comune la modifica** (verificato
+su `updateReportStatusAction` e su ogni azione che tocca `category`).
+
+Il blocco avrebbe detto all'operatore «il testo somiglia a *parchi*» davanti a
+un modulo dove *parchi* non si può scegliere: una discrepanza visibile e non
+risolvibile, su una superficie di lavoro. **Peggio del silenzio**, perché il
+silenzio non chiede niente.
+
+⚠️ **Il sintomo non somigliava alla causa.** Il difetto si è manifestato come
+«il suggerimento non compare mai» — che sembrava un problema dell'euristica, e
+in parte lo era (tace quando conferma la scelta già fatta, quindi parla solo sul
+14% dei casi). È stato aprendo il modulo per capire quel silenzio che è emersa
+la cosa vera: non c'era la leva.
+
+La regola generale: **prima di mettere un suggerimento su una superficie,
+chiediti quale controllo lo rende seguibile.** Se non c'è, il suggerimento va
+dove il controllo è — qui il modulo del cittadino, che la categoria la sceglie
+davvero — oppure non va.
+
+E il corollario che è venuto dalla stessa sessione: **le prove di un
+suggerimento sono le parole della persona, non i token del codice.** Mostravamo
+«cassonett», il troncamento con cui la spia tiene insieme singolare e plurale:
+onesto e illeggibile, e su una superficie pubblica un artefatto che pare un
+refuso mina proprio la fiducia che il suggerimento vuole costruire.
+⚠️ Nel correggerlo è entrato un difetto nuovo, trovato **dal test e non
+guardando il codice**: in `\p{L}\p{N}` non ci sono i segni combinanti (sono
+`\p{M}`), quindi un accento **decomposto** vale da separatore e «velocità»
+usciva «velocita», con l'accento tagliato via.
 
 ### `undefined` in un `where` di Prisma non è «nessuna riga»: è «nessun filtro» (2026-08-08)
 

@@ -211,6 +211,8 @@ export async function getSegnalazioneDaTriare(id: string) {
       assignedDepartment: true,
       baseConfirmations: true,
       createdAt: true,
+      // Serve alla lista dei simili: la lente è categoria + quartiere.
+      neighborhoodId: true,
       neighborhood: { select: { name: true } },
       _count: { select: { confirmations: true, photos: true } },
     },
@@ -227,11 +229,46 @@ export async function getSegnalazioneDaTriare(id: string) {
     autore: r.anonymous ? null : r.authorName,
     luogo: r.location,
     assignedDepartment: r.assignedDepartment,
+    neighborhoodId: r.neighborhoodId,
     neighborhoodName: r.neighborhood?.name ?? null,
     confirmations: demoBaseline(r.baseConfirmations) + r._count.confirmations,
     foto: r._count.photos,
     createdAt: r.createdAt,
   };
+}
+
+/**
+ * Le altre segnalazioni APERTE della stessa categoria e dello stesso
+ * quartiere — la lista che il moderatore deve avere davanti per decidere se
+ * unire (Ondata 8, moderazione assistita).
+ *
+ * ⚠️ **È un fatto, non un suggerimento**, e la differenza è il punto.
+ * Misurato il 2026-08-09: una somiglianza sul TESTO, sul corpus del seed,
+ * trova **zero duplicati veri** e mette in cima un falso positivo pericoloso —
+ * «Lampione a intermittenza in Via Dalmazia» contro «…in Via Bonellina», che
+ * sono due lampioni in due strade diverse. Le segnalazioni comunali sono
+ * formulari, quindi il testo si somiglia **proprio quando il luogo cambia**, e
+ * il luogo è il segnale che distingue. Da qui la lente: categoria e quartiere,
+ * la stessa di `findSimilarReports` — che era già quella giusta.
+ */
+export async function getSimiliPerUnione(
+  id: string,
+  category: string,
+  neighborhoodId: string | null,
+) {
+  return prisma.report.findMany({
+    where: {
+      id: { not: id },
+      category,
+      // Senza quartiere si resta sulla sola categoria: meglio una lista più
+      // larga che nessuna, perché a decidere è comunque una persona.
+      ...(neighborhoodId ? { neighborhoodId } : {}),
+      ...SEGNALAZIONE_APERTA,
+    },
+    orderBy: { createdAt: "desc" },
+    take: 5,
+    select: { id: true, title: true, createdAt: true, location: true },
+  });
 }
 
 /**

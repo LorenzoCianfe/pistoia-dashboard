@@ -66,7 +66,7 @@ città dice a un visitatore non deve essere «per queste ti serve entrare».
 | **Bilancio** | `/bilancio` | ✅ | Apertura a bento con la **cifra display** (142 mln) e i tre anelli; **sankey a due stadi** "dove scorrono i soldi" (entrate → spesa/avanzo → 6 missioni), preceduto dall'unica **sezione narrata** della piattaforma; andamento mensile, treemap e elenco come lettura alternativa, glossario contestuale |
 | **Opere** | `/opere` · `/opere/[id]` | ✅ | **Cifra display** sull'investimento nei cantieri aperti e `MeshSurface` la cui tinta è la quota di cantieri che rispettano il calendario. **Cronoprogramma**: per ogni cantiere il lavoro fatto contro il tempo passato, col marcatore di dove i tempi previsti direbbero di essere. Dettaglio: stessa lettura in una riga, fonte di finanziamento, RUP, foto prima/durante/dopo, FAQ, commenti, mini-mappa, "Cosa cambia per me", "Spiegamelo semplice". **Transizione a elemento condiviso** lista → dettaglio |
 | **Mappa** | `/mappa` | ✅ | Leaflet + tile OSM, layer attivabili (opere, segnalazioni, eventi, avvisi urgenti, uffici, scuole, verde, servizi) |
-| **Segnalazioni** | `/segnalazioni` · `/[id]` | ✅ 👤 | Filtri + KPI, **timeline a punti** dell'andamento (altezza = arrivate, diametro = chiuse, colore = settimana in pari), foto reale, geolocalizzazione, **invio anonimo**, workflow di stato, "Anche io", timeline ufficiale, follow. **Transizione a elemento condiviso** lista → dettaglio |
+| **Segnalazioni** | `/segnalazioni` · `/[id]` | ✅ 👤 | Filtri + KPI, **timeline a punti** dell'andamento (altezza = arrivate, diametro = chiuse, colore = settimana in pari), foto reale, geolocalizzazione, **invio anonimo**, workflow di stato, "Anche io", timeline ufficiale, follow. **Transizione a elemento condiviso** lista → dettaglio. **Suggerimento di categoria dal titolo** (O8): porta le parole che l'hanno prodotto, tace se non sa o se pareggia, e **non applica niente da sé** |
 | **Sondaggi** | `/sondaggi` | ✅ 👤🔒 | Voto ottimistico. Consultazioni ufficiali e voti territoriali riservati ai verificati |
 | **Proposte** | `/proposte` · `/[id]` | ✅ 👤🔒 | Cifra display sui sostegni raccolti in tutto. Dettaglio: **scala a tacche** sull'intervallo reale 0→500 e i tre gradini 50/200/500 con cosa scatta a ciascuno. Sostegno riservato ai verificati, risposta ufficiale, "Perché non si può fare?" sulle respinte. **Transizione a elemento condiviso** |
 | **Comunità** | `/comunita` | ✅ 👤 | Cifra display sulla quota di **domande con risposta ufficiale** (contata sulle sole domande). Stanze tematiche a griglia col numero di conversazioni. Composer con tipo post e quartiere, feed con badge autore, like/commenti ottimistici, risposte ufficiali con ufficio, "questa risposta è utile?", segnala commento |
@@ -145,7 +145,7 @@ colore che `DESIGN.md` §4 assegna al lato cittadino — e vive su filo e pallin
 | `/admin/valutazioni` · `/[id]` | Le recensioni dei servizi: rispondi o segnala alla redazione | coda |
 | `/admin/proposte` · `/[id]` | Le proposte, ordinate per sostegno | coda |
 | `/admin/domande` · `/[id]` | Le domande del question time senza risposta | coda |
-| `/admin/segnalazioni` · `/[id]` | Il triage: stato, ufficio, nota ufficiale | coda |
+| `/admin/segnalazioni` · `/[id]` | Il triage: stato, ufficio, nota ufficiale · **«altre N aperte come questa»** (O8) | coda |
 | `/admin/cittadini` | Richieste di verifica **+** moderazione della community | coda (due, un mestiere) |
 | `/admin/pubblica` | Aggiorna un cantiere · crea un sondaggio · invia una notifica | strumenti |
 

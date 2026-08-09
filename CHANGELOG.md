@@ -5,6 +5,27 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.43.0] — 2026-08-09 · Un consiglio che non si può seguire è peggio del silenzio (Ondata 8)
+
+> La seconda voce del nucleo: la moderazione assistita. **Le misure hanno smontato due delle tre euristiche previste**, e la terza è finita su un'altra superficie di quella per cui era stata scritta.
+
+### Misurato — prima di costruire, e poi di nuovo
+- **I duplicati per somiglianza del testo: zero veri positivi.** Sopra il 50% di somiglianza, **nessuna coppia**; la sola sopra il 40% è «Lampione a intermittenza in Via Dalmazia» contro «…in Via Bonellina» — due lampioni, due strade, due quartieri. ⚠️ Il motivo è strutturale e vale oltre il seed: le segnalazioni comunali sono **formulari**, quindi il testo si somiglia **proprio quando il luogo cambia**, e il luogo è il segnale che distingue. Una somiglianza testuale tratta come rumore l'unica cosa che conta — e `mergeReportsAction` fonde davvero.
+- **Il suggerimento di categoria**: 60% azzeccate, **14% diverse dalla scelta umana** (6 su 42). Ma quei 6 sono per lo più casi in cui la categoria giusta è **discutibile** («Panchina imbrattata ai giardini» è decoro o parchi). Il che non assolve il suggerimento: lo rende più pesante, perché su un giudizio incerto una proposta della macchina si prende più spazio di quanto merita.
+
+### Aggiunto
+- **«Altre N aperte come questa» sul triage** — le altre segnalazioni aperte della stessa categoria e dello stesso quartiere. **È un fatto, non una stima**: la stessa lente di `findSimilarReports`, che il cittadino vedeva mentre scrive e il moderatore no. Compare 1 volta su 5 sul seed, ed è giusto: con 14 aperte su dieci categorie e dieci quartieri i vicini veri sono rari.
+- **Il suggerimento di categoria sul modulo del CITTADINO** — con le parole che l'hanno prodotto, e un pulsante «Usa «…»» che è l'unico modo in cui la categoria cambia.
+- **`src/lib/moderazione-assistita.ts`** (puro, parole-spia dichiarate e non apprese) e i suoi test.
+
+### Corretto — due difetti miei, trovati costruendo
+- ⚠️ **Il suggerimento era sul triage del Comune, dove non ha una leva.** Quel modulo cambia stato, ufficio e nota; **la categoria la sceglie il cittadino e nessuna superficie del Comune la modifica** — verificato su `updateReportStatusAction` e su tutte le azioni che toccano `category`. Avrebbe mostrato all'operatore una discrepanza che non poteva risolvere. Spostato dove la leva c'è. Ne esce una regola: **un consiglio che non si può seguire è peggio del silenzio.**
+- **Le prove mostravano il troncamento interno** («cassonett») invece della parola scritta («cassonetto»): onesto, ma somiglia a un refuso — e su una superficie pubblica un artefatto che pare un errore mina la fiducia che il blocco vuole costruire. Nel correggerlo è entrato un secondo difetto, **trovato dal test e non guardando il codice**: `\p{L}` non comprende i segni combinanti, quindi un accento decomposto spezzava la parola e «velocità» usciva «velocita».
+
+### Note
+- **Le quattro difese del suggerimento**, tutte provate dagli unit: tace se non trova parole (5 casi su 42), tace se due categorie pareggiano (6), tace se conferma la scelta già fatta, e **non pre-seleziona mai niente**.
+- **Fuori, con la condizione che lo riapre**: il duplicato per somiglianza del testo si riprende **solo su una serie che contenga duplicati veri** — sul seed il primo risultato è un falso positivo, e l'azione che ne discende è distruttiva.
+
 ## [0.42.0] — 2026-08-09 · Il cruscotto dice chi ha in mano che cosa (Ondata 8)
 
 > La prima voce del nucleo dell'Ondata 8: le analytics operative. La forma l'ha scelta Lorenzo su **tre mockup iniettati sull'applicazione vera**, dopo che la misura aveva già deciso metà del disegno.

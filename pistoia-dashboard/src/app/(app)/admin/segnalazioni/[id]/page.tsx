@@ -7,6 +7,7 @@ import {
   getContatoriAdmin,
   getSegnalazioneDaTriare,
   getSegnalazioniAperte,
+  getSimiliPerUnione,
 } from "@/lib/data/admin";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ import {
 } from "@/components/admin/coda";
 import { ListaSegnalazioni } from "@/components/admin/liste-code";
 import { TriageSegnalazione } from "@/components/admin/report-triage";
+import { SimiliAperte } from "@/components/admin/simili-aperte";
 import { reportCategory, reportStatus, reportUrgency } from "@/lib/community";
 import { formatDate, formatNumber } from "@/lib/format";
 
@@ -45,6 +47,23 @@ export default async function SegnalazioneAdminPage({
     getSegnalazioneDaTriare(id),
   ]);
   if (!voce) notFound();
+
+  /*
+    Le altre aperte come questa (Ondata 8). Si chiedono DOPO, perché la query
+    ha bisogno di categoria e quartiere di questa voce — e costa una lettura
+    sola, sulla superficie dove serve.
+
+    ⚠️ Il **suggerimento di categoria** NON è qui, e non per dimenticanza:
+    questo modulo cambia stato, ufficio e nota, mai la categoria — che la
+    sceglie il cittadino e nessuna superficie del Comune modifica. Un consiglio
+    che non si può seguire è peggio del silenzio, quindi vive dove la leva
+    c'è: `components/segnalazioni/report-composer.tsx`.
+  */
+  const simili = await getSimiliPerUnione(
+    voce.id,
+    voce.category,
+    voce.neighborhoodId,
+  );
 
   const cat = reportCategory(voce.category);
   const stato = reportStatus(voce.status);
@@ -114,6 +133,10 @@ export default async function SegnalazioneAdminPage({
               è uscita dalla coda, e resta modificabile da qui.
             </FuoriDallaCoda>
           ) : null}
+
+          {/* Sta PRIMA del modulo: è una cosa da sapere prima di decidere,
+              non dopo aver deciso. */}
+          <SimiliAperte simili={simili} quartiere={voce.neighborhoodName} />
 
           <TriageSegnalazione
             item={{

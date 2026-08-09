@@ -11,6 +11,7 @@ import { Field, Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Alert } from "@/components/ui/alert";
 import { SimilarReports } from "@/components/segnalazioni/similar-reports";
+import { SuggerimentoCategoria } from "@/components/segnalazioni/suggerimento-categoria";
 import { REPORT_CATEGORY } from "@/lib/community";
 import { downscaleImage } from "@/lib/images";
 import type { NeighborhoodOption } from "@/lib/data/neighborhoods";
@@ -38,6 +39,8 @@ export function ReportComposer({
   const [geoStatus, setGeoStatus] = useState<"idle" | "loading" | "error">("idle");
   // Categoria e zona alimentano il suggerimento anti-duplicati (A1 §2).
   const [category, setCategory] = useState<string | null>(null);
+  // Il titolo alimenta il suggerimento di categoria (Ondata 8).
+  const [titolo, setTitolo] = useState("");
   const [neighborhood, setNeighborhood] = useState<string | null>(
     defaultNeighborhoodId ?? null,
   );
@@ -100,6 +103,9 @@ export function ReportComposer({
           required
           maxLength={120}
           placeholder="Es. Lampione spento in Via…"
+          // Il titolo alimenta il suggerimento di categoria: è il campo che si
+          // compila per primo, ed è il più informativo.
+          onChange={(e) => setTitolo(e.target.value)}
         />
       </Field>
 
@@ -109,7 +115,9 @@ export function ReportComposer({
             id="category"
             name="category"
             required
-            defaultValue=""
+            // Controllata, perché il suggerimento deve poterla impostare: era
+            // `defaultValue` quando nessuno la scriveva da fuori.
+            value={category ?? ""}
             onChange={(e) => setCategory(e.target.value || null)}
             className={selectClass}
           >
@@ -140,6 +148,14 @@ export function ReportComposer({
           </select>
         </Field>
       </div>
+
+      {/* Ondata 8: propone una categoria dal titolo, e la applica solo se la
+          persona preme. Tace se non sa, se pareggia o se conferma la scelta. */}
+      <SuggerimentoCategoria
+        testo={titolo}
+        categoriaScelta={category}
+        onApplica={setCategory}
+      />
 
       {/* Anti-duplicati (A1 §2): appare appena la categoria è scelta */}
       <SimilarReports category={category} neighborhoodId={neighborhood} />
