@@ -6,7 +6,7 @@
 >
 > **Leggilo per intero all'inizio di ogni sessione, prima di toccare codice.**
 >
-> Aggiornato: 2026-08-07 (Fase C · cancello dei 44px · cancello della produzione · `/admin` spezzata in sette · lista + dettaglio sulle code)
+> Aggiornato: 2026-08-09 (**Ondata 8 aperta**: analytics operative e moderazione assistita · review «lenti mancanti» · le tre trappole nuove di §3 — *un consiglio che non si può seguire*, *`undefined` in un `where` di Prisma*, *la preferenza di movimento in fase di render*)
 
 ---
 
@@ -764,7 +764,7 @@ npm run lighthouse     # Lighthouse sulla build di produzione — misura, non gi
 npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
 npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
 node scripts/shots.mjs --simple --width=360   # modalità semplice, viewport minima
-npm run rotte          # tutte le rotte rispondono e rendono contenuto? (66 al 2026-08-07)
+npm run rotte          # tutte le rotte rispondono e rendono contenuto? (66 al 2026-08-09)
 npm run produzione     # il sito DEPLOYATO si monta davvero? — dopo ogni deploy, §8
 npm run db:reset       # ricrea il DB e ripopola i dati dimostrativi
 
@@ -982,7 +982,7 @@ Una modifica è finita quando **tutte** queste sono vere:
 - [ ] `npm run lint` passa
 - [ ] I test esistenti passano
 - [ ] `npm run rotte` è verde — **0 con problemi**, qualunque sia il totale
-      (66 al 2026-08-07; il numero cresce a ogni rotta nuova, e va letto dallo
+      (66 al 2026-08-09; il numero cresce a ogni rotta nuova, e va letto dallo
       script, non da qui). È l'unico cancello che risponde
       alla domanda «abbiamo perso una funzionalità?», e l'unico che apre le
       rotte annidate per indirizzo invece che cliccandole. Da R-5 le passate
@@ -992,7 +992,7 @@ Una modifica è finita quando **tutte** queste sono vere:
       scuro. Un typecheck verde non è una prova visiva.
 - [ ] Funziona da tastiera e il focus è visibile. **Il cancello axe non basta**:
       da 2026-08-05 `npm run test:e2e` comprende `accessibilita.spec.ts` (WCAG
-      AA e 2.2, **21 pagine × 2 temi = 42 casi**, su **116** E2E totali — comprese le sette
+      AA e 2.2, **21 pagine × 2 temi = 42 casi**, su **122** E2E totali — comprese le sette
       superfici di `/admin/*`, i quattro dettagli delle code e `/redazione` — nessuna regola esclusa), ma axe copre ~30–40% delle
       barriere reali — le meccaniche. Ordine di lettura, trappole di focus e
       sensatezza degli annunci restano da provare a mano.
