@@ -178,6 +178,37 @@ al Comune resta una decisione esplicita di Lorenzo.
 **Cancello:** ogni riga pubblicata ha URL e data; il voto si riconta a mano
 dalla pagina; verifica intera.
 
+#### P-3a · La ricognizione preparatoria ✅ *(2026-08-08)*
+
+Fatta oggi ciò che non dipende dal 27/08, in
+[`docs/fonti-pagella.md`](fonti-pagella.md). Due risultati:
+
+1. **La mappa del portale della trasparenza.** Il menu di Amministrazione
+   Trasparente è guidato dal JavaScript — `href="#"` o verso la radice, e
+   l'indirizzo vero in `data-mainurl` — quindi un lettore che raccolga gli
+   `href` conclude che il portale ha una pagina sola. Estratte **94 voci
+   foglia**, e con esse l'indirizzo esatto di ogni griglia che i dieci
+   controlli citano. Ogni griglia esporta l'elenco **intero** in CSV: si usa
+   quello, non si sfoglia. ⚠️ `WebFetch` sulla radice prende 403, un browser
+   vero prende 200.
+
+2. **Il censimento di Promesse si ferma prima degli impegni, e il perché
+   conta più del risultato.** L'ordine del giorno del Consiglio del
+   **15/06/2026** dice, al punto 5, «LINEE PROGRAMMATICHE DI MANDATO –
+   **PRESENTAZIONE**»; due testate locali scrivono invece che sarebbero state
+   **approvate** 18 a 6. Non è la stessa cosa: il TUEL art. 46 c. 3 fa
+   *presentare* le linee, e se ci sia un voto lo dice lo statuto. Il testo del
+   documento **non risulta pubblicato** in nessuna delle quattro fonti aperte
+   (188 atti esportati e letti, zero righe pertinenti).
+
+   Quindi **zero impegni censiti**, e nessuna delle due versioni entra in
+   pagina: scrivere «delibera di approvazione del 15/06/2026» attribuirebbe
+   alla giunta una decisione la cui esistenza non è provata — la cosa che
+   `AGENTS.md` vieta per prima. Le condizioni che chiudono le due aperture
+   sono in `fonti-pagella.md` §3.
+
+**Nessuna edizione è nata**: `EDIZIONI` resta vuoto e il suo guardiano verde.
+
 ---
 
 ## 7. Cosa resta aperto

@@ -138,10 +138,31 @@ sotto) e le due rotte API non dicevano nulla sulla propria conservabilità
 **Il resto ha retto**: 69 azioni censite, 66 rotte tutte dinamiche, `cachedShared`
 pulita, idiomi Next 16 già a posto tranne `unstable_cache` (debito 14).
 
-### 3. Il P-3 della pagella e il censimento delle linee programmatiche
+### 3. Il P-3 della pagella e il censimento — ⚠️ FATTA LA PARTE POSSIBILE (2026-08-08)
 
-L'art. 14 non prima del 27/08, ma **P-3 e il censimento si possono fare oggi**.
-Piano in `docs/piano-pagella.md`.
+**La riga «P-3 si può fare oggi» era sbagliata**, e il piano lo diceva già:
+`piano-pagella.md` §1.1 regola 3 vieta la prima edizione prima del 27/08,
+perché prima di quel termine un'assenza sul portale è **dentro i termini di
+legge** e contarla come punto perso sarebbe un'accusa tratta da un dato
+mancante. Fatto quindi ciò che non dipende dalla scadenza, in
+`docs/fonti-pagella.md` (nuovo), e registrato come **P-3a** nel piano.
+
+1. **La mappa del portale della trasparenza** — 94 voci foglia con
+   l'indirizzo vero del proprio dato, e con esse la griglia esatta di ognuno
+   dei dieci controlli. Serviva: il menu è guidato dal JavaScript e gli
+   `href` puntano tutti alla radice, quindi un lettore automatico conclude
+   che il portale ha una pagina sola. Ogni griglia esporta l'elenco **intero**
+   in CSV.
+2. **Il censimento delle linee programmatiche si ferma prima degli impegni.**
+   L'ordine del giorno del 15/06/2026 dice «PRESENTAZIONE», due testate dicono
+   «approvate 18 a 6», e **il testo non risulta pubblicato** in nessuna delle
+   quattro fonti aperte (188 atti esportati, zero righe pertinenti). Zero
+   impegni censiti, e nessuna delle due versioni entra in pagina.
+
+**Resta da fare, dopo il 27/08:** la ricognizione dei dieci controlli sulle
+griglie già mappate, e il testo delle linee programmatiche — le condizioni che
+chiudono le due aperture sono in `fonti-pagella.md` §3. Una di quelle strade è
+l'**accesso civico**, che è un'azione verso il Comune: la decidi tu.
 
 ### 4. Poi l'Ondata 8 — Il Comune che legge la città
 
@@ -437,7 +458,7 @@ le modifiche. Aggiorna FEATURES/CHANGELOG/ROADMAP/DESIGN/DOCUMENTATION §10
 **Non fare commit o push se non te lo chiedo. E NON lanciare il deploy senza
 chiedere.**
 
-I **Lavori 1 e 2 sono chiusi** (2026-08-08): comincia dal **Lavoro 3 — il P-3
-della pagella e il censimento delle linee programmatiche**. L'art. 14 non prima
-del 27/08, ma P-3 e il censimento si possono fare; il piano è in
-`docs/piano-pagella.md`.
+I **Lavori 1, 2 e la parte possibile del 3 sono chiusi** (2026-08-08):
+comincia dal **Lavoro 4 — l'Ondata 8, «Il Comune che legge la città»**. Del
+Lavoro 3 resta solo ciò che il 27/08 sblocca, e le griglie da interrogare
+hanno già il loro indirizzo (`docs/fonti-pagella.md` §1.2).
