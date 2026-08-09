@@ -2,11 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Shield, History, QrCode } from "lucide-react";
 import { requireAdmin } from "@/lib/auth/dal";
-import { getContatoriAdmin, getRegistroAzioni } from "@/lib/data/admin";
+import {
+  getAnaliticheOperative,
+  getContatoriAdmin,
+  getRegistroAzioni,
+} from "@/lib/data/admin";
 import { Card } from "@/components/ui/card";
 import { buttonClasses } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
 import { PorteAdmin } from "@/components/admin/porte-admin";
+import { AnaliticheOperativeCards } from "@/components/admin/analitiche-operative";
 import { formatRelativeTime } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Area Comune" };
@@ -54,9 +59,10 @@ const MOD_LABEL: Record<string, string> = {
 
 export default async function AdminPage() {
   await requireAdmin();
-  const [contatori, registro] = await Promise.all([
+  const [contatori, registro, analitiche] = await Promise.all([
     getContatoriAdmin(),
     getRegistroAzioni(),
+    getAnaliticheOperative(),
   ]);
 
   const numeri = [
@@ -83,6 +89,11 @@ export default async function AdminPage() {
           </Card>
         ))}
       </div>
+
+      {/* Le due letture operative (Ondata 8): stanno QUI, fra i numeri e le
+          porte, perché sono una lettura e non una destinazione — e la lettura
+          si guarda prima di decidere dove andare a lavorare. */}
+      <AnaliticheOperativeCards dati={analitiche} />
 
       <PorteAdmin contatori={contatori} />
 

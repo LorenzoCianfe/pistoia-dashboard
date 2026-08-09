@@ -18,12 +18,12 @@ Il **Lavoro C** (art. 14 + P-3 della pagella) **non può partire prima del
 
 Leggi prima, in quest'ordine:
 
-- **AGENTS.md** — regole vincolanti. §3 ha ora **trentotto trappole**: le tre
-  nuove sono di «lista + dettaglio», e la prima è quella che ti farebbe
-  sbagliare per prima (*un dettaglio che interroga la propria coda risponde 404
-  quando l'azione RIESCE*). §5 ha i numeri aggiornati: rotte **66**, a11y e
-  bersagli **21 pagine / 42 casi**, **116** E2E. §8 contiene **il disco pieno**,
-  che è la cosa che più probabilmente ti farà perdere ore.
+- **AGENTS.md** — regole vincolanti. §3 ha ora **quaranta trappole**. Le due
+  più recenti sono quelle che ti farebbero sbagliare per prime: *`undefined` in
+  un `where` di Prisma non è «nessuna riga», è «nessun filtro»* e *la preferenza
+  di movimento non si legge in fase di render*. §5 ha i numeri: rotte **66**,
+  a11y e bersagli **21 pagine / 42 casi**, **119** E2E. §8 contiene **il disco
+  pieno**, che è la cosa che più probabilmente ti farà perdere ore.
 - **DESIGN.md** — vincolante prima di qualunque lavoro visivo. §6 ha ora due
   regole sulle superfici di lavoro: *una coda una pagina* (07/08) e ***una coda
   è una lista, e il lavoro è una pagina*** (08/08), tutte e due misurate.
@@ -38,15 +38,15 @@ Leggi prima, in quest'ordine:
 `git log --oneline -1` — scritta così perché questa riga non invecchi a ogni
 commit, come ha già fatto due volte.
 
-- typecheck · lint · **253 unit** · **`rotte` 66, 0 con problemi** ·
-  **116/116 E2E** (26 di merito + **42 a11y** + **42 bersagli** + 6 di porte) ·
+- typecheck · lint · **263 unit** · **`rotte` 66, 0 con problemi** ·
+  **119/119 E2E** (29 di merito + **42 a11y** + **42 bersagli** + 6 di porte) ·
   `npm audit` 0 vulnerabilità · Lighthouse con soglie, bloccante.
 - `shots` **0 in tutti e due i regimi** (normale e `--simple --width=360`),
   **61 pagine per regime**.
 - Stack: **Next 16.3.0**, **Prisma 7.9.1**, React 19.2.4.
 - Dev server **spento**, porte 3000/3939 libere, seed **riseminato**,
   `graphify` aggiornato, albero **pulito**.
-- **`package.json` allineato al CHANGELOG: 0.41.0.** Si muovono insieme.
+- **`package.json` allineato al CHANGELOG: 0.42.0.** Si muovono insieme.
 
 **PRODUZIONE: `67a94fb`, indietro di QUATTRO commit** — due di lavoro
 (`22ce8ab` le code, `e589d67` il taglio) e due di sola documentazione.
@@ -164,7 +164,33 @@ griglie già mappate, e il testo delle linee programmatiche — le condizioni ch
 chiudono le due aperture sono in `fonti-pagella.md` §3. Una di quelle strade è
 l'**accesso civico**, che è un'azione verso il Comune: la decidi tu.
 
-### 4. Poi l'Ondata 8 — Il Comune che legge la città
+### 4. L'Ondata 8 — ▶️ APERTA il 2026-08-09, dal nucleo
+
+Lorenzo ha scelto di aprire **dal nucleo** (analytics, alert, moderazione
+assistita), non dalla pipeline degli atti — che resta pronta: la sua domanda di
+rischio ha già risposta in `docs/fonti-pagella.md` §1.3 (il portale esporta
+**24 colonne in CSV, `Url atto` compreso**).
+
+**Fatta la prima voce: le analytics operative.** Due letture sul cruscotto,
+forma **B** scelta sui mockup iniettati. Dettaglio in CHANGELOG 0.42.0.
+
+⚠️ **Due cose che restano fuori, e perché**, non «rimandate»:
+
+- **Il trend per quartiere**: metà delle celle è sotto il campione minimo (5 su
+  10), quindi la lettura sarebbe per metà muta. **Condizione: entra quando i
+  quartieri sotto soglia saranno meno di un terzo** — che con dati veri arriva
+  da sé.
+- **L'alert su trend anomalo**: le ultime due settimane del seed fanno 6 e 9
+  contro una media di 2,8 e sembrano un picco da manuale, ma **i bucket del
+  seed sono ancorati al calendario** (problema noto 25): tarare un'euristica lì
+  significa tararla sulla semina. **Condizione: si scrive su una serie che non
+  sia il seed** — cioè con la piattaforma in produzione, o su una serie
+  registrata abbastanza a lungo da avere una linea di base vera.
+
+Restano nel nucleo: **la moderazione assistita** (euristiche su spam, duplicati,
+suggerimento di categoria), che non dipende da nessuna delle due condizioni.
+
+### 4b. Il resto dell'Ondata 8 — Il Comune che legge la città
 
 Analytics operative, alert su trend anomali, moderazione assistita; più le sette
 voci recuperate dal limbo; più **la pipeline degli atti** (P-4: la pipeline in
@@ -444,9 +470,9 @@ account demo `cittadino@` e `lorenzo@`, `marco@` (in silenzio), `comune@`
 (admin), `moderatore@`; credenziali nel riquadro del login.
 Deploy: `sh "C:\Users\loren\.homelab\cf.sh"` (AGENTS §8), `ssh homeserver`.
 
-**VERIFICA (AGENTS §5):** typecheck, lint, vitest (253), `npm run rotte` a dev
+**VERIFICA (AGENTS §5):** typecheck, lint, vitest (263), `npm run rotte` a dev
 acceso («0 con problemi», **66** al 2026-08-08, TRE passate), `npm run test:e2e`
-a dev SPENTO (mai `E2E_BASE_URL`; **116/116**), e
+a dev SPENTO (mai `E2E_BASE_URL`; **119/119**), e
 `node scripts/shots.mjs --simple --width=360` (le opzioni a `node`, MAI a `npm`).
 ⚠️ **Dopo gli E2E, cancella `.next` prima di rilanciare dev/`rotte`/`shots`.**
 ⚠️ **E non modificare il codice mentre la suite gira.**
@@ -458,7 +484,11 @@ le modifiche. Aggiorna FEATURES/CHANGELOG/ROADMAP/DESIGN/DOCUMENTATION §10
 **Non fare commit o push se non te lo chiedo. E NON lanciare il deploy senza
 chiedere.**
 
-I **Lavori 1, 2 e la parte possibile del 3 sono chiusi** (2026-08-08):
-comincia dal **Lavoro 4 — l'Ondata 8, «Il Comune che legge la città»**. Del
-Lavoro 3 resta solo ciò che il 27/08 sblocca, e le griglie da interrogare
-hanno già il loro indirizzo (`docs/fonti-pagella.md` §1.2).
+I **Lavori 1, 2 e la parte possibile del 3 sono chiusi**, e l'**Ondata 8 è
+aperta**: fatte le analytics operative (2026-08-09). Del Lavoro 3 resta solo
+ciò che il 27/08 sblocca, e le griglie da interrogare hanno già il loro
+indirizzo (`docs/fonti-pagella.md` §1.2).
+
+**Il prossimo passo dentro O8 è la moderazione assistita** — l'unica voce del
+nucleo che non aspetta una condizione. Poi le sette maturità del backlog, o la
+pipeline degli atti: le decide Lorenzo.

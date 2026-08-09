@@ -141,13 +141,24 @@ colore che `DESIGN.md` §4 assegna al lato cittadino — e vive su filo e pallin
 
 | Rotta | Contenuto | Natura |
 |---|---|---|
-| `/admin` | I quattro numeri · le sei porte · i fogli QR · il registro delle azioni | cruscotto |
+| `/admin` | I quattro numeri · **le due letture operative** · le sei porte · i fogli QR · il registro delle azioni | cruscotto |
 | `/admin/valutazioni` · `/[id]` | Le recensioni dei servizi: rispondi o segnala alla redazione | coda |
 | `/admin/proposte` · `/[id]` | Le proposte, ordinate per sostegno | coda |
 | `/admin/domande` · `/[id]` | Le domande del question time senza risposta | coda |
 | `/admin/segnalazioni` · `/[id]` | Il triage: stato, ufficio, nota ufficiale | coda |
 | `/admin/cittadini` | Richieste di verifica **+** moderazione della community | coda (due, un mestiere) |
 | `/admin/pubblica` | Aggiorna un cantiere · crea un sondaggio · invia una notifica | strumenti |
+
+**Le due letture operative** (Ondata 8, 2026-08-09). *Il carico degli uffici*:
+aperte e **giorni mediani** per ufficio — mediana e mai media, perché una
+pratica ferma da un anno fra quattro svelte porterebbe la media a 75 giorni
+contro una mediana di 3. *Dove si accumula*: le categorie con abbastanza casi,
+e una riga che **dichiara quante ne tace** e perché.
+
+⚠️ Le segnalazioni **senza ufficio stanno fuori dall'elenco**, per costruzione:
+sono 6 aperte e 0 chiuse, e dentro la classifica sarebbero la riga più rossa
+della pagina attribuita a un ufficio che non esiste. Il numero resta, e dice
+un'altra cosa — quante segnalazioni non sono di nessuno.
 | `/admin/codici-qr` | I fogli QR da stampare (R-3, non toccata dal taglio) | strumento |
 
 | Funzionalità | Stato |

@@ -5,6 +5,32 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.42.0] — 2026-08-09 · Il cruscotto dice chi ha in mano che cosa (Ondata 8)
+
+> La prima voce del nucleo dell'Ondata 8: le analytics operative. La forma l'ha scelta Lorenzo su **tre mockup iniettati sull'applicazione vera**, dopo che la misura aveva già deciso metà del disegno.
+
+### Aggiunto
+- **Due letture sul cruscotto dell'Area Comune**: «Il carico degli uffici» (aperte e giorni mediani per ufficio) e «Dove si accumula» (le categorie con abbastanza casi). Stanno fra i quattro numeri e le sei porte: sono una lettura, non una destinazione.
+- **`src/lib/analitiche.ts`** — modulo puro e unit-testabile come `citystats.ts`, da cui **importa** la soglia del campione invece di riscriverla.
+- **`tests/unit/analitiche.test.ts`** (10 casi) e **`tests/e2e/analitiche.spec.ts`** (3 casi).
+
+### Misurato
+- **Prima di disegnare, non dopo.** Su 42 segnalazioni: l'**ufficio è l'unico asse dove ogni cella regge il campione** (5 su 5), mentre categoria e quartiere ne hanno **metà sotto la soglia** (5 su 10 entrambe). L'urgenza non è un asse: 40 righe su 42 non ce l'hanno.
+- **Il tetto dell'area, misurato col browser e non citato a memoria**: a 360px è **3.327px** (`/admin/valutazioni`). Avevo scritto 1.894 — la coda peggiore *prima* di lista + dettaglio — e su quel numero sbagliato avevo raccomandato la forma più piccola. Le due card portano `/admin` a **2.379px** a 360 e **1.595** a 1280: quasi mille pixel sotto il tetto.
+- **Il mockup non ha mentito**: prevedeva 2.316px a 360, il costruito ne fa 2.379.
+
+### Cambiato
+- **Le segnalazioni senza ufficio stanno FUORI dall'elenco**, per costruzione e non per convenzione. Sono **6 aperte e 0 chiuse**: dentro la classifica sarebbero la riga più lenta e più rossa della pagina, **attribuita a un ufficio che non esiste**. Il numero resta e dice un'altra cosa — quante segnalazioni non sono di nessuno — con la frase che lo spiega accanto.
+- **Mediana, mai media.** Una pratica ferma da un anno fra quattro svelte porterebbe la media a 75 giorni contro una mediana di 3: racconterebbe una lentezza che quell'ufficio non ha. Un test lo prova con quei due numeri.
+- **Le categorie sotto la soglia non si mostrano, ma si dichiarano**: «Altre 5 categorie hanno meno di 5 casi». Tacerle farebbe credere che la città non le abbia; mostrarle accanto a quelle piene le farebbe leggere come confrontabili.
+
+### Note
+- ⚠️ **Nessuna barra, e non è una semplificazione.** Una barra del tempo mediano avrebbe come massimo «il peggiore osservato», cioè una scala a tacche senza un traguardo fissato — ciò che `DESIGN.md` vieta e che ha già fatto togliere la scala da `/promesse`.
+- **Le due card hanno altezza costante**: gli uffici sono cinque e restano cinque, e le categorie mostrate sono solo quelle sopra soglia. È la proprietà che ha reso giusto lista + dettaglio — ciò che conta non è l'altezza, è la derivata.
+- **Nessuna rotta nuova**, quindi niente da aggiungere a `rotte.mjs`/`shots.mjs`/`pagine-cancello.ts`: `/admin` è già dentro i cancelli a11y e bersagli, e le due card ci sono finite da sole.
+- ⚠️ **Il cancello a11y ha fatto rosso al primo giro, e aveva ragione.** La riga «6 segnalazioni senza ufficio» usava `--red`, che su testo da **14px** fa **4,3:1** contro il fondo della card — sotto il 4,5 di AA. Il progetto aveva già la leva scritta: `--red-ink` esiste «per il solo caso in cui il rosso dello stemma diventa testo minuto». Un colore aggiunto senza misurare la coppia è la regola di `AGENTS.md` §5, e stavolta il cancello l'ha misurata al posto mio — che è esattamente il mestiere per cui è stato scritto.
+- ⚠️ **L'alert su trend anomalo non è in questa versione, ed è una scelta.** Le ultime due settimane del seed fanno 6 e 9 contro una media di 2,8 — sembra un picco da manuale, ma **i bucket del seed sono ancorati al calendario**: quell'euristica va tarata su dati veri, non su una semina.
+
 ## [0.41.0] — 2026-08-08 · Gli argomenti di una Server Action sono input non fidato
 
 > La review «lenti mancanti» — sicurezza, correttezza della cache, idiomi Next 16 — saltata l'11/06 e mai ripresa: era **l'ultima voce mai passata** della traccia «Qualità continua» ([`ROADMAP.md`](ROADMAP.md) §4). La cosa più grossa non era dove ci si aspettava.

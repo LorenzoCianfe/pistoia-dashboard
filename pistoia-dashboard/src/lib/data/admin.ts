@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db";
+import { analiticheOperative } from "@/lib/analitiche";
 import { demoBaseline } from "@/lib/demo";
 import { SERVIZI, nomePubblico, testoVisibile } from "@/lib/valutazioni";
 
@@ -464,6 +465,33 @@ export async function getRegistroAzioni(quante = 8) {
     take: quante,
     include: { actor: { select: { name: true } } },
   });
+}
+
+/**
+ * Le analitiche operative del cruscotto (Ondata 8).
+ *
+ * ⚠️ **Una `findMany` senza `take`, ed è voluto.** Sembra la trappola dei
+ * contatori — «mai contando le righe che una pagina mostra» — e non lo è: qui
+ * la pagina mostra **cinque uffici**, mentre questa query legge **tutte** le
+ * segnalazioni. È l'aggregazione a ridurre, non il database. Un `take` a monte
+ * darebbe mediane calcolate su un pezzo di città e plausibili lo stesso, che è
+ * il modo peggiore di sbagliare (`AGENTS.md` §3, ondata 7, 2).
+ *
+ * `groupBy` non basta: i conteggi sì, ma la **mediana** dei tempi di chiusura
+ * vuole le durate una per una. Cinque colonne scalari su una tabella di questa
+ * scala costano meno di due giri.
+ */
+export async function getAnaliticheOperative() {
+  const righe = await prisma.report.findMany({
+    select: {
+      status: true,
+      category: true,
+      assignedDepartment: true,
+      createdAt: true,
+      resolvedAt: true,
+    },
+  });
+  return analiticheOperative(righe);
 }
 
 /** Community moderation surface (§14): flagged comments, blocked words, sanctioned users. */

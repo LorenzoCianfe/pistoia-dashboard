@@ -1257,6 +1257,49 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   `unstable_cache`, che la 16 dichiara sostituito da `use cache`: cambio
   architetturale (Cache Components), scritto fra i debiti con la sua condizione.
 
+- **2026-08-09 (Ondata 8 — il cruscotto dice chi ha in mano che cosa)** — Le
+  prime due letture operative dell'Area Comune: «Il carico degli uffici»
+  (aperte e giorni mediani per ufficio) e «Dove si accumula» (le categorie con
+  abbastanza casi). Fra i quattro numeri e le sei porte, perché sono una
+  lettura e non una destinazione.
+
+  **La misura ha deciso metà del disegno, e l'ha fatto prima del disegno.** Su
+  42 segnalazioni: l'**ufficio è l'unico asse dove ogni cella regge il
+  campione** (5 su 5), categoria e quartiere ne hanno **metà sotto la soglia**
+  (5 su 10 ciascuno), e l'urgenza non è un asse — 40 righe su 42 non ce l'hanno.
+  Da lì la forma: un asse solido, uno dichiaratamente parziale, e nessun terzo.
+
+  **Tre scelte che vengono dalle regole già pagate**, non dal gusto:
+
+  1. **Le segnalazioni senza ufficio stanno fuori dall'elenco**, per costruzione.
+     Sono 6 aperte e 0 chiuse: dentro la classifica sarebbero la riga più lenta
+     e più rossa della pagina, **attribuita a un ufficio che non esiste**. È la
+     trappola dell'ondata 7 («una percentuale su un campione minuscolo, tinta a
+     colori, è un'accusa») aggravata dal fatto che qui non c'è nessuno da
+     accusare. Il numero resta e dice un'altra cosa, con la frase che lo spiega.
+  2. **Mediana, mai media.** Una pratica ferma da un anno fra quattro svelte
+     porta la media a 75 giorni contro una mediana di 3. Un unit lo prova con
+     quei due numeri accanto.
+  3. **Nessuna barra.** Una barra del tempo mediano avrebbe come massimo «il
+     peggiore osservato», cioè una scala a tacche senza traguardo fissato — ciò
+     che `DESIGN.md` vieta e che ha già fatto togliere la scala da `/promesse`.
+
+  **La soglia si importa, non si riscrive**: `CAMPIONE_MINIMO_PER_GIUDIZIO` sta
+  in `citystats.ts` e `analitiche.ts` la prende da lì, con un test che lo
+  verifica — due soglie diverse per lo stesso giudizio sono peggio di nessuna.
+
+  ⚠️ **Una correzione mia, e vale più della funzione.** Avevo raccomandato la
+  forma piccola perché quella grande «sfondava il tetto di 1.894px» — ma 1.894
+  è la coda peggiore *prima* di lista + dettaglio, un numero **citato da un
+  documento invece che misurato**. Misurato col browser, il tetto a 360px è
+  **3.327px** (`/admin/valutazioni`), e le due card portano `/admin` a 2.379:
+  quasi mille pixel di margine. Lorenzo ha scelto la forma grande contro la mia
+  raccomandazione, e aveva ragione lui.
+
+  **Cancelli**: unit da 253 a **263**, E2E da 116 a **119** — nessuna rotta
+  nuova, quindi `rotte` resta 66 e `/admin` era già dentro a11y e bersagli, dove
+  le due card sono entrate da sole.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.
