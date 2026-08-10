@@ -5,6 +5,22 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.45.0] — 2026-08-09 · Il cancello che legge la console
+
+> Nessun cancello guardava la console, ed è per questo che i sei errori di
+> idratazione di `/bilancio` sono vissuti mesi: erano scritti **quattro volte
+> nel log degli E2E**, che uscivano verdi.
+
+### Aggiunto
+- **`npm run rotte` ora legge la console** di ogni rotta che apre: `pageerror` + `console.error` fanno rossa la rotta, col testo dell'errore in riga. **Gli avvisi e le informazioni no** — un cancello rumoroso smette di essere letto (l'avviso di Motion su reduced-motion, tipo `warning`, resta fuori per costruzione).
+- **Le tre passate emulano `prefers-reduced-motion: reduce`**: è lo stato che si rompe di più e si verifica di meno, ed è quello in cui gli E2E scrivevano quegli errori nel log.
+- Gli errori della preparazione (login, scoperta dei dettagli) si scartano dichiaratamente: le liste si riaprono comunque nel giro, e il percorso del login lo prova `auth.spec.ts`.
+
+### Verificato
+- **Prima accensione: 66 rotte, 0 errori di console** — nessuna rossa di nascita (coerente col fatto che i sei di `/bilancio` erano stati chiusi il giorno prima).
+- **Provato rosso, non solo verde**: un `console.error` iniettato temporaneamente su `/glossario` ha prodotto esattamente **1 rossa** con uscita 1 e il messaggio in riga (contati 2 eventi: StrictMode monta due volte in sviluppo). Poi rimosso, e due passate pulite.
+- Un limite dichiarato nel codice: un errore che arriva **dopo** lo snapshot di una rotta finisce attribuito alla successiva — si preferisce attribuirlo alla rotta accanto che perderlo, e il testo dice comunque da quale componente viene.
+
 ## [0.44.0] — 2026-08-09 · L'archivio vero è 140 volte più grande (Ondata 8)
 
 > La pipeline degli atti, cioè la metà rischiosa dell'ondata. La misura ha

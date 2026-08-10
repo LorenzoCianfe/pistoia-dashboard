@@ -22,6 +22,17 @@
  * sulla 3939 — processo diverso, stessa cartella `.next` — quindi possono
  * fallire su tre test annidati senza che nulla sia rotto.
  *
+ * DAL 2026-08-09 QUESTO CANCELLO LEGGE ANCHE LA CONSOLE. I due errori di
+ * idratazione di `/bilancio` sono vissuti mesi scritti quattro volte nel log
+ * degli E2E, che uscivano verdi: nessun cancello guardava la console. Questo è
+ * l'unico script che apre tutte le rotte per indirizzo, quindi il posto è qui.
+ *
+ * - «Errore» significa `pageerror` più `console.error`. Gli avvisi e le
+ *   informazioni NO: un cancello rumoroso smette di essere letto.
+ * - Le pagine si aprono emulando `prefers-reduced-motion: reduce`, che è lo
+ *   stato che si rompe di più e si verifica di meno — è lo stato in cui
+ *   giravano gli E2E che scrivevano quegli errori nel log.
+ *
  * Uso:
  *   npm run dev      # in un altro terminale
  *   npm run rotte
@@ -29,6 +40,30 @@
 import { chromium } from "@playwright/test";
 
 const BASE = process.env.ROTTE_BASE_URL ?? "http://localhost:3000";
+
+/**
+ * La sorveglianza della console di una pagina. `prendi()` restituisce gli
+ * errori accumulati dall'ultima chiamata e svuota il registro: ogni rotta
+ * riceve i propri, non quelli di chi l'ha preceduta.
+ *
+ * Un limite dichiarato: un errore che arriva DOPO lo snapshot di una rotta
+ * finisce attribuito alla successiva. Non si drena all'inizio dell'iterazione
+ * proprio per questo — drenare senza attribuire perderebbe l'errore, che è
+ * peggio di attribuirlo alla rotta accanto: il testo dice comunque da quale
+ * componente viene.
+ */
+function sorveglia(page) {
+  const errori = [];
+  page.on("pageerror", (e) => {
+    errori.push(`pageerror: ${String(e.message ?? e).split("\n")[0]}`);
+  });
+  page.on("console", (msg) => {
+    if (msg.type() === "error") {
+      errori.push(`console.error: ${msg.text().split("\n")[0]}`);
+    }
+  });
+  return { prendi: () => errori.splice(0) };
+}
 
 /**
  * Le rotte a percorso fisso. Quelle dinamiche si scoprono a runtime dalle
@@ -117,8 +152,9 @@ const DETTAGLI = [
 ];
 
 const browser = await chromium.launch();
-const ctx = await browser.newContext({ locale: "it-IT" });
+const ctx = await browser.newContext({ locale: "it-IT", reducedMotion: "reduce" });
 const page = await ctx.newPage();
+const consoleAdmin = sorveglia(page);
 
 // Si entra come ADMIN: è l'unico ruolo che vede anche /admin, quindi una sola
 // passata copre l'inventario intero invece di due.
@@ -151,6 +187,12 @@ for (const [lista, sel] of DETTAGLI) {
   else console.warn(`  ⚠ nessun dettaglio trovato da ${lista}`);
 }
 
+// La preparazione (login + scoperta dei dettagli) non è una rotta: i suoi
+// eventuali errori si scartano, così la prima rotta non eredita i suoi. Il
+// percorso del login lo prova `auth.spec.ts`, e le liste della scoperta si
+// riaprono comunque una per una nel giro qui sotto.
+consoleAdmin.prendi();
+
 let rotti = 0;
 for (const url of [...ROTTE, ...dinamiche]) {
   try {
@@ -176,24 +218,32 @@ for (const url of [...ROTTE, ...dinamiche]) {
       /Pagina non trovata|Qualcosa è andato storto|Application error|Unhandled Runtime Error/i.test(
         testo,
       );
+    // Lo snapshot della console è l'ULTIMA lettura: l'innerText qui sopra è un
+    // giro completo per il canale CDP, quindi ciò che la pagina ha scritto
+    // durante l'idratazione è già arrivato.
+    const erroriConsole = consoleAdmin.prendi();
 
-    const ok = status < 400 && titoli > 0 && !erroreInPagina;
+    const ok = status < 400 && titoli > 0 && !erroreInPagina && erroriConsole.length === 0;
     if (!ok) rotti += 1;
     const nota = erroreInPagina
       ? "  ← errore reso in pagina"
-      : finale !== url
-        ? `  → ${finale}`
-        : "";
+      : erroriConsole.length > 0
+        ? `  ← console (${erroriConsole.length}): ${erroriConsole[0].slice(0, 140)}`
+        : finale !== url
+          ? `  → ${finale}`
+          : "";
     console.log(`${ok ? "  ok " : "  ✗  "} ${String(status).padEnd(4)} ${url}${nota}`);
   } catch (e) {
     rotti += 1;
+    consoleAdmin.prendi(); // gli errori della rotta caduta non passano alla prossima
     console.log(`  ✗   ---  ${url}  ${e.message.split("\n")[0]}`);
   }
 }
 
 // Seconda passata: le rotte della Redazione, con l'account moderatore.
-const ctxMod = await browser.newContext({ locale: "it-IT" });
+const ctxMod = await browser.newContext({ locale: "it-IT", reducedMotion: "reduce" });
 const pageMod = await ctxMod.newPage();
+const consoleMod = sorveglia(pageMod);
 await pageMod.goto(`${BASE}/login`, { waitUntil: "domcontentloaded" });
 await pageMod.fill('input[name="email"]', process.env.ROTTE_MOD_EMAIL ?? "moderatore@pistoia.it");
 await pageMod.fill('input[name="password"]', process.env.ROTTE_MOD_PASSWORD ?? "Pistoia2026");
@@ -205,6 +255,7 @@ if (new URL(pageMod.url()).pathname.includes("/login")) {
   console.error("✗ accesso moderatore non riuscito: le rotte della redazione non sono verificabili.");
   rotti += ROTTE_MODERATORE.length;
 } else {
+  consoleMod.prendi(); // la preparazione non è una rotta (vedi sopra)
   for (const url of ROTTE_MODERATORE) {
     try {
       const r = await pageMod.goto(`${BASE}${url}`, {
@@ -220,18 +271,23 @@ if (new URL(pageMod.url()).pathname.includes("/login")) {
         /Pagina non trovata|Qualcosa è andato storto|Application error|Unhandled Runtime Error/i.test(
           testo,
         );
+      const erroriConsole = consoleMod.prendi();
       // Qui `finale === url` è parte del cancello: un redirect silenzioso
       // verso la home passerebbe tutti gli altri controlli.
-      const ok = status < 400 && titoli > 0 && !erroreInPagina && finale === url;
+      const ok =
+        status < 400 && titoli > 0 && !erroreInPagina && finale === url && erroriConsole.length === 0;
       if (!ok) rotti += 1;
       const nota = erroreInPagina
         ? "  ← errore reso in pagina"
-        : finale !== url
-          ? `  → ${finale} (atterraggio mancato)`
-          : "";
+        : erroriConsole.length > 0
+          ? `  ← console (${erroriConsole.length}): ${erroriConsole[0].slice(0, 140)}`
+          : finale !== url
+            ? `  → ${finale} (atterraggio mancato)`
+            : "";
       console.log(`${ok ? "  ok " : "  ✗  "} ${String(status).padEnd(4)} ${url}${nota}  [moderatore]`);
     } catch (e) {
       rotti += 1;
+      consoleMod.prendi();
       console.log(`  ✗   ---  ${url}  ${e.message.split("\n")[0]}`);
     }
   }
@@ -239,8 +295,9 @@ if (new URL(pageMod.url()).pathname.includes("/login")) {
 await ctxMod.close();
 
 // Terza passata: le rotte pubbliche, SENZA login — un contesto vergine.
-const ctxAnon = await browser.newContext({ locale: "it-IT" });
+const ctxAnon = await browser.newContext({ locale: "it-IT", reducedMotion: "reduce" });
 const pageAnon = await ctxAnon.newPage();
+const consoleAnon = sorveglia(pageAnon);
 for (const url of ROTTE_ANONIME) {
   try {
     const r = await pageAnon.goto(`${BASE}${url}`, {
@@ -256,18 +313,23 @@ for (const url of ROTTE_ANONIME) {
       /Pagina non trovata|Qualcosa è andato storto|Application error|Unhandled Runtime Error/i.test(
         testo,
       );
+    const erroriConsole = consoleAnon.prendi();
     // `finale === url` è parte del cancello: un redirect al login passerebbe
     // tutti gli altri controlli e la "lettura pubblica" resterebbe sulla carta.
-    const ok = status < 400 && titoli > 0 && !erroreInPagina && finale === url;
+    const ok =
+      status < 400 && titoli > 0 && !erroreInPagina && finale === url && erroriConsole.length === 0;
     if (!ok) rotti += 1;
     const nota = erroreInPagina
       ? "  ← errore reso in pagina"
-      : finale !== url
-        ? `  → ${finale} (atterraggio mancato)`
-        : "";
+      : erroriConsole.length > 0
+        ? `  ← console (${erroriConsole.length}): ${erroriConsole[0].slice(0, 140)}`
+        : finale !== url
+          ? `  → ${finale} (atterraggio mancato)`
+          : "";
     console.log(`${ok ? "  ok " : "  ✗  "} ${String(status).padEnd(4)} ${url}${nota}  [anonimo]`);
   } catch (e) {
     rotti += 1;
+    consoleAnon.prendi();
     console.log(`  ✗   ---  ${url}  ${e.message.split("\n")[0]}`);
   }
 }
