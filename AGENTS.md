@@ -629,6 +629,18 @@ introdotte suonava giusto ad alta voce.
    categoria che oggi si trova **solo guardando**, e che varrebbe un cancello suo
    — *nessun controllo esce dal proprio contenitore*.
 
+   ✅ **Quel cancello esiste dal 2026-08-09**: `tests/e2e/contenimento.spec.ts`,
+   21 pagine × 2 viewport, bloccante, elenco delle eccezioni **vuoto**. La
+   distinzione che lo rende usabile invece che rumoroso: **un contenitore che
+   scorre non ritaglia niente** — il rosso scatta solo quando l'antenato ha
+   `overflow: hidden`/`clip` sull'asse su cui il controllo sporge, cioè quando
+   la parte fuori è **irraggiungibile**. È §3 (Fase A/B, 3) applicata allo
+   spazio invece che al tempo: *fuori vista* e *fuori portata* non sono la
+   stessa cosa. Alla prima accensione **0 rossi su 42 casi** — il difetto dei
+   62px era già stato chiuso — quindi è stato **provato rosso di proposito**,
+   nei due versi: un pulsante ritagliato lo becca (62px, lo stesso numero del
+   difetto vero), due pulsanti dentro un riquadro che scorre **no**.
+
 ### Un consiglio che non si può seguire è peggio del silenzio (2026-08-09)
 
 Pagata costruendo la moderazione assistita. Il suggerimento di categoria era
@@ -748,6 +760,85 @@ Client Components», con `render: function PenLine` nel messaggio — mentre
 `ADMIN_NAV` era importato *dentro* il componente client. Si passa il **ruolo**,
 una stringa, e la superficie si ricava di là.
 
+### Quattro trappole della pipeline degli atti (2026-08-09)
+
+Pagate leggendo il portale della trasparenza. Come sempre: **nessuna produce un
+errore**, e tutte e quattro producono un risultato plausibile. Il dettaglio
+misurato sta in `docs/fonti-atti.md`.
+
+1. 🔴 **Un id distinto al 100% può non essere un'identità.** `Url atto` è pieno
+   e distinto su tutte le 26.978 righe scaricate: è la chiave che chiunque
+   sceglierebbe. Ma identifica la **pubblicazione**, non l'atto — lo stesso
+   atto sta sull'albo e nello storico con **due id consecutivi**
+   (`4758861`/`4758862`), stesso oggetto e stessi allegati. Usarlo come chiave
+   porta in casa **385 doppioni**, e su un archivio civico non è un errore di
+   conteggio: è la stessa delibera mostrata due volte, cioè la giunta che
+   sembra aver deciso due volte la stessa cosa. L'identità vera è
+   `(tipo, anno, numero)`.
+
+   La regola generale: **prima di prendere un campo per chiave, chiediti di
+   quale ENTITÀ è la chiave.** «Distinto» e «identificante» non sono la stessa
+   proprietà, e la prima si misura mentre la seconda si capisce.
+
+   Corollario pagato subito dopo: i **ripieghi** di una chiave vanno guardati
+   uno per uno. Con `anno`/`numero` a zero si ripiega sulla registrazione; ma
+   tre righe hanno a zero **anche quella**, e due di esse sono delibere di
+   giunta **diverse** — «Pistoia Blues Festival» e «Festa europea della
+   musica». Senza un terzo ripiego una delle due sparisce, in silenzio.
+
+2. 🔴 **Il WAF blocca sullo USER-AGENT, e risponde 500.** `AGENTS.md` diceva
+   «`WebFetch` prende 403, un browser vero prende 200»: vero a metà, perché un
+   browser **headless** è bloccato anche lui. Con l'UA di default di Playwright
+   (`HeadlessChrome/148…`) il portale dà **500** e una pagina «Web Page
+   Blocked»; con l'UA di un Chrome vero, 200.
+
+   Il guaio è la **diagnosi**: uno stato 500 con un corpo HTML sensato si legge
+   come «il portale è giù», e si aspetta che passi. Non passa. Un cancello che
+   legge una fonte esterna deve quindi distinguere **«bloccato»** da
+   **«fuori servizio»**, perché si riparano in modi diversi.
+
+3. **Due griglie dello stesso portale possono non avere le stesse colonne.**
+   «Provvedimenti organi indirizzo politico» ne ha **24**, le altre tre **25**:
+   in mezzo compare `Spesa prevista`. Un parser posizionale sfalsa tutto ciò
+   che segue `Data atto` su una griglia su quattro. **Si mappa per NOME.**
+
+4. **Il `content-type` può mentire.** L'export grande dello storico dichiara
+   `text/html;charset=UTF-8` e manda CSV (le griglie piccole dichiarano
+   `text/csv`). Un controllo sul tipo lo scarta e conclude «l'export è rotto».
+   Si guarda il **corpo**.
+
+### `evaluateAll` non aspetta, e su una lista vuota tace (2026-08-09)
+
+`locator.evaluateAll()` **non ha attesa automatica**: risolve con ciò che
+combacia in quell'istante e, se non combacia niente, restituisce `[]` senza
+lamentarsi. Tutti gli altri metodi di Playwright aspettano, quindi la memoria
+di come funziona la libreria non aiuta — anzi inganna.
+
+`porte.spec.ts` leggeva così le sei porte del cruscotto subito dopo `goto`. È
+andato bene per giorni, poi `/admin` ha guadagnato **una quarta interrogazione
+al database** (il monitor degli atti) ed è diventato rosso con «il cruscotto non
+offre nessuna porta» — cioè il messaggio di un difetto di navigazione, per un
+problema di tempi.
+
+⚠️ **Il segno che lo distingue da un guasto vero, ed è generale:** lo snapshot
+che Playwright salva **dopo** il fallimento (`test-results/…/error-context.md`)
+mostrava la navigazione **al completo, con tutte e sei le porte**. Quando la
+pagina fotografata al momento dell'errore contiene proprio ciò che il test dice
+di non aver trovato, la diagnosi non è «manca», è «non era ancora arrivato».
+Quel file si legge **prima** di cercare nel codice.
+
+La corsa c'era da sempre; una pagina un po' più lenta l'ha solo resa visibile.
+Si chiude con un `waitFor()` prima di leggere — che non ammorbidisce il
+cancello, perché se le porte non arrivano davvero il test scade lo stesso.
+
+E una che non è una trappola ma una regola di scarto: **quando una riga non si
+riesce a leggere, guarda QUALE prima di decidere che è giusto scartarla.** La
+prima stesura pretendeva `Data atto` e buttava via **una riga su 26.588** — un
+decreto vero del Sindaco, con oggetto, fonte e data di pubblicazione, a cui
+mancava solo quel campo. Il minimo per stare in archivio è *che cosa dice, da
+dove viene, quando è stato pubblicato*; il resto è facoltativo, e un archivio
+che perde un atto è peggio di uno con una data vuota.
+
 ---
 
 ## 4. Comandi
@@ -760,11 +851,12 @@ npm test               # vitest
 npm run test:e2e       # playwright (comprende il cancello di accessibilità)
 npm run a11y           # SOLO il cancello a11y: axe, 21 pagine × 2 temi, WCAG AA + 2.2
 npm run bersagli       # SOLO il cancello dei 44px: 21 pagine × 2 viewport (1280 e 360)
+npm run contenimento   # SOLO il cancello del ritaglio: nessun controllo esce dal proprio contenitore
 npm run lighthouse     # Lighthouse sulla build di produzione — misura, non giudica
 npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
 npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
 node scripts/shots.mjs --simple --width=360   # modalità semplice, viewport minima
-npm run rotte          # tutte le rotte rispondono e rendono contenuto? (66 al 2026-08-09)
+npm run rotte          # tutte le rotte rispondono, rendono contenuto E non scrivono errori in console? (66 al 2026-08-09)
 npm run produzione     # il sito DEPLOYATO si monta davvero? — dopo ogni deploy, §8
 npm run db:reset       # ricrea il DB e ripopola i dati dimostrativi
 
@@ -987,12 +1079,17 @@ Una modifica è finita quando **tutte** queste sono vere:
       alla domanda «abbiamo perso una funzionalità?», e l'unico che apre le
       rotte annidate per indirizzo invece che cliccandole. Da R-5 le passate
       sono TRE: admin, moderatore, e **anonima** (le rotte a lettura pubblica,
-      con atterraggio preteso — un redirect al login risponderebbe 200)
+      con atterraggio preteso — un redirect al login risponderebbe 200).
+      ⚠️ **Dal 2026-08-09 legge anche la CONSOLE**: `pageerror` +
+      `console.error` (avvisi e informazioni no), con
+      `prefers-reduced-motion: reduce` emulata su tutte e tre le passate — è lo
+      stato in cui i sei errori di idratazione di `/bilancio` sono vissuti mesi
+      sotto E2E verdi. Un errore in console è una rotta rossa, col testo in riga
 - [ ] L'hai **guardata**: `npm run shots`, o il browser, in tema chiaro **e**
       scuro. Un typecheck verde non è una prova visiva.
 - [ ] Funziona da tastiera e il focus è visibile. **Il cancello axe non basta**:
       da 2026-08-05 `npm run test:e2e` comprende `accessibilita.spec.ts` (WCAG
-      AA e 2.2, **21 pagine × 2 temi = 42 casi**, su **122** E2E totali — comprese le sette
+      AA e 2.2, **21 pagine × 2 temi = 42 casi**, su **165** E2E totali — comprese le sette
       superfici di `/admin/*`, i quattro dettagli delle code e `/redazione` — nessuna regola esclusa), ma axe copre ~30–40% delle
       barriere reali — le meccaniche. Ordine di lettura, trappole di focus e
       sensatezza degli annunci restano da provare a mano.
@@ -1003,7 +1100,16 @@ Una modifica è finita quando **tutte** queste sono vere:
       viewport = 42 casi**), che è un cancello **diverso** da `target-size` di
       axe — quello difende i 24. L'elenco delle esenzioni «essenziali» è
       **vuoto**, e un'aggiunta va scritta con la condizione che la chiude.
-      ⚠️ Le due liste di pagine sono una sola: `tests/e2e/pagine-cancello.ts`
+      ⚠️ Le tre liste di pagine sono una sola: `tests/e2e/pagine-cancello.ts`
+- [ ] **Nessun controllo esce dal proprio contenitore**: dal 2026-08-09
+      `npm run test:e2e` comprende `contenimento.spec.ts` (**21 pagine × 2
+      viewport = 42 casi**). È un cancello **diverso** dagli altri tre, e la
+      differenza è il punto: `shots` misura il traboccamento *della pagina* —
+      che resta zero proprio perché la card ha `overflow` nascosto —,
+      `bersagli` misura la *dimensione* (un bersaglio tagliato a metà è ancora
+      alto 44), e axe non ha una regola per «tagliato».
+      ⚠️ Un contenitore che **scorre** non è un difetto: il rosso è solo dove
+      la parte fuori è **irraggiungibile** (`overflow: hidden`/`clip`)
 - [ ] Regge la **modalità semplice** — `npm run shots -- --simple --width=360`,
       che è anche il controllo del traboccamento orizzontale alla viewport minima
 - [ ] `prefers-reduced-motion` non lascia contenuto invisibile o inaccessibile

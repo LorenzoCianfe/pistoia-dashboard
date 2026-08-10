@@ -5,6 +5,29 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.46.0] — 2026-08-09 · Nessun controllo esce dal proprio contenitore
+
+> L'ultima delle categorie che «si trovavano solo guardando» adesso si misura.
+> Il difetto che l'ha fatta nascere: due pulsanti dell'urgenza da **301px**
+> dentro un riquadro da **239**, con «Flusso ordinario» ritagliato di 62px —
+> sotto **tre cancelli verdi**.
+
+### Aggiunto
+- **`tests/e2e/contenimento.spec.ts`** (`npm run contenimento`): 21 pagine × 2 viewport, bloccante, elenco delle eccezioni **vuoto** come quello di `bersagli`.
+- Perché serviva un cancello suo, e non bastava nessuno dei tre: `shots` misura il traboccamento **della pagina**, che resta zero *proprio perché* la card ha `overflow` nascosto — il difetto si nasconde dentro la proprietà che lo produce; `bersagli` misura la **dimensione**, e un bersaglio tagliato a metà è ancora alto 44; axe non ha una regola per «tagliato».
+
+### La distinzione che lo rende usabile
+- **Un contenitore che scorre non ritaglia niente.** Il rosso scatta solo dove l'antenato ha `overflow: hidden`/`clip` sull'asse su cui il controllo sporge, cioè dove la parte fuori è **irraggiungibile**. È la regola di `AGENTS.md` §3 (Fase A/B, 3) applicata allo spazio invece che al tempo: *fuori vista* e *fuori portata* non sono la stessa cosa. Senza questa distinzione il cancello sarebbe rosso sul riquadro del triage, che scorre per disegno.
+- Si risale **tutta** la catena degli antenati: un controllo può stare dentro il proprio riquadro e sporgere da quello del nonno.
+
+### Corretto per strada
+- **`porte.spec.ts` aveva una corsa, e il cancello nuovo l'ha fatta emergere.** Leggeva le sei porte con `locator.evaluateAll()`, che **non aspetta** e su una lista vuota restituisce `[]` in silenzio. Con `/admin` diventata un filo più lenta (una quarta interrogazione al database: il monitor degli atti) il test è passato a dichiarare «il cruscotto non offre nessuna porta» — il messaggio di un difetto di navigazione, per un problema di tempi. Lo snapshot che Playwright salva **dopo** il fallimento mostrava la navigazione al completo: quando la pagina fotografata contiene proprio ciò che il test dice di non aver trovato, la diagnosi è «non era ancora arrivato», non «manca». Chiuso con un `waitFor()`, che non ammorbidisce niente — se le porte non arrivano, il test scade lo stesso. Trappola scritta in `AGENTS.md` §3.
+
+### Verificato
+- Suite E2E: **165/165** (era 122; il cancello nuovo ne porta 42), `rotte` **66 · 0 problemi**, unit **310**, typecheck e lint verdi, `shots` verde nei due regimi.
+- **Prima accensione: 42 casi, 0 rossi** — il difetto dei 62px era stato chiuso il 2026-08-07, quindi non restava niente da trovare.
+- **Proprio per questo è stato provato rosso, nei due versi** (un cancello che non ha mai visto un rosso non è provato): un pulsante ritagliato lo becca — **62px, lo stesso numero del difetto vero** — e due pulsanti dentro un riquadro `overflow-y: auto`, uno dei quali oltre il bordo, **non** lo fanno scattare. Poi la sonda è stata rimossa e il file è tornato identico a HEAD.
+
 ## [0.45.0] — 2026-08-09 · Il cancello che legge la console
 
 > Nessun cancello guardava la console, ed è per questo che i sei errori di

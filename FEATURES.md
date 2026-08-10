@@ -7,7 +7,7 @@
 > Legenda: ✅ completa · 🚧 in corso · 🔒 richiede verifica · 👤 richiede login ·
 > 🔗 **dati reali, ogni riga con la propria fonte** (non dimostrativi)
 >
-> Aggiornato: 2026-08-07 (Fase C · `/admin` spezzata in sette · lista + dettaglio sulle code)
+> Aggiornato: 2026-08-09 (Ondata 8 · la pipeline degli atti: 26.591 atti reali, lettura, cancello di freschezza e monitor sul cruscotto)
 
 ---
 
@@ -159,6 +159,19 @@ e una riga che **dichiara quante ne tace** e perché.
 sono 6 aperte e 0 chiuse, e dentro la classifica sarebbero la riga più rossa
 della pagina attribuita a un ufficio che non esiste. Il numero resta, e dice
 un'altra cosa — quante segnalazioni non sono di nessuno.
+
+**Il monitor della pipeline degli atti** 🔗 (Ondata 8, 2026-08-09; terza
+lettura del cruscotto, forma C scelta sui mockup iniettati). Stato
+(«Aggiornato / Fermo / Mai letto», **le stesse soglie del cancello** via
+`statoArchivio`), **26.591 atti reali** dal portale della trasparenza contati
+per tipo — parola del portale — e per **tema civico**, che la card dichiara
+«dedotto dall'ufficio che li propone» perché è una deduzione nostra (69%
+misurato), non un conteggio. A base dati senza atti dice «Mai letto» e il
+comando per uscirne. La lettura: `npm run atti` (l'albo, ~2s: ogni atto vi
+resta ~15 giorni) · `--tutte` per il carico iniziale · `npm run
+atti:freschezza` per il cancello (7 controlli, «bloccata dal WAF» distinta da
+«fuori servizio»). Ricognizione e trappole in `docs/fonti-atti.md`; le pagine
+pubbliche nascono in **Ondata 11**.
 | `/admin/codici-qr` | I fogli QR da stampare (R-3, non toccata dal taglio) | strumento |
 
 | Funzionalità | Stato |

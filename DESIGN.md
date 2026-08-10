@@ -5,7 +5,10 @@
 > coerente con quanto scritto qui, o si corregge la scelta o si aggiorna
 > (consapevolmente) questo documento.
 >
-> Ultime revisioni: **2026-08-07** (§6 *una coda è una lista, e il lavoro è una
+> Ultime revisioni: **2026-08-09** (§11.7 *nessun controllo esce dal proprio
+> contenitore*: da trappola trovata guardando a **vincolo con un cancello suo**,
+> con la distinzione fra ciò che è fuori vista e ciò che è fuori portata) ·
+> **2026-08-07** (§6 *una coda è una lista, e il lavoro è una
 > pagina*: la riga compatta è 69px contro i 323 del modulo, e il dettaglio è
 > costante) · **2026-08-07** (§6 le quattro nature messe alla prova
 > eseguendo il taglio di `/admin`: il cruscotto non ripete la navigazione delle
@@ -630,9 +633,25 @@ un'inversione.
    difetto che non era di dimensione: Motion mette `tabindex="0"` su qualunque
    elemento con `whileTap`, e ne usciva una fermata di tabulazione senza nome
    dentro ogni pulsante «Anche io» — **42 su una sola pagina**.
-7. **Ogni grafico ha un equivalente testuale** e, dove possibile, è
+7. **Nessun controllo esce dal proprio contenitore** (2026-08-09). Un comando
+   che sporge da un riquadro con `overflow` nascosto viene **ritagliato**, e la
+   parte fuori non si raggiunge in nessun modo — né col dito, né col mouse.
+   Nasce da un caso vero: i due pulsanti dell'urgenza affiancati misuravano
+   **301px** dentro il riquadro da **239** che li ospita, e «Flusso ordinario»
+   spariva per 62px.
+
+   ⚠️ **Un contenitore che SCORRE non viola questa regola**: lì il contenuto
+   oltre il bordo si raggiunge, ed è il mestiere del riquadro del triage. Il
+   vincolo riguarda l'irraggiungibile, non il fuori vista.
+
+   ✅ **Cancello**: `tests/e2e/contenimento.spec.ts`, 21 pagine × 2 viewport,
+   bloccante, eccezioni **vuote**. Non lo sostituisce nessuno degli altri tre:
+   `shots` misura il traboccamento *della pagina* — zero, proprio perché la
+   card ritaglia —, `bersagli` la *dimensione* (un bersaglio tagliato a metà è
+   ancora alto 44), e axe non ha una regola per «tagliato».
+8. **Ogni grafico ha un equivalente testuale** e, dove possibile, è
    attraversabile da tastiera.
-8. Nessun contenuto può restare invisibile perché un'animazione non è partita
+9. Nessun contenuto può restare invisibile perché un'animazione non è partita
    (vedi la regola `@media print` in `globals.css`).
 
 ---

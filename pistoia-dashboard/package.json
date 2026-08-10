@@ -1,6 +1,6 @@
 {
   "name": "pistoia-dashboard",
-  "version": "0.45.0",
+  "version": "0.46.0",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -24,6 +24,7 @@
     "test:e2e": "playwright test",
     "a11y": "playwright test accessibilita",
     "bersagli": "playwright test bersagli",
+    "contenimento": "playwright test contenimento",
     "lighthouse": "npx --yes @lhci/cli@0.15.1 autorun",
     "shots": "node scripts/shots.mjs",
     "rotte": "node scripts/rotte.mjs",

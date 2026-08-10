@@ -1340,6 +1340,83 @@ runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock**
   **Lo spam resta fuori** perché il seed non ne contiene: non c'è niente su cui
   tarare, e un'euristica tarata sul nulla è una promessa.
 
+- **2026-08-09 (Ondata 8 — la pipeline degli atti: l'archivio vero è 140 volte
+  più grande)** — La metà rischiosa dell'ondata, e la misura ha riscritto la
+  premessa prima del disegno: il piano indicava due griglie da **188** atti, e
+  sotto «Pubblicità Legale» il portale espone **26.588 atti nello «Storico
+  atti»** più 202 sull'albo corrente, tutti con export CSV (13,4 MB in ~161s;
+  l'albo in 2s). Le due griglie piccole sono selezioni per obbligo di
+  trasparenza, contenute al 97% nell'archivio vero. Ricognizione completa in
+  `docs/fonti-atti.md`; Lorenzo ha scelto di leggere **tutto l'archivio**.
+
+  **Le quattro trappole misurate** (ora in `AGENTS.md` §3): `Url atto` è
+  l'identità della *pubblicazione* e non dell'atto (385 doppioni con due id
+  consecutivi per lo stesso atto; l'identità è `(tipo, anno, numero)` con due
+  ripieghi, e il terzo livello salva due delibere reali del 2024 che altrimenti
+  collassano); il **WAF blocca sullo user-agent** e risponde 500 «Web Page
+  Blocked» a `HeadlessChrome` mentre a un UA di Chrome vero risponde 200; le
+  griglie hanno **24 e 25 colonne** (in mezzo `Spesa prevista`), quindi si
+  mappa per nome; l'export grande dichiara `text/html` e manda CSV, quindi si
+  guarda il corpo. E due assunti della consegna non reggono: `Assessore
+  descrizione` è vuota ovunque, e **l'importo non esiste nella fonte**
+  (`Spesa prevista` = `0,00` su 26.588 righe) — il campo promesso dalla ROADMAP
+  non si può riempire da qui, e rientra solo leggendo gli allegati.
+
+  **Costruito:** modelli `Atto`/`LetturaAtti` (26.591 atti reali; il seed non
+  li tocca né li riempie, per il divieto fondante); `npm run atti` (giro
+  quotidiano sull'albo — un atto vi resta ~15 giorni, quindi 2s/giorno
+  intercettano tutto; idempotenza verificata: seconda passata = 1 nuovo, un
+  decreto recuperato, 0 doppioni); `npm run atti:freschezza` (7 controlli,
+  «bloccata dal WAF» distinta da «fuori servizio», **provato rosso** con una
+  lettura bloccata iniettata; soglia di 10 giorni = doppio del buco più lungo
+  in 5,5 anni, che è 5, Ferragosto compreso); la **categoria civica dedotta
+  dall'ufficio proponente** (69% misurato; la `Classifica` del portale provata
+  e scartata: titolario di protocollo con «VARIE ES. CENTRO GIOVANI» che si
+  mangia la Cultura; regola del segmento di testa, senza cui 395 atti di
+  lavori pubblici finivano in Sport; fermo di 102 uffici nei test); il
+  **monitor sul cruscotto** (forma C scelta sui tre mockup iniettati e
+  misurati; stato con le stesse soglie del cancello via `statoArchivio`; i
+  temi dichiarati «dedotti dall'ufficio», perché il conteggio è un fatto e la
+  sintesi è un giudizio; a base dati mai letta dice «Mai letto» e come
+  uscirne, provato dall'E2E — il database dimostrativo e quello degli E2E non
+  hanno atti per disegno).
+
+  **Fuori con le condizioni** (`docs/fonti-atti.md` §5): i legami a
+  opera/bilancio sarebbero **disonesti oggi** — atti reali su opere
+  dimostrative è il divieto fondante al contrario — e si aprono quando quei
+  dati saranno reali; il legame a quartiere è misurato (888 atti nominano un
+  quartiere vero, Bottegone 442) e si costruisce davanti alle pagine di O11,
+  con la resa «atti che nominano», mai «atti su».
+
+- **2026-08-09 (nessun controllo esce dal proprio contenitore)** —
+  `tests/e2e/contenimento.spec.ts` (`npm run contenimento`), 21 pagine × 2
+  viewport, bloccante, eccezioni vuote. Chiude l'ultima categoria che «si
+  trovava solo guardando»: un controllo che sporge dal proprio riquadro e viene
+  **ritagliato**. Nessuno dei tre cancelli esistenti poteva vederlo — `shots`
+  misura il traboccamento della *pagina*, che resta zero proprio perché la card
+  ha `overflow` nascosto; `bersagli` misura la *dimensione*; axe non ha una
+  regola per «tagliato». La regola che lo tiene silenzioso sui casi legittimi:
+  **un contenitore che scorre non ritaglia**, quindi il rosso scatta solo dove
+  l'antenato ha `overflow: hidden`/`clip` sull'asse su cui il controllo sporge —
+  la parte fuori è irraggiungibile. Si risale tutta la catena degli antenati.
+  Prima accensione 0 rossi su 42 (il difetto dei 62px era chiuso dal 07/08);
+  **provato rosso nei due versi** — un pulsante ritagliato lo becca a 62px, due
+  dentro un `overflow-y: auto` no.
+
+- **2026-08-09 (il cancello che legge la console)** — `npm run rotte` ora
+  ascolta `pageerror` e `console.error` su ogni rotta che apre (avvisi e
+  informazioni esclusi: un cancello rumoroso smette di essere letto), con
+  `prefers-reduced-motion: reduce` emulata su tutte e tre le passate — lo
+  stato in cui i sei errori di idratazione di `/bilancio` sono vissuti mesi
+  scritti nel log di E2E verdi. Prima accensione: **66 rotte, 0 errori**,
+  nessuna rossa di nascita. **Provato rosso** con un `console.error` iniettato
+  su `/glossario`: 1 rossa, uscita 1, messaggio in riga (2 eventi: StrictMode
+  monta due volte in sviluppo), poi rimosso e due passate pulite. Limite
+  dichiarato: un errore arrivato dopo lo snapshot di una rotta si attribuisce
+  alla successiva — meglio della rotta accanto che perso, e il testo dice da
+  quale componente viene. Gli errori della preparazione (login, scoperta dei
+  dettagli) si scartano dichiaratamente.
+
 ## 11. Roadmap
 
 La roadmap completa è in **[`ROADMAP.md`](./ROADMAP.md)**.

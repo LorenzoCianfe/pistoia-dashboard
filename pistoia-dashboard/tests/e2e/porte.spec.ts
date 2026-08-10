@@ -128,6 +128,24 @@ test("Comune: ogni porta del cruscotto si apre cliccando, e riporta indietro", a
   await page.goto("/admin");
 
   const porte = page.getByRole("navigation", { name: CRUSCOTTO }).getByRole("link");
+
+  /*
+    ⚠️ `evaluateAll` NON aspetta: risolve con ciò che combacia in quell'istante,
+    e su una lista vuota restituisce `[]` senza lamentarsi. Senza questa attesa
+    il test misura il cruscotto **prima** che il contenuto sia arrivato e
+    dichiara «nessuna porta» su una pagina che le ha tutte.
+
+    Non è teoria: è successo il 2026-08-09. Il cruscotto ha guadagnato una
+    quarta interrogazione al database (il monitor degli atti) e questo test è
+    diventato rosso — mentre lo snapshot che Playwright salva **dopo** il
+    fallimento mostrava la navigazione al completo, con le sue sei porte. La
+    corsa c'era da sempre; una pagina un po' più lenta l'ha solo resa visibile.
+
+    L'attesa non ammorbidisce il cancello: se le porte non arrivano davvero,
+    qui si scade e il test fallisce lo stesso.
+  */
+  await porte.first().waitFor({ state: "visible" });
+
   const indirizzi = await porte.evaluateAll((links) =>
     links.map((l) => l.getAttribute("href") ?? ""),
   );
