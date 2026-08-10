@@ -6,7 +6,7 @@
 >
 > **Leggilo per intero all'inizio di ogni sessione, prima di toccare codice.**
 >
-> Aggiornato: 2026-08-09 (**Ondata 8 aperta**: analytics operative e moderazione assistita · review «lenti mancanti» · le tre trappole nuove di §3 — *un consiglio che non si può seguire*, *`undefined` in un `where` di Prisma*, *la preferenza di movimento in fase di render*)
+> Aggiornato: 2026-08-09 (**la pipeline degli atti e i due cancelli mancanti** — console e contenimento, entrambi provati rossi prima di essere dichiarati verdi · le cinque trappole nuove di §3: *un id distinto al 100% può non essere un'identità*, *il WAF blocca sullo user-agent e risponde 500*, *due griglie dello stesso portale possono non avere le stesse colonne*, *il `content-type` può mentire*, *`evaluateAll` non aspetta e su una lista vuota tace*. Prima, lo stesso giorno: analytics operative e moderazione assistita · review «lenti mancanti»)
 
 ---
 
@@ -61,7 +61,7 @@ L'app vive in `pistoia-dashboard/`. La documentazione vive nella radice.
 
 ## 3. Design system — le regole che si sbagliano più spesso
 
-> §3 raccoglie **quarantuno trappole già pagate**. Sono raggruppate per ondata
+> §3 raccoglie **quarantasei trappole già pagate**. Sono raggruppate per ondata
 > solo perché è così che sono emerse: leggile tutte, valgono tutte ancora.
 
 **Prima di tutto: Astryx è la sorgente dei TOKEN, non lo strato di primitive.**
