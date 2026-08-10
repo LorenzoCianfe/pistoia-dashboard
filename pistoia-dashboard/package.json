@@ -1,6 +1,6 @@
 {
   "name": "pistoia-dashboard",
-  "version": "0.43.0",
+  "version": "0.44.0",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -28,6 +28,8 @@
     "shots": "node scripts/shots.mjs",
     "rotte": "node scripts/rotte.mjs",
     "produzione": "node scripts/produzione.mjs",
+    "atti": "tsx scripts/atti.ts",
+    "atti:freschezza": "tsx scripts/atti-freschezza.ts",
     "typecheck": "tsc --noEmit"
   },
   "browserslist": [

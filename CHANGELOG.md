@@ -5,6 +5,33 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.44.0] — 2026-08-09 · L'archivio vero è 140 volte più grande (Ondata 8)
+
+> La pipeline degli atti, cioè la metà rischiosa dell'ondata. La misura ha
+> riscritto la premessa: il piano indicava due griglie da 188 atti, e il
+> portale ne espone **26.593** sotto «Pubblicità Legale» — albo pretorio e
+> storico atti, entrambe con l'export CSV. La ricognizione completa è in
+> [`docs/fonti-atti.md`](docs/fonti-atti.md).
+
+### Misurato — e quattro trappole pagate, ora in AGENTS.md §3
+- 🔴 **`Url atto` non è l'identità dell'atto: è l'identità della PUBBLICAZIONE.** Lo stesso atto sta su albo e storico con due id consecutivi: usarlo come chiave produce **385 doppioni**, cioè la stessa delibera due volte. L'identità è `(tipo, anno, numero)` con due ripieghi misurati — e il terzo livello serve davvero: due delibere del 2024 senza numero né registrazione («Pistoia Blues» e «Festa della musica») altrimenti collassano.
+- 🔴 **Il WAF blocca sullo USER-AGENT e risponde 500**: con `HeadlessChrome` una pagina «Web Page Blocked», con l'UA di un Chrome vero 200. Un cancello che legge fonti esterne deve distinguere «bloccato» da «fuori servizio»: si riparano in modi diversi.
+- **Le griglie non hanno le stesse colonne** (24 vs 25: `Spesa prevista` in mezzo) → si mappa per nome, mai per posizione. **E il `content-type` mente**: l'export grande dichiara `text/html` e manda CSV → si guarda il corpo.
+- **Due assunti del piano non reggono**: `Assessore descrizione` è vuota su 26.588 righe ovunque, e **l'importo non esiste in questa fonte** (`Spesa prevista` = `0,00` su tutte le righe; il modello `Atto` della ROADMAP lo prometteva). Rientra solo il giorno in cui si leggeranno gli allegati.
+- **La freschezza è tarata sul misurato**: fra due giorni di pubblicazione il buco più lungo in 5,5 anni è **5 giorni** (Ferragosto compreso); la soglia del cancello è 10, il doppio del peggiore osservato.
+
+### Aggiunto
+- **Modelli `Atto` e `LetturaAtti`** — 26.591 atti reali dal 2021, ognuno con `urlFonte` (si preferisce lo storico: l'URL dell'albo scade in ~15 giorni). ⚠️ **Non sono dati dimostrativi**: il seed non li tocca e non li riempie mai — una delibera inventata attribuisce alla giunta una decisione che non ha preso.
+- **`npm run atti`** — il giro quotidiano legge l'albo (202 righe, ~2s) e intercetta tutto perché ogni atto vi resta ~15 giorni; `--storico`/`--tutte` per il carico iniziale (~3 min). Idempotente, verificato: seconda passata = 1 nuovo (un decreto recuperato), 0 doppioni.
+- **`npm run atti:freschezza`** — il cancello: 7 controlli, distingue «bloccata dal WAF» da «fuori servizio» e da «archivio fermo», e **provato rosso** con una lettura bloccata iniettata, non solo verde.
+- **La categoria civica dedotta dall'UFFICIO proponente** (`temaCivicoDaUfficio`): copertura misurata **69%**; il resto è amministrazione interna, per cui «nessun tema» è la risposta giusta. La `Classifica` del portale è stata provata e scartata: è un titolario di protocollo («VARIE ES. CENTRO GIOVANI» si mangia tutta la Cultura). Un **fermo di 102 uffici** nei test fa diventare rossa ogni regola che cambi tema a un ufficio esistente.
+- **Il monitor sul cruscotto** (`/admin`, forma C scelta da Lorenzo sui tre mockup iniettati e misurati: +445px a 1280, +585 a 360 dentro il tetto di 3.327). Stato con le **stesse soglie del cancello** (`statoArchivio`, importate non riscritte), conteggio per tipo nell'ordine canonico, e i temi dichiarati per ciò che sono: «dedotto dall'ufficio che li propone» — il conteggio è un fatto, la sintesi è un giudizio. A base dati mai letta dice «Mai letto» e come uscirne, provato dall'E2E.
+- **36 unit e 1 E2E nuovi** (310 unit totali, 123 E2E).
+
+### Note
+- Gli avvisi di **altri enti** e le **pubblicazioni di matrimonio** restano fuori dall'archivio: i primi non sono atti del Comune, le seconde portano dati personali di cittadini.
+- Due buchi dichiarati nella categoria civica, con la condizione che li chiude in `docs/fonti-atti.md` §4.3: sociale/casa (970 atti) e urbanistica (373) aspettano un tema in `CIVIC_TOPICS`, che è una decisione sul selettore dei temi, non su questa pipeline.
+
 ## [0.43.0] — 2026-08-09 · Un consiglio che non si può seguire è peggio del silenzio (Ondata 8)
 
 > La seconda voce del nucleo: la moderazione assistita. **Le misure hanno smontato due delle tre euristiche previste**, e la terza è finita su un'altra superficie di quella per cui era stata scritta.

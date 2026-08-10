@@ -61,3 +61,23 @@ test("le categorie sotto la soglia non si mostrano, ma si dichiarano", async ({
     page.getByText(/Altre \d+ categorie hanno meno di \d+ casi/),
   ).toBeVisible();
 });
+
+test("il monitor degli atti dice la verità su una base dati mai letta", async ({
+  page,
+}) => {
+  /*
+    Il database degli E2E nasce dal seed e NON contiene atti — per disegno: il
+    seed non deve mai riempire l'archivio, perché una delibera inventata
+    attribuisce alla giunta una decisione che non ha preso. Quindi ciò che
+    questo test può provare è lo stato onesto del vuoto: la card c'è, dichiara
+    «Mai letto», e dice COME si esce da quello stato. Un monitor che a
+    pipeline mai lanciata mostrasse «0 atti, tutto bene» sarebbe il difetto
+    classico del cancello che non distingue «verificato» da «non verificato».
+  */
+  const monitor = page
+    .locator("div.card", { has: page.getByRole("heading", { name: "Archivio degli atti" }) })
+    .last();
+  await expect(monitor.getByRole("heading", { name: "Archivio degli atti" })).toBeVisible();
+  await expect(monitor.getByText("Mai letto")).toBeVisible();
+  await expect(monitor.getByText(/la lettura dal portale della trasparenza non/)).toBeVisible();
+});

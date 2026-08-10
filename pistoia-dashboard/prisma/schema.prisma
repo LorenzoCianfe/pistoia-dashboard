@@ -1201,3 +1201,77 @@ model CivicProject {
 
   @@index([status])
 }
+
+// ---------------------------------------------------------------------------
+// La pipeline degli atti (Ondata 8)
+// ---------------------------------------------------------------------------
+
+// Gli atti del Comune letti dal portale della trasparenza. La ricognizione
+// della fonte sta in `docs/fonti-atti.md`; la logica pura in `lib/atti.ts`.
+//
+// ⚠️ Questi NON sono dati dimostrativi: sono atti veri di un'amministrazione
+// vera, e la regola fondante vale doppio — una delibera inventata attribuisce
+// alla giunta una decisione che non ha preso. Ogni riga porta `urlFonte`, e
+// senza fonte un atto non si mostra.
+//
+// ⚠️ `chiave` è l'identità, NON `idPubblicazione`: lo stesso atto è pubblicato
+// due volte (albo e storico) con due id consecutivi, e usare l'id come chiave
+// produce 385 doppioni (`docs/fonti-atti.md` §2.2).
+model Atto {
+  id     String @id @default(cuid())
+  chiave String @unique // `TIPO|anno/numero`, con i due ripieghi di lib/atti.ts
+
+  tipo    String // DELIBERA DI GIUNTA | DELIBERA DI CONSIGLIO | DETERMINAZIONE DEL DIRIGENTE | ORDINANZA | DECRETO
+  anno    Int
+  numero  Int
+  oggetto String // l'oggetto UFFICIALE, mai riscritto: la comprensibilità viene dalla struttura (Ondata 11)
+
+  ufficio    String // `Proponente descrizione`: il segnale da cui si deduce il tema
+  temaCivico String? // CivicTopicKey; null = nessun tema, ed è un esito legittimo (69% di copertura misurata)
+  dirigente  String?
+
+  dataAtto            DateTime? // manca in 1 riga su 26.588: si ordina per inizioPubblicazione
+  dataEsecutivita     DateTime?
+  numeroAllegati      Int       @default(0)
+  inizioPubblicazione DateTime
+  finePubblicazione   DateTime?
+
+  // La provenienza della riga vincente. `urlFonte` si preferisce dallo storico,
+  // perché quello dell'albo scade dopo ~15 giorni.
+  urlFonte            String
+  idPubblicazione     String
+  griglia             String // storico | albo | provvedimenti | generali
+  numeroRegistrazione Int    @default(0)
+
+  lettoIl   DateTime // l'ultima volta che la pipeline ha visto questo atto
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([temaCivico])
+  @@index([tipo])
+  @@index([inizioPubblicazione])
+  @@index([anno])
+}
+
+// Il registro delle letture: è ciò che rende il cancello di freschezza capace
+// di distinguere «letto e a posto» da «non letto», che è la regola di
+// AGENTS.md §3 (Fase A/B, 3) applicata a una pipeline invece che a un test.
+model LetturaAtti {
+  id      String @id @default(cuid())
+  griglia String
+
+  iniziataIl DateTime  @default(now())
+  finitaIl   DateTime?
+  // riuscita | bloccata (il WAF) | vuota | errore — «bloccata» è separata
+  // apposta: risponde 500 come un guasto e si ripara in modo diverso.
+  esito      String
+
+  righeLette     Int     @default(0)
+  attiNuovi      Int     @default(0)
+  attiAggiornati Int     @default(0)
+  righeScartate  Int     @default(0)
+  messaggio      String?
+
+  @@index([iniziataIl])
+  @@index([esito])
+}

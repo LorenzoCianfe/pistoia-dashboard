@@ -43,6 +43,14 @@ const photoSvg = (label: string, c1: string, c2: string) =>
   );
 
 async function wipe() {
+  // ⚠️ `Atto` e `LetturaAtti` NON si cancellano, ed è voluto: non sono dati
+  // dimostrativi ma atti veri letti dal portale della trasparenza
+  // (docs/fonti-atti.md). Riseminare la dimostrazione non deve buttare via
+  // l'archivio — che costa una lettura da tre minuti — e soprattutto il seed
+  // non deve mai avere l'occasione di RIEMPIRLI, perché una delibera inventata
+  // attribuisce alla giunta una decisione che non ha preso.
+  // Per rileggerli: `npm run atti -- --tutte`.
+
   // Child-first deletion to satisfy foreign keys.
   // O4 — Territorio & partecipazione
   await prisma.qtVote.deleteMany();

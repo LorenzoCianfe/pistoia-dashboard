@@ -12,6 +12,8 @@ import { buttonClasses } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
 import { PorteAdmin } from "@/components/admin/porte-admin";
 import { AnaliticheOperativeCards } from "@/components/admin/analitiche-operative";
+import { MonitorAttiCard } from "@/components/admin/monitor-atti";
+import { getMonitorAtti } from "@/lib/data/atti";
 import { formatRelativeTime } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Area Comune" };
@@ -59,10 +61,11 @@ const MOD_LABEL: Record<string, string> = {
 
 export default async function AdminPage() {
   await requireAdmin();
-  const [contatori, registro, analitiche] = await Promise.all([
+  const [contatori, registro, analitiche, monitorAtti] = await Promise.all([
     getContatoriAdmin(),
     getRegistroAzioni(),
     getAnaliticheOperative(),
+    getMonitorAtti(),
   ]);
 
   const numeri = [
@@ -94,6 +97,10 @@ export default async function AdminPage() {
           porte, perché sono una lettura e non una destinazione — e la lettura
           si guarda prima di decidere dove andare a lavorare. */}
       <AnaliticheOperativeCards dati={analitiche} />
+
+      {/* Il monitor della pipeline degli atti (Ondata 8): la quarta natura di
+          DESIGN.md §6 lo nomina per nome fra le letture. */}
+      <MonitorAttiCard dati={monitorAtti} />
 
       <PorteAdmin contatori={contatori} />
 
