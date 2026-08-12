@@ -144,8 +144,11 @@ const REGOLE_UFFICIO: ReadonlyArray<readonly [RegExp, CivicTopicKey | null]> = [
   [/anagrafe|stato civile|demografic|elettorale|leva/, null],
   [/rimborsi|oggetti smarriti/, null],
   // Urbanistica ed edilizia privata NON sono lavori pubblici: un permesso di
-  // costruire non è un'opera. Nessun tema copre la pianificazione, quindi
-  // restano senza — vedi docs/fonti-atti.md §4.3.
+  // costruire non è un'opera. Deciso il 2026-08-11 (misurato prima): un tema
+  // «urbanistica» avrebbe zero agganci nelle quattro tassonomie di contenuto e
+  // vivrebbe solo di atti — resta fuori finché una tassonomia non avrà una
+  // categoria urbanistica, o finché l'archivio (Ondata 11) non mostrerà il
+  // bisogno del filtro davanti alla pagina vera. Vedi docs/fonti-atti.md §4.3.
   [/urbanistic|edilizia privata|paesaggistica|pianificazione intermedia|citta storica/, null],
   // Sicurezza sul lavoro (D.Lgs 81), non sicurezza urbana.
   [/prevenzione e protezione|prevenzione, protezione/, null],
@@ -159,6 +162,11 @@ const REGOLE_UFFICIO: ReadonlyArray<readonly [RegExp, CivicTopicKey | null]> = [
   [/sportiv/, "sport"],
   [/turismo/, "turismo"],
   [/commercio|annona|suap|attivita produttive|sviluppo economico|promozione territoriale/, "commercio"],
+  // «Sociale e casa», deciso il 2026-08-11: i tre uffici del welfare e
+  // dell'abitare (940 atti misurati, 176 negli ultimi 12 mesi). L'apostrofo di
+  // «Opportunita'» diventa spazio in normalizzaUfficio, quindi la radice è
+  // senza accento e senza apostrofo.
+  [/servizi per l abitare|progettazione sociale|inclusione sociale|pari opportunita|promozione dell integrazione/, "sociale"],
   [/lavori pubblici|llpp|grandi opere|patrimonio|espropri|energia|impianti|infrastrutture/, "lavori"],
 ];
 
@@ -261,15 +269,71 @@ export function dataItaliana(s: string): Date | null {
  * user-agent sa di automazione: è il WAF, non un guasto. Chi legge lo stato
  * conclude «il portale è giù»; chi legge il corpo sa che è «ci hanno scambiati
  * per un bot», che si ripara e va detto in modo diverso.
+ *
+ * 🔴 **La finestra era 4.000 caratteri e non bastava, misurato il 2026-08-11
+ * rompendo la lettura di proposito.** La pagina di blocco vera è lunga 39.133
+ * caratteri e comincia con ~19KB di CSS inline: il `<title>` con la frase
+ * incriminata arriva a **19.205**, «Web Page Blocked» a **38.709** e `MDAWAF`
+ * a **38.749**. Dentro i primi 4.000 non c'è nessuna delle tre spie, quindi
+ * questa funzione rispondeva `false` proprio sul caso per cui esiste, e la
+ * lettura archiviava «errore» dove il fatto era «bloccata» — cioè la
+ * distinzione che `docs/fonti-atti.md` §2.1 dichiara essenziale, perché le due
+ * cose si riparano in modo diverso.
+ *
+ * 64.000 copre la pagina intera con margine. Non si guarda tutto il corpo
+ * perché l'export dello storico è di 13,4MB e la spia, se c'è, è in testa.
  */
 export function paginaDiBlocco(corpo: string): boolean {
-  return /Web Page Blocked|The URL you requested has been blocked|MDAWAF/i.test(corpo.slice(0, 4000));
+  return /Web Page Blocked|The URL you requested has been blocked|MDAWAF/i.test(corpo.slice(0, 64_000));
 }
 
 /** L'export grande dichiara `text/html` e manda CSV: il tipo mente, il corpo
  *  no. Si riconosce dall'intestazione, che è sempre la stessa. */
 export function sembraCsvDegliAtti(corpo: string): boolean {
   return corpo.trimStart().startsWith('"Proponente"');
+}
+
+// ---------------------------------------------------------------------------
+// Il barattolo dei cookie
+// ---------------------------------------------------------------------------
+
+/**
+ * La lettura non usa un browser (decisione del 2026-08-11, misurata): il WAF
+ * guarda lo user-agent e l'export vuole la sessione del portlet, e tutte e due
+ * le cose si fanno con `fetch` più questi cookie. Serviva Chromium — 427MB per
+ * immagine, su un disco che si è già riempito al 100% una volta — per due
+ * richieste GET.
+ *
+ * Il barattolo è volutamente minimo: nomi e valori, l'ultimo vince. Non serve
+ * niente di più perché vive quanto una lettura di una griglia, in un processo
+ * che non parla con nessun altro dominio — quindi `Domain`, `Path`, `Expires`
+ * e `Secure` non cambierebbero nessuna decisione.
+ */
+export type Barattolo = Map<string, string>;
+
+/**
+ * ⚠️ **Le stringhe di `Set-Cookie` si prendono da `getSetCookie()`, mai
+ * concatenate.** Un `Expires=Wed, 09 Sep 2026 10:00:00 GMT` contiene una
+ * virgola: chi legge l'intestazione unita e la spezza sulle virgole taglia il
+ * cookie in mezzo alla data e si porta a casa un nome che è un pezzo di data.
+ * `Headers.getSetCookie()` restituisce le intestazioni già separate, ed è la
+ * ragione per cui questa funzione prende un array e non una stringa.
+ */
+export function raccogliCookie(barattolo: Barattolo, intestazioni: readonly string[]): Barattolo {
+  for (const riga of intestazioni) {
+    const coppia = riga.split(";")[0];
+    const i = coppia.indexOf("=");
+    if (i <= 0) continue;
+    const nome = coppia.slice(0, i).trim();
+    const valore = coppia.slice(i + 1).trim();
+    if (nome) barattolo.set(nome, valore);
+  }
+  return barattolo;
+}
+
+/** Il barattolo come intestazione `Cookie`. Vuoto = nessuna intestazione. */
+export function intestazioneCookie(barattolo: Barattolo): string {
+  return [...barattolo].map(([n, v]) => `${n}=${v}`).join("; ");
 }
 
 // ---------------------------------------------------------------------------

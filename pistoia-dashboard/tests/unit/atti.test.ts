@@ -1,14 +1,17 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  type Barattolo,
   chiaveAtto,
   dataItaliana,
   ETICHETTA_TIPO,
   GIORNI_MASSIMI_SENZA_ATTI,
   idPubblicazione,
+  intestazioneCookie,
   isTipoAtto,
   paginaDiBlocco,
   parseCsv,
+  raccogliCookie,
   righeConIntestazione,
   rigaAdAtto,
   sembraCsvDegliAtti,
@@ -23,6 +26,44 @@ import { CIVIC_TOPICS } from "@/lib/civic-topics";
   Ogni test qui difende una trappola PAGATA leggendo il portale il 2026-08-09,
   non un caso immaginato. Le misure stanno in docs/fonti-atti.md.
 */
+
+describe("il barattolo dei cookie · la sessione del portlet senza browser", () => {
+  it("raccoglie nome e valore, e l'ultimo vince", () => {
+    const b: Barattolo = new Map();
+    raccogliCookie(b, ["JSESSIONID=ABC; Path=/; HttpOnly", "COOKIE_SUPPORT=true; Path=/"]);
+    raccogliCookie(b, ["JSESSIONID=XYZ; Path=/"]);
+    expect(b.get("JSESSIONID")).toBe("XYZ");
+    expect(b.get("COOKIE_SUPPORT")).toBe("true");
+    expect(intestazioneCookie(b)).toBe("JSESSIONID=XYZ; COOKIE_SUPPORT=true");
+  });
+
+  it("🔴 una data in `Expires` contiene una virgola, e non deve spezzare il cookie", () => {
+    // È la ragione per cui `raccogliCookie` prende un ARRAY (da
+    // `Headers.getSetCookie()`) e non l'intestazione unita: chi spezzasse
+    // sulle virgole si porterebbe a casa un cookie che si chiama « 09 Sep 2026
+    // 10:00:00 GMT» e perderebbe quello vero.
+    const b: Barattolo = new Map();
+    raccogliCookie(b, ["cookiesession1=678B2train; Expires=Wed, 09 Sep 2026 10:00:00 GMT; Path=/"]);
+    expect([...b.keys()]).toEqual(["cookiesession1"]);
+    expect(b.get("cookiesession1")).toBe("678B2train");
+  });
+
+  it("un barattolo vuoto non produce intestazione", () => {
+    expect(intestazioneCookie(new Map())).toBe("");
+  });
+
+  it("regge le righe malformate senza perdere le buone", () => {
+    const b: Barattolo = new Map();
+    raccogliCookie(b, ["", "senza-uguale", "=valore-senza-nome", "buono=1"]);
+    expect([...b.keys()]).toEqual(["buono"]);
+  });
+
+  it("il valore può contenere `=` (i token in base64 finiscono con `==`)", () => {
+    const b: Barattolo = new Map();
+    raccogliCookie(b, ["t=YWJjZA==; Path=/"]);
+    expect(b.get("t")).toBe("YWJjZA==");
+  });
+});
 
 describe("chiaveAtto · l'identità è l'atto, non la pubblicazione", () => {
   const base = { tipo: "ORDINANZA", annoRegistrazione: 2026, numeroRegistrazione: 3000, idPubblicazione: "9" };
@@ -128,6 +169,46 @@ describe("il CSV del portale", () => {
   it("riconosce la pagina di blocco del WAF, che risponde 500 come un guasto", () => {
     expect(paginaDiBlocco("<html><body>Web Page Blocked! Pagina web bloccata - MDAWAF001</body></html>")).toBe(true);
     expect(paginaDiBlocco('"Proponente","Oggetto"')).toBe(false);
+  });
+
+  it("🔴 la riconosce anche nella FORMA VERA, con le spie oltre i 19KB di CSS", () => {
+    /*
+      Questo test è nato da un rosso vero (2026-08-11): rompendo la lettura di
+      proposito — user-agent di un Chrome headless — la pagina bloccata veniva
+      archiviata come «errore» invece che «bloccata», e le due cose si riparano
+      in modo diverso.
+
+      La causa: `paginaDiBlocco` guardava i primi 4.000 caratteri, mentre la
+      pagina vera è lunga 39.133 e comincia con ~19KB di CSS inline. Le
+      posizioni qui sotto sono MISURATE su quella risposta, non stimate: il
+      titolo con la frase a 19.205, «Web Page Blocked» a 38.709, `MDAWAF` a
+      38.749.
+
+      Il test che c'era prima usava una pagina inventata e CORTA, dove le spie
+      stavano all'inizio: passava, e non poteva vedere il difetto. È la regola
+      generale che vale oltre questo caso — un test scritto sulla forma
+      immaginata di una risposta certifica il parser contro sé stesso.
+    */
+    const cssLungo = "/* " + "a".repeat(19_000) + " */";
+    const paginaVera =
+      `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"><html> <head> ` +
+      `<meta name="viewport" content="width=device-width"> <style type="text/css"> ${cssLungo} </style> ` +
+      `<title>The URL you requested has been blocked</title></head><body>` +
+      "x".repeat(19_000) +
+      `<h1>Web Page Blocked</h1><p>MDAWAF001</p><p>Attack ID: 20000005</p></body></html>`;
+
+    expect(paginaVera.length).toBeGreaterThan(38_000);
+    expect(paginaVera.indexOf("Web Page Blocked")).toBeGreaterThan(4_000);
+    expect(paginaDiBlocco(paginaVera)).toBe(true);
+  });
+
+  it("non scandisce tutto un export da 13MB: la spia, se c'è, è in testa", () => {
+    // Il contrappeso del test qui sopra: alzando la finestra si paga in
+    // scansione, quindi resta limitata. Un CSV enorme che contenesse la frase
+    // in fondo non è un caso reale — la pagina di blocco SOSTITUISCE la
+    // risposta, non la segue.
+    const csvEnorme = '"Proponente","Oggetto"\n' + "x".repeat(200_000) + "Web Page Blocked";
+    expect(paginaDiBlocco(csvEnorme)).toBe(false);
   });
 
   it("riconosce il CSV dal CORPO, perché l'export grande dichiara text/html", () => {
@@ -310,7 +391,7 @@ const UFFICI_2026: ReadonlyArray<readonly [string, string | null]> = [
   ["U.O. Lavori Pubblici e Patrimonio", "lavori"],
   ["U.O. Cultura e Biblioteche", "cultura"],
   ["Servizio Cultura e Tradizioni, Turismo e Informatica", "cultura"],
-  ["U.O. Servizi per l'abitare", null],
+  ["U.O. Servizi per l'abitare", "sociale"],
   ["U.O. Progetti Speciali, Grandi Opere e Espropri", "lavori"],
   ["U.O. Edilizia Scolastica e Impiantistica Sportiva", "scuole"],
   ["U.O. Promozione Sportiva", "sport"],
@@ -334,10 +415,10 @@ const UFFICI_2026: ReadonlyArray<readonly [string, string | null]> = [
   ["U.O.C. Viabilita' Pronto Intervento e Polizia Giudiziaria", "mobilita"],
   ["U.O. Musei e Beni Culturali", "cultura"],
   ["U.O. Ambiente e Tutela degli Animali", "ambiente"],
-  ["U.O. Progettazione Sociale e Organizzazione Servizi di Inclusione Sociale", null],
+  ["U.O. Progettazione Sociale e Organizzazione Servizi di Inclusione Sociale", "sociale"],
   ["U.O. Imposte sugli Immobili (ICI, IMU, TASI) e di Soggiorno", null],
   ["U.O. Servizi Educativi e Amministrativi Strumentali", "scuole"],
-  ["U.O. Promozione dell'integrazione e Pari Opportunita'", null],
+  ["U.O. Promozione dell'integrazione e Pari Opportunita'", "sociale"],
   ["U.O. Gestioni Economali, Pianificazione e Controllo Strategico", null],
   ["Servizio Personale e Politiche di Inclusione Sociale", null],
   ["Servizio Finanziario e Controllo Aziende Partecipate", null],
@@ -412,9 +493,12 @@ describe("il fermo dei 102 uffici del 2026-08-09", () => {
     }
   });
 
-  it("copre 42 uffici su 102: il resto è amministrazione interna", () => {
+  it("copre 45 uffici su 102: il resto è amministrazione interna", () => {
+    // 42 dal 2026-08-09; 45 dal 2026-08-11, quando «Sociale e casa» ha preso
+    // i tre uffici del welfare e dell'abitare (decisione di prodotto, non
+    // tecnica — vedi docs/fonti-atti.md §4.3).
     expect(UFFICI_2026).toHaveLength(102);
-    expect(UFFICI_2026.filter(([, t]) => t !== null)).toHaveLength(42);
+    expect(UFFICI_2026.filter(([, t]) => t !== null)).toHaveLength(45);
   });
 
   it("ogni tema prodotto esiste nella tassonomia canonica", () => {

@@ -163,15 +163,25 @@ un'altra cosa — quante segnalazioni non sono di nessuno.
 **Il monitor della pipeline degli atti** 🔗 (Ondata 8, 2026-08-09; terza
 lettura del cruscotto, forma C scelta sui mockup iniettati). Stato
 («Aggiornato / Fermo / Mai letto», **le stesse soglie del cancello** via
-`statoArchivio`), **26.591 atti reali** dal portale della trasparenza contati
+`statoArchivio`), **26.644 atti reali** dal portale della trasparenza contati
 per tipo — parola del portale — e per **tema civico**, che la card dichiara
-«dedotto dall'ufficio che li propone» perché è una deduzione nostra (69%
-misurato), non un conteggio. A base dati senza atti dice «Mai letto» e il
+«dedotto dall'ufficio che li propone» perché è una deduzione nostra (72,3%
+misurato dal 2026-08-11, quando «Sociale e casa» ha preso i tre uffici del
+welfare e dell'abitare: 940 atti), non un conteggio. A base dati senza atti dice «Mai letto» e il
 comando per uscirne. La lettura: `npm run atti` (l'albo, ~2s: ogni atto vi
 resta ~15 giorni) · `--tutte` per il carico iniziale · `npm run
 atti:freschezza` per il cancello (7 controlli, «bloccata dal WAF» distinta da
 «fuori servizio»). Ricognizione e trappole in `docs/fonti-atti.md`; le pagine
 pubbliche nascono in **Ondata 11**.
+
+**Dal 2026-08-11 la lettura è automatica e non usa un browser** (piano in
+`docs/pipeline-atti-schedulata.md`). Gira su `fetch` con l'UA di un Chrome vero
+e i cookie del portlet — Playwright serviva solo per quelle due cose, e **in
+produzione non c'era**: `npm ci` installa il pacchetto, non i binari, quindi un
+lavoro schedulato sarebbe morto al primo scatto. La chiama uno **Scheduled Task
+di Coolify** una volta al giorno; **su un archivio vuoto il giro fa da sé il
+carico completo**, perché leggere solo l'albo lascerebbe 220 atti su 26.644 col
+monitor che dichiara «Aggiornato».
 | `/admin/codici-qr` | I fogli QR da stampare (R-3, non toccata dal taglio) | strumento |
 
 | Funzionalità | Stato |

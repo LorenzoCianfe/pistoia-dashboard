@@ -6,7 +6,16 @@
 >
 > **Leggilo per intero all'inizio di ogni sessione, prima di toccare codice.**
 >
-> Aggiornato: 2026-08-09 (**la pipeline degli atti e i due cancelli mancanti** — console e contenimento, entrambi provati rossi prima di essere dichiarati verdi · le cinque trappole nuove di §3: *un id distinto al 100% può non essere un'identità*, *il WAF blocca sullo user-agent e risponde 500*, *due griglie dello stesso portale possono non avere le stesse colonne*, *il `content-type` può mentire*, *`evaluateAll` non aspetta e su una lista vuota tace*. Prima, lo stesso giorno: analytics operative e moderazione assistita · review «lenti mancanti»)
+> Aggiornato: 2026-08-11 (**il tema civico «Sociale e casa»**, deciso misurando
+> quanti contenuti *esistenti* ogni tema candidato coprirebbe · **la pipeline
+> degli atti che gira da sola**, senza browser — `npm ci` non installava i
+> binari, quindi in produzione sarebbe morta al primo scatto · le cinque
+> trappole nuove di §3: *`comando | tail` restituisce l'exit code di `tail`,
+> quindi un cancello rosso si legge verde*, *a macchina carica gli E2E cadono e
+> i rossi somigliano a una regressione*, *il pacchetto npm non è il browser*,
+> *un riconoscitore tarato sulla forma immaginata di una risposta certifica sé
+> stesso*, *un giro incrementale su un archivio vuoto si dichiara fresco*).
+> Prima: 2026-08-09 (**la pipeline degli atti e i due cancelli mancanti** — console e contenimento, entrambi provati rossi prima di essere dichiarati verdi · le cinque trappole nuove di §3: *un id distinto al 100% può non essere un'identità*, *il WAF blocca sullo user-agent e risponde 500*, *due griglie dello stesso portale possono non avere le stesse colonne*, *il `content-type` può mentire*, *`evaluateAll` non aspetta e su una lista vuota tace*. Prima, lo stesso giorno: analytics operative e moderazione assistita · review «lenti mancanti»)
 
 ---
 
@@ -61,7 +70,7 @@ L'app vive in `pistoia-dashboard/`. La documentazione vive nella radice.
 
 ## 3. Design system — le regole che si sbagliano più spesso
 
-> §3 raccoglie **quarantasei trappole già pagate**. Sono raggruppate per ondata
+> §3 raccoglie **cinquantuno trappole già pagate**. Sono raggruppate per ondata
 > solo perché è così che sono emerse: leggile tutte, valgono tutte ancora.
 
 **Prima di tutto: Astryx è la sorgente dei TOKEN, non lo strato di primitive.**
@@ -838,6 +847,117 @@ decreto vero del Sindaco, con oggetto, fonte e data di pubblicazione, a cui
 mancava solo quel campo. Il minimo per stare in archivio è *che cosa dice, da
 dove viene, quando è stato pubblicato*; il resto è facoltativo, e un archivio
 che perde un atto è peggio di uno con una data vuota.
+
+### Due trappole del lanciare i cancelli (2026-08-11)
+
+Pagate aggiungendo il tema civico «Sociale e casa». Nessuna delle due riguarda
+il prodotto: riguardano **il modo in cui si legge l'esito di un cancello**, che
+è la categoria che qui costa di più.
+
+1. 🔴 **`comando | tail` restituisce l'exit code di `tail`, non del comando —
+   quindi un cancello ROSSO si legge verde.** `npm run rotte 2>&1 | tail -12`
+   è morto su un `TimeoutError` (il dev server era ancora in prima
+   compilazione, che è lo stato *standard* dopo che gli E2E hanno cancellato
+   `.next`), e la notifica del task ha riportato **exit code 0**: l'ultimo
+   comando della pipe era `tail`, che era andato benissimo.
+
+   È la regola di §3 (Fase A/B, 3) presa da una porta nuova — *un cancello
+   deve distinguere «verificato e a posto» da «non verificato»* — con
+   l'aggravante che qui il cancello **funzionava**: a mentire era il modo di
+   invocarlo. La forma sicura, quando serve vedere solo la coda di un output
+   lungo, è **redirigere su file** e leggere l'exit code prima del `tail`:
+
+   ```bash
+   npm run rotte > rotte.log 2>&1; echo "EXIT=$?"; tail -8 rotte.log
+   ```
+
+   ⚠️ Vale per **ogni** cancello lanciato in una pipe, non solo per `rotte`.
+
+2. **A macchina carica gli E2E cadono, e i rossi somigliano a una
+   regressione.** Con la suite completa in corsa insieme ad altro lavoro (CPU
+   al 100%, 2,4GB liberi su 15,2), **4 test su 165** sono caduti in specifiche
+   scorrelate — moderazione, segnalazione, suggerimento categoria, trasparenza.
+   A macchina scarica: **165/165**, due volte di fila.
+
+   È la stessa famiglia della trappola 2 della Fase C (il dev server
+   superstite) ma con una causa che non si vede in nessun log: **la macchina**.
+   I segni che la distinguono da un guasto vero sono gli stessi, e valgono la
+   pena di essere elencati perché sono ciò che evita di cercare nel diff:
+   sono tutti **timeout o instabilità** (`element is not stable`,
+   `net::ERR_ABORTED; maybe frame was detached?`, `29 × unexpected value`) e
+   **nessuno afferma un contenuto sbagliato**; l'insieme dei falliti **cambia a
+   ogni esecuzione** (4, poi 6, poi 3 — con file diversi), mentre un guasto
+   vero è deterministico.
+
+   Il modo di lavorare che ne esce, e che ha risolto il dubbio in venti minuti
+   invece che in un'ora: **si mette la modifica da parte** (`git stash`), si
+   rilanciano *gli stessi* test — se passano su HEAD pulito **e** ripassano con
+   la modifica rimessa, la causa era l'ambiente. Non basta rilanciare e vedere
+   verde: quello dimostra solo che è intermittente, non di chi è la colpa.
+
+   Corollario operativo: **non lanciare due cose pesanti insieme.** La suite
+   completa costa ~22 minuti a macchina scarica e ~29 a macchina carica — cioè
+   parallelizzare non fa nemmeno risparmiare tempo, e in cambio produce rossi
+   da diagnosticare.
+
+### Tre trappole della pipeline che gira da sola (2026-08-11)
+
+Pagate rendendo automatica la lettura degli atti. Come sempre: **nessuna
+produce un errore dove la si scrive**, e tutte e tre producono un risultato
+plausibile. Il dettaglio sta in `docs/pipeline-atti-schedulata.md`.
+
+1. 🔴 **`npm ci` installa il PACCHETTO di Playwright, non il browser.** I
+   binari li scarica `npx playwright install`, che nel `Dockerfile` non c'è
+   mai stato: quindi `npm run atti` funzionava benissimo qui e in produzione
+   sarebbe morto su «Executable doesn't exist at
+   /root/.cache/ms-playwright/…». **Un cron l'avrebbe scoperto scattando**, e
+   il sintomo sarebbe arrivato dentro un log che nessuno guarda.
+
+   La regola generale: **quando una dipendenza scarica risorse fuori da
+   `node_modules`, `npm ci` non la installa davvero** — e la differenza si
+   vede solo là dove nessuno ha ancora provato a eseguirla. Prima di
+   schedulare uno script in un ambiente diverso da questo, chiediti *che cosa
+   tocca oltre al proprio codice*: browser, binari, cache, font, certificati.
+
+   Qui la risposta è stata togliere il browser invece di portarlo: il WAF
+   voleva uno user-agent credibile e l'export i cookie del portlet, e `fetch`
+   fa tutte e due. **Costo evitato: 427MB per immagine** su un disco che si è
+   già riempito al 100% una volta, per fare due GET.
+
+2. 🔴 **Un riconoscitore tarato sulla forma IMMAGINATA di una risposta
+   certifica sé stesso.** `paginaDiBlocco` cercava le spie del WAF nei primi
+   **4.000** caratteri. La pagina di blocco vera è lunga **39.133** e comincia
+   con ~19KB di CSS inline: il titolo arriva a 19.205, «Web Page Blocked» a
+   **38.709**. Nessuna spia dentro la finestra — quindi la funzione rispondeva
+   `false` **proprio sul caso per cui esisteva**, e la lettura archiviava
+   «errore» dove il fatto era «bloccata», cioè la distinzione che
+   `docs/fonti-atti.md` §2.1 dichiara essenziale perché le due cose si
+   riparano in modo diverso.
+
+   Il test che la copriva passava, e non poteva vedere il difetto: usava una
+   pagina **inventata e corta**, con le spie all'inizio. **La regola: un test
+   su una risposta esterna si scrive sulla forma VERA — lunghezza e ordine
+   compresi — non su un esempio abbreviato**, perché è proprio la taglia ciò
+   che il codice sbaglia a indovinare.
+
+   ⚠️ Il difetto era **preesistente** e non del motore nuovo: la funzione è la
+   stessa che usava la lettura a browser. L'ha trovato **rompere di proposito**
+   — mandare l'UA di un Chrome headless e guardare che cosa finiva in archivio.
+   Senza quella prova sarebbe rimasto lì.
+
+3. **Un giro incrementale su un archivio VUOTO riempie di poco e si dichiara
+   fresco.** L'albo contiene ~220 atti: su un archivio a zero ne restano
+   **220 su 26.644** — 120 volte più piccolo del vero — e il monitor dice
+   «Aggiornato», perché la lettura è riuscita davvero. Non è un caso di
+   scuola: **è lo stato della produzione**, dove l'archivio non è mai stato
+   riempito, ed è dove il primo scatto del task sarebbe finito.
+
+   Si chiude facendo accorgere il giro da sé (zero atti → si leggono tutte e
+   quattro le griglie). La soglia è **zero** e non un numero scelto: *vuoto* è
+   un fatto, *troppo pochi* sarebbe un giudizio da tarare. La regola generale:
+   **quando un lavoro periodico ha un primo scatto diverso dagli altri, quel
+   primo scatto va progettato — o capiterà in produzione senza che nessuno
+   guardi.**
 
 ---
 

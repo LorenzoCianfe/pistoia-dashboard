@@ -21,7 +21,8 @@ export type CivicTopicKey =
   | "sport"
   | "accessibilita"
   | "turismo"
-  | "commercio";
+  | "commercio"
+  | "sociale";
 
 export type CivicTopic = {
   label: string;
@@ -145,6 +146,24 @@ export const CIVIC_TOPICS: Record<CivicTopicKey, CivicTopic> = {
     proposalCats: [],
     eventCats: ["mercato"],
     operaCats: ["piazza"],
+  },
+  // Deciso il 2026-08-11, misurando prima (docs/fonti-atti.md §4.3): le
+  // politiche della casa non avevano NESSUN posto nella tassonomia e il
+  // surrogato più vicino («giovani») era visibilmente falso. Le categorie
+  // restano condivise con giovani e accessibilita — la condivisione è già la
+  // norma («Sport» sta in due temi, «restauro» in tre). L'altro buco misurato,
+  // «urbanistica», NON entra: zero agganci in tutte e quattro le tassonomie,
+  // sarebbe un tema alimentato solo dagli atti — si riapre quando una
+  // tassonomia di contenuto avrà una categoria urbanistica, o quando la
+  // pagina dell'archivio (Ondata 11) mostrerà il bisogno del filtro.
+  sociale: {
+    label: "Sociale e casa",
+    emoji: "🏠",
+    color: "viola",
+    reportCats: [],
+    proposalCats: ["Sociale"],
+    eventCats: ["volontariato"],
+    operaCats: ["sociale"],
   },
 };
 

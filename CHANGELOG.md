@@ -5,6 +5,62 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.48.0] — 2026-08-11 · La pipeline degli atti gira da sola, e senza browser
+
+> Era **il debito più grosso lasciato aperto** dall'Ondata 8: `npm run atti` si
+> lanciava a mano, in produzione non era mai girato, e il cancello di
+> freschezza misurava una cosa che nessuno alimentava. La misura che ha deciso
+> tutto il resto: **in produzione Playwright non c'era**, quindi la strada che
+> sembrava più economica — un cron dentro il container — sarebbe partita verso
+> un errore. Piano completo in [`docs/pipeline-atti-schedulata.md`](docs/pipeline-atti-schedulata.md).
+
+### Cambiato — la lettura non usa più un browser
+- **`scripts/atti.ts` legge con `fetch`**, un barattolo di cookie e l'UA di un Chrome vero. Le due cose per cui serviva Playwright erano uno user-agent credibile (il WAF blocca sull'UA e risponde 500) e i cookie del portlet (l'export dipende dall'ultima griglia visitata): `fetch` le fa tutte e due. Misurato su tutte e quattro le griglie — albo **2,6s** · storico **13,47MB in 178s** · le due piccole ~1s, nessuna bloccata — e il carico da zero produce **la stessa identica distribuzione dei temi** del database riempito col motore vecchio.
+- **Perché non il contrario** (mettere Chromium nell'immagine): +427MB per immagine più ~50 pacchetti Debian, cioè ogni deploy da 2,82GB a ~3,4GB, su un disco da 40GB che si è già riempito al 100% una volta — per fare due richieste GET.
+- Il barattolo (`raccogliCookie`, `intestazioneCookie`) sta in `src/lib/atti.ts` ed è coperto dai test. ⚠️ Le stringhe di `Set-Cookie` si prendono da `Headers.getSetCookie()`, **mai dall'intestazione unita spezzata sulle virgole**: un `Expires=Wed, 09 Sep 2026 …` contiene una virgola e il cookie si spezzerebbe in mezzo alla data.
+
+### Corretto — un difetto trovato rompendo di proposito
+- 🔴 **`paginaDiBlocco` non riconosceva la pagina di blocco vera.** Guardava i primi **4.000** caratteri; la pagina del WAF è lunga **39.133** e comincia con ~19KB di CSS inline, quindi «Web Page Blocked» (a 38.709) e `MDAWAF` (a 38.749) restavano fuori. La lettura archiviava **«errore»** dove il fatto era **«bloccata»** — la distinzione che `docs/fonti-atti.md` §2.1 dichiara essenziale, perché le due cose si riparano in modo diverso. Finestra a 64.000.
+- **Il difetto era preesistente**, non del motore nuovo: la funzione è la stessa che usava la lettura a browser. Il test che la copriva **passava** perché usava una pagina inventata e corta, con le spie all'inizio; adesso ne esiste uno sulla forma vera, con le posizioni misurate.
+
+### Aggiunto — il primo scatto è diverso dagli altri, e ora è progettato
+- **Su un archivio vuoto il giro fa il carico completo, da sé.** L'albo contiene ~220 atti: leggerlo su un archivio a zero lascerebbe **220 atti su 26.644** con il monitor che dichiara «Aggiornato». Non è un caso di scuola — è lo stato della produzione, ed è dove il primo scatto del task sarebbe finito. La soglia è **zero**, non un numero scelto.
+- **Lo Scheduled Task di Coolify** (`npm run atti`, `0 21 * * *`), con l'avvertenza che il cron di Coolify gira in **UTC**, il ripiego a crontab se quella versione non li avesse, e il modo di verificare che sia andato senza fidarsi dei log.
+
+### Misurato e NON fatto, con la condizione che lo riapre
+- **Non si passa a WAL.** Il database è in `journal_mode=delete`, dove un writer blocca i lettori. Misurato sul carico iniziale (53 transazioni da 500 righe): mediana **21ms**, massima **84ms**, **1,23s** di lock in tutto su un giro di tre minuti, contro un `busy_timeout` di 5.000ms — margine **59×** sulla peggiore. **Condizione: se il carico crescesse molto, o se comparissero errori `SQLITE_BUSY`.**
+- **Il task non è stato attivato**: il server era **spento** (risponde al ping, nessuna porta aperta fra 22, 80, 443 e 8000), quindi non è stato possibile verificare che questa versione di Coolify abbia gli Scheduled Task né misurare il disco.
+
+### Verificato
+- Unit **317** (erano 310: 5 sul barattolo dei cookie, 2 sul riconoscimento del blocco), typecheck e lint verdi.
+- **Il rosso è stato provato di proposito, nei due versi**: con l'UA di un Chrome headless la lettura esce **1** e archivia **«bloccata»** (prima diceva «errore»); con l'UA vero torna verde, 53 atti nuovi in 1,8s.
+- Il carico da zero su un database di prova: **26.644 atti**, gli stessi di `dev.db`, con i temi identici riga per riga.
+
+## [0.47.0] — 2026-08-11 · «Sociale e casa» entra nei temi civici; «Urbanistica» no, e i motivi sono misure
+
+> I due buchi del tema civico degli atti (970 e 373 righe misurate il 09/08)
+> chiedevano una decisione **di prodotto, non tecnica**: `CIVIC_TOPICS` pilota
+> il selettore dei temi del cittadino, il feed «Per te», le stanze della
+> comunità e le sessioni del Question Time. La decisione è stata presa
+> **misurando prima** quanti contenuti esistenti finirebbero nei temi nuovi —
+> perché un tema che esiste solo per gli atti è un tema che al cittadino non
+> serve — e portando opzioni separabili sui mockup iniettati.
+
+### La misura che ha deciso
+- Per ogni tema, quanti contenuti reali di `dev.db` coprirebbe (segnalazioni + proposte + eventi + opere): i più magri esistenti sono `giovani` e `accessibilita` con **2**; il candidato «Sociale e casa» ne copre **1** oggi ma ha **tre agganci** già nei selettori del cittadino (ambito proposta «Sociale», categoria opera «sociale», evento «volontariato»); il candidato «Urbanistica» **0, con zero agganci in tutte e quattro le tassonomie** — il cittadino non può né segnalare né proporre nulla di urbanistico.
+- Gli atti, rimisurati sull'archivio distinto: **940** di sociale/casa (Servizi per l'abitare 563, Progettazione Sociale 205, Pari Opportunità 172 — e 176 solo negli ultimi 12 mesi) e **370** di urbanistica.
+
+### Aggiunto
+- **`sociale` («Sociale e casa», 🏠, viola) in `CIVIC_TOPICS`** — 13ª chip del selettore, 13ª stanza in `/comunita/stanze`, tema disponibile a «Per te», notifiche e Question Time. **Categorie condivise** con `giovani` e `accessibilita` (decisione di Lorenzo): la condivisione è già la norma del sistema («Sport» sta in due temi, «restauro» in tre) e nessun comportamento esistente cambia.
+- **Tre radici in `REGOLE_UFFICIO`** (`abitare`, `progettazione/inclusione sociale`, `pari opportunità/promozione dell'integrazione`): l'esclusione `personale` continua a difendere «Servizio Personale e Politiche di Inclusione Sociale», che infatti resta senza tema.
+- **Ricalcolo una tantum** del tema sugli atti già in archivio, con la funzione vera della pipeline: **esattamente 940 cambi `null → sociale`, zero su ogni altro tema.** Copertura: da 18.296 a **19.236 su 26.591 (72,3%)**.
+
+### Deciso, e scritto con la condizione
+- **«Urbanistica» NON entra.** Sarebbe un tema alimentato solo dagli atti: chip che non filtra mai niente, stanza che nasce vuota. I 370 atti restano senza tema — un fatto, non un errore. **Si riapre quando una tassonomia di contenuto avrà una categoria urbanistica, o quando la pagina dell'archivio (Ondata 11) mostrerà il bisogno del filtro.** Scartato un vocabolario separato "solo per atti": due definizioni dello stesso indicatore.
+
+### Aggiornato
+- Il fermo dei 102 uffici dichiara **45 coperti** (era 42), coi tre uffici nuovi verificati uno per uno; `docs/fonti-atti.md` §4.3 porta la revisione con le misure.
+
 ## [0.46.0] — 2026-08-09 · Nessun controllo esce dal proprio contenitore
 
 > L'ultima delle categorie che «si trovavano solo guardando» adesso si misura.

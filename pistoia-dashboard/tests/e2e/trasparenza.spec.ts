@@ -71,6 +71,13 @@ test("una proposta respinta spiega perché non si può fare", async ({ page }) =
   await login(page);
   await page.goto("/proposte");
   await page.getByText("Navetta gratuita serale per le frazioni").first().click();
+  // Si pretende l'ARRIVO prima di leggere. Senza, il test cerca l'intestazione
+  // mentre è ancora sulla lista e rinuncia dopo i 5s di `expect`: caduto così
+  // il 2026-08-11 con la macchina occupata, e lo snapshot del fallimento
+  // mostrava la lista con dentro il link appena cliccato — cioè «non era
+  // ancora arrivato», non «manca». Stessa correzione di `porte.spec.ts`, e non
+  // ammorbidisce niente: se il dettaglio non si apre, il test scade lo stesso.
+  await page.waitForURL(/\/proposte\/[^/]+$/, { timeout: 20_000 });
   await expect(
     page.getByRole("heading", { name: "Perché non si può fare?" }),
   ).toBeVisible();

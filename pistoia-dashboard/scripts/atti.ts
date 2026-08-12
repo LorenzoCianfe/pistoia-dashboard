@@ -17,20 +17,32 @@
 
   ⚠️ Tre cose che sembrano dettagli e non lo sono — docs/fonti-atti.md:
   - lo user-agent DEVE sembrare un Chrome vero, o il WAF risponde 500;
-  - l'export si chiede DOPO essere passati dalla griglia, nello stesso
-    contesto: l'URL è identico per tutte e quello che esporta dipende dalla
-    sessione del portlet;
+  - l'export si chiede DOPO essere passati dalla griglia, con i cookie di
+    quella visita: l'URL è identico per tutte le griglie dello stesso portlet e
+    quello che esporta dipende dalla sessione del portlet;
   - il CSV si riconosce dal corpo, perché l'export grande dichiara text/html.
+
+  🔴 NIENTE BROWSER, ed è una decisione misurata (2026-08-11). Questa lettura
+  girava su Playwright, e Playwright in produzione non esisteva: il Dockerfile
+  fa `npm ci`, che installa il pacchetto ma NON scarica i binari — un cron nel
+  container sarebbe partito verso «Executable doesn't exist». Le due cose per
+  cui serviva un browser sono uno user-agent credibile e i cookie del portlet,
+  e `fetch` le fa tutte e due. Misurato su tutte e quattro le griglie: albo
+  2,6s · storico 13,47MB in 178s · le due piccole ~1s, nessuna bloccata.
+  Il browser sarebbe costato 427MB per immagine, su un disco da 40GB che si è
+  già riempito al 100% una volta, per fare due GET.
 */
 
 import "dotenv/config";
-import { chromium, type Page } from "@playwright/test";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import {
   type AttoLetto,
+  type Barattolo,
   type Griglia,
+  intestazioneCookie,
   paginaDiBlocco,
+  raccogliCookie,
   rigaAdAtto,
   righeConIntestazione,
   sembraCsvDegliAtti,
@@ -68,19 +80,47 @@ const urlExport = (g: Griglia) => {
 type Esito = "riuscita" | "bloccata" | "vuota" | "errore";
 type Lettura = { esito: Esito; corpo: string; messaggio: string | null };
 
-async function scaricaGriglia(page: Page, g: Griglia): Promise<Lettura> {
-  const risposta = await page.goto(urlGriglia(g), { waitUntil: "domcontentloaded", timeout: 120_000 });
-  const html = await page.content();
-  if (paginaDiBlocco(html)) {
-    return { esito: "bloccata", corpo: "", messaggio: `il WAF ha bloccato la griglia (stato ${risposta?.status()})` };
+/** Le intestazioni di un Chrome vero. L'UA è la sola che il WAF guarda, ma le
+ *  altre due costano nulla e rendono la richiesta meno anomala. */
+const INTESTAZIONI = {
+  "User-Agent": UA_BROWSER_VERO,
+  "Accept-Language": "it-IT,it;q=0.9,en;q=0.8",
+  Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+} as const;
+
+/** Lo storico impiega ~178s a rispondere: il timeout sta sopra quel numero con
+ *  un margine ampio, ma esiste — senza, un portale che non chiude mai la
+ *  risposta terrebbe il giro appeso per sempre, che su un lavoro schedulato è
+ *  peggio di un errore. */
+const TIMEOUT_MS = 300_000;
+
+async function chiedi(url: string, barattolo: Barattolo, referer?: string) {
+  const cookie = intestazioneCookie(barattolo);
+  const risposta = await fetch(url, {
+    headers: {
+      ...INTESTAZIONI,
+      ...(cookie ? { Cookie: cookie } : {}),
+      ...(referer ? { Referer: referer } : {}),
+    },
+    redirect: "follow",
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
+  raccogliCookie(barattolo, risposta.headers.getSetCookie());
+  return { stato: risposta.status, corpo: await risposta.text() };
+}
+
+async function scaricaGriglia(g: Griglia): Promise<Lettura> {
+  // Un barattolo NUOVO per ogni griglia: l'export è agganciato all'ultima
+  // griglia visitata nella stessa sessione (fonti-atti.md §1.2), quindi due
+  // griglie che condividessero i cookie si esporterebbero a vicenda.
+  const barattolo: Barattolo = new Map();
+
+  const griglia = await chiedi(urlGriglia(g), barattolo);
+  if (paginaDiBlocco(griglia.corpo)) {
+    return { esito: "bloccata", corpo: "", messaggio: `il WAF ha bloccato la griglia (stato ${griglia.stato})` };
   }
 
-  // L'export si chiede DENTRO la pagina, così valgono i cookie del portlet.
-  const risultato = await page.evaluate(async (u) => {
-    const r = await fetch(u, { credentials: "include" });
-    return { stato: r.status, corpo: await r.text() };
-  }, urlExport(g));
-
+  const risultato = await chiedi(urlExport(g), barattolo, urlGriglia(g));
   if (paginaDiBlocco(risultato.corpo)) {
     return { esito: "bloccata", corpo: "", messaggio: "il WAF ha bloccato l'export" };
   }
@@ -176,24 +216,42 @@ function perIlDatabase(a: AttoLetto, griglia: Griglia, adesso: Date) {
   };
 }
 
+const TUTTE: Griglia[] = ["storico", "albo", "provvedimenti", "generali"];
+
 async function main() {
   const argomenti = process.argv.slice(2);
   const prova = argomenti.includes("--prova");
+  const chiesteEsplicitamente = argomenti.includes("--tutte") || argomenti.includes("--storico");
+
+  /*
+    🔴 SU UN ARCHIVIO VUOTO IL GIRO BREVE NON BASTA, e il difetto sarebbe
+    invisibile. L'albo contiene ~220 atti: chi lo leggesse su un archivio a
+    zero si ritroverebbe **220 atti su 26.644**, cioè un archivio 120 volte
+    più piccolo del vero — e il monitor direbbe «Aggiornato», perché la lettura
+    è andata benissimo. Un dato plausibile e falso, che è la categoria di
+    difetti che qui costa di più.
+
+    Non è un caso di scuola: è **esattamente lo stato della produzione**, dove
+    l'archivio non è mai stato riempito. Il primo scatto dello scheduled task
+    ci finirebbe dentro. Quindi il giro se ne accorge da sé e fa il carico
+    completo — 178s una volta sola, contro i ~2s di tutti i giorni dopo.
+
+    La soglia è ZERO e non un numero scelto: «vuoto» è un fatto, «troppo
+    pochi» sarebbe un giudizio da tarare.
+  */
+  const archivioVuoto = !prova && (await prisma.atto.count()) === 0;
   const quali: Griglia[] = argomenti.includes("--tutte")
-    ? ["storico", "albo", "provvedimenti", "generali"]
+    ? TUTTE
     : argomenti.includes("--storico")
       ? ["storico"]
-      : ["albo"];
+      : archivioVuoto
+        ? TUTTE
+        : ["albo"];
 
+  if (archivioVuoto && !chiesteEsplicitamente) {
+    console.log("L'archivio è VUOTO: questo giro fa il carico iniziale, non quello quotidiano.");
+  }
   console.log(`Lettura degli atti · griglie: ${quali.join(", ")}${prova ? " · PROVA (non scrive)" : ""}`);
-
-  const browser = await chromium.launch();
-  const contesto = await browser.newContext({
-    userAgent: UA_BROWSER_VERO,
-    locale: "it-IT",
-    extraHTTPHeaders: { "Accept-Language": "it-IT,it;q=0.9,en;q=0.8" },
-  });
-  const page = await contesto.newPage();
 
   let uscita = 0;
   const raccolti: Array<{ atto: AttoLetto; griglia: Griglia }> = [];
@@ -203,7 +261,7 @@ async function main() {
     process.stdout.write(`  ${CONFIGURAZIONE[g].nome}… `);
     let lettura: Lettura;
     try {
-      lettura = await scaricaGriglia(page, g);
+      lettura = await scaricaGriglia(g);
     } catch (e) {
       lettura = { esito: "errore", corpo: "", messaggio: (e as Error).message.split("\n")[0] };
     }
@@ -238,8 +296,6 @@ async function main() {
       });
     }
   }
-
-  await browser.close();
 
   const ridotti = riduci(raccolti);
   console.log(`\n  ${raccolti.length} righe utili → ${ridotti.length} atti distinti`);

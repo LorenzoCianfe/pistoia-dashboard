@@ -94,6 +94,23 @@ Due conseguenze operative:
   un corpo HTML sensato è ciò che un controllo distratto legge come «il portale
   è giù» quando invece è «ci hanno scambiati per un bot».
 
+> **Revisione 2026-08-11 — due cose che questa sezione dava per vere e non lo
+> erano.**
+>
+> 1. **Il riconoscimento non funzionava.** `paginaDiBlocco` cercava le spie nei
+>    primi 4.000 caratteri, ma la pagina di blocco è lunga **39.133** e comincia
+>    con ~19KB di CSS inline: il titolo arriva a 19.205, «Web Page Blocked» a
+>    **38.709**, `MDAWAF` a **38.749**. Nessuna spia dentro la finestra —
+>    quindi la lettura archiviava «errore» dove il fatto era «bloccata».
+>    Finestra portata a 64.000, e il test rifatto sulla **forma vera** (quello
+>    di prima usava una pagina inventata e corta, e per questo passava).
+>    Trovato **rompendo la lettura di proposito**, non leggendo il codice.
+> 2. **Non serve un browser per non essere bloccati.** Il WAF guarda l'UA, e
+>    l'export vuole i cookie del portlet: `fetch` fa tutte e due. Dal
+>    2026-08-11 la lettura gira senza Playwright — che in produzione **non
+>    esisteva**, perché `npm ci` installa il pacchetto e non i binari. Dettaglio
+>    in [`docs/pipeline-atti-schedulata.md`](pipeline-atti-schedulata.md).
+
 ### 2.2 🔴 `Url atto` non è l'identità dell'ATTO: è l'identità della PUBBLICAZIONE
 
 È la trappola più costosa, perché `Url atto` è **pieno al 100% e distinto al
@@ -275,6 +292,36 @@ per i quali «nessun tema civico» è la risposta giusta, non una lacuna.
 2. **Urbanistica ed edilizia privata: 373 atti senza tema.** Un permesso di
    costruire non è un'opera pubblica, quindi non entra in `lavori`, e nessun
    tema copre la pianificazione. **Stessa condizione.**
+
+> **Revisione 2026-08-11 — il primo buco è chiuso, il secondo resta con la
+> condizione raffinata.** La decisione è stata presa misurando prima quanti
+> contenuti *esistenti* (segnalazioni, proposte, eventi, opere) finirebbero nei
+> temi nuovi — perché un tema che esiste solo per gli atti è un tema che al
+> cittadino non serve.
+>
+> - **«Sociale e casa» (`sociale`) è entrato in `CIVIC_TOPICS`**, con categorie
+>   condivise: proposte «Sociale», opere «sociale» ed eventi «volontariato»
+>   restano anche a `giovani` e `accessibilita` (la condivisione è già la norma
+>   del sistema). Non esisteva solo per gli atti: tre agganci nelle tassonomie
+>   correnti, 1 contenuto del seed (i temi più magri esistenti ne hanno 2), e
+>   **940 atti veri sui 26.591 distinti** in archivio — riclassificati con un
+>   ricalcolo una tantum da `ufficio`, esattamente 940 cambi e nessun altro
+>   tema toccato. Copertura: da 18.296 a **19.236 su 26.591 (72,3%)**. Il
+>   fermo dei 102 uffici dichiara ora 45 coperti.
+> - **«Urbanistica» NON è entrato**, e il criterio è proprio quello della
+>   misura: **zero agganci in tutte e quattro le tassonomie** — il cittadino
+>   non può né segnalare né proporre nulla di urbanistico, quindi la chip non
+>   filtrerebbe mai niente nel «Per te» e la stanza nascerebbe vuota. I 370
+>   atti distinti restano senza tema, che è un fatto e non un errore.
+>   **Condizione che lo riapre: quando una tassonomia di contenuto avrà una
+>   categoria urbanistica** (per esempio un ambito proposta «Urbanistica» per
+>   le osservazioni ai piani), **o quando la pagina dell'archivio (Ondata 11)
+>   mostrerà il bisogno del filtro davanti alla pagina vera.** Scartato anche
+>   un vocabolario separato "solo per atti": sarebbero due definizioni dello
+>   stesso indicatore.
+>
+> (I 970/373 di questa sezione contano le righe scaricate pre-deduplicazione;
+> 940/370 sono gli stessi gruppi sugli atti distinti in archivio.)
 
 ---
 
