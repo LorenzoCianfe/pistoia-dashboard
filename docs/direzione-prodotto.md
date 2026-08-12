@@ -437,7 +437,11 @@ un fatto, non un giudizio:
   ricognizione del bilancio vero (§1.6.2), il conto del lancio come lista di
   lavoro (§2).
 - Le tre maturità di O8 (scorciatoie, OG image, alto contrasto) restano
-  com'erano: piccole e utili.
+  piccole e utili, ma **si spostano dentro/dopo il battesimo di O10** —
+  deciso da Lorenzo il 12/08, aggiornando questa riga che le lasciava
+  «com'erano»: OG image nate col marchio vecchio sarebbero da fare due
+  volte, e l'alto contrasto si misura sulla palette che il battesimo
+  ridisegna.
 - ⚠️ `ROADMAP.md` va **allineata a questa direzione** come primo atto della
   prossima sessione di piano — non è stata riscritta oggi di proposito, per
   non ridisegnare il piano nello stesso giorno in cui se ne è deciso il perché.

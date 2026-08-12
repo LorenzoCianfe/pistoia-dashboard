@@ -1,7 +1,7 @@
-# Roadmap — Dashboard di Pistoia
+# Roadmap — Pistoia.app *(già «Dashboard di Pistoia»)*
 
 > Documento strategico e operativo del progetto: visione, obiettivi, piano a ondate e catalogo completo delle idee.
-> **Ultimo aggiornamento:** 2026-08-11 — **la pipeline degli atti gira da sola, e il tema civico che le mancava.** Era il debito più grosso lasciato aperto, e la misura ha ribaltato il piano: **in produzione Playwright non c'era**, perché `npm ci` installa il pacchetto e non i binari del browser — un cron nel container sarebbe morto al primo scatto, dentro un log che nessuno guarda. Il browser però non serviva: il WAF guarda lo **user-agent** e l'export vuole i **cookie del portlet**, e `fetch` fa tutte e due (albo 2,6s, storico 13,47MB in 178s, e il carico da zero dà la **stessa identica distribuzione dei temi** del motore vecchio). Costo evitato: **427MB per immagine** su un disco che si è già riempito al 100% una volta, per fare due GET. Tre cose sono uscite dal misurare e dal **rompere di proposito**: `paginaDiBlocco` **non riconosceva la pagina di blocco vera** (cercava in 4.000 caratteri, le spie stanno a 38.709 — la lettura archiviava «errore» dove il fatto era «bloccata», e il difetto era **preesistente** perché il test lo copriva con una pagina inventata e corta); **su un archivio vuoto il giro fa da sé il carico completo**, perché il solo albo lascerebbe 220 atti su 26.644 col monitor che dichiara «Aggiornato» — ed è esattamente lo stato della produzione; **non si passa a WAL**, misurato (1,23s di lock in tutto contro un `busy_timeout` di 5s, margine 59×). Resta l'attivazione dello Scheduled Task, che vuole il server acceso. Lo stesso giorno: **il tema civico «Sociale e casa»**, deciso misurando **quanti contenuti esistenti** ogni candidato coprirebbe — perché un tema che esiste solo per gli atti al cittadino non serve. Entra con **categorie condivise** (nessun comportamento esistente cambia) e **940 atti** riclassificati; **«urbanistica» no**, perché ha *zero* agganci in tutte e quattro le tassonomie: sarebbe una chip che non filtra niente e una stanza che nasce vuota. Prima, il 2026-08-09 — **i due cancelli che mancavano, e sono stati provati ROSSI prima di essere dichiarati verdi.** Il **cancello della console** (`rotte.mjs`: `pageerror` + `console.error`, avvisi esclusi, con `prefers-reduced-motion: reduce` su tutte e tre le passate) chiude la falla che i sei errori di idratazione di `/bilancio` avevano mostrato — stavano scritti **quattro volte nel log di E2E verdi**, perché nessun cancello guardava la console. Il **cancello del contenimento** (`contenimento.spec.ts`, 21 pagine × 2 viewport) chiude l'ultima categoria che «si trovava solo guardando»: un controllo ritagliato dal proprio riquadro, che `shots` non vede (misura la pagina, e resta zero *proprio perché* la card ritaglia), `bersagli` non vede (misura la dimensione: tagliato a metà è ancora alto 44) e axe non ha regola per vedere. La distinzione che lo rende usabile: **un contenitore che scorre non ritaglia niente** — *fuori vista* ≠ *fuori portata*. Entrambi verdi alla prima accensione, quindi entrambi provati rossi di proposito: un `console.error` iniettato → 1 rossa; un pulsante ritagliato → 62px, lo stesso numero del difetto vero, mentre due dentro un riquadro che scorre **non** scattano. Prima, lo stesso giorno: **la moderazione assistita, e le misure che l'hanno riscritta.** Delle tre euristiche previste ne regge una: i **duplicati per somiglianza del testo hanno zero veri positivi** e in cima un falso positivo pericoloso, perché le segnalazioni comunali sono formulari e il testo si somiglia *proprio quando il luogo cambia*. Al triage è arrivata la lente che esisteva già — «altre N aperte, stessa categoria e stesso quartiere», che è un **fatto** — e il **suggerimento di categoria** è finito sul modulo del **cittadino**, non su quello del Comune, perché lì non aveva una leva: il triage cambia stato, ufficio e nota, mai la categoria. Regola nuova in `AGENTS.md` §3: *un consiglio che non si può seguire è peggio del silenzio*. Prima, lo stesso giorno: **l'Ondata 8 si apre dal nucleo: il cruscotto dice chi ha in mano che cosa.** Due letture operative sull'Area Comune, forma scelta da Lorenzo su tre mockup iniettati sull'applicazione vera. **La misura ha deciso metà del disegno prima che disegnassi**: su 42 segnalazioni l'ufficio è l'unico asse dove ogni cella regge il campione (5/5), categoria e quartiere ne hanno metà sotto soglia, l'urgenza non è un asse. Le segnalazioni **senza ufficio stanno fuori dalla classifica** (6 aperte, 0 chiuse: dentro sarebbero la riga più rossa, attribuita a nessuno), **mediana e mai media**, **nessuna barra** perché il massimo sarebbe «il peggiore osservato». ⚠️ E una correzione mia: avevo raccomandato la forma piccola confrontando con **1.894px**, che è la coda peggiore *prima* di lista + dettaglio — un numero citato da un documento invece che misurato. Il tetto vero a 360 è **3.327px**, e le due card lasciano quasi mille pixel di margine. Prima, il 2026-08-08: **la review «lenti mancanti»** e **la preferenza di movimento non si legge in fase di render** (traccia «Qualità continua», §4). `/bilancio` stampava due errori di idratazione a ogni caricamento, ma **solo con `prefers-reduced-motion` attivo**: `useReducedMotion()` è `null` sul server e `true` sul browser di chi ce l'ha, quindi ogni ramo del *markup* su quel valore serve un HTML diverso da quello idratato. I punti erano **sei in cinque componenti**, non due — React riporta un solo mismatch per albero, quindi ognuno era invisibile finché non si chiudeva quello sopra. Adesso la preferenza si applica **in CSS o nella durata**, mai nel markup. ⚠️ Il difetto stava scritto **quattro volte nel log degli E2E**, che girano già in quello stato e uscivano verdi: **nessun test guarda la console**, e nessun altro cancello emula la preferenza. Misura: `/bilancio` da 2 a **0**, e 16 rotte sondate, **0 con errori**. Prima, il 2026-08-07: **lista + dettaglio sulle quattro code** ([`docs/piano-admin.md`](docs/piano-admin.md) §8): il debito lasciato aperto dal taglio poche ore prima, con la condizione già soddisfatta (14 segnalazioni, 32 valutazioni). La forma l'ha scelta Lorenzo su tre mockup iniettati sull'applicazione vera: **pagina di dettaglio, e su desktop la lista resta a fianco**. La misura che conta è una derivata, non un'altezza — **la superficie di lavoro non dipende più da quanta coda c'è**: 656–913px con quattordici voci o con quattrocento, mentre prima il massimo era 1.894 e cresceva di ~320px per voce. Due pagine crescono, dichiarato: segnalazioni da 896 a 1.416 (gli 896 nascondevano 12 voci su 14) e valutazioni da 1.114 a 2.539, che però mostra **32 recensioni invece di 6**. E la ragione vera non era l'altezza: la **descrizione della segnalazione era caricata e mai mostrata**. Chiuso per strada un difetto preesistente che nessun cancello poteva vedere — «Flusso ordinario» **tagliato di 62px** a 375. Cancelli: `rotte` da 62 a **66**, a11y e bersagli da 17 a **21 pagine**, E2E **116**. Prima, lo stesso giorno: **`/admin` spezzata in sette** ([`docs/piano-admin.md`](docs/piano-admin.md), eseguito lo stesso giorno in cui è stato deciso). Il massimo per pagina passa da **7.558px a 1.894**, il cruscotto fa 822, e ogni pagina paga ~190px di testata e navigazione che prima esistevano una volta sola. La navigazione porta il **contatore sulle code e nessun pallino sugli strumenti** — non per convenzione ma per tipo: `SuperficieAdmin` è un’unione discriminata, «uno strumento con un contatore» non è scrivibile. Due correzioni sono venute dal misurare e non dal ragionare: il riquadro che scorre dentro «Segnalazioni» **doveva restare** (toglierlo faceva 5.000px), e il contatore ha rivelato che «Valutazioni» mostra **6** recensioni mentre ne aspettano **32**. Cancelli: `rotte` da 56 a **62**, a11y e bersagli da 11 a **17 pagine**, `porte.spec.ts` +2 casi che leggono le sei porte dal cruscotto stesso. Prima, lo stesso giorno: **il cancello sulla produzione** (`npm run produzione`, `scripts/produzione.mjs`): un browser vero contro il sito deployato, con il **marcatore della versione** per primo (lo SHA dell'immagine che il container sta davvero eseguendo), la soglia sui caratteri **per pagina**, l'atterraggio preteso, e due rotte protette *dopo* l'accesso — perché il guasto del cookie `Secure` si vedeva solo alla navigazione successiva. Era il debito aperto il 2026-08-05, ed era **l'ultima voce aperta della traccia «Qualità continua»** (§4): restano solo una review consigliata e un debito che aspetta un certificato HTTPS, cioè una condizione che non dipende da noi. Prima, lo stesso giorno: **backlog riordinato e piano riscritto fino all'Ondata 11.** L'Ondata 8 portava due tesi e metà voci acerbe: adesso tiene l'intelligenza operativa, le maturità del backlog e la pipeline degli atti. Poi **O9** i quattro strumenti con cui il progetto si racconta (roadmap pubblica, voto, changelog, idee e problemi, in `/progetto/*` a firma della Redazione), **O10** il rifacimento visivo, **O11** l'archivio pubblico delle delibere. Il criterio del riordino, il perimetro del rifacimento, il parcheggio e le voci tenute ferme sono in fondo a §4. Prima, lo stesso giorno: **il cancello dei 44px scritto e bloccante** (`bersagli.spec.ts`, 11 pagine × 2 viewport, zero esenzioni), che chiudendosi ha portato via sette componenti fuori norma più tre difetti che nessun cancello guardava — le fermate di tabulazione che Motion aggiunge da sé, e due violazioni axe che vivevano dentro un `<details>` chiuso. Prima ancora, **Lavoro D chiuso**: footer rifatto, quattro decisioni di forma prese, cancelli estesi alle superfici staff, `npm audit` e Lighthouse resi bloccanti. Fase A e Fase B chiuse, **Fase C sbloccata** dal 2026-07-29. Il piano delle due fasi è in [`docs/roadmap-consolidamento.md`](docs/roadmap-consolidamento.md); il dettaglio tecnico di quanto già costruito è in [DOCUMENTATION.md](DOCUMENTATION.md).
+> **Ultimo aggiornamento:** 2026-08-12 (sera) — **O10 è aperta: la ricognizione visiva è fatta e giudicata.** Tre giri nello stesso giorno (mirato su Dribbble/Behance + canone Apple HIG; i prodotti veri — Apple Sports, Flighty, Helsinki, FixMyStreet, FT, Il Post…; il polso generico chiesto da Lorenzo), **21 pattern** in [`docs/ricognizione-visiva.md`](docs/ricognizione-visiva.md), e tre scoperte che pesano: la HIG dice **«mai il vetro sul livello di contenuto»** mentre il nostro vetro sta sulle card (la tensione è dichiarata, si scioglie con le direzioni); **il civico premium quasi non esiste** (l'eccezione Helsinki mostra il metodo: patrimonio astratto in geometria, mai araldica) — le meccaniche di FixMyStreet × la materia di Apple è la casella vuota che occupiamo; e **il nostro lime è diventato l'accento di moda del mestiere**, quindi resta comprimario e mai identità. Decisione di Lorenzo a fine giornata: **si montano D1 «piazza di giorno» e D2 «vetro di città»** (+ D3 notte) su tre pagine vere. Prima, lo stesso giorno (mattina) — **la svolta di prodotto: da demo del Comune a Pistoia.app, piattaforma civica indipendente.** Decisa da Lorenzo l'11-12/08 in una discussione guidata per domande; vive in [`docs/direzione-prodotto.md`](docs/direzione-prodotto.md), che da quel giorno è **la fonte di verità sul perché** — la stessa regola di `DESIGN.md`, applicata alla direzione invece che alla forma. In breve: marchio proprio (**Pistoia.app**, «.app» nel rosso della città), si parla DI Pistoia senza parlare PER il Comune, prima pagina pubblica col fatto del giorno dagli atti, il Comune raccontato da fuori in una sezione sua, telemetria completa ma dichiarata, economia con le linee rosse scritte prima del primo sponsor. **Questo documento è stato riallineato di conseguenza** (era il primo atto chiesto dalla direzione, §3): **O10 anticipata e allargata** — non più «rifacimento visivo» ma **il battesimo di Pistoia.app**, identità + vestito, e viene SUBITO; **O11 (l'archivio pubblico degli atti) entra nel perimetro del lancio**, perché è il magnete principale del giorno uno; **O9 si trasforma** — «chi siamo» e changelog diventano parte del lancio (fiducia), roadmap pubblica e voto arrivano quando c'è un pubblico che vota; le **tre maturità ex-O8** (scorciatoie «?», OG image, alto contrasto + font grande) si spostano **dentro/dopo il battesimo** — deciso da Lorenzo il 12/08: OG image nate col marchio vecchio sarebbero da fare due volte. Prima, il 2026-08-11 — **la pipeline degli atti gira da sola, e il tema civico che le mancava.** Era il debito più grosso lasciato aperto, e la misura ha ribaltato il piano: **in produzione Playwright non c'era**, perché `npm ci` installa il pacchetto e non i binari del browser — un cron nel container sarebbe morto al primo scatto, dentro un log che nessuno guarda. Il browser però non serviva: il WAF guarda lo **user-agent** e l'export vuole i **cookie del portlet**, e `fetch` fa tutte e due (albo 2,6s, storico 13,47MB in 178s, e il carico da zero dà la **stessa identica distribuzione dei temi** del motore vecchio). Costo evitato: **427MB per immagine** su un disco che si è già riempito al 100% una volta, per fare due GET. Tre cose sono uscite dal misurare e dal **rompere di proposito**: `paginaDiBlocco` **non riconosceva la pagina di blocco vera** (cercava in 4.000 caratteri, le spie stanno a 38.709 — la lettura archiviava «errore» dove il fatto era «bloccata», e il difetto era **preesistente** perché il test lo copriva con una pagina inventata e corta); **su un archivio vuoto il giro fa da sé il carico completo**, perché il solo albo lascerebbe 220 atti su 26.644 col monitor che dichiara «Aggiornato» — ed è esattamente lo stato della produzione; **non si passa a WAL**, misurato (1,23s di lock in tutto contro un `busy_timeout` di 5s, margine 59×). Resta l'attivazione dello Scheduled Task, che vuole il server acceso. Lo stesso giorno: **il tema civico «Sociale e casa»**, deciso misurando **quanti contenuti esistenti** ogni candidato coprirebbe — perché un tema che esiste solo per gli atti al cittadino non serve. Entra con **categorie condivise** (nessun comportamento esistente cambia) e **940 atti** riclassificati; **«urbanistica» no**, perché ha *zero* agganci in tutte e quattro le tassonomie: sarebbe una chip che non filtra niente e una stanza che nasce vuota. Prima, il 2026-08-09 — **i due cancelli che mancavano, e sono stati provati ROSSI prima di essere dichiarati verdi.** Il **cancello della console** (`rotte.mjs`: `pageerror` + `console.error`, avvisi esclusi, con `prefers-reduced-motion: reduce` su tutte e tre le passate) chiude la falla che i sei errori di idratazione di `/bilancio` avevano mostrato — stavano scritti **quattro volte nel log di E2E verdi**, perché nessun cancello guardava la console. Il **cancello del contenimento** (`contenimento.spec.ts`, 21 pagine × 2 viewport) chiude l'ultima categoria che «si trovava solo guardando»: un controllo ritagliato dal proprio riquadro, che `shots` non vede (misura la pagina, e resta zero *proprio perché* la card ritaglia), `bersagli` non vede (misura la dimensione: tagliato a metà è ancora alto 44) e axe non ha regola per vedere. La distinzione che lo rende usabile: **un contenitore che scorre non ritaglia niente** — *fuori vista* ≠ *fuori portata*. Entrambi verdi alla prima accensione, quindi entrambi provati rossi di proposito: un `console.error` iniettato → 1 rossa; un pulsante ritagliato → 62px, lo stesso numero del difetto vero, mentre due dentro un riquadro che scorre **non** scattano. Prima, lo stesso giorno: **la moderazione assistita, e le misure che l'hanno riscritta.** Delle tre euristiche previste ne regge una: i **duplicati per somiglianza del testo hanno zero veri positivi** e in cima un falso positivo pericoloso, perché le segnalazioni comunali sono formulari e il testo si somiglia *proprio quando il luogo cambia*. Al triage è arrivata la lente che esisteva già — «altre N aperte, stessa categoria e stesso quartiere», che è un **fatto** — e il **suggerimento di categoria** è finito sul modulo del **cittadino**, non su quello del Comune, perché lì non aveva una leva: il triage cambia stato, ufficio e nota, mai la categoria. Regola nuova in `AGENTS.md` §3: *un consiglio che non si può seguire è peggio del silenzio*. Prima, lo stesso giorno: **l'Ondata 8 si apre dal nucleo: il cruscotto dice chi ha in mano che cosa.** Due letture operative sull'Area Comune, forma scelta da Lorenzo su tre mockup iniettati sull'applicazione vera. **La misura ha deciso metà del disegno prima che disegnassi**: su 42 segnalazioni l'ufficio è l'unico asse dove ogni cella regge il campione (5/5), categoria e quartiere ne hanno metà sotto soglia, l'urgenza non è un asse. Le segnalazioni **senza ufficio stanno fuori dalla classifica** (6 aperte, 0 chiuse: dentro sarebbero la riga più rossa, attribuita a nessuno), **mediana e mai media**, **nessuna barra** perché il massimo sarebbe «il peggiore osservato». ⚠️ E una correzione mia: avevo raccomandato la forma piccola confrontando con **1.894px**, che è la coda peggiore *prima* di lista + dettaglio — un numero citato da un documento invece che misurato. Il tetto vero a 360 è **3.327px**, e le due card lasciano quasi mille pixel di margine. Prima, il 2026-08-08: **la review «lenti mancanti»** e **la preferenza di movimento non si legge in fase di render** (traccia «Qualità continua», §4). `/bilancio` stampava due errori di idratazione a ogni caricamento, ma **solo con `prefers-reduced-motion` attivo**: `useReducedMotion()` è `null` sul server e `true` sul browser di chi ce l'ha, quindi ogni ramo del *markup* su quel valore serve un HTML diverso da quello idratato. I punti erano **sei in cinque componenti**, non due — React riporta un solo mismatch per albero, quindi ognuno era invisibile finché non si chiudeva quello sopra. Adesso la preferenza si applica **in CSS o nella durata**, mai nel markup. ⚠️ Il difetto stava scritto **quattro volte nel log degli E2E**, che girano già in quello stato e uscivano verdi: **nessun test guarda la console**, e nessun altro cancello emula la preferenza. Misura: `/bilancio` da 2 a **0**, e 16 rotte sondate, **0 con errori**. Prima, il 2026-08-07: **lista + dettaglio sulle quattro code** ([`docs/piano-admin.md`](docs/piano-admin.md) §8): il debito lasciato aperto dal taglio poche ore prima, con la condizione già soddisfatta (14 segnalazioni, 32 valutazioni). La forma l'ha scelta Lorenzo su tre mockup iniettati sull'applicazione vera: **pagina di dettaglio, e su desktop la lista resta a fianco**. La misura che conta è una derivata, non un'altezza — **la superficie di lavoro non dipende più da quanta coda c'è**: 656–913px con quattordici voci o con quattrocento, mentre prima il massimo era 1.894 e cresceva di ~320px per voce. Due pagine crescono, dichiarato: segnalazioni da 896 a 1.416 (gli 896 nascondevano 12 voci su 14) e valutazioni da 1.114 a 2.539, che però mostra **32 recensioni invece di 6**. E la ragione vera non era l'altezza: la **descrizione della segnalazione era caricata e mai mostrata**. Chiuso per strada un difetto preesistente che nessun cancello poteva vedere — «Flusso ordinario» **tagliato di 62px** a 375. Cancelli: `rotte` da 62 a **66**, a11y e bersagli da 17 a **21 pagine**, E2E **116**. Prima, lo stesso giorno: **`/admin` spezzata in sette** ([`docs/piano-admin.md`](docs/piano-admin.md), eseguito lo stesso giorno in cui è stato deciso). Il massimo per pagina passa da **7.558px a 1.894**, il cruscotto fa 822, e ogni pagina paga ~190px di testata e navigazione che prima esistevano una volta sola. La navigazione porta il **contatore sulle code e nessun pallino sugli strumenti** — non per convenzione ma per tipo: `SuperficieAdmin` è un’unione discriminata, «uno strumento con un contatore» non è scrivibile. Due correzioni sono venute dal misurare e non dal ragionare: il riquadro che scorre dentro «Segnalazioni» **doveva restare** (toglierlo faceva 5.000px), e il contatore ha rivelato che «Valutazioni» mostra **6** recensioni mentre ne aspettano **32**. Cancelli: `rotte` da 56 a **62**, a11y e bersagli da 11 a **17 pagine**, `porte.spec.ts` +2 casi che leggono le sei porte dal cruscotto stesso. Prima, lo stesso giorno: **il cancello sulla produzione** (`npm run produzione`, `scripts/produzione.mjs`): un browser vero contro il sito deployato, con il **marcatore della versione** per primo (lo SHA dell'immagine che il container sta davvero eseguendo), la soglia sui caratteri **per pagina**, l'atterraggio preteso, e due rotte protette *dopo* l'accesso — perché il guasto del cookie `Secure` si vedeva solo alla navigazione successiva. Era il debito aperto il 2026-08-05, ed era **l'ultima voce aperta della traccia «Qualità continua»** (§4): restano solo una review consigliata e un debito che aspetta un certificato HTTPS, cioè una condizione che non dipende da noi. Prima, lo stesso giorno: **backlog riordinato e piano riscritto fino all'Ondata 11.** L'Ondata 8 portava due tesi e metà voci acerbe: adesso tiene l'intelligenza operativa, le maturità del backlog e la pipeline degli atti. Poi **O9** i quattro strumenti con cui il progetto si racconta (roadmap pubblica, voto, changelog, idee e problemi, in `/progetto/*` a firma della Redazione), **O10** il rifacimento visivo, **O11** l'archivio pubblico delle delibere. Il criterio del riordino, il perimetro del rifacimento, il parcheggio e le voci tenute ferme sono in fondo a §4. Prima, lo stesso giorno: **il cancello dei 44px scritto e bloccante** (`bersagli.spec.ts`, 11 pagine × 2 viewport, zero esenzioni), che chiudendosi ha portato via sette componenti fuori norma più tre difetti che nessun cancello guardava — le fermate di tabulazione che Motion aggiunge da sé, e due violazioni axe che vivevano dentro un `<details>` chiuso. Prima ancora, **Lavoro D chiuso**: footer rifatto, quattro decisioni di forma prese, cancelli estesi alle superfici staff, `npm audit` e Lighthouse resi bloccanti. Fase A e Fase B chiuse, **Fase C sbloccata** dal 2026-07-29. Il piano delle due fasi è in [`docs/roadmap-consolidamento.md`](docs/roadmap-consolidamento.md); il dettaglio tecnico di quanto già costruito è in [DOCUMENTATION.md](DOCUMENTATION.md).
 
 ---
 
@@ -42,9 +42,14 @@
 
 ## 1. Visione
 
-**Dashboard di Pistoia è il sistema operativo civico della città: un unico luogo dove il cittadino capisce cosa succede, segnala, propone, partecipa — e vede che cosa la sua partecipazione produce.**
+> ⚠️ **Riscritta il 2026-08-12 dalla svolta di prodotto.** La visione estesa —
+> sedici decisioni, il conto del lancio, ciò che il documento NON autorizza —
+> vive in [`docs/direzione-prodotto.md`](docs/direzione-prodotto.md), che è la
+> fonte di verità sulla direzione. Qui ne resta la sintesi operativa.
 
-Non una vetrina istituzionale, non un social network locale: una piattaforma operativa che chiude il cerchio tra ascolto e azione, con un design distintivo e una semplicità d'uso radicale.
+**Pistoia.app è una piattaforma civica indipendente, con un marchio proprio, che parla DI Pistoia senza parlare PER il Comune** — dove i cittadini leggono la città su dati veri e, crescendo, agiscono insieme; il Comune è un interlocutore da conquistare, non un prerequisito.
+
+Non una vetrina istituzionale, non un social network locale: una piattaforma operativa che chiude il cerchio tra ascolto e azione — *guardo → agisco → qualcuno risponde → vedo l'esito* — con un design distintivo e una semplicità d'uso radicale. All'inizio il cerchio si chiude **fra cittadini** (segnalazione pubblica, conferme, pressione sociale visibile); l'inoltro ufficiale al Comune arriva con la massa critica, e il costo del frattempo si dichiara, mai si maschera.
 
 ### Cosa è / cosa non è
 
@@ -53,7 +58,7 @@ Non una vetrina istituzionale, non un social network locale: una piattaforma ope
 | Uno strumento concreto: segnalare, proporre, capire il bilancio, seguire le opere | Un feed social con like e classifiche |
 | Trasparenza bidirezionale: il Comune risponde, motiva, rendiconta | Una bacheca a senso unico |
 | Un prodotto curato: design intenzionale, gerarchia visiva, motion sobrio | Un template generico o estetica "AI slop" |
-| Una demo credibile con dati mock dichiarati | Un sistema con dati finti spacciati per veri |
+| Oggi una demo dichiarata, domani un servizio pubblico — col conto del lancio pagato voce per voce (direzione §2) | Un sistema con dati finti spacciati per veri — **mai cittadini inventati nel percorso pubblico** |
 | Semplice per chiunque: anziani, nuovi residenti, utenti esperti | Un portale burocratico che richiede istruzioni |
 
 ### Le tre direttrici
@@ -69,6 +74,19 @@ Ogni ondata di lavoro fa progredire tutte e tre, mai una sola:
 ### Decisione strategica (2026-06-11)
 
 Il progetto **resta una demo con dati mock**: nessuna importazione di dati reali, vive in locale e su GitHub. Il passaggio ai dati pubblici reali è **in pausa, non cancellato**: la ricerca su fonti e ETL è conservata in [§8](#8--in-pausa--dati-reali-ex-fase-2) e l'infrastruttura già costruita (provenance, `DATA_MODE`, `DEMO_MODE`, cache a tag) rende la ripresa possibile in qualsiasi momento senza rifare nulla. Conseguenza operativa: **tutto ciò che è pianificato nelle ondate deve essere realizzabile al 100 % in mock.**
+
+> ⚠️ **Superata a tappe, e il 2026-08-12 per direzione.** I dati veri sono
+> entrati ogni volta che una fonte si è lasciata leggere e misurare: il costo
+> dell'amministrazione (2026-07-31), l'organigramma (2026-08-03), i 26.644
+> atti che si aggiornano da soli (2026-08-09/11). La svolta di prodotto punta
+> ora a un **lancio pubblico**, col conto scritto in `direzione-prodotto.md`
+> §2. Che cosa resta vero di questa decisione, e va difeso: **il seed
+> partecipativo è dimostrativo, dichiarato, e nel percorso pubblico non
+> entrerà mai** (direzione §1.8 — un cittadino inventato che firma una
+> segnalazione è la furbizia che brucia la fiducia); il **bilancio e le opere
+> restano dimostrativi** finché la ricognizione delle fonti (BDAP/OpenBilanci)
+> non dirà che si lasciano leggere — la regola degli atti vale anche lì: si
+> misura prima di promettere.
 
 ---
 
@@ -110,6 +128,15 @@ Gli obiettivi traducono la visione in risultati verificabili. Ogni ondata del pi
 ## 4. Piano operativo a ondate
 
 > Ondate tematiche chiuse, tutte realizzabili in mock. Ogni ondata è un blocco coerente di funzioni **+ restyling delle pagine toccate**. Il dettaglio di ogni voce è nel [catalogo §6](#6-catalogo-delle-idee-per-tema). La numerazione storica è preservata: l'Ondata 2 è già completata ([§3](#3-completato)); la nuova ondata di fondazione visiva prende il numero **O0** perché è propedeutica a tutte.
+>
+> ⚠️ **Dal 2026-08-12 l'ordine di esecuzione non è più la numerazione.** La
+> svolta di prodotto mette **O10 — il battesimo — SUBITO**, poi il perimetro
+> del lancio: **O11**, le voci «al lancio» di O9, e il **conto del lancio**
+> voce per voce (`direzione-prodotto.md` §2 — PWA e notifiche, telemetria
+> dichiarata, «chi siamo», privacy vera, moderazione presidiata, «Domande alla
+> città», pseudonimo, Vetrina). E «tutte realizzabili in mock» non è più il
+> vincolo: gli atti sono veri, e il lancio pretende il contrario — **dentro
+> solo ciò che è vero o dichiarato**.
 
 ### Ondata 0 — Fondamenta visive & design system ✅ *(completata 2026-06-12)*
 
@@ -333,9 +360,9 @@ niente.
 | Open data out (export CSV/JSON + API read-only) | `BE` | Zero dipendenze, e chiude il cerchio della trasparenza sui dati che pubblichiamo |
 | QR territoriali (QR su cantieri e bacheche, modalità totem) | `FE` | La macchina dei QR è in piedi da R-3: `/v/`, `/admin/codici-qr`, il generatore |
 | Bilancio partecipativo simulato | `FE` `UX` | Autoconsistente e dichiaratamente dimostrativo |
-| Scorciatoie da tastiera + pannello «?» | `UX` `A11Y` | La command palette esiste dall'ondata 0 |
-| OG image dinamiche | `FE` | Next la fa nativamente (`opengraph-image`) |
-| Alto contrasto + font grande | `FE` `A11Y` | Catena del tema e modalità semplice già in piedi. **Senza la lettura audio**, che è un'altra funzione |
+| ~~Scorciatoie da tastiera + pannello «?»~~ | `UX` `A11Y` | La command palette esiste dall'ondata 0. **→ Spostata dentro/dopo il battesimo (O10) il 2026-08-12**: il pannello «?» è una superficie, e nasce nel vestito nuovo |
+| ~~OG image dinamiche~~ | `FE` | Next la fa nativamente (`opengraph-image`). **→ Spostata DOPO il rebranding di O10 (2026-08-12)**: nate prima, porterebbero il marchio vecchio e andrebbero fatte due volte — è l'argomento con cui Lorenzo ha deciso lo spostamento di tutte e tre |
+| ~~Alto contrasto + font grande~~ | `FE` `A11Y` | Catena del tema e modalità semplice già in piedi. **Senza la lettura audio**, che è un'altra funzione. **→ Spostata dentro/dopo il battesimo (O10) il 2026-08-12**: l'alto contrasto si misura sulla palette, e la palette si ridisegna lì (vale `DESIGN.md` §4: la coppia colore/`-soft` si misura quando si aggiunge una tinta) |
 
 **La pipeline degli atti** — la metà rischiosa di *Delibere*, anticipata qui
 apposta: il rischio non sta nel disegno ma nel sapere **se quel portale si
@@ -348,38 +375,112 @@ moltissimo se la si scopre dopo tre ondate.
 | **La lettura gira DA SOLA** — scheduler, e senza browser | `ENG` | ✅ **2026-08-11**, [`docs/pipeline-atti-schedulata.md`](docs/pipeline-atti-schedulata.md). Era il debito più grosso lasciato aperto: `npm run atti` si lanciava a mano. La misura che ha ribaltato il piano — **in produzione Playwright non c'era**: `npm ci` installa il pacchetto e non i binari, quindi un cron nel container sarebbe morto al primo scatto, dentro un log che nessuno guarda. Il browser però non serviva: il WAF guarda lo **user-agent** e l'export vuole i **cookie del portlet**, e `fetch` fa tutte e due (misurato su tutte e quattro le griglie; il carico da zero dà **la stessa identica distribuzione dei temi** del motore vecchio). L'alternativa costava **427MB per immagine** su un disco che si è già riempito al 100% una volta. Tre cose uscite dal misurare e dal rompere: 🔴 `paginaDiBlocco` **non riconosceva la pagina di blocco vera** — cercava in 4.000 caratteri, le spie stanno a 38.709, e la lettura archiviava «errore» dove il fatto era «bloccata» (difetto **preesistente**; il test lo copriva con una pagina inventata e corta); **su un archivio vuoto il giro fa da sé il carico completo**, perché il solo albo lascerebbe 220 atti su 26.644 col monitor che dichiara «Aggiornato» — ed è lo stato della produzione; **non si passa a WAL**, misurato (1,23s di lock in tutto contro un `busy_timeout` di 5s, margine 59×). ⏳ **Resta l'attivazione dello Scheduled Task su Coolify**, che vuole il server acceso |
 | **Il tema civico «Sociale e casa»** | `BE` `UX` | ✅ **2026-08-11** — i 970 atti di sociale/casa non avevano un tema, e il più vicino (`giovani`) avrebbe messo le politiche della casa sotto *Giovani*. Deciso **misurando prima quanti contenuti esistenti** ogni candidato coprirebbe, perché un tema che esiste solo per gli atti al cittadino non serve: `sociale` è entrato con **categorie condivise** (nessun comportamento esistente cambia) e **940 atti** riclassificati; **`urbanistica` no**, perché ha *zero* agganci in tutte e quattro le tassonomie — chip che non filtra, stanza che nasce vuota. Copertura del tema civico: **72,3%**, e il fermo dei 102 uffici dichiara **45** coperti |
 
-### Ondata 9 — Il progetto si racconta 🔜
+### Ondata 9 — Il progetto si racconta 🔜 *(trasformata il 2026-08-12 dalla direzione)*
 
-**Obiettivo (→ OB-4, OB-5):** le quattro superfici con cui il prodotto parla di
-sé stesso. Vivono in `/progetto/*` e portano la firma della **Redazione della
-Dashboard di Pistoia**, non quella del Comune (decisione del 2026-08-07):
-lettura pubblica, account per agire. Il footer ha già la colonna «Il progetto»
-dove attaccarle.
+**Obiettivo (→ OB-4, OB-5):** le superfici con cui il prodotto parla di sé
+stesso. Vivono in `/progetto/*` e portano la firma della **Redazione di
+Pistoia.app** (era «Redazione della Dashboard di Pistoia», decisione del
+2026-08-07 — la firma nel codice si aggiorna col rebranding di O10): lettura
+pubblica, account per agire. Il footer ha già la colonna «Il progetto» dove
+attaccarle.
 
-| Voce | Livello | Nota di fattibilità |
-|---|---|---|
-| **Roadmap pubblica** — proposto · pianificato · in sviluppo · rilasciato · rimandato, su una linea del tempo con un modello d'interazione da progettare, non un elenco cronologico | `FE` `DES` `BE` | Elenco **curato** in un modello suo, con legame esplicito alla voce interna di `ROADMAP.md` e un cancello che pretende quel legame: il piano vero non si pubblica per intero |
-| **Voto alle funzionalità** | `FE` `BE` | Riusa `Proposal` + sostegni + `ThresholdBar`; le difese dai voti ripetuti hanno già un precedente in `Sollecitazione` e nel voto riservato ai verificati |
-| **Changelog** | `FE` `BE` | `CHANGELOG.md` esiste dalla Fase 0 e ha già versioni e date |
-| **Idee e problemi** (proposta, segnalazione errore, stato tracciabile) | `FE` `BE` `UX` | Riusa `Report`: categorie, stati, triage, moderazione e registro firmato sono già costruiti e provati |
+**La trasformazione (direzione-prodotto §3): l'ondata si spezza in due tempi**,
+perché metà delle sue voci ha senso solo quando esiste un pubblico.
+
+| Tempo | Voce | Livello | Nota di fattibilità |
+|---|---|---|---|
+| **Al lancio** — è una voce del conto (direzione §2) | **«Chi siamo»** — la carta d'identità del progetto: chi lo fa, come vive, che fine fanno i dati, la procedura pubblica di verifica dei badge, la regola sull'uso politico («numeri uguali per tutti, la redazione non commenta il merito») | `FE` `UX` | Per un indipendente non è un extra: è ciò che rende accettabile tutto il resto. Quando arriva la polemica, la risposta è già pubblicata (direzione §1.13.3, §1.16.2) |
+| **Al lancio** | **Changelog** | `FE` `BE` | `CHANGELOG.md` esiste dalla Fase 0 e ha già versioni e date |
+| **Dopo, quando c'è un pubblico che vota** | **Roadmap pubblica** — proposto · pianificato · in sviluppo · rilasciato · rimandato, su una linea del tempo con un modello d'interazione da progettare, non un elenco cronologico | `FE` `DES` `BE` | Elenco **curato** in un modello suo, con legame esplicito alla voce interna di `ROADMAP.md` e un cancello che pretende quel legame: il piano vero non si pubblica per intero |
+| **Dopo, quando c'è un pubblico che vota** | **Voto alle funzionalità** | `FE` `BE` | Riusa `Proposal` + sostegni + `ThresholdBar`; le difese dai voti ripetuti hanno già un precedente in `Sollecitazione` e nel voto riservato ai verificati. Un voto senza votanti è una superficie vuota che sembra un fallimento |
+| **Dopo, quando c'è un pubblico che vota** | **Idee e problemi** (proposta, segnalazione errore, stato tracciabile) | `FE` `BE` `UX` | Riusa `Report`: categorie, stati, triage, moderazione e registro firmato sono già costruiti e provati |
 
 > ⚠️ **Una collisione da sciogliere quando si costruisce**: «segnalazioni» sono
 > già i problemi della città. «Segnala un problema del sito» userebbe lo stesso
 > verbo per un'altra cosa, sulla stessa piattaforma. La distinzione va fatta nel
 > nome, non nella spiegazione.
 
-### Ondata 10 — Il rifacimento visivo 🔜
+### Ondata 10 — Il battesimo di Pistoia.app ▶️ *(anticipata e allargata il 2026-08-12; aperta lo stesso giorno)*
 
-**Obiettivo (→ OB-2):** non un ritocco, ma una revisione completa di UX, UI e
-identità visiva, fatta **dopo** che tutte le superfici esistono — così si
-disegna una volta sola. Il perimetro chiesto da Lorenzo il 2026-08-07 è in
-fondo a questa sezione, sotto «Il perimetro del rifacimento».
+**Obiettivo (→ OB-2, OB-4):** non più (solo) il rifacimento visivo: **il
+battesimo del marchio** — identità e vestito insieme (direzione-prodotto §1.4,
+§1.9–1.12). La regola di prima era «dopo che tutte le superfici esistono, così
+si disegna una volta sola»; la svolta la anticipa **per la stessa ragione al
+contrario**: le superfici del lancio (la prima pagina, l'archivio di O11)
+nascerebbero col marchio vecchio e andrebbero disegnate due volte. Il
+perimetro tecnico chiesto da Lorenzo il 2026-08-07 resta valido ed è in fondo
+a questa sezione, sotto «Il perimetro del rifacimento»; sopra ci si aggiunge
+l'identità.
 
-### Ondata 11 — L'archivio pubblico degli atti 🔜
+**Il processo, deciso (direzione §1.10) — Lorenzo giudice a ogni tappa:**
 
-**Obiettivo (→ OB-1):** le pagine con cui il cittadino legge le delibere,
+1. **La ricognizione visiva** — riferimenti professionali raccolti col browser
+   (Dribbble/Behance), pattern estratti e documentati in
+   [`docs/ricognizione-visiva.md`](docs/ricognizione-visiva.md), come
+   `fonti-atti.md` ha aperto la pipeline. Il filtro del gusto è **dichiarato da
+   Lorenzo: minimal di lusso · glassmorphism · tech — scuola Apple, non
+   Linear** (la faccia canonica è CHIARA e accoglie; lo scuro può essere il
+   momento «Linear», il terminale della città di notte). Requisito non
+   negoziabile: **mai una UI generica o da template**. E l'onestà scritta: il
+   gusto spontaneo dell'esecutore converge al «ben fatto canonico» — la
+   ricognizione e l'occhio di Lorenzo sono il contrappeso strutturale, non una
+   cortesia.
+   ✅ **Fatta il 2026-08-12, in tre giri** (mirato · prodotti veri · polso
+   generico, gli ultimi due chiesti da Lorenzo): 21 pattern estratti, il
+   canone HIG letto, la tensione P1 (vetro sul contenuto vs sul telaio)
+   dichiarata, il «test dell'intruso» come regola. Schermate in `refs-o10/`
+   (fuori da git).
+2. **2–3 direzioni estetiche** montate su pagine vere e fotografate; Lorenzo
+   sceglie e si itera. (⚠️ Nei mockup iniettati, classi non già nel sorgente =
+   stili in linea: Tailwind non le compila.)
+   ▶️ **Deciso da Lorenzo il 12/08 sera: si montano D1 «piazza di giorno» e
+   D2 «vetro di città»** (più la tesi condivisa D3 per la notte) su tre
+   pagine vere — la futura prima pagina `/`, una pagina atto, una di lavoro —
+   fotografate nei due temi, col test dell'intruso su ogni proposta.
+3. **Dentro il vestito scelto, in ordine di dipendenza:**
+   - il **rebranding** — marchio «Pistoia.app» con «.app» nel rosso della
+     città + segno (il «P» attuale è un placeholder dichiarato); **censimento
+     prima, sostituzione poi** (grep, mai alla cieca) di «Comune di Pistoia» /
+     «Dashboard di Pistoia» hardcoded in testate, footer, metadata, manifest,
+     email, README; **via lo stemma come identità** — resta legittimo dove si
+     *parla del* Comune (uso informativo, §1.4);
+   - la **prima pagina pubblica su `/`** — il fatto del giorno dagli atti +
+     UN numero-monumento + le didascalie della redazione (§1.6-bis): oggi
+     quella rotta non è una prima pagina. ⚠️ `e2e.db` non ha atti per disegno:
+     i suoi test seminano atti di prova propri, il seed non riempie mai `Atto`;
+   - il **riordino delle sezioni** — la lettura davanti (atti, soldi, pagella,
+     quartieri), «Partecipa» e «Comunità» dopo; la sezione **«Il Comune»**
+     raccontata da fuori (§1.11) — il riordino concreto si decide sui mockup;
+   - il **logo** — nessuna direzione a priori: decide la ricognizione
+     (§1.12.3), provato su testata, icona della schermata home e favicon;
+   - i **badge di ruolo verificati** — tanti, colorati, animati, «catchy»; gli
+     **istituzionali sobri** (un «Sindaco» che luccica perde peso, §1.14.4);
+   - la **pagina dell'atto pubblica** — doppio titolo onesto (umano sopra,
+     oggetto ufficiale sempre visibile sotto) + il contesto che spiega
+     (§1.12.1–2).
+4. **`DESIGN.md` §1 si riscrive QUI, consapevolmente** — dice ancora «è il
+   Comune che parla», e la nuova identità lo smentisce. Nel giro entrano il
+   vetro alzato ad Apple-grade e il **rosso da dosare con prove di palette sul
+   prodotto vero** (vincolo fermo: resta anche il colore d'errore/urgenza, la
+   semantica non si confonde).
+
+**Dentro/dopo il battesimo entrano le tre maturità ex-O8** (decisione del
+12/08): scorciatoie da tastiera col pannello «?», **OG image dinamiche (dopo
+il rebrand)**, alto contrasto + font grande.
+
+### Ondata 11 — L'archivio pubblico degli atti 🔜 *(nel perimetro del LANCIO dal 2026-08-12)*
+
+**Obiettivo (→ OB-1):** le pagine con cui il cittadino legge gli atti,
 costruite sulla pipeline dell'Ondata 8 e **nate nel linguaggio visivo nuovo**
-invece di essere disegnate due volte.
+invece di essere disegnate due volte. **La direzione la porta dentro il
+perimetro del lancio** (§1.6.1): 26.644 decisioni vere, cercabili e spiegate —
+nessuno lo offre, nemmeno il portale del Comune, che è illeggibile — sono il
+magnete principale del giorno uno, già in casa e aggiornate da sole; e ogni
+atto è una pagina che i motori di ricerca trovano. La **pagina del singolo
+atto** (doppio titolo onesto + contesto) nasce nel battesimo di O10; qui
+attorno le si costruiscono archivio, ricerca, filtri e conteggi — e la
+decisione di forma lasciata aperta («che cosa MOSTRA l'archivio», con le
+determine al 56%) si scioglie davanti alla pagina vera.
 
 **Comprensibile per struttura, non per riscrittura** (decisione del
 2026-08-07): nessuna frase generata. L'atto si capisce dall'oggetto ufficiale —
@@ -453,6 +554,10 @@ una sola e va nel parcheggio, con la ragione scritta accanto.
 ### Il perimetro del rifacimento (Ondata 10)
 
 Chiesto da Lorenzo il 2026-08-07. Non un ritocco: una revisione completa.
+*(Dal 2026-08-12 questo perimetro è la metà «vestito» del battesimo: sopra ci
+sta l'identità — marchio, prima pagina, riordino, logo, badge — descritta
+nella sezione dell'ondata qui sopra. I limiti della tabella valgono identici
+per tutte e due le metà.)*
 
 - Design system più rifinito e coerente; identità visiva più forte e senso di
   maturità del prodotto.
@@ -538,10 +643,10 @@ automatizzata**, comprensibilità **per struttura e non per riscrittura** — ch
 | **Test a11y automatici (axe in E2E)** | `ENG` `A11Y` | L'a11y già raggiunta non deve regredire mai | ♾️ qualità continua |
 | **Lighthouse CI + performance budget** | `ENG` | La percezione di qualità passa anche dalla velocità; il budget la difende | ♾️ qualità continua |
 | **Audit dipendenze in CI** | `SEC` | Sicurezza della supply chain a costo quasi zero | ♾️ qualità continua |
-| **Vetrina aziende & sponsorizzazioni** | `FE` `BE` | Le aziende di Pistoia si fanno conoscere e sostengono la piattaforma; `OrganizationProfile` esiste già. Sponsor sempre dichiarati (regola n. 9) | 🔜 O5 |
+| **Vetrina aziende & sponsorizzazioni** | `FE` `BE` | Le aziende di Pistoia si fanno conoscere e sostengono la piattaforma; `OrganizationProfile` esiste già. Sponsor sempre dichiarati (regola n. 9) | 🔜 dopo il battesimo — entrata nel modello economico come «Vetrina delle attività» con abbonamento (direzione §1.15); le linee rosse complete si scrivono PRIMA del primo sponsor |
 | **Onboarding "primi passi in città" (checklist progressiva)** | `UX` | Accompagna il nuovo utente alle prime azioni utili | ✅ O4 (2026-06-13) |
-| **Scorciatoie da tastiera + pannello "?"** | `UX` `A11Y` | Produttività per utenti esperti, scopribilità per tutti | 📋 |
-| **Open Graph image dinamiche** (condivisione di segnalazioni/proposte) | `FE` | Anche un link condiviso deve essere bello | 📋 |
+| **Scorciatoie da tastiera + pannello "?"** | `UX` `A11Y` | Produttività per utenti esperti, scopribilità per tutti | 🔜 O10 (dentro/dopo il battesimo, 2026-08-12) |
+| **Open Graph image dinamiche** (condivisione di segnalazioni/proposte) | `FE` | Anche un link condiviso deve essere bello | 🔜 O10 — DOPO il rebrand (2026-08-12) |
 
 ---
 
@@ -560,7 +665,7 @@ automatizzata**, comprensibilità **per struttura e non per riscrittura** — ch
 | Empty state & illustrazioni custom | Identità visiva anche dove non ci sono dati | `DES` | 🆕 | ✅ O0 (2026-06-12) |
 | Data-viz bilancio next-gen | Treemap missioni, confronti leggibili anno su anno | `FE` `DES` | 🆕 | ✅ O0 (2026-06-12) |
 | "Stato della città" hero | Indicatori sintetici con sparkline in home | `FE` `DES` | 🆕 | ✅ O3 (2026-06-12) |
-| OG image dinamiche | Anteprima curata dei link condivisi | `FE` | 🆕 | 🔜 O8 |
+| OG image dinamiche | Anteprima curata dei link condivisi | `FE` | 🆕 | 🔜 O10 — dopo il rebrand (2026-08-12): col marchio vecchio andrebbero fatte due volte |
 | Restyling continuo | Ogni ondata rifinisce le pagine toccate | `DES` | direttrice Estetica | trasversale |
 
 ### 🛠️ Segnalazioni
@@ -936,7 +1041,7 @@ documento. Dice la stessa cosa a chi legge, e regge in tribunale.
 | Sistema fonti + freschezza | Fonte, data aggiornamento, tipo dato su ogni numero | `BE` | `A1 §25` | ✅ Fase 1 |
 | Modalità demo / ufficiale | Badge "dati non ufficiali" in demo | `FE` `BE` | `A1 §26` | ✅ Fase 0 |
 | Open data out | Export CSV/JSON + API read-only dei dati piattaforma | `BE` | `A1 §31` + idea esistente | 🔜 O8 |
-| **Delibere — archivio degli atti** | Albo pretorio letto in automatico e reso navigabile: organo, numero, data, oggetto ufficiale, importo, allegati, categoria civica, legami a quartiere/opera/bilancio | `BE` `ENG` `FE` | §9 — scongelata 2026-08-07 | 🔜 pipeline in O8 · superfici pubbliche in O11 |
+| **Delibere — archivio degli atti** | Albo pretorio letto in automatico e reso navigabile: organo, numero, data, oggetto ufficiale, allegati, categoria civica, legami a quartiere/opera/bilancio (l'importo NON esiste nella fonte) | `BE` `ENG` `FE` | §9 — scongelata 2026-08-07 | ✅ pipeline in O8 (2026-08-09/11) · 🔜 superfici pubbliche in O11, **nel perimetro del lancio** (2026-08-12) |
 
 ### 🗺️ Quartieri & territorio
 
@@ -955,6 +1060,7 @@ documento. Dice la stessa cosa a chi legge, e regge in tribunale.
 | Idea | Cosa fa | Livello | Fonte | Stato |
 |---|---|---|---|---|
 | Question time digitale | Il Comune apre un tema, domande votate, risposte archiviate | `FE` `BE` | `A2 §22` | ✅ O4 (2026-06-13) |
+| «Domande alla città» — il question time ribaltato | I cittadini domandano e votano; la redazione porta le più votate al Comune per vie ufficiali. Il motore della pressione è la **visibilità**: contatore dell'attesa («400 voti, senza risposta da 32 giorni»), condivisibilità, prima pagina | `FE` `BE` `UX` | direzione §1.14.1 | 🔜 dopo il battesimo (conto del lancio) |
 | Vota la priorità | Voto dei verificati su interventi già validati | `FE` `BE` | `A2 §9` | ✅ O4 (2026-06-13) |
 | Consultazioni con documenti | Documento + sintesi + domande guidate + risultati | `FE` `BE` | `A2 §23` | ✅ O4 (2026-06-13) |
 | Volontariato e iniziative | Bacheca iniziative di Comune e associazioni, adesioni | `FE` `BE` | `A2 §14` | ✅ O4 (2026-06-13) |
@@ -983,7 +1089,7 @@ documento. Dice la stessa cosa a chi legge, e regge in tribunale.
 | Tour demo guidato | La piattaforma si presenta da sola, passo passo | `UX` | 🆕 | ✅ O0 (2026-06-12), persistito O4 |
 | Modalità semplice / anziani | Menu ridotto, pulsanti grandi, flussi guidati | `FE` `UX` `A11Y` | `A1 §19` | ✅ O2 (2026-06-11) |
 | Onboarding "primi passi in città" | Checklist progressiva delle prime azioni utili | `UX` | 🆕 | ✅ O4 (2026-06-13) |
-| Scorciatoie da tastiera + pannello "?" | Navigazione esperta scopribile | `UX` `A11Y` | 🆕 | 🔜 O8 |
+| Scorciatoie da tastiera + pannello "?" | Navigazione esperta scopribile | `UX` `A11Y` | 🆕 | 🔜 O10 — dentro/dopo il battesimo (2026-08-12) |
 
 ### ♿ Accessibilità & inclusione
 
@@ -991,7 +1097,7 @@ documento. Dice la stessa cosa a chi legge, e regge in tribunale.
 |---|---|---|---|---|
 | Base a11y (ARIA, contrasto, tastiera) | Review fatte e verificate | `A11Y` | `A1 §18` (parte) | ✅ |
 | Test a11y automatici | axe-core dentro gli E2E: l'a11y non regredisce | `ENG` `A11Y` | 🆕 | ✅ 2026-08-05 (11 pagine × 2 temi, WCAG AA + 2.2) |
-| Alto contrasto + font grande | Preferenze di visualizzazione avanzate | `FE` `A11Y` | `A1 §18` | 🔜 O8 |
+| Alto contrasto + font grande | Preferenze di visualizzazione avanzate | `FE` `A11Y` | `A1 §18` | 🔜 O10 — dentro/dopo il battesimo (2026-08-12): si misura sulla palette nuova |
 | Lettura audio | Sintesi vocale dei contenuti | `FE` `A11Y` | `A1 §18` | 🅿️ parcheggio — macchina diversa dalle altre due |
 | Glossario termini amministrativi | Tooltip/pagina dei termini burocratici | `FE` `A11Y` | `A2 §27` (parte) | ✅ O3 (2026-06-12) |
 | Multilingua + easy-to-read ("Pistoia Facile") | EN, AL, RO, ZH, UK + linguaggio facilitato | `FE` `A11Y` | `A2 §27` + Fase 4 | 💡 pre-lancio |
@@ -1009,7 +1115,7 @@ documento. Dice la stessa cosa a chi legge, e regge in tribunale.
 |---|---|---|---|---|
 | Modalità turista | Vista per visitatori: eventi, musei, ZTL, numeri utili | `FE` `UX` | `A2 §28` | 🧊 ferma — chiede orari di musei veri |
 | Commercio locale | Sezione attività verificate: mercati, iniziative, cantieri | `FE` `BE` | `A2 §29` | 🅿️ parcheggio — porta un modello di business |
-| Vetrina aziende & sponsor | Profili aziendali ricchi + sponsorizzazioni dichiarate di spazi non civici | `FE` `BE` | 🆕 richiesta 2026-06-11 | 🅿️ parcheggio — regola §7.9 |
+| Vetrina aziende & sponsor | Profili aziendali ricchi + sponsorizzazioni dichiarate di spazi non civici | `FE` `BE` | 🆕 richiesta 2026-06-11 | 🔜 dopo il battesimo — «Vetrina delle attività» con abbonamento, nel modello economico (direzione §1.15); linee rosse complete PRIMA del primo sponsor; resta la regola §7.9 |
 | Servizi quotidiani | Scorciatoie a certificati, tributi, mense (link mock) | `FE` `UX` | `A1 §22` + idea esistente | 🧊 ferma — link finti a servizi veri |
 | Spazio scuole | Mini-aree per scuola: avvisi, progetti, eventi | `FE` `BE` | `A2 §13` | 💡 |
 | Versione bambini / scuola | Sezione educativa: come funziona il Comune, quiz civici | `FE` `UX` | `A2 §12` | 💡 |
@@ -1018,10 +1124,10 @@ documento. Dice la stessa cosa a chi legge, e regge in tribunale.
 
 | Idea | Cosa fa | Livello | Fonte | Stato |
 |---|---|---|---|---|
-| Analytics operative | KPI: per categoria/quartiere/ufficio, tempi, trend | `FE` `BE` `DES` | `A1 §27` | 🔜 O8 |
-| Alert trend anomalo | Avviso su picchi improvvisi di segnalazioni | `BE` | `A2 §21` | 🔜 O8 (euristica) |
+| Analytics operative | KPI: per categoria/quartiere/ufficio, tempi, trend | `FE` `BE` `DES` | `A1 §27` | ✅ O8 (2026-08-09) — le prime due letture sul cruscotto; trend per quartiere fuori (metà celle sotto campione) |
+| Alert trend anomalo | Avviso su picchi improvvisi di segnalazioni | `BE` | `A2 §21` | 🅿️ parcheggio — i bucket del seed sono ancorati al calendario: si tara su una serie che non sia il seed |
 | Sentiment civico per tema | Segnale qualitativo del clima per tema | `FE` `BE` | `A2 §20` | 🅿️ parcheggio — serve prima una definizione |
-| Moderazione assistita | Spam, duplicati, suggerimento categoria (euristiche) | `BE` | `A1 §28` | 🔜 O8 · 🧊 versione AI |
+| Moderazione assistita | Spam, duplicati, suggerimento categoria (euristiche) | `BE` | `A1 §28` | ✅ O8 (2026-08-09) — con due euristiche su tre smontate dalle misure: duplicati zero veri positivi, spam senza corpus; il suggerimento vive sul modulo del cittadino · 🧊 versione AI |
 
 ### 🤖 AI civica *(tutte richiedono un LLM: restano 💡 finché il progetto è mock/locale)*
 
@@ -1033,31 +1139,20 @@ documento. Dice la stessa cosa a chi legge, e regge in tribunale.
 | Assistente FAQ civico | Chatbot sui servizi del Comune | `AI` | idea §20 | 💡 |
 | Moderazione AI piena | Tossicità, bozze di risposta (sempre con revisione umana) | `AI` | `A1 §28` | 💡 |
 
-### 🧰 Il progetto come prodotto *(richiesta 2026-08-07 — Ondata 9)*
+### 🧰 Il progetto come prodotto *(richiesta 2026-08-07 — Ondata 9 · trasformata 2026-08-12)*
 
-> Le quattro superfici con cui il prodotto parla di sé. Vivono in `/progetto/*`
-> e portano la firma della **Redazione della Dashboard di Pistoia**, non quella
-> del Comune: lettura pubblica, account per agire.
-
-| Idea | Cosa fa | Livello | Fonte | Stato |
-|---|---|---|---|---|
-| Roadmap pubblica | Linea del tempo delle funzionalità: proposto, pianificato, in sviluppo, rilasciato, rimandato | `FE` `DES` `BE` | richiesta 2026-08-07 | 🔜 O9 |
-| Voto alle funzionalità | I cittadini dicono quali funzioni vogliono; riusa `Proposal` + sostegni | `FE` `BE` | richiesta 2026-08-07 | 🔜 O9 |
-| Changelog pubblico | Che cosa è uscito, quando, e che cosa è cambiato | `FE` `BE` | richiesta 2026-08-07 | 🔜 O9 |
-| Idee e problemi | Proporre, segnalare un errore, seguire lo stato della propria segnalazione; riusa `Report` | `FE` `BE` `UX` | richiesta 2026-08-07 | 🔜 O9 |
-
-### 🧰 Il progetto come prodotto *(richiesta 2026-08-07 — Ondata 9)*
-
-> Le quattro superfici con cui il prodotto parla di sé. Vivono in `/progetto/*`
-> e portano la firma della **Redazione della Dashboard di Pistoia**, non quella
-> del Comune: lettura pubblica, account per agire.
+> Le superfici con cui il prodotto parla di sé. Vivono in `/progetto/*` e
+> portano la firma della **Redazione di Pistoia.app**, non quella del Comune:
+> lettura pubblica, account per agire. *(Questa sezione compariva due volte,
+> identica — refuso rimosso il 2026-08-12.)*
 
 | Idea | Cosa fa | Livello | Fonte | Stato |
 |---|---|---|---|---|
-| Roadmap pubblica | Linea del tempo delle funzionalità: proposto, pianificato, in sviluppo, rilasciato, rimandato | `FE` `DES` `BE` | richiesta 2026-08-07 | 🔜 O9 |
-| Voto alle funzionalità | I cittadini dicono quali funzioni vogliono; riusa `Proposal` + sostegni | `FE` `BE` | richiesta 2026-08-07 | 🔜 O9 |
-| Changelog pubblico | Che cosa è uscito, quando, e che cosa è cambiato | `FE` `BE` | richiesta 2026-08-07 | 🔜 O9 |
-| Idee e problemi | Proporre, segnalare un errore, seguire lo stato della propria segnalazione; riusa `Report` | `FE` `BE` `UX` | richiesta 2026-08-07 | 🔜 O9 |
+| «Chi siamo» | La carta d'identità del progetto: chi lo fa, come vive, che fine fanno i dati, la verifica dei badge, la regola sull'uso politico | `FE` `UX` | direzione §2 | 🔜 O9 — **al lancio** (voce del conto) |
+| Changelog pubblico | Che cosa è uscito, quando, e che cosa è cambiato | `FE` `BE` | richiesta 2026-08-07 | 🔜 O9 — **al lancio** |
+| Roadmap pubblica | Linea del tempo delle funzionalità: proposto, pianificato, in sviluppo, rilasciato, rimandato | `FE` `DES` `BE` | richiesta 2026-08-07 | 🔜 O9 — dopo, quando c'è un pubblico che vota |
+| Voto alle funzionalità | I cittadini dicono quali funzioni vogliono; riusa `Proposal` + sostegni | `FE` `BE` | richiesta 2026-08-07 | 🔜 O9 — dopo, quando c'è un pubblico che vota |
+| Idee e problemi | Proporre, segnalare un errore, seguire lo stato della propria segnalazione; riusa `Report` | `FE` `BE` `UX` | richiesta 2026-08-07 | 🔜 O9 — dopo, quando c'è un pubblico che vota |
 
 ### ⚙️ Piattaforma & qualità
 
@@ -1067,7 +1162,7 @@ documento. Dice la stessa cosa a chi legge, e regge in tribunale.
 | Mock data "vivo" | Seed temporale deterministico: la demo evolve nel tempo | `BE` `ENG` | 🆕 | ✅ O1 (2026-06-12) |
 | Lighthouse CI + performance budget | La velocità percepita non degrada | `ENG` | 🆕 | ✅ 2026-08-06 (soglie scritte, job bloccante) |
 | Audit dipendenze in CI | npm audit sulla supply chain | `SEC` | 🆕 | ✅ 2026-08-06 (`--audit-level=high`, bloccante) |
-| PWA + offline + Web Push | App installabile, coda offline segnalazioni, push VAPID | `FE` `ENG` | idea esistente | 🅿️ parcheggio — tocca CSP e service worker, dopo il rifacimento |
+| PWA + offline + Web Push | App installabile, coda offline segnalazioni, push VAPID | `FE` `ENG` | idea esistente | 🔜 conto del lancio (direzione §1.11.3–4): Pistoia.app sul telefono è un'app installabile con notifiche push — **due canali** («ciò che segui» e «il fatto del giorno»), interruttori separati, zero canali imposti. Dopo il battesimo: tocca CSP e service worker |
 | Mailer transazionale | Verifica email, password dimenticata; sblocca digest email | `BE` | residuo Fase 1 | 🧊 su richiesta — la base d'invio esiste da R-3 (`src/lib/email.ts`: file in locale, `fetch` verso il provider quando ci sarà il dominio; decisione 2026-08-03 in [`docs/piano-rating-servizi.md`](docs/piano-rating-servizi.md) §8) |
 | Switch SQLite → Postgres/Neon | Necessario solo per deploy/dati reali; procedura documentata | `BE` `ENG` | residuo Fase 1 | 🧊 alla ripresa |
 
@@ -1086,6 +1181,9 @@ Vincoli trasversali, validi per ogni funzione presente e futura:
 7. **Le mappe analizzano, non colpevolizzano** — heatmap e trend presentati come strumenti di priorità, mai come pagelle dei quartieri (`A2 §6`).
 8. **Il design è progettato, non generato** — ogni schermata ha gerarchia intenzionale, motion sobrio e componenti del design system: niente pattern generici, niente estetica da template. La direzione estetica è definita in [DESIGN.md](DESIGN.md). 🆕
 9. **Gli sponsor sono ospiti, non padroni** — le sponsorizzazioni delle aziende sono sempre etichettate come tali, vivono in spazi dedicati e non toccano mai i contenuti civici (segnalazioni, proposte, dati di bilancio, decisioni). 🆕
+10. **Numeri caldi, tono freddo** *(2026-08-12, direzione §1.7)* — il dato che attira si mostra grande e bello; il tono resta di fatto, mai d'accusa. Il costo della giunta in prima pagina è un fatto; lo stesso numero con un colore d'allarme o un titolo ammiccante è un giudizio — e un intermediario civico che scivola nel tabloid perde il capitale che lo tiene in piedi.
+11. **Mai cittadini finti nel percorso pubblico** *(2026-08-12, direzione §1.8)* — il seed dimostrativo va bene nella demo ed è dichiarato; nel servizio col marchio proprio le prime voci sono della **redazione, firmate come tali**. Il primo miglio è lavoro editoriale, non un trucco di riempimento.
+12. **Si traccia tanto, dichiarato** *(2026-08-12, direzione §1.14.5)* — due livelli: anonimo aggregato (Umami) e per-utente con **opt-in** esplicito; una pagina pubblica «che cosa misuriamo e perché». Tracciare di nascosto su un prodotto che predica trasparenza è la contraddizione che la stampa aspetta.
 
 ---
 
@@ -1131,6 +1229,13 @@ Vincoli trasversali, validi per ogni funzione presente e futura:
 ## 9. 🧊 In pausa — Fiducia istituzionale (ex Fase 4)
 
 > Necessaria solo in vista di un lancio pubblico reale.
+>
+> ⚠️ **E il lancio ora è pianificato (2026-08-12).** Le voci che il lancio
+> pretende davvero — privacy/GDPR veri, informative, base giuridica — sono
+> entrate nel **conto del lancio** (`direzione-prodotto.md` §2) e si pagano
+> lì. SPID/CIE, 2FA, HIBP e il resto restano qui: servono alla relazione con
+> l'ente o a una scala che il giorno uno non ha, e si accendono quando una
+> decisione li chiama (le porte chiuse restano vive, direzione §1.14.3).
 
 | Attività | Dettaglio |
 |---|---|
