@@ -1,8 +1,8 @@
 # Prompt per la sessione successiva
 
-> Scritta il **2026-08-09**, riscritta da capo — non è un aggiornamento della
-> precedente. È la consegna completa: lavori, debiti con le loro condizioni,
-> problemi noti d'ambiente e di prodotto, regole e metodo.
+> Aggiornata il **2026-08-12**, a valle della discussione di prodotto
+> dell'11-12/08. È la consegna completa: lavori, debiti con le loro
+> condizioni, problemi noti d'ambiente e di prodotto, regole e metodo.
 >
 > **Fidati di questa, non di quello che ricordi.**
 
@@ -11,59 +11,220 @@
 ## Il prompt da incollare
 
 ```
-Pistoia Dashboard. Riprendiamo dall'Ondata 8.
+Pistoia.app (già «Pistoia Dashboard»). Riprendiamo dopo la SVOLTA DI PRODOTTO
+dell'11-12/08: da demo del Comune a piattaforma civica indipendente.
 
 LEGGI PRIMA, in quest'ordine:
 - docs/prossima-sessione.md — è questa: la consegna completa.
-- AGENTS.md — vincolante. §3 ha quarantasei trappole già pagate; §5 dice cosa
-  significa "fatto"; §8 contiene il disco pieno del server.
-- DESIGN.md — vincolante prima di qualunque lavoro visivo.
-- docs/fonti-atti.md — la mappa del portale degli atti, che serve al primo
-  lavoro e a tutto ciò che tocca l'archivio.
+- docs/direzione-prodotto.md — 🔴 LA CARTA DEL PRODOTTO, vincolante. Sedici
+  sezioni decise con Lorenzo a giri di domande: visione e nome (Pistoia.app),
+  prima pagina, perimetro v1, motore e telemetria, economia, persone,
+  relazione col Comune, identità in piazza, gusto e processo del design
+  (§1.1–1.16), più il CONTO DEL LANCIO (§2) e il piano (§3). Nessuna scelta
+  di prodotto si prende senza averla letta.
+- AGENTS.md — vincolante. §3 ha 51 trappole già pagate; §5 dice cosa
+  significa «fatto»; §8 il server, il disco, il deploy.
+- DESIGN.md — vincolante per i VINCOLI (contrasti, 44px, contenimento,
+  motion), MA ⚠️ §1 dice ancora «è il Comune che parla»: si riscrive durante
+  il battesimo, non prima e non in silenzio.
+- docs/pipeline-atti-schedulata.md e docs/fonti-atti.md — per tutto ciò che
+  tocca gli atti.
 
-COMINCIA DA: i due buchi del tema civico degli atti. 970 atti di sociale/casa
-e 373 di urbanistica restano senza tema perché CIVIC_TOPICS non ha né
-«sociale» né «urbanistica». NON è una decisione tecnica: aggiungere un tema
-cambia il selettore che vede il cittadino e il feed «Per te». Misura prima,
-poi portami le opzioni.
+COMINCIA DA, in quest'ordine:
 
-STATO: main pushato, CI verde. 310 unit · 66 rotte, 0 problemi · 165/165 E2E ·
-shots 0 in entrambi i regimi. Versione 0.46.0. Dev spento, porte libere,
-albero pulito. 26.591 atti veri in dev.db.
+1. ALLINEA ROADMAP.md alla direzione (direzione-prodotto §3): O10 = battesimo
+   di Pistoia.app e viene SUBITO; O11-archivio entra nel perimetro del
+   lancio; O9 si trasforma («chi siamo» e changelog al lancio; roadmap
+   pubblica e voto dopo, quando c'è un pubblico); le tre maturità ex-O8
+   (scorciatoie «?», OG image, alto contrasto) si spostano DENTRO/DOPO il
+   battesimo — deciso da Lorenzo il 12/08: le OG image col marchio vecchio
+   sarebbero da fare due volte.
 
-COME LAVORIAMO:
-- La forma si porta su MOCKUP INIETTATI SULL'APPLICAZIONE VERA e fotografati,
-  mai su una domanda astratta. Opzioni separabili, una domanda per volta, la
-  raccomandata per prima con l'argomento onesto.
-- E PRIMA DI DECIDERE, MISURA — col browser, non citando un numero da un
-  documento.
-- Non fare commit o push se non te lo chiedo. E NON lanciare il deploy senza
-  chiedere.
-- Commit solo a nome di Lorenzo Cianferoni, niente Co-Authored-By.
+2. APRI O10 — IL BATTESIMO, col processo deciso (Lorenzo GIUDICE A OGNI
+   TAPPA):
+   a. La RICOGNIZIONE VISIVA (direzione-prodotto §1.10): riferimenti
+      professionali raccolti col browser (Dribbble/Behance; Pinterest ha
+      muri di login), pattern estratti e documentati in un doc stile
+      fonti-atti. Il filtro del gusto è DICHIARATO da Lorenzo: minimal di
+      lusso + glassmorphism + tech — scuola Apple, non Linear (chiaro
+      canonico che accoglie; lo scuro può essere il momento «Linear»).
+      Requisito NON NEGOZIABILE: mai una UI da template. Onestà scritta:
+      il gusto spontaneo dell'esecutore converge al canonico — la
+      ricognizione e l'occhio di Lorenzo sono il contrappeso strutturale.
+   b. 2–3 DIREZIONI ESTETICHE montate su pagine vere e fotografate; Lorenzo
+      sceglie e si itera.
+   c. Dentro il vestito scelto, in quest'ordine di dipendenza: il REBRANDING
+      (marchio «Pistoia.app» con «.app» nel rosso della città + segno;
+      censimento e sostituzione di «Comune di Pistoia»/«Dashboard di
+      Pistoia» hardcoded in testate, footer, metadata, manifest, email,
+      README; via lo stemma come identità — resta dove si PARLA del Comune);
+      la PRIMA PAGINA pubblica su `/` (fatto del giorno dagli atti +
+      numero-monumento + didascalie della redazione — oggi quella rotta non
+      è una prima pagina); il RIORDINO delle sezioni (lettura prima, sezione
+      «Il Comune» raccontata da fuori); il LOGO (decide la ricognizione);
+      i BADGE di ruolo verificati (tanti, colorati, animati — istituzionali
+      sobri); la PAGINA ATTO pubblica (doppio titolo onesto + contesto).
 
-DUE COSE CHE ASPETTANO ME, NON TE:
-- APP_ORIGIN non è impostata su Coolify. È l'unica cosa di sicurezza rimasta
-  aperta.
-- La produzione è indietro di quindici commit (misura con
-  `git rev-list --count 67a94fb..main`). Ogni deploy costa 2,82GB su un disco
-  da 40: `ssh homeserver "df -h /"` prima.
+I LAVORI DOPO IL BATTESIMO (ordine da decidere con Lorenzo):
+- Il CONTO DEL LANCIO, voce per voce (direzione-prodotto §2): PWA
+  installabile + notifiche push (due canali, interruttori separati);
+  telemetria DICHIARATA (pagina «che cosa misuriamo», Umami c'è già +
+  eventi per-utente con opt-in); seed partecipativo FUORI dal percorso
+  pubblico (mai cittadini finti in produzione); «chi siamo»; privacy/GDPR
+  veri; moderazione con presidio; «Domande alla città» (trasformazione del
+  question time: il contatore dell'attesa è la pressione); pseudonimo
+  attivabile nelle impostazioni (default resta «Nome C.»); Vetrina delle
+  attività con abbonamento (OrganizationProfile esiste già).
+- Il BILANCIO SU DATI VERI: prima la RICOGNIZIONE delle fonti
+  (BDAP/OpenBilanci) — la regola degli atti vale anche qui: si misura se la
+  fonte si lascia leggere PRIMA di promettere.
+- Le maturità ex-O8: scorciatoie col pannello «?», OG image (dopo il
+  rebrand), alto contrasto + font grande.
+
+PROBLEMI NOTI DA RISOLVERE (nessuno bloccante, tutti scritti):
+- Gli E2E completi a macchina carica fanno cadere ~2 test per volta, sempre
+  diversi, sempre per ATTESA, mai contenuti sbagliati. Il metodo per
+  distinguere ambiente da regressione è in AGENTS §3 (2026-08-11): git
+  stash + stessi test su HEAD + ripasso con la modifica. Non lanciare due
+  cose pesanti insieme.
+- `comando | tail` restituisce l'exit code di tail: un cancello rosso si
+  legge verde. Redirigere su file e leggere $? (AGENTS §3).
+- DESIGN.md §1 e il carattere «è il Comune che parla»: da riscrivere in O10
+  (identità nuova, vetro alzato ad Apple-grade, rosso da dosare con prove).
+- «Dashboard di Pistoia» e «Comune di Pistoia» sono hardcoded in molti punti:
+  serve un censimento (grep) prima del rebranding, non sostituzioni alla
+  cieca.
+- prato.app è GIÀ registrato: il pattern multi-città si verifica città per
+  città, quando servirà.
+- e2e.db ha zero Atto per disegno: i test della futura prima pagina «fatto
+  del giorno» dovranno seminare atti di prova propri (il seed non deve mai
+  riempire Atto — regola esistente).
+- Il rosso «quanto e dove» non è deciso: prove di palette dentro la
+  ricognizione. Vincolo: resta anche il colore d'errore, la semantica non
+  si confonde.
+
+COSE CHE ASPETTANO LORENZO, NON TE:
+- REGISTRARE pistoia.app (al 12/08 non risolve: quasi certamente libero).
+- ACCENDERE IL SERVER (spento: ping sì, nessuna porta aperta). Poi, in
+  ordine: attivare lo Scheduled Task della lettura atti
+  (pipeline-atti-schedulata §2 — finché non c'è, l'archivio in produzione
+  resta VUOTO e il monitor dice «Mai letto», che è la verità); impostare
+  APP_ORIGIN su Coolify (unica cosa di sicurezza aperta); l'eventuale
+  deploy — produzione indietro di DICIOTTO commit (misura con
+  `git rev-list --count 67a94fb..main`), e PRIMA:
+  `ssh homeserver "df -h /"` perché ogni deploy costa 2,82GB su 40.
+- Il PARERE LEGALE sull'uso del toponimo nel nome, prima del lancio.
+- Le LINEE ROSSE economiche complete: da scrivere PRIMA del primo sponsor.
+- Dove affiggere i QR FISICI (valuta lui; la via senza sanzioni è la rete
+  dei «luoghi amici»).
+
+COME LAVORIAMO (invariato, più il processo O10):
+- La forma su MOCKUP INIETTATI sull'applicazione vera e fotografati, mai su
+  una domanda astratta. ⚠️ Nei mockup, classi non presenti nel sorgente =
+  stili in linea (Tailwind non le compila).
+- Opzioni SEPARABILI, una domanda per volta, la raccomandata per prima con
+  l'argomento onesto — e Lorenzo spesso compone la quinta: dopo la risposta,
+  dichiara cosa hai dedotto.
+- PRIMA DI DECIDERE, MISURA — col browser e col database, non citando un
+  numero da un documento.
+- Un cancello che non ha mai visto un rosso non è provato: si rompe di
+  proposito (è così che il 11/08 è emerso che paginaDiBlocco non
+  riconosceva la pagina del WAF).
+- «Fatto» = AGENTS §5: typecheck, lint, unit (317), rotte (66, 0 problemi),
+  E2E, shots nei due regimi (le opzioni a node, MAI a npm).
+- Non fare commit o push se Lorenzo non lo chiede. MAI il deploy senza
+  chiedere. Commit a nome di Lorenzo Cianferoni, niente Co-Authored-By.
+- Per O10: Lorenzo è giudice a ogni tappa.
+
+STATO: main pushato con tutto il lavoro dell'11-12/08 (0.47.0 tema «Sociale
+e casa» + 0.48.0 pipeline senza browser + la direzione di prodotto), albero
+pulito. 317 unit · 66 rotte 0 problemi · 165 E2E (vedi nota flakiness) ·
+shots 0 nei due regimi. 26.644 atti veri in dev.db (940 col tema «sociale»),
+zero in e2e.db per disegno. Dev spento, porte libere. Versione 0.48.0.
 ```
 
 ---
 
-## Stato al 2026-08-09
+## Stato al 2026-08-11
 
 | | |
 |---|---|
-| Versione | **0.46.0** |
-| Branch | `main`, pushato, **CI verde** |
-| Unit | **310** |
+| Versione | **0.48.0** |
+| Branch | `main`, **albero SPORCO**: il lavoro dell'11/08 non è committato |
+| Unit | **317** (erano 310) |
 | Rotte | **66**, 0 con problemi |
-| E2E | **165/165** |
+| E2E | **165 test, tutti verdi** — ma vedi la nota qui sotto |
 | `shots` | 0 in entrambi i regimi (normale e semplice a 360) |
-| Ambiente | dev spento, porte 3000/3939 libere, albero pulito |
-| Archivio atti | **26.591 atti veri** in `dev.db` (vuoto in `e2e.db`, per disegno) |
-| Produzione | **indietro di 15 commit** |
+| Ambiente | dev spento, porte 3000/3939 libere |
+| Archivio atti | **26.644 atti veri** in `dev.db` (vuoto in `e2e.db`, per disegno) |
+| Produzione | **indietro di 16 commit**, e l'archivio là sopra è ancora VUOTO |
+| Server | 🔴 **spento** |
+
+⚠️ **Sugli E2E, detto con onestà.** Tutti e 165 passano, ma **la suite completa
+in un colpo solo ne fa cadere circa due per volta quando la macchina è carica**
+— sempre per *attesa* (timeout, `element is not stable`, `ERR_ABORTED`), mai
+affermando un contenuto sbagliato, e con l'insieme dei caduti **diverso a ogni
+esecuzione**. Rilanciati da soli passano tutti, in pochi secondi. Il metodo per
+distinguerlo da una regressione vera sta in `AGENTS.md` §3 (2026-08-11): si
+mette la modifica da parte con `git stash`, si rilanciano *gli stessi* test, e
+se passano su HEAD pulito **e** ripassano con la modifica rimessa, era
+l'ambiente. Fatto due volte l'11/08, con quell'esito.
+
+---
+
+## Che cosa è stato fatto il 2026-08-11
+
+Due lavori, entrambi decisi **misurando prima**, e non committati.
+
+### 0.47.0 — «Sociale e casa» entra nei temi civici, «Urbanistica» no
+
+I due buchi del tema civico erano una decisione **di prodotto**: `CIVIC_TOPICS`
+pilota il selettore del cittadino, il feed «Per te», le stanze della comunità e
+il Question Time. La misura che ha deciso: **quanti contenuti esistenti** ogni
+candidato coprirebbe.
+
+- **`sociale` è entrato** (🏠, viola, categorie **condivise** con `giovani` e
+  `accessibilita`, quindi nessun comportamento esistente cambia). Non esisteva
+  solo per gli atti: tre agganci già nei selettori del cittadino, e **940 atti
+  veri** riclassificati con un ricalcolo una tantum — esattamente 940 cambi,
+  zero altrove. Copertura del tema civico: **72,3%** (era 68,8%).
+- **`urbanistica` NON è entrato**: **zero agganci in tutte e quattro le
+  tassonomie**, cioè una chip che non filtrerebbe mai niente e una stanza che
+  nasce vuota. I 370 atti restano senza tema, che è un fatto. **Condizione che
+  lo riapre: quando una tassonomia di contenuto avrà una categoria urbanistica,
+  o quando la pagina dell'archivio (O11) mostrerà il bisogno del filtro.**
+
+Il fermo dei 102 uffici dichiara ora **45 coperti** (erano 42).
+
+### 0.48.0 — La pipeline degli atti gira da sola, e senza browser
+
+Era il debito più grosso. La misura che ha ribaltato il piano: **in produzione
+Playwright non c'era.** Il `Dockerfile` fa `npm ci`, che installa il pacchetto
+ma **non i binari del browser** — quindi un cron dentro il container sarebbe
+partito verso «Executable doesn't exist», e lo si sarebbe scoperto da un log
+che nessuno guarda.
+
+Il browser però non serviva: il WAF guarda lo **user-agent** e l'export vuole i
+**cookie del portlet**, e `fetch` fa tutte e due. Misurato su tutte e quattro
+le griglie (albo 2,6s · storico 13,47MB in 178s · le piccole ~1s), e il carico
+da zero produce **la stessa identica distribuzione dei temi** del database
+riempito col motore vecchio. L'alternativa costava **427MB per immagine**.
+
+Tre cose che ne sono uscite, tutte trovate misurando o rompendo:
+
+1. 🔴 **`paginaDiBlocco` non riconosceva la pagina di blocco vera** — guardava
+   4.000 caratteri, le spie stanno a 38.709. La lettura archiviava «errore»
+   dove il fatto era «bloccata». **Difetto preesistente**, non del motore
+   nuovo; il test che lo copriva usava una pagina inventata e corta.
+2. **Su un archivio vuoto il giro fa il carico completo, da sé** — leggere solo
+   l'albo lascerebbe 220 atti su 26.644 col monitor che dice «Aggiornato». È lo
+   stato della produzione, cioè dove il primo scatto sarebbe finito.
+3. **Non si passa a WAL**, misurato: il carico iniziale tiene il database
+   bloccato **1,23s in tutto** (mediana 21ms, massima 84ms) contro un
+   `busy_timeout` di 5.000ms — margine 59×.
+
+**Quello che manca è solo l'attivazione**, e vuole il server acceso: comando,
+frequenza e ripiego stanno in [`docs/pipeline-atti-schedulata.md`](pipeline-atti-schedulata.md) §2.
 
 ---
 
@@ -119,76 +280,70 @@ non ha mai visto un rosso non è provato.
 
 ## IL LAVORO
 
-### 1. I due buchi del tema civico degli atti ⬅️ **si comincia da qui**
+> ✅ I due lavori che aprivano questa sezione — **i buchi del tema civico** e
+> **la pipeline che non girava da sola** — sono stati fatti l'11/08. Il
+> racconto sta più in alto; qui resta ciò che ne è avanzato.
 
-**Misurato, non stimato:** 18.515 atti su 26.978 (69%) hanno un tema civico. Dei
-restanti, la gran parte è **amministrazione interna** (personale 1.612, bilancio,
-affari legali, tributi, contratti, demografici) e per quelli «nessun tema» è la
-risposta giusta. Ma due gruppi sono buchi veri:
+### 0. Quello che resta della pipeline: **accendere il server e attivare il task**
 
-| Buco | Atti | Uffici |
-|---|---:|---|
-| **Sociale e casa** | **970** | `U.O. Servizi per l'abitare` (566), `U.O. Progettazione Sociale…` (211), `U.O. Promozione dell'integrazione e Pari Opportunità` (193) |
-| **Urbanistica ed edilizia privata** | **373** | `Servizio Urbanistica e Assetto del Territorio` (268), `U.O.C. Urbanistica` (29), `Regolamento Urbanistico` (45), `Paesaggistica e Città Storica` (14), `U.O.C. Edilizia Privata` (17) |
+Il codice c'è, misurato e provato rosso. Manca l'attivazione, che vuole il
+server acceso ed è **tua**: comando, frequenza, fuso e ripiego stanno in
+[`docs/pipeline-atti-schedulata.md`](pipeline-atti-schedulata.md) §2. Finché non
+è attivo, **in produzione l'archivio resta vuoto** e il monitor dice «Mai
+letto» — che è la verità, non un guasto.
 
-`CIVIC_TOPICS` (`src/lib/civic-topics.ts`) ha dodici temi e **non ha né
-«sociale» né «urbanistica»**. Il più vicino al primo è `giovani`, e mettere le
-politiche della casa sotto *Giovani* sarebbe visibilmente falso; un permesso di
-costruire non è un'opera pubblica, quindi non entra in `lavori`.
+### 1. Allineare ROADMAP.md, poi SUBITO O10 ⬅️ **si comincia da qui**
 
-⚠️ **Non è una decisione tecnica.** `CIVIC_TOPICS` pilota il **selettore dei
-temi che il cittadino sceglie**, il feed «Per te» e le notifiche: aggiungere un
-tema cambia una superficie pubblica. Quindi:
+Deciso da Lorenzo il 12/08: prima il piano si riallinea alla direzione
+(direzione-prodotto §3), poi si apre **il battesimo di Pistoia.app** con la
+ricognizione visiva — il dettaglio operativo sta nel prompt qui sopra, punto 2.
 
-1. **Misura prima**: quanti contenuti *esistenti* (segnalazioni, proposte,
-   eventi, opere) finirebbero nei temi nuovi? Un tema civico che esiste solo per
-   gli atti è un tema che al cittadino non serve. `CivicTopic` ha
-   `reportCats`/`proposalCats`/`eventCats`/`operaCats` proprio per questo.
-2. **Porta le opzioni**, non la soluzione: aggiungere due temi, aggiungerne uno
-   solo, o lasciare gli atti senza tema e dichiararlo in pagina.
-3. Se si aggiungono, le regole stanno in `REGOLE_UFFICIO` (`src/lib/atti.ts`) e
-   **il test dei 102 uffici va aggiornato** — è un fermo, non una verifica: se
-   diventa rosso su un ufficio che non intendevi toccare, hai spostato altro.
+### 2. Le maturità ex-O8, dentro/dopo il battesimo
 
-### 2. 🔴 La pipeline non gira da sola, e in produzione non è mai girata
+Scorciatoie da tastiera col pannello «?» (la command palette esiste
+dall'ondata 0), OG image dinamiche (Next le fa nativamente — **dopo il
+rebrand**, o nascono col marchio vecchio), alto contrasto + font grande
+(catena del tema e modalità semplice già in piedi — **senza** la lettura
+audio, che è un'altra funzione).
 
-**È il debito più grosso lasciato aperto, e non è una svista: è che non è stato
-deciso come.** `npm run atti` si lancia **a mano**. Ne discende:
+⚠️ Per l'alto contrasto vale `DESIGN.md` §4: **se aggiungi un colore, misura la
+coppia colore/`-soft`** — è lì che il contrasto è caduto la prima volta, e non
+si vede guardando.
 
-- in **produzione l'archivio è VUOTO** — il modello c'è, il monitor dice «Mai
-  letto», ma nessuno ha mai lanciato la lettura là sopra;
-- il **cancello di freschezza** (`npm run atti:freschezza`) misura una cosa che
-  nessuno alimenta: oggi è verde perché la lettura l'ho lanciata io.
+### 3. Poi: l'ex-Ondata 9, trasformata dalla direzione
 
-Le strade, in ordine di costo: un **cron sul server** (`ssh homeserver`, il
-container ha già `tsx`); un **task schedulato** che lancia il comando; o
-lasciarlo a mano e **dirlo nel monitor** invece di far sembrare l'archivio vivo.
-⚠️ La lettura iniziale costa **161s e 13,4MB**; il giro quotidiano è l'albo,
-**2 secondi**. Quindi il costo ricorrente è irrisorio: manca solo chi lo chiama.
-
-### 3. Poi: le maturità del backlog di O8
-
-Definite, fattibili, non chiedono di inventare niente: scorciatoie da tastiera
-col pannello «?» (la command palette esiste dall'ondata 0), OG image dinamiche
-(Next le fa nativamente), alto contrasto + font grande (catena del tema e
-modalità semplice già in piedi — **senza** la lettura audio, che è un'altra
-funzione).
-
-### 4. Poi: Ondata 9 — il progetto si racconta
-
-Le quattro superfici con cui il prodotto parla di sé, in `/progetto/*` a firma
-della Redazione: roadmap pubblica, voto alle funzionalità, changelog, idee e
-problemi. Il footer ha già la colonna «Il progetto» dove attaccarle.
+«Chi siamo» e changelog diventano **parte del lancio** (fiducia); roadmap
+pubblica e voto alle funzionalità arrivano quando c'è un pubblico che vota.
+Il footer ha già la colonna «Il progetto» dove attaccarle.
 
 ---
 
 ## Debiti aperti, ognuno con la condizione che lo chiude
 
+### Nuovi, dal 2026-08-11
+
+0. 🆕 **Il tema «urbanistica» resta fuori**, con i 370 atti senza tema. Non è
+   una svista ma il criterio applicato: zero agganci nelle quattro tassonomie
+   di contenuto, cioè una chip che non filtra niente e una stanza vuota.
+   **Condizione: quando una tassonomia di contenuto avrà una categoria
+   urbanistica — per esempio un ambito proposta «Urbanistica» per le
+   osservazioni ai piani — o quando la pagina dell'archivio (O11) mostrerà il
+   bisogno del filtro davanti alla pagina vera.**
+0b. 🆕 **La suite E2E completa è intermittente sotto carico**: ~2 test per
+   volta cadono per attesa, diversi ogni esecuzione, e passano tutti se
+   rilanciati da soli. Non è una regressione, ed è documentato in `AGENTS.md`
+   §3 col metodo per distinguerlo. **Condizione: si chiude alzando i tempi
+   d'attesa dei punti fragili uno per uno — il primo è già chiuso
+   (`trasparenza.spec.ts`, `waitForURL` sul dettaglio della proposta) — oppure
+   dichiarando che la suite si lancia a macchina scarica.**
+
 ### Nuovi, dal 2026-08-09
 
-1. 🆕 🔴 **La pipeline degli atti non ha uno scheduler** e in produzione non è
-   mai girata. Vedi il Lavoro 2 qui sopra. **Condizione: si chiude quando
-   qualcosa la chiama da sé, o quando il monitor dichiara che è a mano.**
+1. ✅ ~~**La pipeline degli atti non ha uno scheduler**~~ — **chiusa a metà
+   l'11/08.** Il codice gira da solo, senza browser, e sa fare da sé il carico
+   iniziale su un archivio vuoto. **Resta l'attivazione dello Scheduled Task su
+   Coolify, che vuole il server acceso** (`docs/pipeline-atti-schedulata.md`
+   §2): finché non c'è, in produzione l'archivio resta vuoto.
 2. 🆕 **L'importo degli atti NON esiste in questa fonte.** `Spesa prevista` vale
    `0,00` in **tutte** e 26.588 le righe, e la pagina del singolo atto non lo
    porta — la ROADMAP descriveva il modello `Atto` con «importo», e quel campo
@@ -278,8 +433,9 @@ problemi. Il footer ha già la colonna «Il progetto» dove attaccarle.
 
 ## Decisioni di forma lasciate aperte
 
-- **I due temi civici nuovi** (sociale, urbanistica): è il Lavoro 1, e la
-  decisione è di prodotto, non tecnica.
+- ✅ ~~**I due temi civici nuovi** (sociale, urbanistica)~~ — **decisi l'11/08
+  sui mockup iniettati**: «Sociale e casa» è entrato con categorie condivise,
+  «urbanistica» no e con la condizione che lo riapre (debito 0).
 - **`.btn-sm` ha la stessa altezza di `.btn-md`** e si distingue solo per il
   respiro orizzontale. Se vuoi tre gradini distinti, la leva è **rinominare, non
   abbassare**.
@@ -307,6 +463,20 @@ problemi. Il footer ha già la colonna «Il progetto» dove attaccarle.
 ---
 
 ## Problemi noti — ambiente (costano ore)
+
+0. 🆕 🔴 **IL SERVER È SPENTO** (11/08). Risponde al **ping** ma non ha
+   **nessuna porta aperta** (22, 80, 443, 8000), e sulla macchina non c'è
+   nessun processo VMware in esecuzione. ⚠️ Il ping che risponde inganna: non è
+   una prova che la VM sia viva. Finché è spento non si possono misurare il
+   disco, lo stato di Coolify, la produzione — né attivare lo Scheduled Task.
+0b. 🆕 **`comando | tail` restituisce l'exit code di `tail`**, quindi un
+   cancello rosso si legge verde: `npm run rotte 2>&1 | tail -12` è morto su un
+   timeout e la notifica ha riportato **exit 0**. Si redirige su file e si
+   legge `$?` prima del `tail`. Dettaglio in `AGENTS.md` §3.
+0c. 🆕 **A macchina carica gli E2E cadono**, ~2 per volta e sempre diversi,
+   tutti per attesa. Non lanciare due cose pesanti insieme: la suite completa
+   costa ~22 minuti a macchina scarica e ~29 a macchina carica, quindi
+   parallelizzare non fa nemmeno risparmiare tempo.
 
 1. **🔴 IL DISCO DEL SERVER SI RIEMPIE, E BUTTA GIÙ COOLIFY.** Ogni deploy costa
    **2,82GB** su un disco da **40GB**, e Coolify non cancella l'immagine
