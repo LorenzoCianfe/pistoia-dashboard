@@ -15,6 +15,11 @@ graphify-out/
 # ne abbiamo tratto vive in REFERENCES.md, che è la parte che serve davvero.
 refs/
 
+# Stessa ragione per le schermate della ricognizione di O10 (2026-08-12):
+# 21 riferimenti raccolti col browser, lavoro altrui. L'analisi con i link
+# vive in docs/ricognizione-visiva.md, che è la parte committata.
+refs-o10/
+
 # App-level ignores live in pistoia-dashboard/.gitignore
 
 # Artefatti Playwright, se la suite viene lanciata dalla radice per errore:

@@ -5,7 +5,12 @@
 > coerente con quanto scritto qui, o si corregge la scelta o si aggiorna
 > (consapevolmente) questo documento.
 >
-> Ultime revisioni: **2026-08-09** (§11.7 *nessun controllo esce dal proprio
+> Ultime revisioni: **2026-08-12** (due note dalla ricognizione di O10: la
+> questione aperta del vetro sul contenuto in §6 — il canone HIG dice il
+> contrario, si scioglie con le direzioni — e l'avvertenza sul lime diventato
+> moda in §4. ⚠️ §1 «è il Comune che parla» è SUPERATO dalla direzione di
+> prodotto e si riscrive dentro il battesimo di O10, non prima) ·
+> **2026-08-09** (§11.7 *nessun controllo esce dal proprio
 > contenitore*: da trappola trovata guardando a **vincolo con un cancello suo**,
 > con la distinzione fra ciò che è fuori vista e ciò che è fuori portata) ·
 > **2026-08-07** (§6 *una coda è una lista, e il lavoro è una
@@ -116,6 +121,13 @@ da usare male. Su bianco fa **1,1:1**: come testo o icona è illeggibile.
 
 Per costruzione esiste `bg-highlight` ma **non** `text-highlight`.
 
+> ⚠️ **2026-08-12, dalla ricognizione di O10** (`docs/ricognizione-visiva.md`
+> §2-ter): il lime è diventato **l'accento di moda di mezzo mestiere** — tre
+> apparizioni in cima a ricerche generiche in un giorno. Non si toglie, ma
+> **non si promuove mai a colore d'identità**: «lime su grigio caldo» oggi è
+> un template, non una firma. L'identità la portano il rosso della città e i
+> motivi veri.
+
 ### Altre regole
 
 - **Un colore dominante per schermata.** Le pagine non sono arcobaleni.
@@ -207,6 +219,16 @@ l'opposto della regola precedente ed è voluto.
   `backdrop-filter: blur(24px) saturate(180%)`, filo di luce interno sul bordo
   superiore, bordo capello. **Niente ombre diffuse**: l'elevazione si comunica
   con la translucenza e col filo, non con un bagliore attorno alla card.
+
+  > ⚠️ **Questione aperta dal 2026-08-12, si scioglie con le direzioni di
+  > O10.** La ricognizione (`docs/ricognizione-visiva.md` §1) ha letto il
+  > canone Apple per intero, e dice l'opposto di questa regola sul punto che
+  > conta: *«Don't use Liquid Glass in the content layer»* — il vetro sta sul
+  > telaio (barre, navigazione, controlli), il contenuto su materiali pieni.
+  > Le due direzioni montate per Lorenzo (D1 vetro-sul-telaio · D2
+  > vetro-sulle-card alzato di grado) sono esattamente questa biforcazione:
+  > quando sceglie, **questo paragrafo si riscrive consapevolmente** — non si
+  > lascia in disaccordo silenzioso col canone dichiarato.
 
   La *saturazione* non è un vezzo: sfocare rende il fondo indistinto ma lo
   sbiadisce, e il boost restituisce il colore che la sfocatura toglie. È il

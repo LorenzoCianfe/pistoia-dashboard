@@ -6,7 +6,10 @@
 >
 > **Leggilo per intero all'inizio di ogni sessione, prima di toccare codice.**
 >
-> Aggiornato: 2026-08-11 (**il tema civico «Sociale e casa»**, deciso misurando
+> Aggiornato: 2026-08-12 (**la ricognizione col browser**: il pannello Browser
+> non composita senza schermo — si fotografa col DevTools MCP e `filePath`; i
+> banner dei consensi possono vivere in shadow DOM; i muri «accetta o paga» si
+> saltano e si dichiara). Prima: 2026-08-11 (**il tema civico «Sociale e casa»**, deciso misurando
 > quanti contenuti *esistenti* ogni tema candidato coprirebbe · **la pipeline
 > degli atti che gira da sola**, senza browser — `npm ci` non installava i
 > binari, quindi in produzione sarebbe morta al primo scatto · le cinque
@@ -958,6 +961,31 @@ plausibile. Il dettaglio sta in `docs/pipeline-atti-schedulata.md`.
    **quando un lavoro periodico ha un primo scatto diverso dagli altri, quel
    primo scatto va progettato — o capiterà in produzione senza che nessuno
    guardi.**
+
+### Tre trappole della ricognizione col browser (2026-08-12)
+
+Pagate raccogliendo i riferimenti visivi di O10. Valgono per qualunque
+sessione che navighi il web da agente.
+
+1. **Il pannello Browser (`mcp__Claude_Browser__*`) non composita se non è a
+   schermo**: `screenshot` esce con «the Browser pane is not displayed» in
+   qualunque sessione senza display. Per navigare E fotografare si usa il
+   **DevTools MCP** (`mcp__plugin_chrome-devtools-mcp_*`), che gestisce un
+   Chrome proprio: `take_screenshot` inline per guardare, con `filePath` per
+   salvare. ⚠️ Le schermate salvate nello scratchpad **muoiono con la
+   sessione**: ciò che deve sopravvivere si copia in una cartella del
+   progetto ignorata da git (`refs-o10/` è il precedente, con la motivazione
+   in `.gitignore`).
+2. **I banner dei consensi possono vivere in shadow DOM** (hel.fi/HDS: il
+   pulsante non esiste per `document.querySelectorAll`). Si cerca camminando
+   gli `shadowRoot`; e la scelta è sempre la più riservata («solo necessari»,
+   «rifiuta», «continua senza accettare»). I muri **«accetta tutto o paga»**
+   (theguardian.com) si saltano e si dichiara nel documento: la via che
+   rispetta la privacy non può essere comprare l'accesso.
+3. **«Human Verification» su Dribbble si risolve da sola** dopo qualche
+   secondo (interstitial, non CAPTCHA): si aspetta e si riprova una volta
+   prima di scartare la fonte. Se resta un CAPTCHA vero, la fonte si scarta —
+   mai aggirarlo.
 
 ---
 
