@@ -7,7 +7,74 @@
 > Legenda: ✅ completa · 🚧 in corso · 🔒 richiede verifica · 👤 richiede login ·
 > 🔗 **dati reali, ogni riga con la propria fonte** (non dimostrativi)
 >
-> Aggiornato: 2026-08-09 (Ondata 8 · la pipeline degli atti: 26.591 atti reali, lettura, cancello di freschezza e monitor sul cruscotto)
+> Aggiornato: 2026-08-12 (Ondata 10 · **il marchio Pistoia.app**: identità
+> propria in testata, footer, metadata e firme; lo stemma resta solo dove si
+> *parla del* Comune) · prima: 2026-08-09 (Ondata 8 · la pipeline degli atti:
+> 26.591 atti reali, lettura, cancello di freschezza e monitor sul cruscotto)
+
+---
+
+## −1. Identità (Ondata 10 — il battesimo, 2026-08-12)
+
+| Cosa | Dove | Note |
+|---|---|---|
+| **Marchio Pistoia.app** ✅ | `components/brand/wordmark.tsx` | Segno + logotipo con «.app» nel rosso della città. Due taglie (`sm` per le superfici minute, `md` per le testate) e il logotipo nascondibile sotto `sm`, dove resta il solo segno |
+| Il marchio in testata | top-bar autenticata e anonima, landing, login, footer, testata di stampa del digest | Misurato: rosso **4,56:1** sulla testata (soglia 3:1 per il testo grande), segno **14,4:1**, link **isolato di 84px** — dentro l'eccezione di spaziatura dei 44px |
+| **Lo stemma esce dall'identità** ✅ | `components/brand/crest.tsx` resta, ma solo dove si *parla del* Comune | Firma le risposte ufficiali dell'ente (`post-card`, dettaglio proposta). Fuori da testate, marchio e metadata: uso informativo sì, identitario no (`direzione-prodotto.md` §1.4) |
+| Il marchio sul mesh sta su **pastiglia piena** | pannello del login | Non è estetica: sul mesh il «.app» faceva **2,45:1** e **1,17:1**. Il marchio è payload, e il payload si legge sul pieno |
+
+⚠️ **Il segno «P» è un placeholder dichiarato.** Il marchio disegnato — segno
+da griglia geometrica, derivato dalle fasce romaniche e dal verde dei vivai,
+mai araldico — è lavoro di O10 e non è ancora stato fatto.
+
+---
+
+## −0.5. La prima pagina (Ondata 10, 2026-08-12)
+
+La rotta `/` era una landing di presentazione che **reindirizzava gli
+autenticati** a `/la-mia-citta`. Ora è **pubblica e uguale per tutti**
+(`direzione-prodotto.md` §1.6-bis.1): si legge tutto senza registrarsi, e
+l'account serve solo per *agire*.
+
+| Cosa | Dove | Note |
+|---|---|---|
+| **Striscia dei dati** ✅ | `components/prima-pagina/striscia-dati.tsx` | Aggiornamento, atti dell'anno, ultimi 7 giorni, archivio. ⚠️ Tutti da `count`, mai dalla lunghezza della lista mostrata. Ferma per disegno: `DESIGN.md` §7 non concede animazioni ambientali |
+| **Il fatto del giorno** ✅ | `components/prima-pagina/fatto-del-giorno.tsx` | Titolo umano **curato dalla redazione** + didascalia + **oggetto ufficiale integrale** su superficie opaca dentro la card di vetro. Il kicker del tema è la pastiglia `--red-soft`+`--red-ink` (4,52:1), la «dose 2» del rosso |
+| 🔴 **Senza cura non c'è apertura** | `lib/prima-pagina.ts` → `fattoDelGiorno()` | Se nessuno ha curato, la home apre col fiume e col monumento. **Nessun ripiego sul giorno prima.** Coperta dai test unit |
+| **Il numero-monumento** ✅ | `components/prima-pagina/monumento.tsx` | Isola scura (P4). Tre righe coi nomi e **come si arriva alla carica**; **mai il partito**, ed è misurato (`fonti-organigramma.md` §2.2). Un test lega le righe al totale |
+| **Il fiume del giorno** ✅ | `components/prima-pagina/fiume-atti.tsx` | Sei righe leggibili **per struttura** (tipo, numero, tema, ufficio) col numero vero del giorno accanto. Le righe non sono link: la pagina atto non esiste ancora, e l'URL dell'albo scade in ~15 giorni |
+| **Le tre porte** ✅ | `components/prima-pagina/porte-citta.tsx` | Quartiere, pagella, segnala. Col **lucchetto** per chi è anonimo, e col perché distinto: *agire* chiede un account per disegno, *leggere* è un residuo che cade col riordino |
+| **Archivio vuoto = stato disegnato** ✅ | `(pubblico)/page.tsx` | È lo stato della **produzione** finché la lettura schedulata non esiste: dice «non ancora letto» invece di mostrare zeri |
+| **La cura del fatto del giorno** ✅ | `/redazione` · `components/redazione/cura-fatto-del-giorno.tsx` | **Non** in area Comune: `/admin` è «Riservato al Comune». Gate `requireRedazione` (solo `MODERATOR`). Uno **strumento**, non una coda: niente contatore. Con le tre righe di guida del registro «Il Post» (P18) |
+
+⚠️ **Il rifiuto che giustifica il campo**: se il titolo umano è l'oggetto
+ufficiale ricopiato, la barriera che si voleva togliere dalla cima della prima
+pagina è stata rimessa lì a mano. `validaCura()` lo respinge, e un E2E lo prova.
+
+---
+
+## −0.4. Il guscio (Ondata 10, 2026-08-12)
+
+Nasce da una domanda di Lorenzo — *«il menù è sempre laterale a sinistra? è
+molto old style vero?»* — e da due misure che le hanno dato ragione.
+
+| Cosa | Misura | Dove |
+|---|---|---|
+| **Il guscio è largo 1.680px** ✅ | Era 852 di colonna a qualunque schermo: a 1.700px di finestra **624px di margine morto**, il 50,1% vuoto | `--container-guscio` in `globals.css`, utility `max-w-guscio`. **Una definizione sola** per cinque punti: due testate, guscio, footer, layout pubblico |
+| **L'isola di vetro flottante** ✅ | La barra era alta **870px per 236px di contenuto**: 73% vuoto in permanenza, per cinque voci | `components/app/side-nav.tsx` · abbraccia il contenuto, galleggia staccata dal bordo, larga 224px |
+| **La goccia** ✅ | Si deforma sulla **velocità** (`useVelocity`), `scaleX` all'inverso per conservare il volume | Reattiva — passaggio, fuoco da tastiera, cambio pagina — e **ferma a riposo** |
+| **Il guscio dà lo spazio, il testo si dà la misura** ✅ | Senza tetti l'oggetto ufficiale passava a **95 caratteri/riga**; il fiume a **108** | Tetti in `ch`: oggetto 80, didascalie 68. Il **titolo no**: occupa la colonna. Il fiume passa a **due colonne** (53 car/riga) |
+
+⚠️ **La goccia è reattiva e non ambientale, ed è una decisione di Lorenzo.** La
+richiesta diceva «si muovono anche senza selezionarle»: contraddiceva
+`DESIGN.md` §7 e `AGENTS.md` §2, ed è stata portata alla sua scelta fra tre
+gradi invece che eseguita. Le due metà del contratto — *ferma a riposo* e
+*nessuna animazione con `prefers-reduced-motion`* — sono provate da
+`porte.spec.ts`, perché nessuno dei quattro cancelli le vede.
+
+⚠️ **La verità di «dove sono» non dipende dalla goccia**: va a visitare la voce
+sorvolata, quindi l'attiva porta una tacca teal che non si sposta e
+`aria-current`.
 
 ---
 

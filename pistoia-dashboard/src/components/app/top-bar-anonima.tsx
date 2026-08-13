@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Crest } from "@/components/brand/crest";
+import { Wordmark } from "@/components/brand/wordmark";
 import { PreviewBadge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 
@@ -23,12 +23,11 @@ export function TopBarAnonima() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-surface/80 backdrop-blur-lg print:hidden">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+      {/* Stessa misura del contenuto sotto: `max-w-guscio`, una definizione
+          sola in `globals.css`. */}
+      <div className="mx-auto flex h-16 max-w-guscio items-center justify-between gap-3 px-4 sm:px-6">
         <span className="flex items-center gap-2.5">
-          <Crest className="h-8 w-auto" />
-          <span className="hidden font-bold tracking-tight sm:inline">
-            Comune di Pistoia
-          </span>
+          <Wordmark logotipoClassName="hidden sm:inline" />
           <PreviewBadge className="hidden md:inline-flex" />
         </span>
 

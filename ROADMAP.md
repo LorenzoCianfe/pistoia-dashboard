@@ -437,20 +437,79 @@ l'identità.
    D2 «vetro di città»** (più la tesi condivisa D3 per la notte) su tre
    pagine vere — la futura prima pagina `/`, una pagina atto, una di lavoro —
    fotografate nei due temi, col test dell'intruso su ogni proposta.
+   ✅ **Montate il 12/08**, consuntivo in
+   [`docs/montaggio-d1-d2.md`](docs/montaggio-d1-d2.md): 16 schermate in
+   `mockups-o10/` (fuori da git), contenuti da atti **veri** di `dev.db`, zero
+   codice del prodotto toccato. Il fatto misurato che ne esce e che vale per
+   qualunque direzione vinca: **il rosso come testo minuto non regge AA sulla
+   tela** (3,69:1 — e nemmeno `--red-ink`, 4,48), quindi vive su superficie
+   piena o dentro la pastiglia `--red-soft`+`--red-ink` (4,52). Sul vetro di
+   D2 il rosso pieno fa 4,31: D2 si porta dietro il vincolo `--red-ink`.
+   **In attesa del giudizio di Lorenzo** su direzione, dose del rosso, isola
+   scura e striscia dei dati in cima.
 3. **Dentro il vestito scelto, in ordine di dipendenza:**
-   - il **rebranding** — marchio «Pistoia.app» con «.app» nel rosso della
-     città + segno (il «P» attuale è un placeholder dichiarato); **censimento
-     prima, sostituzione poi** (grep, mai alla cieca) di «Comune di Pistoia» /
-     «Dashboard di Pistoia» hardcoded in testate, footer, metadata, manifest,
-     email, README; **via lo stemma come identità** — resta legittimo dove si
-     *parla del* Comune (uso informativo, §1.4);
-   - la **prima pagina pubblica su `/`** — il fatto del giorno dagli atti +
-     UN numero-monumento + le didascalie della redazione (§1.6-bis): oggi
-     quella rotta non è una prima pagina. ⚠️ `e2e.db` non ha atti per disegno:
-     i suoi test seminano atti di prova propri, il seed non riempie mai `Atto`;
+   - ✅ **2026-08-12 — il rebranding, fatto** (v0.49.0). Censimento **prima**:
+     23 occorrenze, separate in **identitarie** (testate, landing, login,
+     footer, metadata, firma della redazione, email di benvenuto, pagine
+     legali, pagine del voto QR → sostituite) e **informative** (le fonti della
+     giunta e del costo, `authorName` delle risposte ufficiali, il badge
+     «Account ufficiale Comune», `chi-pubblica`, la pagella → **intatte**).
+     Nato `components/brand/wordmark.tsx`; **lo stemma è uscito dall'identità**
+     e resta dove si *parla del* Comune; **la scacchiera è uscita dal login**
+     senza essere rimpiazzata da un altro motivo (le fasce a contrasto minimo
+     sopra il mesh si leggono come un blocco di caricamento, non come
+     ornamento). Due difetti trovati **misurando**: il «.app» sul mesh faceva
+     2,45:1 → il marchio sta su pastiglia piena; e il rosso minuto non regge
+     AA sulla tela → regola in `DESIGN.md` §4. **`DESIGN.md` §1 riscritta**
+     nello stesso giro. ⚠️ Il segno «P» resta un **placeholder**: il marchio
+     disegnato (P11) non è ancora stato fatto;
+   - ✅ **2026-08-12 — la prima pagina pubblica su `/`, fatta** (v0.50.0). La
+     rotta era una landing che **reindirizzava gli autenticati**, cioè non
+     mostrava niente a chi era già entrato; ora è pubblica e uguale per tutti,
+     nel gruppo `(pubblico)`. Porta la striscia dei dati (conteggi da `count`,
+     mai da una lista), il **doppio titolo onesto** con l'oggetto ufficiale
+     integrale su superficie opaca, l'**isola scura** del monumento con le tre
+     righe coi nomi e il modo d'accesso alla carica (**mai il partito**), il
+     fiume del giorno e le tre porte — che dichiarano col lucchetto quali
+     chiedono un account oggi.
+     **Il fatto del giorno esiste solo se curato**: tre campi redazionali su
+     `Atto` con la loro migrazione, e `fattoDelGiorno()` in
+     `lib/prima-pagina.ts` che restituisce `null` senza cura — **nessun
+     ripiego sul giorno prima**, che sarebbe la finzione che la decisione
+     vieta. La superficie per curarlo sta su **`/redazione`** e non in area
+     Comune: `/admin` è «Riservato al Comune», e la prima pagina di una
+     piattaforma che osserva il Comune non la può scrivere il Comune.
+     Quattro difetti trovati **guardando** (la cifra display misurata sulla
+     finestra invece che sulla colonna, l'elisione di «l'11 agosto», il
+     `line-clamp` che non troncava, la striscia a 4,53:1) e uno di
+     accessibilità chiuso (**P24**: la cifra non diceva quando aveva finito di
+     contare). ⚠️ E la rotta `/` **non era in nessun cancello di
+     accessibilità**: adesso c'è. Gli atti degli E2E li semina
+     `tests/e2e/semina-atti.ts` da `global-setup`, fuori da `prisma/seed.ts`,
+     che non riempie mai `Atto` per disegno;
+   - ✅ **2026-08-12 — il guscio, fatto** (v0.51.0). Nasce da una domanda di
+     Lorenzo («il menù è sempre laterale a sinistra? è molto old style vero?»)
+     e da due misure: la colonna di lettura era **congelata a 852px** a
+     qualunque schermo (**50,1% di vuoto** a 1.700px di finestra) e la barra
+     laterale era **alta 870px per 236px di contenuto** — 73% vuoto in
+     permanenza, per cinque voci. La barra è ora un'**isola di vetro
+     flottante** che abbraccia il proprio contenuto, con una **goccia** che si
+     deforma sulla propria velocità: **reattiva e mai ambientale**, che è la
+     scelta di Lorenzo fra tre gradi dopo che la richiesta originale («si
+     muovono anche senza selezionarle») è stata portata alla sua decisione
+     invece che eseguita — contraddiceva `DESIGN.md` §7. Il guscio passa a
+     **1.680px** (scelto su tre varianti fotografate), con **una definizione
+     sola** al posto di cinque copie. Ne è uscita una regola nuova in
+     `DESIGN.md` §6: **il guscio dà lo spazio, il testo si dà la misura** — in
+     `ch` — perché allargare il guscio portava l'oggetto ufficiale a 95
+     caratteri per riga e il fiume a 108. Il fiume passa a **due colonne**;
    - il **riordino delle sezioni** — la lettura davanti (atti, soldi, pagella,
      quartieri), «Partecipa» e «Comunità» dopo; la sezione **«Il Comune»**
-     raccontata da fuori (§1.11) — il riordino concreto si decide sui mockup;
+     raccontata da fuori (§1.11) — il riordino concreto si decide sui mockup.
+     ⚠️ Qui cade anche il **lucchetto delle tre porte** della prima pagina:
+     `/quartieri` e `/pagella` chiedono un account **per residenza** nel gruppo
+     `(app)`, non per decisione — e §1.6-bis.1 dice che si legge tutto senza
+     registrarsi;
    - il **logo** — nessuna direzione a priori: decide la ricognizione
      (§1.12.3), provato su testata, icona della schermata home e favicon;
    - i **badge di ruolo verificati** — tanti, colorati, animati, «catchy»; gli
@@ -463,6 +522,14 @@ l'identità.
    vetro alzato ad Apple-grade e il **rosso da dosare con prove di palette sul
    prodotto vero** (vincolo fermo: resta anche il colore d'errore/urgenza, la
    semantica non si confonde).
+   ✅ **Fatto il 12/08**: **§1** riscritta (osservatore indipendente, mai
+   araldica come identità, quattro caratteri con la credibilità al posto
+   dell'affidabilità) · **§3** i motivi (fuori la scacchiera, fuori il filo,
+   *nessun ornamento obbligatorio*) · **§4** la regola misurata del rosso
+   minuto e del contrasto legato alla taglia · **§6** la questione del vetro
+   **chiusa**: resta sulle card, con la disciplina «il dato minuto vive su
+   superficie opaca» · **§12** la riga nuova *nessun ornamento quando non
+   risolve niente*.
 
 **Dentro/dopo il battesimo entrano le tre maturità ex-O8** (decisione del
 12/08): scorciatoie da tastiera col pannello «?», **OG image dinamiche (dopo

@@ -1,15 +1,17 @@
-# Design — Dashboard di Pistoia
+# Design — Pistoia.app
 
 > Direzione estetica e linguaggio visivo della piattaforma. Questo documento è
 > la fonte di verità per ogni decisione di design: se una scelta visiva non è
 > coerente con quanto scritto qui, o si corregge la scelta o si aggiorna
 > (consapevolmente) questo documento.
 >
-> Ultime revisioni: **2026-08-12** (due note dalla ricognizione di O10: la
-> questione aperta del vetro sul contenuto in §6 — il canone HIG dice il
-> contrario, si scioglie con le direzioni — e l'avvertenza sul lime diventato
-> moda in §4. ⚠️ §1 «è il Comune che parla» è SUPERATO dalla direzione di
-> prodotto e si riscrive dentro il battesimo di O10, non prima) ·
+> Ultime revisioni: **2026-08-12** (il battesimo: **§1 riscritta** — non è più
+> «il Comune che parla» ma un osservatore indipendente, con la distinzione
+> dall'ente promossa a quarto carattere e il divieto di araldica come
+> identità; **§4** la regola misurata del rosso minuto, che non regge AA sulla
+> tela; più le due note della ricognizione — la questione aperta del vetro sul
+> contenuto in §6, che le direzioni scioglieranno, e l'avvertenza sul lime
+> diventato moda in §4) ·
 > **2026-08-09** (§11.7 *nessun controllo esce dal proprio
 > contenitore*: da trappola trovata guardando a **vincolo con un cancello suo**,
 > con la distinzione fra ciò che è fuori vista e ciò che è fuori portata) ·
@@ -34,22 +36,41 @@
 
 ## 1. Carattere: civica, toscana, contemporanea
 
-La Dashboard di Pistoia rappresenta un'istituzione. Il suo design deve
-trasmettere tre cose, in quest'ordine:
+> **Riscritta il 2026-08-12, dentro il battesimo di O10.** Questo paragrafo
+> diceva «è il Comune che parla», e non è più vero: Pistoia.app è una
+> piattaforma civica **indipendente** che parla *di* Pistoia usando dati
+> pubblici (`docs/direzione-prodotto.md` §1.4). La differenza non è di tono, è
+> di legittimità: presentarsi come l'istituzione senza esserlo brucia la
+> fiducia che tiene in piedi tutto il resto.
 
-1. **Affidabilità** — è il Comune che parla: ordine, gerarchia chiara, niente
-   effetti gratuiti.
-2. **Vicinanza** — è al servizio dei cittadini, non sopra di loro: toni caldi,
-   linguaggio umano, forme morbide.
+Pistoia.app **osserva** un'istituzione, non la rappresenta. Il suo design deve
+trasmettere quattro cose, in quest'ordine:
+
+1. **Credibilità** — non ci si crede sulla parola: ogni numero porta la sua
+   fonte, ogni testo ufficiale resta leggibile com'è scritto, e ciò che è
+   dimostrativo lo dichiara. È l'affidabilità di prima, spostata dall'autorità
+   di chi parla alla verificabilità di ciò che dice.
+2. **Vicinanza** — è dei cittadini, non sopra di loro: toni caldi, linguaggio
+   umano, forme morbide. Il registro è quello del Post (P18): spiegare senza
+   gridare, domandare senza accusare.
 3. **Cura** — una piattaforma curata comunica che la città è curata: ogni
-   dettaglio (stati vuoti, caricamenti, errori) è disegnato, mai lasciato al caso.
+   dettaglio (stati vuoti, caricamenti, errori) è disegnato, mai lasciato al
+   caso.
+4. **Distinzione dall'ente** — 🆕 e non è una preferenza estetica: **mai
+   araldica come identità**. Lo stemma e la scacchiera restano legittimi dove
+   si *parla del* Comune (le fonti, le risposte ufficiali), e sono fuori da
+   testate, marchio e firme. Il rosso della città radica; l'araldica
+   travestirebbe.
 
-**In una frase:** *l'eleganza sobria di un palazzo comunale toscano, con la
-leggibilità di un prodotto digitale moderno.*
+**In una frase:** *la sobrietà di un giornale civico toscano, con la
+leggibilità e la materia di un prodotto digitale moderno.*
 
 Non è: un social network, una startup SaaS, un sito vetrina turistico, un
-template Tailwind. Quando un pattern sembra "già visto su dieci dashboard", è il
-segnale per ridisegnarlo.
+template Tailwind, **né un sito istituzionale**. Quando un pattern sembra "già
+visto su dieci dashboard", è il segnale per ridisegnarlo — e la prova che lo
+misura è il **test dell'intruso** (`docs/ricognizione-visiva.md` P21): ogni
+schermata deve poter dire che cosa, in lei, esiste solo perché questa è
+Pistoia.
 
 ---
 
@@ -78,15 +99,44 @@ decide cosa significa.**
 
 ---
 
-## 3. I tre motivi identitari
+## 3. I motivi identitari
 
-Il design attinge a tre simboli reali di Pistoia. Sono il vocabolario decorativo
+Il design attinge a simboli reali di Pistoia. Sono il vocabolario decorativo
 della piattaforma: ogni ornamento deve derivare da uno di questi, mai da pattern
-generici.
+generici — **e nessun ornamento è obbligatorio**: una superficie senza motivo è
+una scelta legittima, spesso la migliore.
+
+> 🔴 **Rivisto il 2026-08-12 col battesimo, in due tempi.**
+>
+> **Primo tempo:** la scacchiera **esce dal vocabolario identitario**. Evoca lo
+> stemma, e §1 (riscritta lo stesso giorno) dice che l'araldica dell'ente su
+> una piattaforma che l'ente non è sarebbe un travestimento —
+> `direzione-prodotto.md` §1.9 lo scrive alla lettera: «i *colori* della città
+> sì, lo *stemma* e la scacchiera che lo evoca no». Resta dentro `Crest`, cioè
+> **dove si raffigura lo stemma perché si parla del Comune**. Al suo posto era
+> subentrato un filo sfumato nel rosso della città.
+>
+> **Secondo tempo, la sera stessa.** Lorenzo: «mi piaceva la scacchiera». Il
+> rilievo era fondato — quel motivo aveva una cifra — quindi si è fatto ciò
+> che questo progetto fa sempre: **quattro varianti montate sulla card vera e
+> fotografate** (la scacchiera com'era, il filo sfumato, due versioni a moduli
+> monocromi che tenevano il ritmo senza l'alternanza araldica). Verdetto:
+> **«mi fanno tutti pena, non metterci niente».**
+>
+> ✅ **Deciso: in cima alle superfici-firma non va nessun motivo.** È la
+> lezione che vale oltre il caso: quel filo non risolveva un problema,
+> riempiva un'abitudine — e §12 dice «**un** momento memorabile per pagina»,
+> non «un ornamento per card». Una decorazione di cui nessuna variante
+> convince è una decorazione che non serve. Le superfici-firma si distinguono
+> per ciò che dicono e per come sono composte.
 
 | Motivo | Origine | Uso nella UI |
 |---|---|---|
-| **La scacchiera** | Lo stemma comunale, bianco e rosso scaccato | Momenti di brand: crest, favicon, Civic ID Card. Il rosso `--color-error` è *il* rosso dello stemma: riservato a brand ed errore/urgenza, mai decorativo |
+| **Le fasce romaniche** | Il marmo a fasce di San Giovanni Fuorcivitas | Ritmo orizzontale: separatori (`.divider-bande`), pattern tenui negli hero e negli stati vuoti (`.bande-romaniche`). Sempre a contrasto minimo. ⚠️ **Non reggono sopra una superficie mesh**: al 3,5% lì si leggono come un blocco di caricamento (misurato sul pannello del login) |
+| **La città verde** | Pistoia capitale europea dei vivai | Il verde-acqua `--color-accent` è il colore «vivo» della piattaforma: azioni, progressi, dati che crescono |
+| **Il rosso della città** | Il rosso dello stemma, **senza la sua forma** | Marca (il «.app» del marchio), pastiglia del tema sopra i titoli, errore e urgenza. Il colore radica; la forma araldica travestirebbe. ⚠️ Come **testo minuto** si usa `--red-ink` (§4) |
+| ~~La scacchiera~~ | Lo stemma comunale | **Fuori dall'identità dal 2026-08-12.** Sopravvive solo dentro `Crest`, dove lo stemma è il soggetto e non la firma |
+| ~~Il filo in cima alle card~~ | — | **Mai adottato.** Provato in quattro varianti e scartato: nessun motivo sopra le superfici-firma |
 | **Le fasce romaniche** | Il marmo a fasce di San Giovanni Fuorcivitas | Ritmo orizzontale: separatori, pattern tenui negli hero e negli empty state. Sempre a contrasto minimo (`.bande-romaniche`) |
 | **La città verde** | Pistoia capitale europea dei vivai | Il verde-acqua `--color-accent` è il colore "vivo" della piattaforma: azioni, progressi, dati che crescono |
 
@@ -127,6 +177,35 @@ Per costruzione esiste `bg-highlight` ma **non** `text-highlight`.
 > **non si promuove mai a colore d'identità**: «lime su grigio caldo» oggi è
 > un template, non una firma. L'identità la portano il rosso della città e i
 > motivi veri.
+
+### Il rosso come testo minuto non vive sulla tela (misurato 2026-08-12)
+
+Montando D1 e D2 ([`docs/montaggio-d1-d2.md`](docs/montaggio-d1-d2.md) §2) è
+emerso che il **kicker editoriale rosso** — la parola-tema sopra un titolo, il
+precedente FT — nel tema chiaro sta sotto AA appena esce da una superficie
+piena:
+
+| Dove | `--red` | `--red-ink` |
+|---|---|---|
+| Sulla tela `#E8E7E4` | **3,69:1** ❌ | **4,48:1** ❌ |
+| Su card piena | 4,56:1 ✅ | 5,54:1 ✅ |
+| Sul vetro (card al 72%) | **4,31:1** ❌ | 5,23:1 ✅ |
+| Nella pastiglia `--red-soft` | 3,72:1 ❌ | **4,52:1** ✅ |
+
+Nel tema scuro passano tutti. La regola che ne discende, e che non dipende da
+quale direzione vince: **il rosso minuto sta su superficie piena o dentro la
+pastiglia `--red-soft` con `--red-ink`.** È §8 («il testo minuto non va sul
+mesh») estesa dal *testo* al *colore del testo*: anche un colore appena sopra
+soglia perde il margine appena il fondo si schiarisce.
+
+> **Corollario, pagato lo stesso giorno sul marchio.** La stessa tinta cambia
+> norma con la **taglia**: il «.app» a 19px in peso 800 è *testo grande*
+> (soglia 3:1) e fa 4,56 — a 13,5px nel footer la soglia diventa 4,5:1 e lo
+> stesso colore fa **4,3:1**. Venti pagine rosse sul cancello axe, per un
+> colore che era stato misurato e trovato a norma. Da qui `--color-red-ink`
+> come utility (`text-red-ink`, prima esisteva solo la variabile) e la regola:
+> **quando un componente ha più taglie, ogni taglia è un caso di contrasto
+> suo.**
 
 ### Altre regole
 
@@ -220,15 +299,27 @@ l'opposto della regola precedente ed è voluto.
   superiore, bordo capello. **Niente ombre diffuse**: l'elevazione si comunica
   con la translucenza e col filo, non con un bagliore attorno alla card.
 
-  > ⚠️ **Questione aperta dal 2026-08-12, si scioglie con le direzioni di
-  > O10.** La ricognizione (`docs/ricognizione-visiva.md` §1) ha letto il
-  > canone Apple per intero, e dice l'opposto di questa regola sul punto che
-  > conta: *«Don't use Liquid Glass in the content layer»* — il vetro sta sul
-  > telaio (barre, navigazione, controlli), il contenuto su materiali pieni.
-  > Le due direzioni montate per Lorenzo (D1 vetro-sul-telaio · D2
-  > vetro-sulle-card alzato di grado) sono esattamente questa biforcazione:
-  > quando sceglie, **questo paragrafo si riscrive consapevolmente** — non si
-  > lascia in disaccordo silenzioso col canone dichiarato.
+  > ✅ **CHIUSA il 2026-08-12, da Lorenzo, sui mockup.** La ricognizione
+  > (`docs/ricognizione-visiva.md` §1) aveva letto il canone Apple per intero,
+  > e sul punto che conta dice l'opposto: *«Don't use Liquid Glass in the
+  > content layer»* — il vetro sul telaio, il contenuto su materiali pieni.
+  >
+  > **La decisione: il vetro resta sulle card, con una regola in più che lo
+  > rende difendibile.**
+  >
+  > > **Il dato minuto vive sempre su una superficie OPACA, dentro il vetro.**
+  >
+  > È il pattern P2 della ricognizione («il payload si legge sul pieno»), che
+  > combacia con la variante *regular* della HIG: il vetro fa cornice e
+  > atmosfera, la lettura avviene su pieno. Nei mockup è ciò che ha reso il
+  > monumento leggibile in D2 (barre e didascalia su superficie opaca dentro il
+  > vetro), ed è la stessa regola che ha salvato il marchio sopra il mesh del
+  > login (§4-bis di `docs/montaggio-d1-d2.md`).
+  >
+  > **La deroga al canone è quindi consapevole e circoscritta**: si tiene il
+  > vetro dove Apple non lo metterebbe, ma si adotta la disciplina che lo rende
+  > leggibile. Il costo dichiarato: il confine col «template di vetro» resta
+  > sottile, e la difesa è il test dell'intruso (§1).
 
   La *saturazione* non è un vezzo: sfocare rende il fondo indistinto ma lo
   sbiadisce, e il boost restituisce il colore che la sfocatura toglie. È il
@@ -278,6 +369,77 @@ l'opposto della regola precedente ed è voluto.
   cambia *dove* vive un componente, cambia la sua larghezza — e le larghezze a
   cui è stato verificato non valgono più. `@container` risolve il *come* si
   adatta, non il *se* qualcuno l'ha guardato a quella misura.
+
+  🔴 **Pagata una terza volta il 2026-08-12, e questa volta non era una
+  variante ma un'UNITÀ.** La cifra display si dimensionava con
+  `clamp(3rem, 7vw, 5.5rem)`: `vw` è la larghezza del *viewport*, cioè la
+  stessa cosa che `sm:`/`lg:` guardano. Nella colonna da **343px** del
+  numero-monumento della prima pagina dava 88px, e «689.724» a quella taglia
+  misura **369px** — **55px fuori dalla card**, con `overflow: visible`, quindi
+  sbordava sulla tela invece di essere ritagliato.
+
+  **Nessuno dei quattro cancelli poteva vederlo**, ed è la parte che vale oltre
+  il caso: `shots` misura il traboccamento *della pagina* (zero, perché il
+  numero sborda dalla card e non dal documento), `contenimento` guarda i
+  *controlli* (una cifra non lo è), `bersagli` le *dimensioni*, e axe non ha
+  una regola per «non ci sta». L'ha trovato l'occhio, guardando la schermata.
+
+  Ora è `22cqw`, e il coefficiente è scelto perché **nulla cambi dove oggi
+  funziona**: il tetto di 5,5rem si raggiunge già a ~400px di colonna, quindi
+  `/bilancio` (398px → 87,5px) e `/trasparenza/costo-amministrazione` (803px →
+  88px) restano identici al pixel, e solo le colonne strette scendono quanto
+  serve a starci dentro. **La regola: se una misura deve adattarsi allo spazio
+  di un componente, l'unità è `cqw`, mai `vw`** — è `@container` applicato a
+  una lunghezza invece che a una soglia.
+
+- **La larghezza del guscio: 1.680px, e una definizione sola** (decisa da
+  Lorenzo il 2026-08-12 guardando tre varianti montate sulla prima pagina
+  vera). Era `max-w-6xl` — 1.152px — ripetuto in **cinque punti**: le due
+  testate, il guscio, il footer e il layout pubblico. Adesso è
+  `--container-guscio` in `globals.css`, e l'utility è `max-w-guscio`.
+
+  **Il fatto che ha deciso:** a 1.700px di finestra il vecchio tetto lasciava
+  **624px di margine morto** e la colonna di lettura restava congelata a 852px
+  — cioè **il 50,1% dello schermo era vuoto**, e a 2.560px sarebbe stato il
+  67%. La colonna non cresceva mai, perché il tetto era assoluto.
+
+  ⚠️ **Cinque copie, e il disallineamento si vedrebbe**: la testata deve
+  incolonnarsi col contenuto sotto, quindi cambiarne quattro su cinque sposta
+  il marchio rispetto al titolo. È la regola di §3 sugli indicatori applicata a
+  una misura.
+
+  🔴 **E il tetto del guscio NON è la misura di lettura.** È la conseguenza che
+  conta, ed è emersa misurando: a 1.680 l'oggetto ufficiale di un atto passava
+  a **95 caratteri per riga** (era 54), oltre la soglia in cui l'occhio trova
+  il ritorno a capo. La regola che ne esce:
+
+  > **Il guscio dà lo spazio, il testo si dà la misura** — in `ch`, che conta
+  > caratteri, e non in `px`.
+
+  Oggi: oggetto ufficiale `80ch` (esatto al carattere, è monospaziato),
+  didascalie e sommari `68ch`, il footer i suoi 850px. **Il titolo no**: un
+  tetto sul titolo lasciava mezza card bianca a destra, e in prima pagina il
+  titolo occupa la colonna che ha — si stringe ciò che si legge riga per riga,
+  non ciò che si scandisce a colpo d'occhio.
+
+  E dove la larghezza è un guadagno vero, la si usa: il fiume degli atti passa
+  a **due colonne** da `lg` in su, che riporta la riga da 108 a **53
+  caratteri** *e* riempie lo spazio invece di lasciarlo bianco.
+
+- **L'isola** (P4): l'unica superficie **scura e opaca** di una pagina chiara.
+  Nasce sul numero-monumento della prima pagina, e l'opacità non è gusto —
+  `DESIGN.md` §6 vuole il dato minuto su superficie piena, e l'isola porta nove
+  importi e tre barre; una `.card` sarebbe vetro, e sfocare la tela sotto una
+  superficie scura la schiarirebbe di quel tanto che basta a togliere il
+  contrasto. Nel tema scuro **sale invece di scendere**: una card più nera
+  della tela near-black sparirebbe, quindi la gerarchia la fa un gradino di
+  luminanza (§10). Contrasti misurati: inchiostro **16,3:1** nel chiaro e
+  **13,8:1** nello scuro, testo attenuato 7,1:1 e 6,0:1.
+
+  ⚠️ **Resta aperto se sia una regola di sistema («una isola per pagina») o il
+  gesto della sola prima pagina.** Oggi è il secondo, e finché non lo decide
+  Lorenzo non si generalizza: i token (`--isola*`) e la classe esistono, il
+  vincolo «una per pagina» no.
 
 - **Il `:hover` non è un canale, è un rinforzo** (2026-08-07). Tutto ciò che dice
   «questo si può premere» deve esserci **a riposo**: su un telefono il passaggio
@@ -388,11 +550,46 @@ sobria, mai giocosa. **Livello 3 su 5**: sicura e orchestrata, mai ambientale.
 | **Transizioni di rotta** | Elemento condiviso per lista → dettaglio; cross-fade altrove. **View Transitions native**, non `layoutId` — vedi sotto |
 | **Scroll** | Rivelazione una tantum. **Una sola** sezione narrata per pagina. Nessun parallax |
 | **Micro-interazioni** | Tre soli momenti di festa: invio segnalazione, firma proposta, segnalazione risolta |
+| **Indicatori vivi** | 🆕 Un indicatore può **deformarsi sulla propria velocità** (la goccia della barra laterale). Reattivo — passaggio, fuoco, cambio pagina — e **fermo a riposo**: vedi sotto |
 | **Dati** | I numeri contano da 0 una volta; i grafici si disegnano una volta sola |
 | **Reduced motion** | `prefers-reduced-motion` annulla tutto. Non negoziabile. **Si applica in CSS o nella durata, mai in un ramo del markup** — vedi sotto |
 
 **Librerie.** Motion per tutto ciò che è React. Anime.js solo per lavoro
 nativamente SVG. Nessun GSAP, nessuno sfondo WebGL — vedi `REFERENCES.md` §6.
+
+### La goccia: come si fa «vivo» senza fare «ambientale» (2026-08-12)
+
+Lorenzo ha chiesto una barra laterale «con un menu innovativo, animato, tipo
+goccia di vetro o goccia d'acqua». La formulazione originale diceva anche
+*«che si muovono anche senza selezionarle»*, e **quella parte è stata portata
+alla sua decisione invece che eseguita**: contraddice la riga qui sopra («mai
+ambientale») e `AGENTS.md` §2 (il servizio deve girare su Android vecchi).
+Messo davanti ai tre gradi, ha scelto **reattivo**. La regola resta com'era, e
+la barra è comunque viva.
+
+**Che cosa la rende viva, e non è una durata più lunga.** La deformazione si
+deriva dalla **velocità** dell'indicatore (`useVelocity` sulla posizione): si
+allunga quando corre, si ricompone quando arriva, con `scaleX` all'inverso per
+conservare il volume. Un salto corto la deforma appena, uno lungo la stira —
+che è quel che fa una goccia d'acqua. Con `layoutId` non era ottenibile:
+quello interpola e basta.
+
+Le tre condizioni che la tengono dentro le regole, tutte e tre provate da
+`porte.spec.ts`:
+
+1. **A riposo è ferma.** Due letture a mezzo secondo di distanza devono essere
+   identiche: è la prova che nessuna animazione sta girando.
+2. **Con `prefers-reduced-motion` non anima e non si deforma**: si posiziona.
+3. **La verità di «dove sono» non dipende da lei.** La goccia va a *visitare*
+   la voce sorvolata, quindi la voce attiva porta un segno suo che non si
+   sposta mai — `aria-current`, l'inchiostro pieno, la tacca teal. È §6 («il
+   `:hover` non è un canale, è un rinforzo») applicata a un indicatore.
+
+⚠️ **E la goccia non porta `backdrop-filter`.** L'isola sì, perché è ferma e si
+compone una volta; sfocare lo sfondo di un elemento **che si muove** obbliga il
+compositore a rifare il lavoro a ogni fotogramma. Una superficie translucida
+dentro un pannello già sfocato legge come vetro lo stesso, e costa solo
+trasformazioni.
 
 ### La preferenza di movimento non si legge in fase di render (2026-08-08)
 
@@ -500,6 +697,24 @@ numero circondato da quattro decorazioni non è più leggibile di uno nudo:
 
 Entra contando da zero (≤900ms, `tabular-nums` per non far ballare la
 larghezza). Taglia `md` per le card di stato e le superfici mesh.
+
+> 🔴 **E deve dire quando ha finito** (aggiunto il 2026-08-12, P24 di
+> `docs/ricognizione-visiva.md`). Contando da zero la cifra muta il proprio
+> testo fotogramma per fotogramma: chi usa un lettore di schermo e arriva
+> mentre l'animazione gira sente un numero **intermedio**, e niente gli dice
+> che non è quello definitivo. Era un buco nostro, e **nessuno dei quattro
+> cancelli lo vede**: axe non ha una regola per «il testo sta ancora
+> cambiando». Trovato guardando com'è fatto il contatore di qualcun altro.
+>
+> La prop `annuncio` accende una live region che **parla una volta sola**,
+> quando il valore si assesta. Due precisazioni che la rendono difendibile:
+> vuota finché il conteggio non finisce — una live region che seguisse
+> l'animazione annuncerebbe decine di valori in un secondo — e **non è
+> l'«equivalente nascosto» che questo stesso paragrafo vieta**: quello è un
+> secondo testo permanente da tenere allineato a mano, questo è un annuncio a
+> scatto singolo che prende il valore dallo stesso formattatore della cifra
+> visibile. Omessa, non c'è nessuna live region: la regola «una cifra per
+> schermata» non è imposta dal codice, e due regioni si calpesterebbero.
 
 > *Sostituisce la cifra a matrice di punti (revisione 2026-07-25). La matrice
 > era l'elemento più riconoscibile dei riferimenti ma andava contro il
@@ -683,7 +898,8 @@ un'inversione.
 | ✅ Sì | ❌ No |
 |---|---|
 | Un momento memorabile per pagina | Dieci effetti che competono |
-| Ornamento derivato dai tre motivi | Gradienti generici da template |
+| **Nessun ornamento, quando non risolve niente** | Un fregio su ogni card «perché ci sta» |
+| Ornamento derivato dai motivi identitari | Gradienti generici da template |
 | Lime come sfondo di un chip | Lime come testo o icona |
 | Mesh la cui tinta codifica un dato | Mesh scelto perché "sta bene" |
 | Una cifra display per schermata, in peso leggero | Due numeri che si contendono il ruolo di protagonista |

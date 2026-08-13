@@ -1,9 +1,123 @@
-# Changelog — Dashboard di Pistoia
+# Changelog — Pistoia.app
 
 > Tutte le modifiche rilevanti del progetto, in ordine cronologico inverso.
 > Formato ispirato a [Keep a Changelog](https://keepachangelog.com/it/); le versioni seguono
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
+
+## [0.51.0] — 2026-08-12 · L'isola di vetro, e il sito smette di usare metà schermo
+
+> Nasce da una domanda di Lorenzo — *«il menù è sempre laterale a sinistra? è
+> molto old style vero?»* — e da due misure che le hanno dato ragione con dei
+> numeri invece che con un'impressione.
+
+### Misurato prima di toccare qualsiasi cosa
+- **La colonna di lettura era congelata a 852px** a qualunque larghezza di schermo: `max-w-6xl` faceva da tetto assoluto. A 1.700px di finestra restavano **624px di margine morto** — il **50,1% dello schermo vuoto**, e il 67% a 2.560.
+- **La barra laterale era alta 870px per 236px di contenuto**: il **73% di quella colonna era vuoto in modo permanente**, su ogni pagina, per cinque voci. È il sintomo «old style», e non era un giudizio.
+- Una precisazione onesta emersa misurando: la barra **non è sempre laterale** — sotto i 1024px sparisce e diventa barra in basso.
+
+### Cambiato — la barra laterale è un'isola di vetro flottante
+- **Abbraccia il proprio contenuto** invece di stirarsi a tutta altezza, e galleggia staccata dal bordo. La larghezza resta 224px per scelta di Lorenzo: le etichette non si nascondono dietro un'icona-indovinello.
+- **La goccia**: l'indicatore si deforma sulla **velocità** del proprio movimento (`useVelocity`), con `scaleX` all'inverso per conservare il volume — si allunga quando corre, si ricompone quando arriva. Un salto corto la deforma appena, uno lungo la stira. Con `layoutId` non era ottenibile: quello interpola e basta.
+- 🔴 **Reattiva, mai ambientale — ed è una decisione, non un'implementazione.** La richiesta diceva «si muovono anche senza selezionarle»: contraddice `DESIGN.md` §7 («mai ambientale») e `AGENTS.md` §2 (deve girare su Android vecchi). Portata a Lorenzo come scelta fra tre gradi invece che eseguita o ignorata; ha scelto **reattivo**, e la regola non è stata toccata.
+- **La verità di «dove sono» non dipende dalla goccia**: va a *visitare* la voce sorvolata, quindi l'attiva porta una tacca teal che non si sposta mai, più `aria-current`. È §6 — *il `:hover` non è un canale, è un rinforzo* — applicata a un indicatore.
+- La goccia **non porta `backdrop-filter`**: sfocare lo sfondo di un elemento che si muove rifà il lavoro a ogni fotogramma. L'isola sì, perché è ferma.
+
+### Cambiato — il guscio passa a 1.680px, con una definizione sola
+- **Scelto da Lorenzo su tre varianti montate sulla prima pagina vera** (1.152 · 1.440 · 1.680), fotografate e misurate.
+- `--container-guscio` in `globals.css`, utility `max-w-guscio`. Era `max-w-6xl` ripetuto in **cinque punti** — le due testate, il guscio, il footer, il layout pubblico — e la testata deve incolonnarsi col contenuto: cambiarne quattro su cinque sposta il marchio rispetto al titolo.
+
+### Corretto — le tre cose che la larghezza nuova ha rotto, e la misura le ha trovate tutte
+- 🔴 **L'oggetto ufficiale passava a 95 caratteri per riga** (era 54): oltre la soglia in cui l'occhio trova il ritorno a capo. Da qui la regola nuova di `DESIGN.md` §6: **il guscio dà lo spazio, il testo si dà la misura** — in `ch`, che conta caratteri. Oggi 80ch sull'oggetto (esatto: è monospaziato), 68ch su didascalie e sommari. **Il titolo no**: un tetto lì lasciava mezza card bianca, e in prima pagina il titolo occupa la colonna che ha.
+- **Il fiume degli atti a 108 caratteri per riga** — una terza cosa che non era stata annunciata e che è stata trovata misurando dopo il cambio. Passa a **due colonne** da `lg`: la riga torna a **53 caratteri** *e* lo spazio si riempie invece di restare bianco. È il «taglio basso» di un giornale (P8).
+- **L'unità del monumento si accavallava alla cifra**: 8px fra un numero da 88px e il suo «€ all'anno», perché a colonna larga smettono di andare a capo. Lo stacco è ora proporzionale alla scala, e solo sulla taglia `hero`.
+
+### Aggiunto — il cancello del movimento
+- **`porte.spec.ts` prova le due metà del contratto della goccia**, che nessuno dei quattro cancelli vede — axe non ha una regola per «si sta muovendo da solo»: *a riposo è ferma* (due letture a mezzo secondo devono coincidere) e *con `prefers-reduced-motion` si posiziona senza animare né deformarsi*.
+
+### 🔴 Verificato — e che cosa NON è stato verificato
+- **Verde:** typecheck · lint · **334 unit** · **66 rotte, 0 problemi** · **shots verdi nei due regimi**, normale e semplice a 360px, sulla larghezza nuova · le pagine dense (`/la-mia-citta`, `/admin`, `/bilancio`) guardate una per una a 1.680px.
+- ⚠️ **L'ultimo giro completo di E2E ha dato 177 passati e 2 rossi**, e vanno letti in modo diverso:
+  1. `accessibilita.spec.ts` → «redazione (moderatore)»: l'accesso è andato in **timeout** restando su `/login`. È la firma dell'ambiente documentata in `AGENTS.md` §3 (2026-08-11) — un rosso d'attesa, non di merito, su una suite girata a macchina carica (22,3 minuti contro i 18,3 del giro precedente). **Non riprodotto in isolamento.**
+  2. `porte.spec.ts` → la goccia con `prefers-reduced-motion`: rosso **mio**, e legittimo. Il test leggeva la goccia 50ms dopo il fuoco e pretendeva che fosse già arrivata: una soglia in millisecondi è una scommessa sulla velocità della macchina.
+- 🔴 **Il test è stato RISCRITTO ma NON ESEGUITO** (decisione di Lorenzo: committare senza il giro di verifica). Adesso campiona la goccia fotogramma per fotogramma e pretende che le posizioni distinte siano al massimo due — la proprietà vera, senza tempi dentro. **Condizione che chiude questa nota: al primo giro della prossima sessione si lancia `npx playwright test tests/e2e/porte.spec.ts`, e con lui la suite completa a macchina scarica.**
+
+### Corretto — un commento che era diventato falso
+- Il footer spiegava i propri 850px con «è la colonna di `main` dentro `AppShell`». Col guscio a 1.680 quella colonna è **1.380**: la coincidenza non c'è più, e il commento ora lo dice invece di lasciar credere una cosa che non è. Gli 850 restano perché sono una **misura di lettura**, non il riflesso della geometria di qualcos'altro.
+
+## [0.50.0] — 2026-08-12 · La prima pagina: la città si apre dai suoi atti
+
+> Seconda tappa eseguita dell'Ondata 10, e la prima superficie che nasce già
+> col marchio nuovo invece di essere disegnata due volte. La rotta `/`
+> smette di essere una landing di presentazione e diventa quello che la
+> direzione le chiede (§1.6-bis): **pubblica, uguale per tutti, e viva**.
+
+### Aggiunto — il fatto del giorno, che esiste solo se qualcuno l'ha curato
+- **Tre campi redazionali su `Atto`** (`titoloRedazionale`, `sommarioRedazionale`, `curatoIl`) con la loro migrazione. Sono l'unico posto della piattaforma in cui una persona scrive **sopra** un atto, e ci sono per una ragione misurata: generare il titolo umano è vietato («nessuna frase generata»), ma l'oggetto ufficiale **non è un titolo** — sui 500 atti più recenti misura in mediana **245 caratteri**, p90 **428**, massimo **736**. In cima alla prima pagina sarebbe una barriera, non un magnete.
+- 🔴 **Senza cura non c'è apertura.** Se in un giorno nessuno ha curato niente, la home **non finge**: apre col fiume degli atti e col numero-monumento. La regola vive in `lib/prima-pagina.ts` (`fattoDelGiorno`), è coperta dai test, e **non c'è nessun ripiego sul giorno prima** — un fatto curato ieri, presentato oggi come «il fatto del giorno», sarebbe esattamente la finzione che la decisione vieta.
+- **La superficie per curarlo sta su `/redazione`, non in area Comune.** `/admin` è «Riservato al Comune», e la prima pagina di una piattaforma che **osserva** il Comune non la può scrivere il Comune: il gate è `requireRedazione`, cioè il solo `MODERATOR`. È la linea di R-4 applicata al posto in cui conta di più. Ed è uno **strumento**, non una coda (`DESIGN.md` §6): niente contatore, niente pallino.
+- Con lo strumento arrivano **le tre righe di guida** del registro «Il Post» (P18), che `montaggio-d1-d2.md` §5.4 dichiarava mancanti: chi apre quella pagina vede una casella vuota, e una casella vuota su una prima pagina scivola nel titolo da giornale locale.
+
+### Aggiunto — la prima pagina su `/`
+- **Pubblica e uguale per tutti**: via il `redirect("/la-mia-citta")` che non mostrava niente a chi era già entrato. La rotta si sposta nel gruppo `(pubblico)`, che ha già il contratto giusto — con una sessione rende l'`AppShell` intero, senza rende barra anonima e footer.
+- **La striscia dei dati** in cima (P7, il precedente FT): aggiornamento, atti dell'anno, ultimi 7 giorni, archivio. ⚠️ **Tutti da `count` sul database**, mai dalla lunghezza della lista mostrata — la tentazione era concreta, perché la pagina ha già il fiume in mano.
+- **Il doppio titolo onesto**: titolo umano sopra, **oggetto ufficiale integrale** sotto, su superficie opaca dentro la card di vetro (`DESIGN.md` §6). Non troncato: tagliarlo renderebbe più bella la composizione e **più debole la prova**, che è l'unica ragione per cui quel blocco esiste.
+- **Il numero-monumento** come **isola scura** (P4), con le tre righe coi nomi e **come si arriva alla carica** — mai il partito, ed è misurato (`fonti-organigramma.md` §2.2). Un test lega le righe al totale: se divergessero, la pagina mostrerebbe una cifra che le sue stesse righe non spiegano.
+- **Il fiume del giorno**, leggibile per struttura e non per riscrittura, col numero vero accanto a una lista troncata; e **le tre porte**, che dichiarano col lucchetto quali chiedono un account oggi — un menu di porte chiuse senza avviso è una presa in giro, e il footer lo dice già dal 05/08.
+- **L'archivio vuoto è uno stato disegnato**, non un ramo dimenticato: è lo stato della **produzione** finché la lettura schedulata non esiste, e la striscia dice «non ancora letto» invece di mostrare zeri.
+
+### Corretto — quattro difetti trovati guardando, che nessun cancello vedeva
+- 🔴 **La cifra display si misurava sulla FINESTRA, non sulla colonna.** `clamp(3rem, 7vw, 5.5rem)`: nella colonna da **343px** del monumento dava 88px, e «689.724» a quella taglia misura **369px** — **55px fuori dalla card**, con `overflow: visible`, quindi sbordava sulla tela. È la famiglia di errore che `DESIGN.md` §6 ha già pagato due volte (il footer, la riga di coda) e la cui regola era già scritta. Ora è `22cqw`, che misura il **contenitore**: il tetto si raggiunge già a ~400px, quindi `/bilancio` (398px → 87,5px) e `/trasparenza/costo-amministrazione` (803px → 88px) restano identici, e solo le colonne strette scendono quanto serve.
+- **«il 11 agosto» invece di «l'11 agosto».** In italiano l'elisione dipende dal *suono* del numero: si elide davanti a *otto* e *undici*, non davanti a *diciotto* o *ventotto* — da qui un elenco di due numeri e non una regola sulle cifre, che sbaglierebbe il 18 in silenzio (`dataConPreposizione`). Il giorno si legge dallo **stesso fuso** del formattatore, o su un server a ovest di Greenwich l'articolo finirebbe in disaccordo con la data accanto.
+- **`line-clamp-2` accanto a `block` non tronca niente**: sono due utility che dichiarano entrambe `display`, e vince quella che il foglio generato scrive per ultima — non l'ordine in cui stanno scritte nel JSX. Sulla superficie redazionale uscivano interi tutti e trentuno gli oggetti.
+- **La striscia dei dati usava `--muted-2`**, che sulla tela fa **4,53:1** — tre centesimi sopra AA. Regge, ma è la riga più scandita della pagina, in maiuscoletto spaziato a 11,5px e sulla tela nuda: passata a `--muted` (5,35:1), altrettanto silenzioso.
+
+### Corretto — un buco di accessibilità nostro (P24)
+- 🔴 **`DisplayNumber` non diceva quando aveva finito di contare.** La cifra muta il proprio testo fotogramma per fotogramma: chi usa un lettore di schermo e arriva mentre l'animazione gira sente un numero **intermedio**, e niente gli dice quando quel valore è definitivo. Nessuno dei quattro cancelli lo vede — axe non ha una regola per «il testo sta ancora cambiando». Trovato guardando com'è fatto il contatore di CodeFronts (`ricognizione-visiva.md` P24).
+- Chiuso con una live region che **parla una volta sola**, quando il valore si assesta (`annuncio` su `DisplayNumber`, `onAssestato` su `AnimatedNumber`). ⚠️ **Non è l'«equivalente nascosto» che `DESIGN.md` §8 vieta**: quello è un secondo testo permanente da tenere allineato: questo è un annuncio a scatto singolo, e il valore viene dallo stesso formattatore della cifra visibile.
+
+### Aggiunto — copertura che mancava
+- 🔴 **La prima pagina non era in nessun cancello di accessibilità.** La rotta `/` non è mai stata in `pagine-cancello.ts`: la superficie pubblica più importante del prodotto — quella che vede chi arriva da un motore di ricerca — non è mai stata misurata da axe, dal cancello dei 44px né da quello del ritaglio. Adesso c'è.
+- **Gli atti di prova degli E2E** (`tests/e2e/semina-atti.ts`), seminati da `global-setup` **prima** che il server parta, quindi senza due processi che scrivono insieme. Restano **fuori da `prisma/seed.ts`**, che non riempie mai `Atto`: il seed è dichiaratamente dimostrativo, gli atti sono decisioni vere, e mescolarli confonde le due categorie proprio dove la distinzione conta.
+- **17 unit nuovi** sulla scelta dell'apertura e sul monumento, e un E2E che difende la decisione più facile da smontare senza accorgersene: *senza cura la home apre col fiume*.
+
+## [0.49.0] — 2026-08-12 · Il battesimo: il marchio è Pistoia.app, e lo stemma esce dall'identità
+
+> Prima tappa **eseguita** dell'Ondata 10, dopo la ricognizione visiva
+> ([`docs/ricognizione-visiva.md`](docs/ricognizione-visiva.md)) e il montaggio
+> delle due direzioni su pagine vere
+> ([`docs/montaggio-d1-d2.md`](docs/montaggio-d1-d2.md)). È il primo anello di
+> dipendenza: ogni superficie porta la testata, quindi tutto il resto del
+> rifacimento nasce col marchio nuovo invece di essere disegnato due volte.
+
+### Cambiato — l'identità
+- **`components/brand/wordmark.tsx`**: il marchio **Pistoia.app**, con «.app» nel rosso della città. Nel design system quel rosso è già dichiarato «brand e urgenza» (`DESIGN.md` §4), quindi il marchio è l'uso previsto del token e non uno strappo. Il segno quadrato con la «P» resta un **placeholder dichiarato**: il marchio disegnato è lavoro di O10 (P11 della ricognizione).
+- **Lo stemma esce dall'identità e resta dove si *parla del* Comune.** `Crest` continua a firmare le risposte ufficiali dell'ente (`post-card`, dettaglio proposta) — uso informativo. Fuori: testata autenticata e anonima, landing, login, footer, testata di stampa del digest.
+- **La scacchiera è uscita dal pannello del login.** È l'araldica dell'ente e come firma di una piattaforma che l'ente non è sarebbe il travestimento che `direzione-prodotto.md` §1.4 vieta. **Non è stata sostituita da un altro motivo**: le fasce romaniche vivono a contrasto minimo (3,5%) e sopra il mesh non si leggono come ornamento — si leggono come un blocco di caricamento rimasto lì.
+- **Metadata, firma della redazione, email di benvenuto, pagine legali, pagine del voto QR**: 23 occorrenze censite prima di toccarle, separate in identitarie (sostituite) e informative (intatte). `authors` non poteva più dire «Comune di Pistoia»: sarebbe una dichiarazione di paternità falsa nei metadati.
+
+### Corretto — due difetti trovati misurando, non guardando
+- 🔴 **Il «.app» rosso sul mesh del login era illeggibile**: **2,45:1** sullo stop chiaro di `cool` e **1,17:1** su quello scuro, contro il 3:1 che vale perfino per il testo grande. Il marchio sta ora su una **pastiglia piena**, che è `DESIGN.md` §8 («sotto una superficie mesh il testo minuto non ci va») e P2 della ricognizione applicati al marchio: **il marchio è payload, non ornamento**.
+- **Il rosso come testo minuto non regge AA sulla tela**, e la regola è entrata in `DESIGN.md` §4: sulla tela fa **3,69:1** e nemmeno `--red-ink` basta (**4,48**), sul vetro **4,31**; su superficie piena 4,56 e dentro la pastiglia `--red-soft`+`--red-ink` **4,52**. Vale per qualunque direzione estetica vinca.
+
+### Cambiato — la scacchiera esce, e con lei l'idea che sopra una card ci vada un fregio
+- **`.scacchiera` non firma più niente.** Era il «momento di marca» su **sei superfici** — l'apertura di Opere, il tour, l'hero dello stato della città, la checklist dei primi passi, gli stati vuoti e la vetrina del design system — più il pannello del login. Evoca lo stemma, e `direzione-prodotto.md` §1.9 lo scrive alla lettera: «i *colori* della città sì, lo *stemma* e la scacchiera che lo evoca no». **Resta dentro `Crest`**, dove lo stemma è il soggetto perché si parla del Comune.
+- Negli **stati vuoti** il quadrettato è diventato **fasce romaniche** — patrimonio della città, non insegna dell'ente.
+- 🔴 **E in cima alle superfici-firma non è rimasto NIENTE.** Il primo rimpiazzo era un filo sfumato nel rosso; Lorenzo l'ha visto e ha detto «mi piaceva la scacchiera», quindi si è fatto ciò che qui si fa sempre: **quattro varianti montate sulla card vera e fotografate** — la scacchiera com'era, il filo sfumato, due a moduli monocromi che tenevano il ritmo senza l'alternanza araldica. Verdetto: **«mi fanno tutti pena, non metterci niente»**.
+- **La lezione, ora in `DESIGN.md` §3 e §12:** quel filo non risolveva un problema, riempiva una casella — «qui ci va un motivo» — che nessuno aveva mai messo in discussione. Quando nessuna variante di un ornamento convince, **la casella è sbagliata, non le varianti**. Da qui la riga nuova in §12: *nessun ornamento, quando non risolve niente*, e in §3: *una superficie senza motivo è una scelta legittima, spesso la migliore*.
+
+### Corretto — il terzo difetto, e l'ha trovato il cancello
+- 🔴 **Lo stesso rosso cambia norma con la taglia.** Il «.app» a 19px in peso 800 è *testo grande* (soglia 3:1) e fa 4,56; in taglia `sm` nel footer, a **13,5px**, la soglia sale a 4,5:1 e lo stesso colore fa **4,3:1** — **20 pagine rosse** sul cancello axe, tutte nel tema chiaro, per un colore che era stato misurato e trovato a norma. Chiuso con `text-red-ink` sulla taglia piccola (**5,23:1**), ed è stato necessario **esporre `--color-red-ink` come utility**: la variabile esisteva dal 2026-08-05, l'utility no, quindi l'unico modo di usarla sarebbe stato uno stile in linea.
+- La regola generale è entrata in `DESIGN.md` §4 e `AGENTS.md` §3: **il contrasto non è una proprietà del colore ma della coppia colore + taglia + peso** — quando un componente ha più taglie, ogni taglia è un caso di contrasto suo. Le due misure fatte a mano *prima* di scrivere il codice non l'avevano visto, perché coprivano i casi a cui si era pensato.
+
+### Deciso, e scritto nei documenti (non ancora costruito)
+- **Il fatto del giorno esiste solo se qualcuno l'ha curato.** Nei mockup il titolo umano era scritto a mano dall'esecutore: generarlo è vietato («nessuna frase generata») e l'oggetto ufficiale in cima alla home è una barriera. Serve un **campo redazionale** sull'atto; **se nessuno ha curato, la home apre col fiume degli atti** e col monumento, senza fingere un'apertura. `direzione-prodotto.md` §1.12.
+- **Il monumento nomina le persone**: tre righe (sindaco · vicesindaca · «7 assessori») con **come si arriva alla carica**. I **partiti restano fuori** ed è misurato: quattro assessori su otto non compaiono in nessuna lista perché li nomina il sindaco, e il vuoto accanto agli altri quattro direbbe una cosa falsa.
+
+### Verificato
+- Typecheck, lint, **317 unit** verdi · **66 rotte, 0 con problemi** (comprese le passate moderatore e anonima) · cancello a11y **42/42** · **E2E 164/165** (l'unico rosso, sul voto QR, rilanciato da solo passa 3/3 in 24s: era carico della macchina) · **schermate verdi nei due regimi**, normale e semplice a 360px.
+- Il marchio misurato dal vivo nei due temi: rosso sulla testata **4,56:1** contro una soglia di 3:1, segno **14,4:1**, e il link del marchio resta **isolato di 84px** dal vicino — quindi dentro l'eccezione di spaziatura dei 44px, come lo stemma prima di lui.
+- ⚠️ **Dopo la rimozione del filo** sono stati rilanciati typecheck, lint, unit e rotte (tutti verdi). **E2E e schermate no**: la modifica toglie cinque `<div aria-hidden>` decorativi e una regola CSS, senza toccare testo, bersagli o contenimento. **Condizione che chiude la nota:** al primo giro completo della prossima sessione si rilanciano entrambi.
 
 ## [0.48.0] — 2026-08-11 · La pipeline degli atti gira da sola, e senza browser
 

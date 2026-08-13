@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Bell } from "lucide-react";
-import { Crest } from "@/components/brand/crest";
+import { Wordmark } from "@/components/brand/wordmark";
 import { PreviewBadge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { ProfileMenu } from "./profile-menu";
@@ -16,12 +16,14 @@ export function TopBar({
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-surface/80 backdrop-blur-lg print:hidden">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+      {/* `max-w-guscio`: la stessa misura del contenuto sotto, definita una
+          volta sola in `globals.css`. Se le due divergono, il marchio si
+          scolla dal titolo della pagina — e si vede. */}
+      <div className="mx-auto flex h-16 max-w-guscio items-center justify-between gap-3 px-4 sm:px-6">
         <Link href="/la-mia-citta" className="flex items-center gap-2.5">
-          <Crest className="h-8 w-auto" />
-          <span className="hidden font-bold tracking-tight sm:inline">
-            Comune di Pistoia
-          </span>
+          {/* Sotto `sm` resta il solo segno: è la ragione per cui il segno
+              esiste separato dal logotipo. */}
+          <Wordmark logotipoClassName="hidden sm:inline" />
           <PreviewBadge className="hidden md:inline-flex" />
         </Link>
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Lock } from "lucide-react";
-import { Crest } from "@/components/brand/crest";
+import { Wordmark } from "@/components/brand/wordmark";
 import { PROGETTO_NAV, UTILITY_NAV } from "./nav-items";
 import { DEMO_MODE } from "@/lib/demo";
 
@@ -43,13 +43,20 @@ import { DEMO_MODE } from "@/lib/demo";
  * `max-w-xs`, 320px) e le colonne dei link appese al bordo destro. Misurato il
  * 2026-08-07, e visibile su ogni pagina della piattaforma.
  *
- * 850px non è un numero scelto a occhio: è la colonna di `main` dentro
- * `AppShell` — `max-w-6xl` meno il padding, la barra laterale e il gap — cioè
- * **la larghezza a cui questo footer è stato disegnato e verificato** quando
- * ci viveva dentro. Il tetto sta sulle due righe interne e non sulla scheda,
- * così il vetro resta a tutta larghezza come deciso e la composizione torna
- * dove funzionava. Sulle pagine legali (640px) non cambia niente: il tetto è
- * più largo del contenitore.
+ * 850px non è un numero scelto a occhio: è **la larghezza a cui questo footer
+ * è stato disegnato e verificato**. All'origine coincideva con la colonna di
+ * `main` dentro `AppShell`; il tetto sta sulle due righe interne e non sulla
+ * scheda, così il vetro resta a tutta larghezza come deciso. Sulle pagine
+ * legali (640px) non cambia niente: il tetto è più largo del contenitore.
+ *
+ * ⚠️ **Dal 2026-08-12 quella coincidenza NON c'è più**, e vale la pena dirlo
+ * invece di lasciare il commento a mentire: il guscio è passato a 1.680px
+ * (`--container-guscio`) e la colonna di `main` è **1.380**. Gli 850 restano
+ * perché sono una **misura di lettura** — le due colonne di link e la riga
+ * d'identità si leggono a quella larghezza — non perché rispecchino ancora la
+ * geometria di qualcos'altro. È lo stesso principio che tiene l'oggetto
+ * ufficiale stretto dentro una card larga: il guscio dà lo spazio, il testo
+ * si dà la misura.
  *
  * ⚠️ **Le soglie sono `@container`, non `sm:`/`lg:`, e non è un vezzo.** Le
  * varianti normali guardano la FINESTRA, e questo footer vive in due colonne di
@@ -66,14 +73,7 @@ export function Footer({ autenticato = false }: { autenticato?: boolean }) {
     <footer className="card @container mt-8 px-6 py-8 sm:px-8 sm:py-9 print:hidden">
       <div className="mx-auto flex w-full max-w-[850px] flex-col gap-9 @3xl:flex-row @3xl:items-start @3xl:justify-between">
         <div className="flex min-w-0 max-w-xs flex-col gap-3">
-          <span className="flex items-center gap-2.5">
-            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-white shadow-sm ring-1 ring-border">
-              <Crest className="h-4 w-auto" />
-            </span>
-            <span className="text-[13.5px] font-semibold tracking-tight">
-              Dashboard di Pistoia
-            </span>
-          </span>
+          <Wordmark size="sm" />
           <p className="text-xs leading-relaxed text-muted-2">
             Progetto dimostrativo. I dati mostrati sono di esempio e non
             rappresentano fonti ufficiali.
@@ -121,8 +121,11 @@ export function Footer({ autenticato = false }: { autenticato?: boolean }) {
             </Link>
           </p>
         )}
+        {/* La firma dice CHI pubblica, ed è il punto: un progetto civico
+            indipendente, non l'ente. È il «chi pubblica» di FixMyStreet («A
+            service from mySociety») applicato al nostro caso. */}
         <p className="text-[11.5px] text-muted-2">
-          Comune di Pistoia · anteprima pubblica
+          Un progetto civico indipendente · anteprima pubblica
         </p>
       </div>
     </footer>

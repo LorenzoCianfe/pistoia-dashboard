@@ -33,8 +33,22 @@ export async function AppShell({
         Salta al contenuto
       </a>
       <TopBar user={user} unread={unread} />
-      <div className="mx-auto flex max-w-6xl gap-7 px-4 sm:px-6">
-        <aside className="sticky top-16 hidden h-[calc(100dvh-4rem)] w-56 shrink-0 overflow-y-auto py-6 lg:block print:hidden">
+      <div className="mx-auto flex max-w-guscio gap-7 px-4 sm:px-6">
+        {/*
+          L'ISOLA FLOTTANTE (Ondata 10, decisione di Lorenzo del 2026-08-12).
+
+          Prima: `h-[calc(100dvh-4rem)]` più `overflow-y-auto` QUI, cioè una
+          colonna alta quanto lo schermo — misurata a 1700px di finestra,
+          **870px di colonna per 236px di contenuto: il 73% vuoto**, su ogni
+          pagina, per cinque voci.
+
+          Adesso l'altezza la decide il contenuto (`h-fit`) e l'isola galleggia.
+          Lo scorrimento e il tetto d'altezza sono passati DENTRO `SideNav`,
+          sulla superficie di vetro: se restassero qui, la parte che scorre
+          sarebbe il contenitore trasparente e il vetro verrebbe tagliato a
+          metà schermo.
+        */}
+        <aside className="sticky top-[4.5rem] hidden h-fit w-56 shrink-0 py-6 lg:block print:hidden">
           {/* Il RUOLO, non il `NavItem`: l'icona è un componente, e da qui
               (Server Component) non attraversa il confine — vedi `SideNav`. */}
           <SideNav ruolo={user.role} />
@@ -70,7 +84,7 @@ export async function AppShell({
         finire sotto la navigazione bassa, ed è il footer l'ultima cosa della
         pagina.
       */}
-      <div className="mx-auto max-w-6xl px-4 pb-28 sm:px-6 lg:pb-12">
+      <div className="mx-auto max-w-guscio px-4 pb-28 sm:px-6 lg:pb-12">
         {/* `autenticato`: qui c'è sempre una sessione, quindi il footer non
             deve mostrare l'invito ad accedere. Il valore predefinito della
             prop è `false` di proposito — un innesto che se ne dimenticasse

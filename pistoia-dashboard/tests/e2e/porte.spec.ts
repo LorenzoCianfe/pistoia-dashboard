@@ -54,9 +54,12 @@ for (const { ruolo, conto, voce, url } of PORTE) {
     /*
       E la voce dev'essere ATTIVA una volta arrivati. Non è un vezzo: è la metà
       del difetto del 2026-08-07 che si vedeva a schermo — il moderatore stava
-      sulla propria pagina con una barra che non sapeva indicargliela. La
-      pastiglia è un solo elemento condiviso (`layoutId`), quindi «attiva» qui
-      si legge da `aria-current`, che è anche ciò che sente chi non la vede.
+      sulla propria pagina con una barra che non sapeva indicargliela.
+
+      «Attiva» si legge da `aria-current` e non dalla goccia, ed è voluto: la
+      goccia va a *visitare* la voce sorvolata, quindi come prova di «dove
+      sono» mentirebbe. `aria-current` è anche ciò che sente chi la goccia non
+      la vede.
     */
     await expect(
       barra.getByRole("link", { name: voce, exact: true }),
@@ -205,4 +208,128 @@ test("Comune: a 375px la navigazione dell'area porta a un'altra coda", async ({ 
 
   await altra.click();
   await expect(page).toHaveURL(/\/admin\/proposte$/);
+});
+
+/*
+  LA GOCCIA DELLA BARRA LATERALE (Ondata 10, 2026-08-12).
+
+  L'indicatore dell'isola di vetro si deforma sulla propria velocità, ed è ciò
+  che lo fa leggere come liquido invece che come una pastiglia che scivola.
+  Lorenzo l'ha scelto **reattivo e non ambientale**, fra tre gradi possibili:
+  quindi il contratto ha due metà, e tutte e due sono invisibili ai quattro
+  cancelli — axe non ha una regola per «si sta muovendo da solo».
+
+  1. **A riposo NON si muove.** È `DESIGN.md` §7 («mai ambientale») e
+     `AGENTS.md` §2 (deve girare su Android vecchi) applicati a un componente
+     che sta su ogni pagina autenticata: un'animazione perpetua qui costerebbe
+     batteria ovunque, per sempre.
+  2. **Con `prefers-reduced-motion` non anima affatto**, e non si deforma: si
+     posiziona e basta. È uno stato di prima classe (`DESIGN.md` §11.5).
+
+  Perché serve un test e non basta averlo guardato: sono due proprietà che si
+  perdono con una riga — una durata rimessa, una condizione tolta — e la
+  regressione non produce nessun rosso altrove.
+*/
+const GOCCIA = "nav[aria-label='Navigazione principale'] > span[aria-hidden]";
+
+/** Lo stato della goccia: dov'è, e quanto è deformata. */
+async function leggiGoccia(page: import("@playwright/test").Page) {
+  return page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    if (!el) return null;
+    const m = new DOMMatrix(getComputedStyle(el).transform);
+    return { y: Math.round(m.m42), scaleY: +m.m22.toFixed(2) };
+  }, GOCCIA);
+}
+
+test("la goccia sta FERMA quando nessuno tocca niente", async ({ page }) => {
+  await login(page);
+  await page.goto("/la-mia-citta");
+  await page.waitForTimeout(2_500);
+
+  const primo = await leggiGoccia(page);
+  expect(primo, "la goccia non esiste nella barra laterale").not.toBeNull();
+  // A riposo non è deformata: la deformazione viene dalla velocità, e a riposo
+  // la velocità è zero.
+  expect(primo!.scaleY).toBe(1);
+
+  // E dopo mezzo secondo di nulla è esattamente dov'era. Due letture identiche
+  // sono la prova che NESSUNA animazione sta girando: un respiro ambientale,
+  // anche lentissimo, le farebbe divergere.
+  await page.waitForTimeout(500);
+  expect(
+    await leggiGoccia(page),
+    "la goccia si muove da sola: è un'animazione ambientale, che DESIGN.md §7 " +
+      "non concede e che su un telefono modesto costa batteria su ogni pagina",
+  ).toEqual(primo);
+});
+
+test("con prefers-reduced-motion la goccia si posiziona, non anima", async ({
+  page,
+}) => {
+  await login(page);
+  // `emulateMedia` e non `test.use({ reducedMotion })`: è la forma che
+  // `accessibilita.spec.ts` usa già, e in questa versione di Playwright
+  // l'opzione di test non è tipizzata. Si emula PRIMA di aprire la pagina.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/la-mia-citta");
+  await page.waitForTimeout(2_500);
+
+  const riposo = await leggiGoccia(page);
+  expect(riposo).not.toBeNull();
+
+  /*
+    ⚠️ **Si campiona fotogramma per fotogramma, non a un istante scelto.**
+
+    La prima stesura leggeva la goccia 50ms dopo il fuoco e pretendeva che
+    fosse già arrivata. Ha fallito a macchina carica — 50ms possono non bastare
+    a un solo fotogramma — cioè con un rosso che parlava di `reduced-motion`
+    per un problema di scheduling. Una soglia in millisecondi è una scommessa
+    sulla velocità della macchina, e questo repository ha già pagato due volte
+    per rossi d'ambiente scambiati per regressioni (`AGENTS.md` §3, 2026-08-11).
+
+    La proprietà vera non ha tempi dentro: **la goccia non deve passare da
+    posizioni INTERMEDIE**. Posizionarsi significa avere due sole posizioni —
+    quella di partenza e quella d'arrivo. Animare significa averne tante.
+  */
+  const campioni = await page.evaluate(
+    async ([sel, quanti]) => {
+      const el = document.querySelector(sel as string);
+      const leggi = () => {
+        const m = new DOMMatrix(getComputedStyle(el!).transform);
+        return { y: Math.round(m.m42), scaleY: +m.m22.toFixed(2) };
+      };
+      const visti: { y: number; scaleY: number }[] = [leggi()];
+      // Il fuoco da TASTIERA: è anche il percorso che una goccia legata al solo
+      // mouse non coprirebbe.
+      const voci = document.querySelectorAll<HTMLElement>(
+        "nav[aria-label='Navigazione principale'] a",
+      );
+      voci[voci.length - 1].focus();
+      for (let i = 0; i < (quanti as number); i++) {
+        await new Promise((r) => requestAnimationFrame(() => r(null)));
+        visti.push(leggi());
+      }
+      return visti;
+    },
+    [GOCCIA, 40] as const,
+  );
+
+  const posizioni = [...new Set(campioni.map((c) => c.y))];
+  expect(
+    posizioni.length,
+    `la goccia è passata da ${posizioni.length} posizioni (${posizioni.join(", ")}): ` +
+      "con prefers-reduced-motion deve posizionarsi, non animare",
+  ).toBeLessThanOrEqual(2);
+  expect(
+    campioni.at(-1)!.y,
+    "la goccia non si è mossa affatto: il fuoco da tastiera non la sposta",
+  ).not.toBe(riposo!.y);
+
+  const deformazioni = [...new Set(campioni.map((c) => c.scaleY))];
+  expect(
+    deformazioni,
+    "la goccia si deforma anche con la preferenza attiva: lo schiacciamento " +
+      "è movimento, e qui non deve avvenire",
+  ).toEqual([1]);
 });

@@ -6,7 +6,12 @@
 >
 > **Leggilo per intero all'inizio di ogni sessione, prima di toccare codice.**
 >
-> Aggiornato: 2026-08-12 (**la ricognizione col browser**: il pannello Browser
+> Aggiornato: 2026-08-12 (**la prima pagina**: le cinque trappole di §3 — *un
+> `<fieldset>` non si stringe*, *`vw` è la finestra e non la colonna, anche per
+> le lunghezze*, *`line-clamp` accanto a `block` non tronca*, *l'italiano elide
+> davanti a otto e undici*, *una rotta può non stare in nessun cancello*, *una
+> copertura nuova non si compra spegnendone una che c'è*). Prima, lo stesso
+> giorno: (**la ricognizione col browser**: il pannello Browser
 > non composita senza schermo — si fotografa col DevTools MCP e `filePath`; i
 > banner dei consensi possono vivere in shadow DOM; i muri «accetta o paga» si
 > saltano e si dichiara). Prima: 2026-08-11 (**il tema civico «Sociale e casa»**, deciso misurando
@@ -73,8 +78,9 @@ L'app vive in `pistoia-dashboard/`. La documentazione vive nella radice.
 
 ## 3. Design system — le regole che si sbagliano più spesso
 
-> §3 raccoglie **cinquantuno trappole già pagate**. Sono raggruppate per ondata
-> solo perché è così che sono emerse: leggile tutte, valgono tutte ancora.
+> §3 raccoglie **cinquantotto trappole già pagate**. Sono raggruppate per
+> ondata solo perché è così che sono emerse: leggile tutte, valgono tutte
+> ancora.
 
 **Prima di tutto: Astryx è la sorgente dei TOKEN, non lo strato di primitive.**
 Le primitive in `components/ui/` restano Pistoia, e non è pigrizia: ogni caso è
@@ -961,6 +967,160 @@ plausibile. Il dettaglio sta in `docs/pipeline-atti-schedulata.md`.
    **quando un lavoro periodico ha un primo scatto diverso dagli altri, quel
    primo scatto va progettato — o capiterà in produzione senza che nessuno
    guardi.**
+
+### Lo stesso colore cambia norma con la taglia (2026-08-12)
+
+Pagata portando il marchio **Pistoia.app** su tutte le testate. Il «.app» usa
+il rosso della città, e la verifica a mano era stata fatta **sulla testata**:
+19px in peso 800, cioè *testo grande*, dove la soglia WCAG è **3:1** e il rosso
+fa 4,56 — ampio margine, tutto verde.
+
+Lo stesso componente in taglia `sm` vive nel **footer**, a 13,5px. Lì non è più
+testo grande: la soglia sale a **4,5:1** e lo stesso identico colore fa
+**4,3:1**. Venti pagine rosse sul cancello axe, in un solo colpo, per un colore
+che era stato misurato e trovato a norma.
+
+La regola: **il contrasto non è una proprietà del colore, è una proprietà della
+coppia colore + taglia + peso.** Quando un componente ha più di una taglia,
+ogni taglia è un caso di contrasto diverso e va misurata da sé. Qui la risposta
+era già nel sistema — `--red-ink` esiste apposta per il rosso minuto
+(`DESIGN.md` §4) — ma non era esposto come utility Tailwind, quindi l'unico
+modo di usarlo sarebbe stato uno stile in linea: adesso `--color-red-ink` sta
+nel blocco `@theme`.
+
+⚠️ **E il cancello l'ha trovato, l'occhio no.** Nella stessa sessione due
+difetti di contrasto sono stati trovati misurando col browser *prima* di
+scrivere il codice (il rosso sulla tela, il marchio sul mesh); questo terzo è
+sfuggito a entrambe le misure perché la taglia piccola non era nell'elenco
+delle cose da misurare. È il corollario di §5: *un cancello copre le regole che
+gli hai chiesto* — e una misura a mano copre i casi a cui hai pensato.
+
+### Cinque trappole della prima pagina (2026-08-12)
+
+Pagate costruendo `/`. Come sempre: **nessuna produce un errore**; tre le ha
+trovate l'occhio guardando la schermata, una il cancello dei 360px, e una il
+rosso di un test che non c'entrava niente.
+
+0. 🔴 **Un `<fieldset>` NON si stringe: il browser gli mette
+   `min-inline-size: min-content`.** Nessun `min-w-0` sui figli lo salva, e
+   nemmeno un genitore stretto: il pavimento sta sul fieldset stesso. Misurato
+   sulla superficie redazionale a 360px in modalità semplice — **520px dentro
+   un genitore da 275**, cioè **203px di pagina che scorre di lato**, in tutti
+   e due i temi.
+
+   È la famiglia di §3 (ondata 7, 5) — «restringere non è far entrare» — da una
+   porta nuova: là il pavimento era il min-content di una traccia di griglia,
+   qui è quello di un elemento che se lo porta dalla nascita. Si chiude con
+   `min-w-0` **sul fieldset**, più `break-words` sul testo che porta codici di
+   protocollo senza spazi (CUP, CIG, partite IVA): su un testo macchina
+   spezzare non rompe una parola, manda a capo un codice.
+
+   ⚠️ L'ha trovato **solo** `node scripts/shots.mjs --simple --width=360`. A
+   1280 la pagina è perfetta, e nessuno degli altri tre cancelli guarda il
+   traboccamento.
+
+1. 🔴 **`vw` è la finestra, non la colonna — e vale per le LUNGHEZZE, non solo
+   per le soglie.** La cifra display si dimensionava con
+   `clamp(3rem, 7vw, 5.5rem)`. Nella colonna da **343px** del numero-monumento
+   dava 88px, e «689.724» a quella taglia misura **369px**: **55px fuori dalla
+   card**, con `overflow: visible`, quindi sbordava sulla tela.
+
+   È la trappola di `DESIGN.md` §6 («un componente che vive in colonne di
+   larghezza diversa non può usare `sm:` e `lg:`») presa da una porta nuova:
+   là la leva sbagliata era una *variante*, qui un'*unità*. **Nessuno dei
+   quattro cancelli poteva vederlo**: `shots` misura il traboccamento della
+   *pagina* — zero, perché a sbordare è la card e non il documento —,
+   `contenimento` guarda i *controlli* (una cifra non lo è), `bersagli` le
+   dimensioni, e axe non ha una regola per «non ci sta».
+
+   La regola: **se una misura deve adattarsi allo spazio di un componente,
+   l'unità è `cqw`** (con `container-type: inline-size` sul componente), mai
+   `vw`. E si sceglie il coefficiente perché il tetto sia già raggiunto alle
+   larghezze dove oggi funziona, così nulla cambia dove nessuno ha chiesto che
+   cambiasse.
+
+2. **`line-clamp-N` accanto a `block` non tronca niente.** Sono due utility che
+   dichiarano entrambe `display`, e a vincere è quella che il foglio generato
+   scrive per ultima — **non l'ordine in cui stanno scritte nella stringa di
+   classi**, che è l'intuizione naturale e non conta. Sulla superficie
+   redazionale uscivano interi tutti e trentuno gli oggetti degli atti, e a
+   occhio sembrava solo «una lista lunga». Vale per ogni coppia di utility
+   della stessa proprietà: `truncate`, `flex`, `grid`, `hidden`.
+
+3. **L'italiano elide davanti a *otto* e *undici*, e la cifra non lo dice.**
+   «il 11 agosto» è arrivato in prima pagina alla prima resa e si legge come un
+   errore del programma. L'elisione dipende dal **suono** del numero: *undici*
+   e *otto* cominciano per vocale, *diciotto* e *ventotto* no — quindi la
+   regola è un elenco di due numeri (`dataConPreposizione` in `lib/format.ts`)
+   e **non** un controllo sulle cifre, che sbaglierebbe il 18 in silenzio.
+
+   ⚠️ Il giorno si legge dallo **stesso fuso** del formattatore
+   (`Europe/Rome`), mai da `getDate()`: su un server a ovest di Greenwich un
+   timestamp di mezzanotte UTC cade il giorno prima, e l'articolo finirebbe in
+   disaccordo con la data che sta scritta accanto.
+
+4. **Una rotta può non essere in NESSUN cancello, e nessuno se ne accorge.**
+   La home `/` non era né in `tests/e2e/pagine-cancello.ts` né in `shots.mjs`:
+   la superficie pubblica più importante del prodotto non è mai stata misurata
+   da axe, dal cancello dei 44px, da quello del ritaglio **né da quello del
+   traboccamento a 360px** — mentre `rotte.mjs`, che ha una lista *sua*, la
+   apriva da sempre. Tre liste di pagine che non si parlano sono tre risposte
+   diverse alla domanda «che cosa copriamo», ed è il difetto che §3 (ondata 7,
+   nota finale) condanna sugli indicatori.
+
+   La domanda che lo trova, e va fatta **prima** di dichiarare coperta una
+   superficie nuova: *da quale riga di quale script verrebbe misurata?*
+
+5. 🔴 **Una copertura nuova non si compra spegnendo una copertura che c'è.**
+   Per dare alla prima pagina un archivio vero sotto i cancelli, gli atti di
+   prova erano finiti in `global-setup.ts`, cioè per tutta la suite. Ha fatto
+   cadere `analitiche.spec.ts` → «il monitor degli atti dice la verità su una
+   base dati mai letta», che esiste **proprio perché** `e2e.db` nasce vuoto — e
+   quel vuoto non è un caso di laboratorio: **è lo stato della produzione**.
+
+   Il rosso non somigliava alla causa: parlava del monitor degli atti, non
+   della home. Il segno che lo distingue da una regressione vera è che
+   **afferma un contenuto** («Mai letto» non c'è più) invece di scadere per
+   attesa — cioè l'opposto dei rossi d'ambiente di §3 (2026-08-11).
+
+   La via d'uscita non è cambiare il test che dà fastidio: è **circoscrivere la
+   semina allo spec che ne ha bisogno** (`beforeAll`/`afterAll`), e coprire i
+   due stati separatamente — quello vuoto dai cancelli condivisi, quello pieno
+   da un'analisi axe dentro lo spec.
+
+### Due trappole del guscio largo (2026-08-12)
+
+Pagate allargando il guscio da 1.152 a 1.680px. La prima è la ragione per cui
+un tetto non si alza «e basta».
+
+1. 🔴 **Allargare il guscio RESTRINGE la leggibilità, e il difetto è muto.**
+   Col tetto a 1.680 l'oggetto ufficiale di un atto è passato da 54 a **95
+   caratteri per riga** e le righe del fiume a **108** — oltre la soglia in cui
+   l'occhio trova il ritorno a capo. Nessun cancello dice niente: non c'è
+   traboccamento, non c'è contrasto sbagliato, non c'è bersaglio piccolo. La
+   pagina è semplicemente più difficile da leggere di prima, mentre sembra più
+   generosa.
+
+   La regola: **il guscio dà lo spazio, il testo si dà la misura**, in `ch` e
+   non in `px` — su un monospaziato `ch` è esatto al carattere. E il tetto va
+   sul testo che si legge **riga per riga**, non sui titoli: un titolo capato
+   lascia mezza card bianca, che è la sproporzione dal lato opposto.
+
+   ⚠️ Il modo di misurarlo, perché «sembra lungo» non è un dato: si legge la
+   larghezza dell'elemento e la si divide per la larghezza di un carattere nel
+   font effettivo (`getComputedStyle(el).font` su uno `<span>` di prova).
+
+2. **Una misura ripetuta in cinque punti è una misura che divergerà.**
+   `max-w-6xl` stava sulle due testate, sul guscio, sul footer e sul layout
+   pubblico. Qui il disallineamento sarebbe stato **visibile**: la testata deve
+   incolonnarsi col contenuto, quindi cambiarne quattro su cinque sposta il
+   marchio rispetto al titolo sotto. Ora è `--container-guscio`, una volta
+   sola.
+
+   ⚠️ E quando una misura si sposta, **i commenti che la spiegavano diventano
+   falsi**: il footer giustificava i propri 850px con «è la colonna di `main`»,
+   che dopo il cambio è 1.380. Un commento che mente costa più di nessun
+   commento — si aggiorna insieme al codice, o si cancella.
 
 ### Tre trappole della ricognizione col browser (2026-08-12)
 
