@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 import { PenLine } from "lucide-react";
 import { requireRedazione } from "@/lib/auth/redazione";
 import { getCodaRedazione } from "@/lib/data/valutazioni";
+import { getGiornataDaCurare } from "@/lib/data/atti";
 import { SERVIZI } from "@/lib/valutazioni";
 import { FIRMA_REDAZIONE } from "@/lib/redazione";
 import { ElementoCoda } from "@/components/redazione/coda-redazione";
 import { ModuloNota } from "@/components/redazione/modulo-nota";
+import { CuraFattoDelGiorno } from "@/components/redazione/cura-fatto-del-giorno";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
+import { dataConPreposizione } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Redazione" };
 
@@ -26,7 +29,10 @@ export const metadata: Metadata = { title: "Redazione" };
 */
 export default async function RedazionePage() {
   await requireRedazione();
-  const coda = await getCodaRedazione();
+  const [coda, giornata] = await Promise.all([
+    getCodaRedazione(),
+    getGiornataDaCurare(),
+  ]);
 
   const dataIt = (d: Date) =>
     d.toLocaleDateString("it-IT", { day: "numeric", month: "long" });
@@ -36,9 +42,49 @@ export default async function RedazionePage() {
       <SectionHeader
         eyebrow="Riservato alla redazione"
         title="Redazione"
-        description="Le segnalazioni del Comune sulle valutazioni, le rimozioni e le Note. Ogni rimozione lascia una riga nel registro pubblico della scheda."
+        description="Il fatto del giorno in prima pagina, le segnalazioni del Comune sulle valutazioni, le rimozioni e le Note. Ogni rimozione lascia una riga nel registro pubblico della scheda."
         icon={<PenLine size={22} className="text-[var(--viola)]" />}
       />
+
+      {/*
+        IL FATTO DEL GIORNO, in cima: è la sola superficie di questa pagina che
+        decide che cosa vede la città aprendo il sito.
+
+        ⚠️ È uno STRUMENTO e non una coda (`DESIGN.md` §6), quindi **niente
+        contatore accanto al titolo**: nessuno accumula lavoro qui, ed è la
+        redazione a decidere se oggi c'è qualcosa da spiegare.
+      */}
+      <Card>
+        <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-2">
+          <span className="size-2 rounded-full bg-viola" aria-hidden />
+          Il fatto del giorno
+        </p>
+        {giornata.giorno === null ? (
+          <p className="mt-2 text-sm leading-relaxed text-muted">
+            L&apos;archivio degli atti è vuoto: la lettura automatica
+            dell&apos;albo pretorio non ha ancora girato, quindi non c&apos;è
+            nessun atto da curare.
+          </p>
+        ) : (
+          <>
+            <p className="mt-1 max-w-prose text-sm text-muted">
+              Gli atti pubblicati{" "}
+              <span className="font-medium text-foreground">
+                {dataConPreposizione(giornata.giorno)}
+              </span>
+              , che è il giorno di cui parla la prima pagina. Il titolo lo
+              scrivi tu: <strong>generarlo è vietato</strong>, e senza un titolo
+              la home non finge un&apos;apertura.
+            </p>
+            <div className="mt-4">
+              <CuraFattoDelGiorno
+                atti={giornata.atti}
+                curato={giornata.curato}
+              />
+            </div>
+          </>
+        )}
+      </Card>
 
       <Card>
         <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-2">

@@ -10,7 +10,7 @@ export default function CookiePage() {
         In vigore dal 10 giugno 2026
       </p>
       <p className="!text-muted-2">
-        Dashboard di Pistoia usa il minimo indispensabile: nessun cookie di profilazione, nessun
+        Pistoia.app usa il minimo indispensabile: nessun cookie di profilazione, nessun
         tracciamento pubblicitario, nessun cookie di terze parti per la pubblicità.
       </p>
 

@@ -57,6 +57,12 @@ const MOD_LABEL: Record<string, string> = {
   valutazione_rimossa: "Valutazione rimossa (redazione)",
   valutazione_lasciata: "Segnalazione chiusa: lasciata pubblicata",
   nota_redazione: "Nota della Redazione pubblicata",
+  // O10, la prima pagina. Sono azioni della REDAZIONE, non del Comune, e
+  // compaiono qui per la stessa ragione delle quattro righe sopra: il registro
+  // è uno solo. Senza queste due voci l'azione si leggerebbe col proprio nome
+  // tecnico, che è il modo in cui un registro smette di essere leggibile.
+  fatto_del_giorno_curato: "Fatto del giorno messo in prima pagina (redazione)",
+  fatto_del_giorno_tolto: "Fatto del giorno tolto dalla prima pagina (redazione)",
 };
 
 export default async function AdminPage() {

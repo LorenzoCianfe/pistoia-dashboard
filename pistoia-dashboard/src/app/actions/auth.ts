@@ -99,7 +99,7 @@ export async function signupAction(
     data: {
       userId: user.id,
       type: "system",
-      title: "Benvenuto nella Dashboard di Pistoia",
+      title: "Benvenuto su Pistoia.app",
       body: "Esplora il bilancio, segui i cantieri e fai sentire la tua voce nei sondaggi della città.",
       href: "/bilancio",
     },

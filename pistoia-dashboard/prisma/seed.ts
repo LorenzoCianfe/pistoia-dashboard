@@ -119,7 +119,7 @@ async function wipe() {
 }
 
 async function main() {
-  console.log("⛏  Seeding Dashboard di Pistoia (mock data)…");
+  console.log("⛏  Seeding Pistoia.app (mock data)…");
   await wipe();
 
   // --- Quartieri e frazioni ------------------------------------------------
@@ -1684,7 +1684,7 @@ async function main() {
       {
         userId: citizen.id,
         type: "system",
-        title: "Benvenuta nella Dashboard di Pistoia",
+        title: "Benvenuta su Pistoia.app",
         body: "Esplora il bilancio, segui i cantieri e fai sentire la tua voce.",
         href: "/bilancio",
         read: true,

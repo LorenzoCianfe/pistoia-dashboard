@@ -193,7 +193,7 @@ export default async function ImpostazioniPage() {
       </Card>
 
       <p className="px-1 text-xs text-muted-2">
-        Dashboard di Pistoia · progetto dimostrativo. I dati mostrati sono di
+        Pistoia.app · progetto dimostrativo. I dati mostrati sono di
         esempio.
       </p>
     </div>

@@ -65,4 +65,19 @@ export default function globalSetup() {
   // `.cmd` che `execFile` senza shell non saprebbe risolvere.
   execSync("npx prisma migrate deploy", { stdio: "inherit", env });
   execSync("npx tsx prisma/seed.ts", { stdio: "inherit", env });
+
+  /*
+    ⚠️ **Gli atti NON si seminano qui**, ed è una lezione pagata il 2026-08-12.
+
+    Il primo tentativo li metteva in questo punto, per dare alla prima pagina un
+    archivio vero sotto i cancelli. Ha fatto cadere `analitiche.spec.ts` → «il
+    monitor degli atti dice la verità su una base dati mai letta», che esiste
+    **proprio perché** `e2e.db` nasce vuoto — e quel vuoto non è un caso di
+    laboratorio: è **lo stato della produzione** finché la lettura schedulata
+    non esiste.
+
+    La semina è quindi circoscritta a `prima-pagina.spec.ts`, che la fa e la
+    disfa (`tests/e2e/semina-atti.ts`). La regola generale: **una copertura
+    nuova non si compra spegnendo una copertura che c'è già.**
+  */
 }

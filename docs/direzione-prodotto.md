@@ -199,11 +199,38 @@ piattaforme come Dribbble e Pinterest** — analisi approfondita e comparativa d
 molti lavori di designer professionisti (interfacce web e mobile, dashboard,
 tipografia, palette, gerarchie, micro-interazioni…) per estrarne pattern e
 approcci moderni. **Mai una UI generica, standardizzata o da template**: 
-identità forte, raffinata, contemporanea; le fonti servono da ispirazione e
-metro di qualità, **mai da copiare** — ogni scelta rielaborata in originale e
-coerente col prodotto. Non «rendere l'interfaccia funzionante»: un'esperienza
-esteticamente rilevante, moderna e memorabile, in equilibrio con usabilità,
-chiarezza e coerenza.
+identità forte, raffinata, contemporanea. Non «rendere l'interfaccia
+funzionante»: un'esperienza esteticamente rilevante, moderna e memorabile, in
+equilibrio con usabilità, chiarezza e coerenza.
+
+> ✏️ **Corretto da Lorenzo il 2026-08-12 (notte).** Questa riga diceva che le
+> fonti servono «da ispirazione e metro di qualità, **mai da copiare**». Il
+> divieto è caduto, e la sua ragione è semplice: **se qualcosa è bello si
+> copia.** Riscrivere da zero un componente già risolto bene non è integrità,
+> è spreco.
+>
+> Restano però due distinzioni che non sono di gusto ma di sostanza, e che
+> vale la pena tenere scritte:
+>
+> 1. **La licenza decide che cosa si può prendere alla lettera.** Il CSS di
+>    `codefronts.com` è **MIT**: copiarlo, modificarlo e spedirlo è
+>    esplicitamente permesso — l'unico obbligo è conservare l'avviso di
+>    copyright, e la provenienza va annotata in `REFERENCES.md`. Uno
+>    **screenshot** di Dribbble o Behance no: è opera protetta, e ricalcarlo
+>    schermata per schermata non è la stessa cosa che riusare codice aperto.
+>    Da lì si prendono **struttura, ritmo, decisioni** — che è ciò che le
+>    ricognizioni hanno sempre fatto.
+> 2. **Ciò che si copia va ricondotto ai nostri token e al nostro
+>    significato.** Non per pudore: perché un componente incollato con le sue
+>    tinte, i suoi raggi e le sue durate porta dentro un altro design system e
+>    litiga col nostro — ed è il modo più rapido per ottenere l'effetto
+>    template che questo stesso paragrafo vieta.
+>
+> **Il metro che resta, e vale più di qualunque divieto:** il *test
+> dell'intruso* (`docs/ricognizione-visiva.md` P21). Non conta da dove viene
+> una soluzione; conta se la schermata finita può dire che cosa, in lei,
+> esiste solo perché questa è Pistoia. Un pezzo copiato che passa quel test
+> vale più di uno originale che non lo passa.
 
 **Come si esegue, nel metodo di questo progetto:**
 
@@ -274,6 +301,36 @@ glassmorphism · tech.** Tre conseguenze per la ricognizione:
    ufficiale com'è**. Chi legge capisce, chi verifica trova l'originale a un
    millimetro. La regola fondante non si tocca: il testo ufficiale non si
    riscrive mai, la leggibilità si costruisce attorno.
+
+   > ✅ **Sciolto il 2026-08-12 (notte), da Lorenzo.** Costruendo la prima
+   > pagina è emerso che questo punto nascondeva un bivio: nei mockup il
+   > titolo umano l'aveva **scritto l'esecutore a mano**, cioè qualcuno faceva
+   > la parte della redazione. Generarlo automaticamente è vietato («**nessuna
+   > frase generata**», ROADMAP O11), e mostrare l'oggetto ufficiale in cima
+   > alla home è una barriera invece di un magnete.
+   >
+   > **La decisione: il fatto del giorno esiste SOLO se qualcuno l'ha
+   > curato.** Serve un campo redazionale sull'atto (più la sua piccola
+   > superficie in area Comune per compilarlo). **Se in un giorno nessuno ha
+   > curato niente, la home non finge un'apertura**: apre col fiume degli atti
+   > — che è già leggibile per struttura (data, tema, ufficio, tipo) — e col
+   > numero-monumento. Il ritmo quotidiano resta, la promessa non si gonfia.
+   >
+   > È la stessa regola di sempre applicata all'editoriale: *nel dubbio,
+   > nessuna risposta*. Un'apertura vuota è peggio di nessuna apertura.
+
+1-bis. **Il numero-monumento nomina le persone, e dice come ci sono
+   arrivate** (deciso il 2026-08-12). Tre righe raggruppate — sindaco,
+   vicesindaca, «7 assessori» con l'importo unitario — ognuna col **modo in
+   cui si arriva alla carica**: *eletto sindaco*, *nominata dal sindaco*,
+   *eletto in consiglio poi nominato*. Sotto, la riga che dice che **quattro
+   assessori su otto non erano candidati**.
+   ⚠️ **I partiti NO, ed è misurato** (`docs/fonti-organigramma.md` §2.2):
+   quattro assessori su otto non compaiono in nessuna delle dodici liste
+   perché li nomina il sindaco, quindi il partito accanto agli altri quattro
+   e il vuoto accanto a loro si legge «questi non li ha votati nessuno», che è
+   falso. «Come si arriva alla carica» è vero per tutte e nove le persone e
+   dice al cittadino la cosa che conta: chi ha votato, e chi no.
 2. **La pagina dell'atto porta il contesto che spiega**: che cos'è quel tipo
    di atto in una riga, il tema civico, l'ufficio con gli altri suoi atti,
    gli atti correlati, il quartiere se nominato, il link alla fonte. La

@@ -1,5 +1,5 @@
 /* =============================================================================
- * Dashboard di Pistoia — foglio di stile globale
+ * Pistoia.app — foglio di stile globale
  *
  * Architettura (vedi ARCHITECTURE.md §Design system):
  *   1. Astryx possiede i token di sistema (colore, spazio, raggio, tipo, moto).
@@ -163,6 +163,26 @@
     --elev-hover:
       inset 0 1px 0 var(--glass-sheen),
       0 2px 4px color-mix(in srgb, var(--color-shadow) 35%, transparent);
+
+    /* -------------------------------------------------------------------
+     * L'ISOLA (P4) — l'unica superficie scura di una pagina chiara.
+     *
+     * Nasce sul numero-monumento della prima pagina, ed è OPACA per
+     * necessità e non per gusto: `DESIGN.md` §6 vuole il dato minuto sempre
+     * su superficie piena, e l'isola porta nove importi e tre barre.
+     *
+     * ⚠️ Nello scuro l'isola sale invece di scendere. Una card più nera
+     * della tela near-black sparirebbe: la gerarchia si ottiene con un
+     * gradino di luminanza, che è già la regola di `DESIGN.md` §10.
+     *
+     * ⚠️ Se l'isola diventasse una regola di sistema («una per pagina»)
+     * invece del gesto della sola prima pagina, la decisione va scritta in
+     * `DESIGN.md`: al 2026-08-12 è ancora aperta.
+     * ---------------------------------------------------------------- */
+    --isola: light-dark(#1a1918, #262422);
+    --isola-ink: light-dark(#f7f6f4, #f2f0ed);
+    --isola-muted: light-dark(#a8a49f, #a5a09a);
+    --isola-border: light-dark(#332f2c, #3b3733);
   }
 
   .dark {
@@ -200,6 +220,12 @@
   --color-amber-soft: var(--amber-soft);
   --color-red: var(--red);
   --color-red-soft: var(--red-soft);
+  /* Il rosso per il testo MINUTO. Esisteva come variabile ma non come utility,
+     quindi l'unico modo di usarlo era uno stile in linea. Serve: il rosso dello
+     stemma sotto i ~18px non raggiunge AA — il «.app» del marchio nel footer
+     (13,5px in grassetto) fa **4,3:1**, e l'ha trovato il cancello axe, non
+     l'occhio. Regola in `DESIGN.md` §4. */
+  --color-red-ink: var(--red-ink);
   --color-green: var(--green);
   --color-green-soft: var(--green-soft);
 
@@ -212,6 +238,26 @@
   --radius-DEFAULT: var(--radius);
   --radius-lg: var(--radius-lg);
   --radius-pill: var(--radius-pill);
+
+  /*
+    LA LARGHEZZA DEL GUSCIO — **una sola definizione** (2026-08-12, scelta di
+    Lorenzo: 1.680px).
+
+    Era `max-w-6xl` (1.152px) ripetuto in **cinque punti**: le due testate, il
+    guscio, il footer e il layout pubblico. Cinque copie della stessa misura
+    sono la forma tipografica del difetto che `AGENTS.md` §3 condanna sugli
+    indicatori — e qui il disallineamento sarebbe visibile a occhio, perché la
+    testata deve incolonnarsi col contenuto: cambiarne quattro su cinque
+    sposta il marchio rispetto al titolo sotto.
+
+    Perché 1.680 e non 1.152: a 1.700px di finestra il vecchio tetto lasciava
+    **624px di margine morto**, cioè metà schermo. Misurato, non stimato.
+
+    ⚠️ Il tetto del GUSCIO non è la misura di LETTURA. Un testo largo 1.380px
+    non si legge: le superfici che portano prosa o testo monospaziato si danno
+    un tetto proprio in `ch`, che è l'unità giusta perché conta caratteri.
+  */
+  --container-guscio: 105rem;
 
   --font-sans: var(--font-family-body);
   --font-display: var(--font-family-heading);
@@ -440,9 +486,53 @@
     flex-wrap: wrap;
   }
 
+  /*
+    ⚠️ **Lo stacco dell'unità è proporzionale alla cifra, non fisso.**
+
+    `gap: 0.5rem` sono 8px, e vanno bene finché l'unità va a capo per conto
+    suo. Col guscio a 1.680px (2026-08-12) la colonna del monumento si è
+    allargata abbastanza da tenerle sulla STESSA riga, e otto pixel accanto a
+    una cifra da 88px si leggono come un accavallamento: misurato — la cifra
+    finisce a 1496, l'unità comincia a 1504.
+
+    `DESIGN.md` §8 vuole l'unità **accanto** e non dentro («129» è il dato,
+    «mln €» è il contesto): quindi non si torna a mandarla a capo, si dà alla
+    coppia lo spazio che la scala richiede. Solo sulla taglia `hero`: sulla
+    `md` la cifra è la metà e 8px bastano.
+  */
+  .display-number[data-size="hero"] .display-number__row {
+    column-gap: 1.125rem;
+  }
+
+  /*
+    🔴 **La cifra si misura sulla COLONNA, non sulla finestra** (2026-08-12).
+
+    Questa riga diceva `clamp(3rem, 7vw, 5.5rem)`, e `vw` è la larghezza del
+    *viewport*: la stessa famiglia di errore che `DESIGN.md` §6 ha già pagato
+    due volte — il footer con `lg:flex-row` e la riga di coda con `sm:` — e la
+    cui regola è scritta lì: **quando un componente vive in colonne di larghezza
+    diversa, le varianti di finestra sono già sbagliate.**
+
+    Misurato sul monumento della prima pagina, che sta in una colonna da
+    **343px** a 1280 di finestra: `7vw` dava 88px, e «689.724» a quella taglia
+    misura **369px** — cioè **55px fuori dalla card**, con `overflow: visible`,
+    quindi sbordava sulla tela invece di essere ritagliato. Nessun cancello lo
+    vede: `shots` misura il traboccamento *della pagina* (che resta zero),
+    `contenimento` guarda i *controlli*, e axe non ha una regola per «non ci
+    sta». Trovato guardando.
+
+    `cqw` misura il contenitore, e il coefficiente è scelto perché nulla cambi
+    dove oggi funziona: il tetto di 5,5rem si raggiunge già a ~400px di colonna,
+    quindi ogni superficie più larga resta identica al pixel — e solo le colonne
+    strette scendono quanto serve a starci dentro.
+  */
+  .display-number {
+    container-type: inline-size;
+  }
+
   .display-number__value {
     font-family: var(--font-family-heading);
-    font-size: clamp(3rem, 7vw, 5.5rem); /* 48 → 88px */
+    font-size: clamp(3rem, 22cqw, 5.5rem); /* 48 → 88px */
     font-weight: 300;
     line-height: 0.95;
     letter-spacing: -0.035em;
@@ -453,7 +543,10 @@
   /* Taglia intermedia: dentro una card di stato o sopra una mesh, dove la
      scala hero schiaccerebbe tutto il resto. */
   .display-number[data-size="md"] .display-number__value {
-    font-size: clamp(2rem, 4vw, 3.25rem);
+    /* Stessa correzione della taglia hero: il contenitore, non la finestra.
+       Il tetto si raggiunge a ~325px di colonna, che è più stretto di ogni
+       card di stato in cui questa taglia vive oggi. */
+    font-size: clamp(2rem, 16cqw, 3.25rem);
     font-weight: 400;
   }
   .display-number[data-size="md"] .display-number__unit {
@@ -708,8 +801,25 @@
     );
   }
 
-  /* La scacchiera dello stemma: micro-pattern per i momenti di brand.
-     Da usare piccolo e con parsimonia. */
+  /*
+    ⚠️ QUI NON C'È PIÙ UN FILO IN CIMA ALLE SUPERFICI-FIRMA, ed è una decisione
+    di Lorenzo del 2026-08-12 presa su quattro varianti fotografate sulla card
+    vera: la scacchiera com'era, il filo sfumato che l'aveva sostituita, e due
+    versioni a moduli monocromi. Verdetto: **«mi fanno tutti pena, non
+    metterci niente»**.
+
+    Vale la pena tenerne memoria perché è una lezione di sistema: quel filo
+    non risolveva un problema, riempiva un'abitudine. `DESIGN.md` §12 dice
+    «un momento memorabile per pagina», non «un ornamento per card» — e una
+    decorazione che nessuna delle sue varianti convince è una decorazione che
+    non serve. Le superfici-firma ora si distinguono per ciò che dicono e per
+    la loro composizione, non per una fascia colorata sopra.
+
+    Il vocabolario decorativo che resta: le **fasce romaniche**
+    (`.bande-romaniche`, `.divider-bande`) e il **rosso della città** come
+    colore. La scacchiera resta solo dentro `Crest`, dove lo stemma è il
+    soggetto perché si parla del Comune.
+  */
   .scacchiera {
     background-image: conic-gradient(
       var(--red) 25%,
@@ -718,6 +828,31 @@
       transparent 0
     );
     background-size: 0.75rem 0.75rem;
+  }
+
+  /*
+    L'isola (P4): superficie scura, opaca, senza vetro.
+
+    Non è una `.card` con un fondo diverso, ed è voluto: la card È vetro
+    (`backdrop-filter`), e sfocare la tela sotto una superficie scura la
+    schiarirebbe di quel tanto che basta a togliere il contrasto agli importi
+    che ci vivono sopra. Qui il fondo è pieno per disegno — `DESIGN.md` §6.
+  */
+  .isola {
+    position: relative;
+    background-color: var(--isola);
+    color: var(--isola-ink);
+    border: 1px solid var(--isola-border);
+    border-radius: var(--radius-container);
+  }
+
+  /* Come dentro `.mesh-surface`: il reset di Astryx dichiara `color` su
+     `:where(h1…h6, p)`, e una dichiarazione sull'elemento batte sempre un
+     valore EREDITATO dal genitore. Senza questa riga i titoli e i paragrafi
+     dell'isola prendono l'inchiostro del tema — nel chiaro, nero su nero.
+     È la trappola di `AGENTS.md` §3 (ondata 6, 3), pagata una volta sola. */
+  .isola :is(h1, h2, h3, h4, h5, h6, p) {
+    color: inherit;
   }
 
   /* Separatore di sezione a fasce: alternativa decorativa alla linea. */

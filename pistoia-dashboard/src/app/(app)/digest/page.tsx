@@ -17,7 +17,7 @@ import { Stat } from "@/components/ui/stat";
 import { SectionHeader } from "@/components/ui/section-header";
 import { PrintButton } from "@/components/trasparenza/print-button";
 import { TimbroMetodologia } from "@/components/valutazioni/timbro-metodologia";
-import { Crest } from "@/components/brand/crest";
+import { Wordmark } from "@/components/brand/wordmark";
 import { reportCategory, proposalStatus } from "@/lib/community";
 import { decisionOutcome } from "@/lib/transparency";
 import { formatDate, formatDateShort, formatNumber } from "@/lib/format";
@@ -55,12 +55,14 @@ export default async function DigestPage() {
         action={<span className="print:hidden"><PrintButton /></span>}
       />
 
-      {/* Testata visibile solo in stampa: il PDF si presenta da solo. */}
+      {/* Testata visibile solo in stampa: il PDF si presenta da solo.
+          Il marchio va senza segno: il quadrato pieno in stampa è un
+          rettangolo di toner che non aggiunge niente al foglio. */}
       <div className="hidden items-center gap-3 border-b border-border pb-4 print:flex">
-        <Crest className="h-10 w-auto" />
         <div>
+          <Wordmark segno={false} />
           <p className="text-lg font-bold leading-tight">
-            Pistoia — Report civico · {period}
+            Report civico di Pistoia · {period}
           </p>
           <p className="text-xs text-muted">
             Generato il {formatDate(digest.generatedAt)} · dati dimostrativi

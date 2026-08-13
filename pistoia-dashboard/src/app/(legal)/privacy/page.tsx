@@ -16,8 +16,8 @@ export default function PrivacyPage() {
         In vigore dal 10 giugno 2026
       </p>
       <p className="!text-muted-2">
-        Dashboard di Pistoia è un <strong>progetto dimostrativo</strong> e non è un servizio ufficiale
-        del Comune di Pistoia. Questa informativa descrive come la piattaforma tratterebbe i dati
+        Pistoia.app è un <strong>progetto dimostrativo</strong> e non è un servizio ufficiale del
+        Comune di Pistoia. Questa informativa descrive come la piattaforma tratterebbe i dati
         personali in un contesto reale.
       </p>
 

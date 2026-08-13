@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Crest } from "@/components/brand/crest";
+import { Wordmark } from "@/components/brand/wordmark";
 import { PreviewBadge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { MeshSurface } from "@/components/signature/mesh-surface";
@@ -29,8 +29,13 @@ export default function AuthLayout({
         Al loro posto la superficie-firma `MeshSurface` in tono `cool`. `cool` è
         il neutro ed è la scelta giusta qui: la schermata di accesso non
         rappresenta una salute, e usare `good` farebbe dire al verde una cosa
-        che non c'è (DESIGN.md §8). Sopra, la scacchiera dello stemma come
-        momento di marca.
+        che non c'è (DESIGN.md §8).
+
+        ⚠️ Sopra c'era la **scacchiera dello stemma** come momento di marca, ed
+        è uscita col battesimo del 2026-08-12: l'araldica dell'ente su una
+        piattaforma che l'ente non è sarebbe il travestimento che
+        `direzione-prodotto.md` §1.4 vieta. Adesso il momento di marca è il
+        marchio stesso — vedi il commento accanto.
       */}
       <aside className="relative hidden overflow-hidden lg:block">
         <MeshSurface
@@ -45,17 +50,30 @@ export default function AuthLayout({
             motivo per cui `cool` regge il testo piccolo mentre `bad` no
             (vedi `city-state-hero.tsx`).
           */}
-          <div>
-            <div className="flex items-center gap-3">
-              <Crest className="h-11 w-auto" />
-              <span className="text-lg font-bold tracking-tight">
-                Comune di Pistoia
-              </span>
-            </div>
-            {/* Alta 12px quanto il passo del motivo: sotto si vede una sola
-                fila di quadretti e la scacchiera si legge come un tratteggio. */}
-            <div className="scacchiera mt-6 h-3 w-28 opacity-80" aria-hidden />
-          </div>
+          {/* Qui c'era la SCACCHIERA, ed è uscita col rebranding: è l'araldica
+              del Comune, e come firma di una piattaforma che il Comune non è
+              sarebbe il travestimento che `direzione-prodotto.md` §1.4 vieta.
+
+              Non è stata sostituita da un altro motivo, ed è una scelta: le
+              fasce romaniche vivono a contrasto minimo (3,5%, `DESIGN.md` §3)
+              e sopra il mesh quel valore non si legge come ornamento — si
+              legge come un blocco di caricamento rimasto lì. Un motivo che
+              sembra un guasto è peggio di nessun motivo, e il pannello ha già
+              due cose che parlano: il marchio e la materia del mesh.
+
+              Il marchio sta poi su una PASTIGLIA PIENA e non direttamente sul
+              mesh, e anche questa è una misura: il rosso del «.app» sopra gli
+              stop di `cool` fa **2,45:1** sul chiaro e **1,17:1** sullo scuro
+              — sotto il 3:1 che vale perfino per il testo grande. È
+              `DESIGN.md` §8 («sotto una superficie mesh il testo minuto non ci
+              va») e P2 della ricognizione: il payload si legge sul pieno, e il
+              marchio è payload, non ornamento. */}
+          {/* `self-start`: il pannello è un flex column, e senza questo la
+              pastiglia si stira a tutta colonna e smette di sembrare un
+              marchio. */}
+          <span className="inline-flex self-start rounded-pill bg-surface px-4 py-2.5 shadow-sm">
+            <Wordmark />
+          </span>
 
           <div className="max-w-md">
             <h2 className="font-display text-[34px] font-light leading-tight tracking-tight">
@@ -83,9 +101,8 @@ export default function AuthLayout({
       {/* Form side */}
       <main className="relative flex flex-col">
         <header className="flex items-center justify-between p-5 sm:p-6">
-          <Link href="/" className="flex items-center gap-2.5 lg:hidden">
-            <Crest className="h-9 w-auto" />
-            <span className="font-bold tracking-tight">Comune di Pistoia</span>
+          <Link href="/" className="lg:hidden">
+            <Wordmark />
           </Link>
           <div className="ml-auto flex items-center gap-2">
             <PreviewBadge />

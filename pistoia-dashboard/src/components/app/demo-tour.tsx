@@ -143,8 +143,6 @@ export function DemoTour() {
       tabIndex={-1}
       className="card fixed inset-x-4 bottom-20 z-40 mx-auto max-w-md p-0 outline-none lg:bottom-6 lg:right-6 lg:left-auto lg:mx-0 lg:w-96 print:hidden"
     >
-      {/* Filo rosso identitario: la scacchiera dello stemma. */}
-      <div className="scacchiera h-1.5 w-full rounded-t-[var(--radius)] opacity-60" aria-hidden />
       <div className="p-5">
         <div className="flex items-start justify-between gap-3">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-2">

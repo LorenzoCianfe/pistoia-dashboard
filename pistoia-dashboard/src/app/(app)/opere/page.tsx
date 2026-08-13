@@ -80,7 +80,6 @@ export default async function OperePage() {
           tempi dall'altra. */}
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="overflow-hidden p-0 lg:col-span-2">
-          <div className="scacchiera h-1.5 w-full opacity-60" aria-hidden />
           <div className="flex h-full flex-col justify-between gap-5 p-5 sm:p-6">
             {/*
               L'unica cifra display della schermata (DESIGN.md §8). Nuda: la

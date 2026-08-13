@@ -21,7 +21,7 @@ export default async function LoginPage({
       <div className="mb-7">
         <h1 className="text-2xl font-bold tracking-tight">Bentornato</h1>
         <p className="mt-1.5 text-sm text-muted">
-          Accedi alla Dashboard di Pistoia.
+          Accedi a Pistoia.app.
         </p>
       </div>
 

@@ -35,6 +35,22 @@ export type PaginaCancello = {
 };
 
 export const PAGINE_ANONIME: PaginaCancello[] = [
+  /*
+    LA PRIMA PAGINA, entrata il 2026-08-12 con l'Ondata 10.
+
+    ⚠️ **Non c'era, e non era una scelta: era un buco.** La rotta `/` non è mai
+    stata in questa lista, quindi la superficie pubblica più importante del
+    prodotto — quella che vede chi arriva da un motore di ricerca — non è mai
+    stata misurata da axe, dal cancello dei 44px né da quello del ritaglio. Il
+    difetto è della famiglia che `AGENTS.md` §3 nomina per prima: *un cancello
+    copre le regole che gli hai chiesto*, e a questi tre nessuno aveva chiesto
+    la home.
+
+    ⚠️ Corollario che vale al primo giro: quando una pagina entra per la prima
+    volta in un cancello, **i rossi possono essere suoi di nascita**, non della
+    modifica che ce l'ha portata.
+  */
+  { nome: "prima pagina (home pubblica)", url: "/" },
   { nome: "login", url: "/login" },
   { nome: "valutazioni (barra anonima)", url: "/valutazioni" },
   { nome: "metodologia (documento lungo)", url: "/metodologia" },

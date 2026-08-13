@@ -235,10 +235,12 @@ export default function DesignSystemPage() {
             <div className="bande-romaniche h-24" />
             <p className="p-3 text-xs text-muted">Fasce romaniche</p>
           </div>
-          <div className="card overflow-hidden p-0">
-            <div className="scacchiera h-24" />
-            <p className="p-3 text-xs text-muted">Scacchiera dello stemma</p>
-          </div>
+          {/* Qui c'era la SCACCHIERA come motivo identitario. È uscita col
+              battesimo (DESIGN.md §3, 2026-08-12) perché evoca lo stemma, e
+              il filo rosso che l'aveva sostituita è uscito a sua volta la sera
+              stessa: messo a confronto in quattro varianti sulla card vera,
+              nessuna convinceva. Un ornamento che non risolve niente non si
+              rimpiazza — si toglie. Restano le fasce e il rosso come colore. */}
           <div className="card flex flex-col justify-between p-0">
             <div className="flex-1" />
             <hr className="divider-bande mx-3" />

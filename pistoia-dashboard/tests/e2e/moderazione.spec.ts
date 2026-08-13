@@ -44,7 +44,7 @@ test("IL CANCELLO: l'account del Comune non entra dove si rimuove; la redazione 
   await expect(page).toHaveURL(/\/redazione/);
   await expect(page.getByRole("heading", { name: "Redazione" })).toBeVisible();
   await expect(
-    page.getByText("«Redazione della Dashboard di Pistoia»"),
+    page.getByText("«Redazione di Pistoia.app»"),
   ).toBeVisible();
 });
 
@@ -91,7 +91,7 @@ test("il Comune segnala, la redazione rimuove: il testo sparisce e il registro f
     page.getByText("Conteneva dati personali di un terzo."),
   ).toBeVisible();
   await expect(
-    page.getByText("Redazione della Dashboard di Pistoia").first(),
+    page.getByText("Redazione di Pistoia.app").first(),
   ).toBeVisible();
 });
 

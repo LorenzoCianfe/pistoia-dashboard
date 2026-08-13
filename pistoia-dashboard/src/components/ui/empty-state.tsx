@@ -5,7 +5,7 @@ import { accent as accentTokens, type AccentColor } from "@/lib/colors";
 /*
   Empty state "Pistoia geometrica" (DESIGN.md §7): ogni lista vuota dice cosa
   non c'è, perché, e qual è l'azione per riempirla — sotto un'illustrazione
-  costruita solo con i motivi identitari (arco romanico, fasce, scacchiera).
+  costruita solo con i motivi identitari (arco romanico, fasce romaniche).
 */
 
 function ArcoRomanico({ fg, soft }: { fg: string; soft: string }) {
@@ -17,12 +17,15 @@ function ArcoRomanico({ fg, soft }: { fg: string; soft: string }) {
       aria-hidden="true"
       className="mx-auto"
     >
-      {/* La scacchiera dello stemma, piccola e in alto. */}
-      <g transform="translate(90 4)">
-        <rect width="8" height="8" fill="var(--red)" opacity="0.5" />
-        <rect x="8" y="8" width="8" height="8" fill="var(--red)" opacity="0.5" />
-        <rect x="8" width="8" height="8" fill="var(--red-soft)" />
-        <rect y="8" width="8" height="8" fill="var(--red-soft)" />
+      {/* Le fasce romaniche, piccole e in alto. Qui c'era la **scacchiera**
+          dello stemma, uscita col battesimo del 2026-08-12: l'araldica
+          dell'ente non firma una piattaforma che l'ente non è (DESIGN.md §3).
+          Le fasce di San Giovanni Fuorcivitas restano — sono patrimonio della
+          città, non insegna dell'amministrazione. */}
+      <g transform="translate(88 5)">
+        <rect width="18" height="4" fill="var(--red)" opacity="0.45" />
+        <rect y="6" width="18" height="4" fill="var(--red-soft)" />
+        <rect y="12" width="18" height="4" fill="var(--red)" opacity="0.45" />
       </g>
       {/* L'arco romanico: colonne + volta. */}
       <path

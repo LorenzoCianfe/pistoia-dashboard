@@ -72,7 +72,6 @@ export function OnboardingChecklist({ steps }: { steps: OnboardingStep[] }) {
 
   return (
     <Card className="border-teal/30 p-0">
-      <div className="scacchiera h-1.5 w-full rounded-t-[var(--radius)] opacity-50" aria-hidden />
       <div className="p-5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div>

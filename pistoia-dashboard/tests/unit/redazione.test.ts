@@ -36,7 +36,7 @@ describe("il cancello: chi può rimuovere", () => {
 
 describe("la firma collettiva", () => {
   it("è l'entità, mai una persona", () => {
-    expect(FIRMA_REDAZIONE).toBe("Redazione della Dashboard di Pistoia");
+    expect(FIRMA_REDAZIONE).toBe("Redazione di Pistoia.app");
   });
 });
 

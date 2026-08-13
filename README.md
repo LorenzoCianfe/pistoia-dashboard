@@ -1,12 +1,17 @@
-# 🏛️ Dashboard di Pistoia
+# Pistoia.app
 
-> I dati pubblici del Comune di Pistoia, finalmente leggibili.
+> I dati pubblici di Pistoia, finalmente leggibili.
 
-Piattaforma civica che trasforma **bilancio, opere, sondaggi e segnalazioni** in un'unica app
-moderna, chiara e veloce — pensata per i cittadini, non per i ragionieri.
+Piattaforma civica **indipendente** che trasforma **gli atti del Comune, il bilancio, i cantieri,
+i sondaggi e le segnalazioni** in un'unica app moderna, chiara e veloce — pensata per i cittadini,
+non per i ragionieri.
 
-> ⚠️ **Progetto dimostrativo:** i dati mostrati sono di esempio (mock) e non rappresentano fonti
-> ufficiali. L'autenticazione è invece reale e sicura.
+> ⚠️ **Non è un servizio del Comune di Pistoia.** Parla *di* Pistoia usando dati pubblici, non
+> *per* l'amministrazione: la direzione completa è in
+> [`docs/direzione-prodotto.md`](docs/direzione-prodotto.md).
+>
+> ⚠️ **Progetto dimostrativo:** una parte dei dati è di esempio (mock) e dichiarata come tale.
+> Gli atti sono invece reali — 26.644, letti dall'albo pretorio. L'autenticazione è reale e sicura.
 
 ---
 

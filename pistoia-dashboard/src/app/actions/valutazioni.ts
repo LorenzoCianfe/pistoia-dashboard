@@ -123,7 +123,7 @@ function testoMail(
   const stelleTxt = stelle === 1 ? "1 stella" : `${stelle} stelle`;
   return [
     `Da questo indirizzo sono state lasciate ${stelleTxt} su «${s.nome}»`,
-    `(Valutazioni dei servizi — Dashboard di Pistoia).`,
+    `(Valutazioni dei servizi — Pistoia.app).`,
     ``,
     `Il voto è già nel conteggio: non devi fare nulla perché resti.`,
     ``,

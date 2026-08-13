@@ -1247,10 +1247,43 @@ model Atto {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // -------------------------------------------------------------------------
+  // Il fatto del giorno, CURATO (Ondata 10, decisione di Lorenzo del 2026-08-12)
+  // -------------------------------------------------------------------------
+  //
+  // Questi tre campi sono l'unico posto della piattaforma in cui una persona
+  // scrive sopra un atto — e ci sono per una ragione precisa, non per comodità.
+  //
+  // ⚠️ **Generare il titolo umano è VIETATO** («nessuna frase generata»,
+  // ROADMAP Ondata 11): l'archivio si capisce per STRUTTURA, non per
+  // riscrittura. Ma l'oggetto ufficiale non è un titolo — misurato sui 500
+  // atti più recenti: mediana **245 caratteri**, p90 **428**, massimo **736**.
+  // Metterlo in cima alla prima pagina sarebbe una barriera, non un magnete.
+  //
+  // La sola uscita onesta è quindi che il titolo lo scriva **la redazione**, a
+  // mano, e che **senza cura non ci sia apertura**: se in un giorno nessuno ha
+  // curato niente, la home apre col fiume degli atti e col numero-monumento.
+  // Un'apertura vuota è peggio di nessuna apertura.
+  //
+  // L'oggetto ufficiale resta intatto e sempre visibile accanto al titolo umano
+  // (`direzione-prodotto.md` §1.12.1): chi legge capisce, chi verifica trova
+  // l'originale a un millimetro.
+  //
+  // La firma pubblica è sempre e solo l'entità collettiva (`FIRMA_REDAZIONE`),
+  // mai un nome proprio — quindi qui NON c'è un autore: chi ha curato sta nel
+  // registro delle azioni, che è dove vivono gli attori di ogni altra azione
+  // della piattaforma.
+  titoloRedazionale   String? // il titolo umano, scritto a mano dalla redazione
+  sommarioRedazionale String? // la didascalia: «perché questo atto conta», una-due frasi
+  curatoIl            DateTime? // quando; non-null insieme al titolo, mai da solo
+
   @@index([temaCivico])
   @@index([tipo])
   @@index([inizioPubblicazione])
   @@index([anno])
+  // Il fatto del giorno si cerca fra gli atti curati dell'ultimo giorno di
+  // pubblicazione: la coppia è l'indice che serve a quella query.
+  @@index([inizioPubblicazione, curatoIl])
 }
 
 // Il registro delle letture: è ciò che rende il cancello di freschezza capace

@@ -20,6 +20,12 @@ refs/
 # vive in docs/ricognizione-visiva.md, che è la parte committata.
 refs-o10/
 
+# I mockup delle direzioni D1/D2 (tappa b di O10, 2026-08-12): schermate di
+# lavoro per il giudizio di Lorenzo, non artefatti del prodotto. Fuori da git
+# come refs-o10/ — qui non per diritti ma perché sono materiale di decisione:
+# ciò che ne sopravvive va nei documenti (DESIGN.md, ricognizione).
+mockups-o10/
+
 # App-level ignores live in pistoia-dashboard/.gitignore
 
 # Artefatti Playwright, se la suite viene lanciata dalla radice per errore:

@@ -86,8 +86,40 @@ const dateShortFmt = new Intl.DateTimeFormat("it-IT", {
   timeZone: "Europe/Rome",
 });
 
+/** Solo il numero del giorno, nello stesso fuso di `dateFmt`. Vedi `dataConPreposizione`. */
+const giornoFmt = new Intl.DateTimeFormat("it-IT", {
+  day: "numeric",
+  timeZone: "Europe/Rome",
+});
+
 export function formatDate(date: Date | string) {
   return dateFmt.format(new Date(date));
+}
+
+/**
+ * Il giorno con l'articolo o la preposizione giusta: «l'11 agosto 2026»,
+ * «il 5 agosto 2026», «all'8 agosto 2026», «al 5 agosto 2026».
+ *
+ * Esiste perché «il 11 agosto» a schermo si legge come un errore del
+ * programma, ed è finito in prima pagina alla prima resa. In italiano
+ * l'elisione dipende dal **suono del numero**, non dalla cifra: si elide
+ * davanti a *otto* e *undici*, che cominciano per vocale, e non davanti a
+ * *uno*, *diciotto*, *ventotto* — che pure hanno un 8 dentro. Da qui l'elenco
+ * di due numeri invece di una regola sulle cifre, che sbaglierebbe il 18 e il
+ * 28 in silenzio.
+ */
+export function dataConPreposizione(
+  date: Date | string,
+  forma: "il" | "al" = "il",
+) {
+  // ⚠️ Il giorno si legge dallo STESSO fuso di `formatDate` (Europe/Rome), non
+  // da `getDate()`, che usa quello della macchina: su un server a ovest di
+  // Greenwich un timestamp di mezzanotte UTC cade il giorno prima, e l'articolo
+  // finirebbe in disaccordo con la data che sta scritta accanto.
+  const giorno = Number(giornoFmt.format(new Date(date)));
+  const elide = giorno === 8 || giorno === 11;
+  const testa = forma === "il" ? (elide ? "l'" : "il ") : elide ? "all'" : "al ";
+  return `${testa}${formatDate(date)}`;
 }
 
 export function formatDateShort(date: Date | string) {

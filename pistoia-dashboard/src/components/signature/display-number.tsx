@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useInView, useReducedMotion } from "motion/react";
-import { useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { cn } from "@/lib/utils";
@@ -58,6 +58,32 @@ export type DisplayNumberProps = {
    */
   size?: "hero" | "md";
   className?: string;
+  /**
+   * Che cosa annunciare quando la cifra ha finito di contare — «Costo della
+   * giunta» diventa «Costo della giunta: 689.724 € all'anno».
+   *
+   * 🔴 **Chiude un buco di accessibilità nostro** (P24 di
+   * `docs/ricognizione-visiva.md`, trovato guardando com'è fatto il contatore
+   * di CodeFronts). La cifra conta da zero mutando il testo fotogramma per
+   * fotogramma: chi usa un lettore di schermo e arriva mentre l'animazione
+   * gira sente un numero intermedio, e **niente gli dice quando quel valore è
+   * definitivo**. Nessuno dei quattro cancelli lo vede — axe non ha una regola
+   * per «il testo sta ancora cambiando».
+   *
+   * ⚠️ La live region è **vuota finché il conteggio non finisce**, e non è un
+   * dettaglio: una live region che seguisse l'animazione annuncerebbe decine
+   * di valori in un secondo. Qui parla una volta sola.
+   *
+   * ⚠️ E NON è l'«equivalente nascosto» che `DESIGN.md` §8 vieta: quello è un
+   * secondo testo permanente da tenere allineato a mano. Questo è un annuncio
+   * a scatto singolo, e il valore viene dallo stesso formattatore della cifra
+   * visibile — non c'è una seconda verità che possa divergere.
+   *
+   * Omesso = nessuna live region: la regola «una cifra display per schermata»
+   * non è imposta dal codice, e due regioni sulla stessa pagina si
+   * calpesterebbero.
+   */
+  annuncio?: string;
 };
 
 const deltaFormat = new Intl.NumberFormat("it-IT", {
@@ -77,6 +103,7 @@ export function DisplayNumber({
   sparkline,
   size = "hero",
   className,
+  annuncio,
 }: DisplayNumberProps) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-10% 0px" });
@@ -85,6 +112,17 @@ export function DisplayNumber({
     maximumFractionDigits: 0,
     ...formatOptions,
   }).format;
+
+  // Vuota al primo render — sul server e sul browser, quindi nessuna divergenza
+  // di idratazione — e riempita una volta sola quando la cifra si assesta.
+  const [assestato, setAssestato] = useState("");
+  const suFine = useCallback(
+    (testo: string) => {
+      if (!annuncio) return;
+      setAssestato(`${annuncio}: ${testo}${unit ? ` ${unit}` : ""}`);
+    },
+    [annuncio, unit],
+  );
 
   // Posizione del valore nella scala, come indice di tacca.
   const activeTick =
@@ -110,7 +148,12 @@ export function DisplayNumber({
 
       <div className="display-number__row">
         <span className="display-number__value">
-          <AnimatedNumber value={value} format={format} duration={0.88} />
+          <AnimatedNumber
+            value={value}
+            format={format}
+            duration={0.88}
+            onAssestato={annuncio ? suFine : undefined}
+          />
         </span>
         {unit ? <span className="display-number__unit">{unit}</span> : null}
         {sparkline ? (
@@ -152,6 +195,13 @@ export function DisplayNumber({
           <span aria-hidden="true">{rising ? "↗" : "↘"}</span>{" "}
           {(delta.format ?? deltaFormat)(delta.value)}{" "}
           <span className="display-number__period">{delta.period}</span>
+        </p>
+      ) : null}
+
+      {/* P24: parla una volta sola, quando il valore è definitivo. */}
+      {annuncio ? (
+        <p className="sr-only" role="status" aria-live="polite">
+          {assestato}
         </p>
       ) : null}
     </div>

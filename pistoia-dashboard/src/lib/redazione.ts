@@ -29,7 +29,7 @@ import { GIUNTA } from "./giunta";
  * perché due definizioni della stessa firma sono peggio di nessuna firma
  * (AGENTS.md §3, ondata 7).
  */
-export const FIRMA_REDAZIONE = "Redazione della Dashboard di Pistoia";
+export const FIRMA_REDAZIONE = "Redazione di Pistoia.app";
 
 /** Vero SOLO per il ruolo `MODERATOR`: vedi il commento di testa del modulo. */
 export function isRedazione(role: string): boolean {

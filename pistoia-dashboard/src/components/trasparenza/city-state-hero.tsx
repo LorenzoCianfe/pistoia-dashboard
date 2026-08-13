@@ -62,8 +62,6 @@ export function CityStateHero({ state }: { state: CityState }) {
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Cella protagonista: la cifra display della schermata. */}
         <Card className="overflow-hidden p-0 lg:col-span-2">
-          {/* Il filo rosso identitario: la scacchiera dello stemma. */}
-          <div className="scacchiera h-1.5 w-full opacity-60" aria-hidden />
           <div className="flex h-full flex-col justify-between gap-5 p-5 sm:p-6">
             {rate === null ? (
               <p className="text-sm text-muted">

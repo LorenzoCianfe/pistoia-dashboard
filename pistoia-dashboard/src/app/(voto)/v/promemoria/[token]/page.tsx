@@ -20,7 +20,7 @@ export const metadata: Metadata = { title: "Promemoria mensile" };
 function Marca() {
   return (
     <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-2">
-      Dashboard di Pistoia · Valutazioni dei servizi
+      Pistoia.app · Valutazioni dei servizi
     </p>
   );
 }

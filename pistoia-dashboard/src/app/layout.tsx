@@ -22,16 +22,20 @@ const jetbrains = JetBrains_Mono({
   display: "swap",
 });
 
+// Il nome è il marchio, non l'ente: «Pistoia.app» parla DI Pistoia e non PER
+// il Comune (`direzione-prodotto.md` §1.4). `authors` in particolare non può
+// più dire «Comune di Pistoia»: sarebbe una dichiarazione di paternità falsa
+// nei metadati, cioè esattamente ciò che §1.4 vieta.
 export const metadata: Metadata = {
   title: {
-    default: "Dashboard di Pistoia",
-    template: "%s · Dashboard di Pistoia",
+    default: "Pistoia.app — la città, sui dati veri",
+    template: "%s · Pistoia.app",
   },
   description:
-    "I dati pubblici del Comune di Pistoia, finalmente leggibili: bilancio, opere, sondaggi e la città che si risponde.",
-  applicationName: "Dashboard di Pistoia",
-  authors: [{ name: "Comune di Pistoia" }],
-  keywords: ["Pistoia", "comune", "bilancio", "opere", "trasparenza", "cittadini"],
+    "I dati pubblici di Pistoia, finalmente leggibili: gli atti del Comune, i soldi, i cantieri e la città che si risponde. Un progetto civico indipendente.",
+  applicationName: "Pistoia.app",
+  authors: [{ name: "Redazione di Pistoia.app" }],
+  keywords: ["Pistoia", "atti", "comune", "bilancio", "opere", "trasparenza", "cittadini"],
 };
 
 export const viewport: Viewport = {

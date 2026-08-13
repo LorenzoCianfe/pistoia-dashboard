@@ -1,5 +1,10 @@
 # Ricognizione visiva — O10, il battesimo di Pistoia.app
 
+> **Aggiornata il 2026-08-12 (notte)** con §2-quater — CodeFronts, portato da
+> Lorenzo: una libreria CSS invece di un portfolio, e quindi una fonte con
+> regole d'uso diverse. Tre pattern nuovi (P22–P24), fra cui un **buco di
+> accessibilità nostro** trovato guardando com'è fatto un contatore altrui.
+
 > La ricognizione che apre l'Ondata 10, come `fonti-atti.md` ha aperto la
 > pipeline: prima si guarda che cosa fanno i professionisti, poi si disegna.
 > Condotta il **2026-08-12** col browser in **due giri**: il primo su
@@ -9,8 +14,13 @@
 > gov.uk, Citymapper, FixMyStreet, Il Post (§2-bis). Ogni fonte chiude con la
 > riga che conta: **che cosa se ne prende, e che cosa no.**
 >
-> **Le fonti servono da ispirazione e metro di qualità, mai da copiare** —
-> ogni scelta va rielaborata in originale (§1.10, testuale). Questa è la
+> **Le fonti sono ispirazione e metro di qualità** (§1.10). ✏️ Il «mai da
+> copiare» è **caduto il 2026-08-12 per decisione di Lorenzo**: se qualcosa è
+> bello si copia. Restano due distinzioni scritte in §1.10: la **licenza**
+> decide che cosa si può prendere alla lettera (il CSS MIT sì, uno screenshot
+> altrui no), e ciò che entra va **ricondotto ai nostri token** — un
+> componente incollato con le sue tinte e i suoi raggi porta dentro un altro
+> design system. Il metro resta il **test dell'intruso** (P21). Questa è la
 > seconda ricognizione del progetto: la prima (2026-07-25, `REFERENCES.md` e
 > `refs/`) resta valida per i token e le librerie; questa la allarga con
 > Pistoia.app in testa.
@@ -481,6 +491,126 @@ template, non una firma.
 
 ---
 
+## 2-quater. CodeFronts, e la differenza fra una libreria e un riferimento (2026-08-12, notte)
+
+> Portato da Lorenzo: «questo sito ha molti elementi web belli da copiare,
+> analizzalo tutto nel dettaglio e se c'è qualcosa di utile prendilo» —
+> `codefronts.com`. Analizzato col browser: consenso **rifiutato** (banner con
+> 1731 partner, «REJECT ALL»), poi navigate le collezioni pertinenti.
+
+**Che cos'è, misurato**: una libreria di **CSS a copia-incolla** — 139
+collezioni, 2.789 demo, licenza MIT, costruita con Astro. Non è un portfolio
+di design: è codice funzionante, con descrizioni tecniche che spiegano il
+*perché* di ogni scelta. Dichiara lo stesso standard che pretendiamo noi
+(«works at 320px, 600px, 1440px · keyboard-accessible · `prefers-reduced-motion`
+respected»), e tiene fede: ogni collezione è marcata *Pure CSS* o *Light JS*.
+
+⚠️ **La cosa da dire per prima, e non è una sottigliezza.** Una raccolta che
+si intitola «51 CSS Buttons» **è il repertorio del generico**: è esattamente
+il posto da cui viene la UI «già vista su dieci dashboard» che `DESIGN.md` §1
+esclude e che il test dell'intruso (P21) condanna. Prendere di lì un bottone,
+una card di vetro o un footer significa importare la media del mestiere. La
+regola resta quella di §1.10: **le fonti sono ispirazione e metro, mai da
+copiare** — e qui la tentazione è più forte perché il codice è pronto e la
+licenza lo permette.
+
+Detto questo, il sito ha **quattro cose che valgono davvero**, e sono tutte
+tecniche o strutturali — non estetiche.
+
+### Le quattro cose da prendere (rielaborate, non copiate)
+
+1. 🔑 **L'archivio raggruppato per anno con le etichette che si appiccicano**
+   («Blog Archive with Year Separators»). È la forma che l'**archivio degli
+   atti** cerca: 26.644 decisioni in una colonna scorrevole, raggruppate per
+   anno, con l'anno che resta a lato mentre scorri. Risolve il problema vero
+   di O11 — sapere *dove sei* dentro un archivio profondo — senza paginazione
+   e senza filtri. Entra come **P22**.
+2. 🔑 **La barra di avanzamento della lettura senza listener di scroll**:
+   `animation-timeline: scroll()` lega l'animazione alla posizione, gira fuori
+   dal thread principale e costa zero. **Conferma indipendente della nostra
+   scelta** (`ScrollTold` usa la ScrollTimeline nativa via Motion) e dà la
+   forma a un elemento che le pagine lunghe — bilancio, pagina atto — oggi non
+   hanno. Entra come **P23**.
+3. **`subgrid` per allineare le card al pixel** nella griglia secondaria di una
+   prima pagina editoriale. È il rimedio esatto al difetto che si vede quando
+   quattro card hanno titoli di lunghezza diversa e i corpi non si allineano.
+4. 🔑 **Il tile KPI che annuncia in live region quando il numero si è
+   assestato.** Questo è un **miglioramento di accessibilità che ci manca**:
+   `DisplayNumber` conta da zero e chi usa uno screen reader non ha modo di
+   sapere quando il valore è definitivo. Entra come **P24**.
+
+### Le cose da NON prendere, e perché
+
+| Cosa | Perché no |
+|---|---|
+| **Il contatore in CSS puro** (`@property` + `counter()`) | Elegantissimo — e **vietato da `DESIGN.md` §8**: il numero deve essere **testo vero**, selezionabile, copiabile e leggibile dalle tecnologie assistive. `counter()` genera contenuto CSS: non si seleziona, non si copia, e non tutti i lettori di schermo lo annunciano. È il caso esemplare di una soluzione brillante che un nostro vincolo esclude |
+| **La barra «breaking news» a marquee** | Movimento continuo e automatico: `DESIGN.md` §7 concede tre soli momenti di festa e nessuna animazione ambientale. La nostra striscia dei dati è ferma per disegno |
+| **Il blocco scarsità dell'e-commerce** («solo N rimasti», barra che vira all'urgenza) | Meccanica persuasiva costruita per far decidere in fretta. Su un servizio civico è l'opposto del patto: `direzione-prodotto.md` §1.7, numeri caldi e **tono freddo** |
+| **Le card glassmorphism della collezione** | È il «template glass» da cui il nostro vetro deve distinguersi (§2.4 e la questione di `DESIGN.md` §6). Il nostro ha una disciplina — payload sul pieno — che quelle non hanno |
+| **Bottoni, footer, testimonial, ribbon** | Repertorio generico. Un footer preso di lì cancellerebbe le sei decisioni misurate che il nostro porta dentro |
+
+**La nota sulla licenza:** MIT consente l'uso e la modifica, con l'obbligo di
+conservare l'avviso di copyright. Dopo la correzione di §1.10 (2026-08-12,
+«se qualcosa è bello si copia») **importare codice da qui è lecito e
+ammesso**: quando succede, l'avviso resta nel file e la provenienza va
+annotata in `REFERENCES.md`. Ciò che entra si riconduce ai **nostri token** —
+un componente incollato con le sue tinte, i suoi raggi e le sue durate porta
+dentro un secondo design system e litiga col nostro.
+
+### Il giro sulle collezioni di `components` (30 collezioni)
+
+Chiesto da Lorenzo: «guarda tutte le collezioni in components, scrolla bene».
+Esaminate **otto collezioni per intero** — Liquid Glass Cards (21), Steppers
+(12), Skeleton Loaders (12), Search Box (32), Progress Bars (12), Star
+Ratings (22), più Blog Layouts (20) e Number Counters (25) del giro
+precedente: **~156 demo**. L'elenco completo delle 30 collezioni è stato
+letto; quelle **non aperte** sono dichiarate in fondo, con la ragione.
+
+#### Quello che entra, superficie per superficie
+
+| Da dove | Che cosa | Dove serve a noi |
+|---|---|---|
+| **Search Box** n.13 *Tagged Filter* | I **chip dei filtri attivi vivono dentro la barra di ricerca**, ognuno con la sua ×  | 🔑 L'**archivio atti** (O11): tipo, anno, tema, ufficio. Il filtro attivo si vede e si toglie dove si cerca, invece che in una colonna a parte |
+| **Search Box** n.6 *Caret Highlight* | Al focus una linea attraversa il campo **una volta sola** — «senza movimento perpetuo» | I nostri campi: è il rinforzo del focus che `DESIGN.md` §11.2 chiede, senza violare §7 |
+| **Search Box** n.14 *Recent Searches* + n.12 *⌘K* | Ricerche recenti al focus; il suggerimento della scorciatoia dentro il campo | La **palette comandi** ha già il `Ctrl K`; mancano le ricerche recenti |
+| **Animated Cards** n.6 *Filter Re-Layout with FLIP* | Filtrando una griglia le card **viaggiano** alla nuova posizione invece di teletrasportarsi | 🔑 Di nuovo l'archivio: con 26.644 atti, un filtro che riordina di colpo disorienta |
+| **Animated Cards** n.11 *Skeleton-to-Loaded* | Lo scheletro ha **la stessa geometria** della card vera e il contenuto entra in dissolvenza invece di scattare | I nostri caricamenti: `--color-skeleton` esiste già nel tema |
+| **Skeleton Loaders** n.9 *Stat Tiles* e n.8 *Table Rows* | Scheletri per **tessere KPI** e **righe di tabella** | Il cruscotto dell'area Comune e le code |
+| **Steppers** n.4 *Vertical Timeline* | Passi su una **spina verticale**, ognuno si apre nella sua scheda quando è attivo | 🔑 Il **percorso di una segnalazione** (ricevuta → validata → in lavorazione → risolta), che oggi è una pastiglia di stato e basta |
+| **Star Ratings** n.5 *Accessible ARIA* | `fieldset`/`legend` semantici, `:focus-visible` e **live region che annuncia la selezione** | Le **valutazioni dei servizi**: è P24 su una seconda superficie |
+| **Progress Bars** n.7 *Goal Tracker* | Avanzamento con **marcatori di traguardo** lungo la barra | I **cantieri**: il marcatore «dove dice il calendario» esiste già — i traguardi intermedi no |
+| **Liquid Glass** n.8 (nota dell'autore) | «*il vetro ha bisogno di texture viva dietro*» | **Conferma indipendente** di `DESIGN.md` §6: la grana della tela non è decorazione, è ciò che dà al vetro qualcosa da sfocare |
+| **Liquid Glass** n.1 e n.14 | Il vetro deforma **la griglia** del grafico ma la **serie e il KPI restano nitidi** | La disciplina del payload sul pieno, applicata ai grafici |
+| **Animated Cards** n.4 *View Transitions morph* | La card si trasforma nel dettaglio invece di tagliare | **Conferma della nostra architettura**: `shared-element-link.tsx` fa già questo con le View Transitions native |
+
+#### Due avvertenze che valgono più di un pattern
+
+1. ⚠️ **Il loro «trucco di `pathLength`» per disegnare le sparkline è la
+   nostra trappola pagata.** `AGENTS.md` §3 (ondata 6, 1): `pathLength` e
+   `vector-effect: non-scaling-stroke` insieme **accorciano il tracciato** —
+   nel grafico dell'andamento mancavano due mesi su dodici, e nessun errore lo
+   segnalava. Se si prende quel codice, si prende senza `non-scaling-stroke`,
+   o si rivela la linea con una tendina di ritaglio.
+2. ⚠️ **`@starting-style` e `animation-timeline: scroll()` sono ottimi ma
+   vanno misurati contro il nostro `browserslist`.** Tolgono JavaScript e
+   girano fuori dal thread principale; il costo è che sotto la soglia di
+   supporto degradano in silenzio — e `DESIGN.md` §11.9 vieta che un contenuto
+   resti invisibile perché un'animazione non è partita.
+
+#### Le collezioni non aperte, e perché
+
+**Fuori perimetro**: Product Cards (Shopify), Pricing Tables, Testimonials,
+NFT/crypto, Flip Cards, 3D Tilt (`AGENTS.md` §2 vieta il 3D pesante), Image
+Slider (i caroselli sono ostili al tocco e nascondono contenuto), Play/Pause,
+Close Buttons, Gradient e Glowing Buttons (il repertorio più generico).
+**Da guardare quando servirà la superficie**: Modals, Calendars, Custom
+Select, Toggles, Multi-Step Form, Floating Label Inputs, Radio, Checkboxes,
+File Upload, Profile Cards, Range Sliders, Button Groups, Cards, Buttons,
+Login Forms, Input Fields, Stacked Cards, Floating Buttons, Glassmorphism
+Cards. Non è pigrizia: aprire una collezione senza avere davanti la
+superficie che deve risolvere produce una lista di cose carine e nessuna
+decisione.
+
 ## 3. I pattern estratti (la sintesi che vale)
 
 Ognuno con la porta d'ingresso in Pistoia.app. Sono **materiale per le
@@ -509,6 +639,12 @@ direzioni**, non decisioni: decide Lorenzo sulle pagine vere.
 | P19 | **Il collage editoriale per il racconto, mai per i dati** | Akademia/Zajno 2-ter.1 | «Chi siamo» e le superfici del progetto possono essere umane e calde (foto in pillole, annotazioni); le superfici di lettura restano pulite |
 | P20 | **La pagina-città: fotografia + riga di statistiche** | tubik «Chicago» 2-ter.3 | Le pagine quartiere e «Il Comune»: la città vista, poi i suoi numeri in riga — non una dashboard |
 | P21 | **Il test dell'intruso** | 2-ter.2 | Ogni schermata di O10 deve rispondere: «che cosa, qui, esiste SOLO perché questa è Pistoia?» — se potrebbe stare in un portfolio Shakuro senza farsi notare, è rossa |
+| P22 | **L'archivio profondo si naviga per anno, con l'etichetta che resta a lato** | CodeFronts 2-quater | L'archivio degli atti (O11): 26.644 decisioni in una colonna sola, raggruppate per anno, con l'anno appiccicato al bordo mentre scorri. Dice *dove sei* senza paginazione e senza filtri |
+| P23 | **L'avanzamento della lettura si lega allo scroll, non a un listener** | CodeFronts 2-quater | `animation-timeline: scroll()` gira fuori dal thread principale: le pagine lunghe (bilancio, pagina atto) possono avere la barra di lettura a costo zero. Conferma la scelta già fatta in `ScrollTold` |
+| P24 | **Un numero che si anima deve dire quando ha finito** | CodeFronts 2-quater | `DisplayNumber` conta da zero e chi usa uno screen reader non sa quando il valore è definitivo: serve una live region che annunci il valore assestato. È un buco di accessibilità nostro, trovato guardando un altro |
+| P25 | **I filtri attivi vivono dentro la barra di ricerca, non accanto** | CodeFronts *Tagged Filter* | L'archivio atti: tipo, anno, tema e ufficio come chip removibili dentro il campo. Si vede che cosa si sta filtrando nel punto in cui si cerca |
+| P26 | **Quando un filtro riordina una lista, le voci VIAGGIANO** | CodeFronts *FLIP re-layout* | Su 26.644 atti un riordino istantaneo disorienta: il movimento fra la posizione vecchia e la nuova è informazione, non ornamento |
+| P27 | **Lo scheletro ha la geometria della cosa vera** | CodeFronts *Skeleton-to-Loaded* | I caricamenti: stesse misure della card finale e dissolvenza invece di scatto, così il contenuto «arriva» e la pagina non salta |
 
 ### Che cosa il filtro ha scartato, e perché
 

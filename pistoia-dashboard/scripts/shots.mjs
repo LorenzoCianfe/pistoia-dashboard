@@ -55,6 +55,22 @@ let saltati = 0;
 
 /** Pagine sotto revisione. `auth: false` = raggiungibile da disconnessi. */
 const PAGES = [
+  /*
+    LA PRIMA PAGINA, entrata il 2026-08-12 con l'Ondata 10.
+
+    ⚠️ **Non c'era, e non era una scelta.** La rotta `/` non è mai stata in
+    questa lista, quindi la superficie pubblica più importante del prodotto non
+    è mai stata fotografata **né misurata per il traboccamento orizzontale** —
+    che è l'unico difetto di layout che una schermata a piena pagina non mostra,
+    e che qui si controlla a 360px in modalità semplice. È esattamente il caso
+    che il commento più sotto descrive: *una rotta ridisegnata e non elencata
+    qui risulterebbe «verificata» senza essere mai stata aperta.*
+
+    `ruolo: "anonimo"`, perché è la resa che vede chi arriva da un motore di
+    ricerca: barra anonima, footer con la riga di ciò che chiede un account, e
+    i lucchetti sulle tre porte.
+  */
+  { name: "prima-pagina", url: "/", ruolo: "anonimo" },
   { name: "login", url: "/login", auth: false },
   { name: "la-mia-citta", url: "/la-mia-citta" },
   // Le tre pagine-contenitore (Fase A): sono il primo livello della
