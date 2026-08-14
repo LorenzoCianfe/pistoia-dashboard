@@ -80,7 +80,20 @@ export default async function RootLayout({
           attribute={["class", "data-theme"]}
           defaultTheme="light"
           enableSystem
-          disableTransitionOnChange
+          /*
+            ⚠️ `disableTransitionOnChange` è stato TOLTO il 2026-08-14.
+
+            Serviva a evitare che il cambio di tema animasse ogni superficie
+            in modo disordinato, e ha funzionato finché il cambio era uno
+            scatto. Adesso sulla prima pagina il tema è **un'ora del giorno che
+            passa** — un time-lapse di 1,2s sulla città — e uno scatto secco
+            dei colori sotto un filmato che sfuma è la cosa che si nota di più.
+
+            Il disordine che il flag preveniva è tenuto a bada da
+            `globals.css`: le transizioni di colore si accendono solo mentre
+            `html[data-transizione-tema]` esiste, cioè per la durata del
+            cambio, e le mette e toglie `CambioTema`.
+          */
           nonce={nonce}
         >
           {children}

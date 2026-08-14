@@ -50,7 +50,7 @@ export function Monumento() {
       />
 
       <ul className="mt-6 space-y-3 border-t border-[var(--isola-border)] pt-5">
-        {righe.map((r) => (
+        {righe.map((r, i) => (
           <li key={r.chi}>
             <div className="flex items-baseline justify-between gap-3">
               <p className="min-w-0 text-sm font-semibold">
@@ -73,16 +73,32 @@ export function Monumento() {
 
               `role="presentation"`: l'informazione è già nel numero accanto, e
               una barra che si riannuncia sarebbe rumore per chi ascolta.
+
+              🔴 **Si DISEGNA, e dopo la cifra** (2026-08-14). Le tre barre
+              *sono* il rapporto 100/75/60 fissato dalla legge: disegnarle in
+              sequenza fa **leggere** il rapporto invece di mostrarlo già
+              risolto. Il ritardo le fa partire quando la cifra ha finito di
+              contare, così i due movimenti non si accavallano.
+
+              ⚠️ L'animazione è CSS con `both` e un ritardo fisso, non legata a
+              `useInView`: un'animazione che dipende da uno stato può **restare
+              a zero** se quello stato non arriva mai, e una barra ferma a zero
+              non è un'animazione mancata — è un dato sbagliato. Così finisce
+              sempre, e con `prefers-reduced-motion` la regola globale azzera la
+              durata e le barre sono semplicemente già piene.
             */}
             <div
               role="presentation"
               className="mt-1.5 h-1 overflow-hidden rounded-pill bg-[var(--isola-border)]"
             >
               <div
-                className="h-full rounded-pill bg-[var(--isola-muted)]"
-                style={{
-                  width: `${Math.round((r.importoMensile / INDENNITA_SINDACO) * 100)}%`,
-                }}
+                className="barra-disegna h-full rounded-pill bg-[var(--isola-muted)]"
+                style={
+                  {
+                    "--larghezza": `${Math.round((r.importoMensile / INDENNITA_SINDACO) * 100)}%`,
+                    "--ritardo": `${1000 + i * 90}ms`,
+                  } as React.CSSProperties
+                }
               />
             </div>
           </li>

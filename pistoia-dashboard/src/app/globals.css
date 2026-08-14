@@ -152,17 +152,57 @@
     --glass-edge: rgb(255 255 255 / 0.55);
     --glass-edge-strong: rgb(255 255 255 / 0.85);
     --glass-sheen: rgb(255 255 255 / 0.9);
+    /* Il bordo BASSO in ombra di sé: il terzo strato del modello di luce.
+       Nel chiaro è l'inchiostro caldo diluito, non un nero puro, altrimenti
+       sotto la card compare una riga grigia invece di uno spessore. */
+    --glass-underside: rgb(22 24 26 / 0.055);
 
-    /* Ombra ridotta al minimo + filo di luce interno sul bordo superiore.
-       Il filo è `inset 0 1px 0`: segue il raggio da solo, senza pseudo-elementi
-       né maschere. Un tentativo precedente con ::before e mask-composite
-       lavava l'intera card invece del solo bordo. */
+    /*
+      IL MODELLO DI LUCE, COMPLETO (2026-08-14, deciso da Lorenzo sui
+      riferimenti — `4.jpg` in particolare).
+
+      Qui c'erano DUE strati su tre: il filo di luce in cima e un'ombra di
+      contatto da 1px. Mancava tutto il resto del modello, e si vedeva:
+      una superficie con solo il filo legge come **ritagliata dentro** la tela,
+      non come **appoggiata sopra**.
+
+      I tre strati, e che cosa fa ciascuno:
+
+      1. `inset 0 1px 0` — **il filo**. La luce che colpisce lo spigolo alto.
+         C'era già, e segue il raggio da solo senza pseudo-elementi né maschere
+         (un tentativo con ::before e mask-composite lavava l'intera card).
+      2. `inset 0 -1px 0` — **il sottosquadro**. Il bordo basso è in ombra di
+         sé stesso: è ciò che dà spessore al materiale invece che a un rettangolo.
+      3. `0 10px 24px -10px` — **la proiezione**. Larga e morbida, spostata in
+         basso perché la luce viene dall'alto. È lo strato che fa il «sollevato».
+
+      ⚠️ Questo **rivede** la riga «niente ombre diffuse» di `DESIGN.md` §6, e la
+      revisione è deliberata: il divieto nasceva contro l'**alone colorato
+      attorno** alla card (il vecchio bottone teal ne aveva uno), che è un'altra
+      cosa. Un alone circonda; una proiezione cade da una parte sola perché
+      esiste una sorgente di luce. La prima è decorazione, la seconda è fisica.
+    */
     --elev-rest:
       inset 0 1px 0 var(--glass-sheen),
-      0 1px 1px color-mix(in srgb, var(--color-shadow) 30%, transparent);
+      inset 0 -1px 0 var(--glass-underside),
+      0 1px 1px color-mix(in srgb, var(--color-shadow) 10%, transparent),
+      0 10px 24px -10px color-mix(in srgb, var(--color-shadow) 34%, transparent);
     --elev-hover:
+      inset 0 1px 0 var(--glass-edge-strong),
+      inset 0 -1px 0 var(--glass-underside),
+      0 2px 3px color-mix(in srgb, var(--color-shadow) 12%, transparent),
+      0 18px 34px -14px color-mix(in srgb, var(--color-shadow) 42%, transparent);
+    /* La quota più alta: le capsule che galleggiano SOPRA il contenuto
+       (striscia dei dati, barra laterale). Più staccate, quindi ombra più larga. */
+    --elev-capsula:
       inset 0 1px 0 var(--glass-sheen),
-      0 2px 4px color-mix(in srgb, var(--color-shadow) 35%, transparent);
+      inset 0 -1px 0 var(--glass-underside),
+      0 1px 1px color-mix(in srgb, var(--color-shadow) 10%, transparent),
+      0 14px 30px -12px color-mix(in srgb, var(--color-shadow) 38%, transparent);
+    /* Premuto: il rilievo si INVERTE — la luce va sotto e l'ombra entra. */
+    --elev-premuto:
+      inset 0 2px 4px color-mix(in srgb, var(--color-shadow) 16%, transparent),
+      inset 0 1px 0 var(--glass-underside);
 
     /* -------------------------------------------------------------------
      * L'ISOLA (P4) — l'unica superficie scura di una pagina chiara.
@@ -196,6 +236,10 @@
     --glass-edge: rgb(255 255 255 / 0.10);
     --glass-edge-strong: rgb(255 255 255 / 0.18);
     --glass-sheen: rgb(255 255 255 / 0.14);
+    /* Di sera il sottosquadro è nero vero: su un fondo già scuro un inchiostro
+       diluito non si vede, e lo spessore sparirebbe proprio dove il filo in
+       cima è più tenue. */
+    --glass-underside: rgb(0 0 0 / 0.30);
   }
 }
 
@@ -265,6 +309,37 @@
 
   /* Easing di sistema (DESIGN.md §6): ease-out-quint per gli ingressi. */
   --ease-out-civic: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /*
+    LE MOLLE (2026-08-14).
+
+    Non sono curve disegnate a mano: sono l'equazione `m·x'' + c·x' + k·x = 0`
+    campionata in ~25 punti e passata a `linear()`. Costano **zero byte** —
+    è CSS, non una libreria — e si sentono sulle distanze brevi, che sono
+    quasi tutte quelle di un'interfaccia: l'oggetto parte deciso e si posa,
+    invece di rallentare in modo uniforme.
+
+    ζ (smorzamento) è il parametro che decide tutto:
+    - `ferma`    ζ=1,00 — **nessun sorpasso**. Arriva e si ferma.
+    - `tattile`  ζ=0,78 — sorpasso del 2%: non si legge come rimbalzo, si
+      legge come «ha risposto». **È la molla di sistema per i controlli.**
+    - `rimbalzo` ζ=0,50 — sorpasso del 16%. Visibile, e riservata ai tre
+      momenti di festa: una pagina che dice quanto costa una giunta non
+      saltella.
+
+    🔴 **Le molle vanno su ciò che si TOCCA** — bottoni, tessere, interruttori,
+    pastiglie. Gli ingressi di pagina e le card grandi restano su
+    `--ease-out-civic`: su una distanza lunga il sorpasso diventa un
+    ondeggiamento, e le cose grandi devono posarsi, non rispondere.
+
+    Rigenerabili con `scripts/molle.mjs`.
+  */
+  --molla-ferma: linear(0.0000 0.0%, 0.0769 4.5%, 0.2312 9.1%, 0.3960 13.6%, 0.5431 18.2%, 0.6633 22.7%, 0.7567 27.3%, 0.8268 31.8%, 0.8782 36.4%, 0.9151 40.9%, 0.9414 45.5%, 0.9597 50.0%, 0.9725 54.5%, 0.9813 59.1%, 0.9874 63.6%, 0.9915 68.2%, 0.9943 72.7%, 0.9962 77.3%, 0.9975 81.8%, 0.9983 86.4%, 0.9989 90.9%, 0.9993 95.5%, 1.0000 100.0%);
+  --molla-ferma-durata: 455ms;
+  --molla-tattile: linear(0.0000 0.0%, 0.0458 3.8%, 0.1536 7.7%, 0.2895 11.5%, 0.4306 15.4%, 0.5630 19.2%, 0.6789 23.1%, 0.7753 26.9%, 0.8519 30.8%, 0.9101 34.6%, 0.9525 38.5%, 0.9819 42.3%, 1.0009 46.2%, 1.0122 50.0%, 1.0180 53.8%, 1.0199 57.7%, 1.0193 61.5%, 1.0174 65.4%, 1.0148 69.2%, 1.0119 73.1%, 1.0092 76.9%, 1.0069 80.8%, 1.0049 84.6%, 1.0032 88.5%, 1.0020 92.3%, 1.0011 96.2%, 1.0000 100.0%);
+  --molla-tattile-durata: 330ms;
+  --molla-rimbalzo: linear(0.0000 0.0%, 0.1099 3.3%, 0.3557 6.7%, 0.6331 10.0%, 0.8731 13.3%, 1.0423 16.7%, 1.1349 20.0%, 1.1630 23.3%, 1.1468 26.7%, 1.1074 30.0%, 1.0621 33.3%, 1.0225 36.7%, 0.9942 40.0%, 0.9785 43.3%, 0.9735 46.7%, 0.9758 50.0%, 0.9821 53.3%, 0.9895 56.7%, 0.9960 60.0%, 1.0008 63.3%, 1.0034 66.7%, 1.0043 70.0%, 1.0040 73.3%, 1.0030 76.7%, 1.0018 80.0%, 1.0007 83.3%, 0.9999 86.7%, 0.9995 90.0%, 0.9993 93.3%, 0.9993 96.7%, 1.0000 100.0%);
+  --molla-rimbalzo-durata: 643ms;
 
   --animate-shimmer: shimmer 2.2s linear infinite;
 
@@ -386,14 +461,27 @@
     }
   }
 
+  /*
+    Al passaggio reagisce LA LUCE, non l'oggetto (2026-08-14).
+
+    Prima qui c'era il solo `translateY(-2px)`: un oggetto che salta è un
+    oggetto che si **sposta**. Un oggetto la cui ombra si apre e il cui filo
+    si accende è un oggetto che si **solleva** — ed è la differenza che si
+    vede senza saperla nominare.
+
+    Il sollevamento resta (3px, con una scala impercettibile che dà il senso
+    dell'avvicinarsi), ma adesso è la parte piccola del gesto: il grosso lo
+    fanno `--elev-hover` e il bordo.
+  */
   .card-hover {
     transition:
       transform var(--duration-medium) var(--ease-out-civic),
+      box-shadow var(--duration-medium) var(--ease-out-civic),
       background-color var(--duration-medium) ease,
       border-color var(--duration-medium) ease;
   }
   .card-hover:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px) scale(1.004);
     /* Il vetro si fa più denso, non più luminoso. */
     background-color: color-mix(
       in srgb,
@@ -401,6 +489,695 @@
       transparent
     );
     border-color: var(--glass-edge-strong);
+    box-shadow: var(--elev-hover);
+  }
+  /* Il fuoco da tastiera porta lo stesso rilievo del passaggio: `DESIGN.md` §6
+     dice che il `:hover` è un rinforzo, e un rinforzo che esiste solo per chi
+     ha un mouse non è un rinforzo — è un privilegio. */
+  .card-hover:focus-visible {
+    box-shadow: var(--elev-hover);
+    border-color: var(--glass-edge-strong);
+  }
+
+  /*
+    LA CAPSULA — la quota che galleggia sopra il contenuto (2026-08-14).
+
+    È il pattern che tutti e nove i riferimenti hanno e noi non avevamo: la
+    navigazione e i dati vivi non stanno *nella* pagina, stanno *sopra*.
+    Raggio pieno, vetro più denso delle card, proiezione più larga perché sta
+    più in alto. La usa la striscia dei dati, e la userà la barra laterale.
+  */
+  .capsula {
+    background-color: color-mix(
+      in srgb,
+      var(--color-background-card) 86%,
+      transparent
+    );
+    backdrop-filter: blur(20px) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-edge);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--elev-capsula);
+  }
+  @supports not (backdrop-filter: blur(1px)) {
+    .capsula { background-color: var(--color-background-card); }
+  }
+
+  /*
+    ==========================================================================
+    LA PRIMA PAGINA — una schermata sola, sopra la città (2026-08-14).
+
+    La composizione del mockup: colonna del testo a sinistra, griglia 2×2 di
+    tessere a destra, pastiglia d'invito in basso, riga di chiusura al piede.
+
+    ⚠️ **`100dvh` e non `100vh`**: su iOS la barra degli indirizzi entra e
+    esce, e con `vh` la riga di chiusura resta sotto il bordo — cioè proprio
+    la riga che dichiara che non siamo il Comune sparirebbe sul telefono di
+    metà dei cittadini.
+
+    ⚠️ Sotto `lg` la schermata unica si scioglie e la pagina torna a scorrere.
+    «Tutto in una schermata» su un telefono non vuol dire comporre: vuol dire
+    nascondere.
+    ==========================================================================
+  */
+  .prima-pagina {
+    position: relative;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    isolation: isolate;
+  }
+
+  .prima-pagina__contenuto {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: var(--container-guscio);
+    margin-inline: auto;
+    /* Il padding in alto libera la testata, che è `absolute` e alta 5rem: senza,
+       il cappello finisce sotto il marchio. */
+    padding: 6rem 1rem 1.25rem;
+  }
+  @media (min-width: 640px) {
+    .prima-pagina__contenuto {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  /*
+    L'OCCHIELLO, con un filo rosso davanti (2026-08-14).
+
+    Il trattino orizzontale prima delle parole è un gesto da testata: dice
+    «questa è un'apertura» prima ancora che si legga il titolo. È l'unico
+    ornamento della colonna, e come il punto rosso vale perché è uno.
+  */
+  .prima-pagina__kicker {
+    margin-bottom: 1.125rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-family-code);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    /* Il rosso a dose piena come VOCE. Su `--bg` chiaro `--red` fa 4,0:1: sotto
+       AA per il testo minuto, quindi qui vive `--red-ink`, che è il rosso dello
+       stemma corretto per la sola funzione testuale (`DESIGN.md` §4). */
+    color: var(--red-ink);
+  }
+  .prima-pagina__kicker::before {
+    content: "";
+    width: 1.75rem;
+    height: 2px;
+    background-color: currentColor;
+    flex: none;
+  }
+
+  /*
+    ⚠️ Il contenuto sta in ALTO, non al centro (2026-08-14). Tolto il velo,
+    la leggibilità dipende da DOVE cade il testo: in alto la foto è cielo e
+    foschia — il testo scuro (chiaro) o chiaro (scuro) si stacca — mentre a
+    metà cominciano i tetti, dove nessun testo si legge. Alzare il blocco è
+    ciò che tiene l'apertura leggibile senza rimettere un alone sopra la foto.
+  */
+  .prima-pagina__griglia {
+    flex: 1;
+    display: grid;
+    gap: 2rem;
+    align-content: start;
+  }
+  @media (min-width: 1024px) {
+    .prima-pagina__griglia {
+      /* La colonna del testo prende più spazio della griglia: è la
+         proporzione del mockup, ed è ciò che tiene il titolo su due righe. */
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+      gap: 3rem;
+      align-items: start;
+    }
+  }
+
+  .prima-pagina__voce {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /*
+    IL TITOLO DISPLAY — trattato per avere carattere (2026-08-14, Lorenzo:
+    «rendi il font accattivante e il design della scritta»).
+
+    Non cambio la famiglia (il grottesco è il marchio), ma alzo il grado del
+    trattamento: scala più grande, interlinea serrata (0.94, le due righe si
+    toccano quasi) e crenatura stretta (-0.045em). È la differenza fra un
+    titolo scritto e un titolo composto: da vicino si legge come un manifesto,
+    non come un'intestazione.
+
+    `text-4` di peso non basta a fare impatto quanto la SCALA con l'interlinea
+    stretta — è la lezione di `DESIGN.md` §8 (la gerarchia la fa la scala)
+    portata al titolo dell'apertura.
+  */
+  .prima-pagina__titolo {
+    font-family: var(--font-family-heading);
+    font-size: clamp(2.75rem, 6vw, 5.5rem);
+    font-weight: 800;
+    line-height: 0.94;
+    letter-spacing: -0.045em;
+    text-wrap: balance;
+  }
+  /* Il punto rosso: il respiro prima del punto è ciò che lo fa leggere come un
+     gesto e non come un refuso. */
+  .prima-pagina__punto {
+    color: var(--red);
+    margin-left: 0.04em;
+  }
+
+  .prima-pagina__sommario {
+    margin-top: 1.5rem;
+    max-width: 42ch;
+    font-size: 1.0625rem;
+    line-height: 1.55;
+    color: var(--muted);
+  }
+
+  .prima-pagina__azioni {
+    margin-top: 1.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  /*
+    IL BOTTONE «PRESTO» — una feature futura dichiarata come tale (la città in
+    3D). `aria-disabled` più questo trattamento: presente e desiderabile, ma
+    visibilmente non ancora attivo, così promette senza mentire. Non è
+    `disabled` vero perché deve restare raggiungibile da tastiera per essere
+    letto — semplicemente non fa nulla.
+  */
+  .prima-pagina__azioni button[aria-disabled="true"] {
+    opacity: 0.9;
+  }
+  .prima-pagina__presto {
+    margin-left: 0.125rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: var(--radius-full);
+    background-color: color-mix(in oklab, var(--viola) 16%, transparent);
+    color: var(--viola);
+    font-family: var(--font-family-code);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* --- le quattro tessere ------------------------------------------------- */
+  /*
+    Griglia bento: due colonne, e le RIGHE prendono l'altezza che serve
+    (`align-items: start`). La riga alta — costo della giunta e sindaco — porta
+    più contenuto e cresce; la riga bassa — atti dell'anno e atto del giorno —
+    resta compatta. È la proporzione del mockup, dove le due card in alto sono
+    più alte delle due in basso.
+  */
+  .prima-pagina__tessere {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: start;
+  }
+  @media (max-width: 479px) {
+    .prima-pagina__tessere {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  /* La riga alta ha un fondo minimo, così le due card si allineano fra loro
+     anche quando il sindaco (ritratto centrato) avrebbe meno testo del costo. */
+  .tessera--alta {
+    min-height: 15.5rem;
+  }
+
+  /*
+    Il vetro sopra la FOTOGRAFIA è più denso di quello sopra la tela.
+
+    Sotto una card normale c'è un grigio caldo uniforme; sotto queste c'è un
+    cielo quasi bianco, dei tetti rossi e — di notte — dei lampioni. Con
+    l'opacità normale il contrasto del testo cambierebbe a seconda di che cosa
+    capita dietro, ed è esattamente il caso che `DESIGN.md` §6 chiude dicendo
+    che il dato minuto vive sul pieno.
+  */
+  .tessera {
+    position: relative;
+    background-color: color-mix(
+      in srgb,
+      var(--color-background-card) 88%,
+      transparent
+    );
+    backdrop-filter: blur(28px) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-edge);
+    border-radius: var(--radius-container);
+    box-shadow: var(--elev-capsula);
+    min-height: 11.5rem;
+  }
+  @supports not (backdrop-filter: blur(1px)) {
+    .tessera { background-color: var(--color-background-card); }
+  }
+
+  .tessera__cifra {
+    font-family: var(--font-family-heading);
+    font-size: clamp(1.75rem, 2.6cqw + 1.1rem, 2.4rem);
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    column-gap: 0.5rem;
+  }
+  .tessera__unita {
+    font-size: 0.8125rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--muted);
+  }
+
+  .tessera__occhiello {
+    font-family: var(--font-family-code);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--red-ink);
+  }
+  /* Il titolo redazionale dell'atto: `balance` distribuisce le righe invece di
+     lasciarne una monca, poi si taglia a tre. La tessera è un richiamo — l'atto
+     per intero sta nella sua pagina. */
+  .tessera__frase {
+    margin-top: 0.375rem;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.28;
+    letter-spacing: -0.01em;
+    text-wrap: pretty;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /*
+    GLI STIPENDI DELLA GIUNTA — la ripartizione di legge (2026-08-14).
+
+    Al posto delle barre: le tre voci vere — sindaco, vicesindaca, assessori —
+    con l'importo mensile a destra. Un elenco si legge e si verifica; una barra
+    dà solo un'impressione. `tabular-nums` perché tre importi incolonnati sono
+    uno strumento, non tre numeri qualsiasi.
+  */
+  .tessera__voci {
+    margin-top: 0.875rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+    display: grid;
+    gap: 0.5rem;
+  }
+  .tessera__voce {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  .tessera__voce dt {
+    font-size: 0.8125rem;
+    color: var(--muted);
+    min-width: 0;
+  }
+  .tessera__voce dd {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .tessera__mese {
+    font-weight: 400;
+    color: var(--muted-2);
+  }
+
+  /* --- la tessera del sindaco --------------------------------------------- */
+  .tessera__persona {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  .tessera__nome {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .tessera__ruolo {
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+  /* L'avatar del sindaco è più grande della taglia `xl` di sistema: qui è il
+     soggetto della card, non un segnaposto accanto a un nome. */
+  .tessera--sindaco .tessera__persona > :first-child {
+    width: 4.5rem;
+    height: 4.5rem;
+    font-size: 1.5rem;
+  }
+
+  /* --- la pastiglia d'invito ---------------------------------------------- */
+  .prima-pagina__invito {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    align-self: flex-start;
+    max-width: 100%;
+    padding: 0.625rem 1.25rem 0.625rem 0.625rem;
+    color: inherit;
+    text-decoration: none;
+    transition:
+      box-shadow var(--duration-medium) var(--ease-out-civic),
+      border-color var(--duration-medium) ease;
+  }
+  .prima-pagina__invito:hover {
+    border-color: var(--glass-edge-strong);
+    box-shadow: var(--elev-hover);
+  }
+  .prima-pagina__invito-icona {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex: none;
+    border-radius: var(--radius-full);
+    color: var(--teal);
+    background-color: color-mix(in oklab, var(--teal) 15%, transparent);
+  }
+  .prima-pagina__invito-azione {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-left: auto;
+    padding-left: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--teal);
+    white-space: nowrap;
+  }
+
+  /* --- la riga di chiusura ------------------------------------------------ */
+  /*
+    ⚠️ A piena intensità, non `--muted` (2026-08-14): questa riga cade in fondo,
+    sopra i tetti, che è il punto più contrastato della foto. Tolto il velo, un
+    grigio muto lì sparisce; l'inchiostro pieno a peso 500 regge sulla foto in
+    entrambi i temi senza bisogno di un alone dietro.
+  */
+  .prima-pagina__chiusura {
+    padding-top: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--foreground);
+  }
+
+  /*
+    ==========================================================================
+    LA SCENA — la fotografia di Pistoia dietro la prima pagina (2026-08-14).
+
+    Tre `<picture>`: una per il tema di sistema (decide la media query) e due
+    per la scelta esplicita. Quelle non attive stanno a `display: none`, che è
+    l'unica dichiarazione che impedisce davvero al browser di scaricare
+    l'immagine — `opacity: 0` o `visibility: hidden` la scaricherebbero
+    comunque, cioè si pagherebbero 170 KB per non mostrarli.
+    ==========================================================================
+  */
+  .scena {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    /* Il segnaposto: 132 byte di WebP sfocato, presenti dal primo fotogramma.
+       Sopra ci vive del testo, e senza uno sfondo quel testo sarebbe
+       illeggibile finché la foto non arriva. */
+    background-color: var(--bg);
+    background-image: url("data:image/webp;base64,UklGRnwAAABXRUJQVlA4IHAAAAAQBACdASoYAA4APxFysVAsJqSisAgBgCIJagCdMoADThLXxo/woVdTYAD+1P8hCD5yuX1OWTHZVd8boVkF1IXVUUO9+zozFvzpGymnrNLDwBZecLvsurVvrUAAQt2kVpIxpMc4biFfQsZ/qT3OrUAA");
+    background-size: cover;
+    background-position: center;
+  }
+  .dark .scena {
+    background-image: url("data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAABwAwCdASoYAA4APxFysFAsJqSisAgBgCIJQBOgBaDzKm8pHgAA/u7ikZ/RTOFyokRUEDA8HY4eBV8578MGxLSItLUCZh2edTVgT1u7Xsh8kAydZwAAAA==");
+  }
+
+  /*
+    ⚠️ **Niente `display` in questa regola**, ed è un difetto già pagato:
+    `.scena picture` ha specificità (0,1,1) — una classe più un tipo — e
+    batteva `.scena-scura { display: none }`, che è (0,1,0). Risultato: la
+    fotografia notturna restava visibile SOPRA quella diurna anche di giorno,
+    e il sito mostrava Pistoia di notte in tema chiaro.
+
+    Il `display` vive solo nelle regole che decidono quale scena si vede, così
+    non c'è nessuna gara di specificità da vincere.
+  */
+  .scena picture,
+  .scena img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .scena img {
+    display: block;
+    object-fit: cover;
+    object-position: center 42%;
+  }
+
+  /* Di default comanda il sistema; le due esplicite non esistono. */
+  .scena-auto {
+    display: block;
+  }
+  .scena-chiara,
+  .scena-scura {
+    display: none;
+  }
+  .light .scena-auto,
+  .dark .scena-auto {
+    display: none;
+  }
+  .light .scena-chiara,
+  .dark .scena-scura {
+    display: block;
+  }
+
+  /*
+    ⚠️ **Nessun velo** (2026-08-14). C'era una velatura verticale che sfumava
+    verso `--bg`: in tema chiaro sfumava verso il grigio chiaro e leggeva come
+    una cornice biancastra intorno alla pagina — l'«alone» che Lorenzo ha
+    chiesto di togliere. La leggibilità la tiene la composizione: il titolo
+    vive nella zona di cielo (in alto a sinistra), dove il testo si stacca da
+    solo; il sottotitolo è tenuto corto perché non scenda sui tetti.
+  */
+
+  /*
+    IL FILMATO DI TRANSIZIONE — copre la fotografia mentre il tema cambia.
+
+    Stesso ritaglio dell'immagine (`object-position: center 42%`): l'ultimo
+    fotogramma È la fotografia nuova, e se il ritaglio non combaciasse si
+    vedrebbe un salto proprio sul finale.
+
+    A riposo è invisibile e non intercetta nulla; `opacity` invece di
+    `display` perché deve poter sfumare in uscita.
+  */
+  .transizione-scena {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 42%;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 260ms ease;
+  }
+  .transizione-scena[data-attiva] {
+    opacity: 1;
+    transition-duration: 0ms;
+  }
+
+  /*
+    I COLORI SI ACCOMPAGNANO, ma solo durante il cambio di tema.
+
+    `disableTransitionOnChange` è stato tolto da `layout.tsx` perché il salto
+    secco stonava col filmato. Una transizione permanente su ogni superficie
+    però renderebbe molle ogni passaggio del mouse: l'attributo lo mette
+    `CambioTema` e lo toglie dopo 1,25s.
+  */
+  html[data-transizione-tema] *,
+  html[data-transizione-tema] *::before,
+  html[data-transizione-tema] *::after {
+    transition-property: background-color, border-color, color, fill, stroke,
+      box-shadow, opacity !important;
+    transition-duration: 520ms !important;
+    transition-timing-function: ease !important;
+    transition-delay: 0s !important;
+  }
+
+  /*
+    ==========================================================================
+    IL CHIP-DATO (2026-08-14, dai ritagli scelti da Lorenzo).
+
+    Nei riferimenti la riga dei conteggi non è una frase: è una **fila di
+    oggetti**, uno per numero. «24 Bus · 100 Taxi · 12 Trains» sono quattro
+    pastiglie, e dentro ciascuna il numero è **grande e leggero** mentre la
+    parola è **minuta e muta**. È la stessa inversione di peso della cifra
+    display (`DESIGN.md` §8) portata alla scala del chip.
+
+    Perché funziona meglio di una riga di testo: un numero dentro un oggetto
+    suo si conta a colpo d'occhio, e la fila diventa un pannello di strumenti
+    invece di una didascalia. Sulla nostra prima pagina risolve un problema
+    misurato — «26.644 atti in archivio» era grigio a 11,5px, cioè il numero
+    più impressionante del sito reso come nota a piè di pagina.
+    ==========================================================================
+  */
+  .chip-dato {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    border-radius: var(--radius-element);
+    background-color: color-mix(
+      in srgb,
+      var(--color-background-card) 78%,
+      transparent
+    );
+    backdrop-filter: blur(16px) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-edge);
+    box-shadow: var(--elev-rest);
+    transition:
+      box-shadow var(--duration-medium) var(--ease-out-civic),
+      border-color var(--duration-medium) ease;
+  }
+  @supports not (backdrop-filter: blur(1px)) {
+    .chip-dato { background-color: var(--color-background-card); }
+  }
+
+  /*
+    Il numero: **leggero e tabulare**. Peso 300 come la cifra display — è ciò
+    che gli dà il tono di un dato invece che di un titoletto — e
+    `tabular-nums` perché in una fila di chip le cifre devono incolonnarsi
+    anche quando cambiano.
+  */
+  .chip-dato__n {
+    font-family: var(--font-family-heading);
+    font-size: 1.0625rem; /* 17px */
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--foreground);
+  }
+
+  /* L'etichetta tiene il maiuscoletto spaziato: è l'idioma della piattaforma
+     e il filo diretto con `4.jpg`, dove la sola tipografia è una micro-riga
+     in maiuscolo spaziato. */
+  .chip-dato__l {
+    font-family: var(--font-family-code);
+    font-size: 0.625rem; /* 10px */
+    font-weight: 500;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /*
+    IL DELTA IN APICE — «8.574 ⁺³⁷».
+
+    Nei riferimenti la variazione non prende una riga sua: sta **appoggiata in
+    alto a destra del numero**, minuta. Dice «si è mosso di questo» senza
+    rubare la scala al valore, ed è il motivo per cui quelle card sembrano
+    dense senza essere affollate.
+
+    ⚠️ Colore SEMANTICO solo dove la direzione ha un verso morale. Su questa
+    piattaforma quasi mai: «+53 atti» non è né buono né cattivo, e tingerlo di
+    verde sarebbe un giudizio. Il default è muto; il colore si chiede.
+  */
+  .delta-apice {
+    font-family: var(--font-family-code);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    vertical-align: super;
+    line-height: 1;
+    color: var(--muted-2);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /*
+    IL BOTTONE TONDO IN VETRO — da `4.jpg` e dal ritaglio della barra alta.
+
+    Nei riferimenti le azioni con la sola icona non sono icone nude appoggiate
+    sulla barra: sono **capsule circolari**, ciascuna col proprio filo di luce
+    e la propria ombra. È la differenza fra un'icona cliccabile e un bottone.
+
+    Eredita da `.btn` (molla, pressione che affonda, stati disabilitati): qui
+    c'è solo la forma.
+  */
+  .btn-tondo {
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    flex: none;
+    border-radius: var(--radius-full);
+    background-color: color-mix(
+      in srgb,
+      var(--color-background-card) 82%,
+      transparent
+    );
+    backdrop-filter: blur(16px) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-edge);
+    color: var(--muted);
+    box-shadow: var(--elev-rest);
+  }
+  .btn-tondo:hover:not(:disabled) {
+    color: var(--foreground);
+    border-color: var(--glass-edge-strong);
+    box-shadow: var(--elev-hover);
+  }
+
+  /*
+    LA MANIGLIA D'ANGOLO — la freccia ↗ in alto a destra di una card.
+
+    Nei riferimenti compare su ogni superficie che si può aprire, ed è il
+    segnale che distingue **una card che è un riepilogo** da una card che è
+    tutto quello che c'è. Piccola, muta a riposo, e si accende col passaggio
+    sulla card intera — non solo su sé stessa, altrimenti è un bersaglio da
+    centrare.
+  */
+  .maniglia-angolo {
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    flex: none;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border);
+    color: var(--muted-2);
+    background-color: transparent;
+    transition:
+      color var(--duration-fast) ease,
+      border-color var(--duration-fast) ease,
+      background-color var(--duration-fast) ease,
+      transform var(--molla-tattile-durata) var(--molla-tattile);
+  }
+  .group:hover .maniglia-angolo,
+  .maniglia-angolo:hover {
+    color: var(--foreground);
+    border-color: var(--border-strong);
+    background-color: var(--surface-2);
+    transform: translate(1px, -1px);
   }
 
   /*
@@ -624,6 +1401,12 @@
     `.astryx-button` che la documentazione promette. Tenendo il CSS qui, il
     bottone e il link-bottone restano un'unica fonte di verità e non divergono.
   */
+  /*
+    ⚠️ La MOLLA sta sul `transform` e SOLO su quello (2026-08-14). Colori e
+    bordi restano su una durata breve e lineare: un colore che «supera» il
+    proprio valore e torna indietro è un lampeggio, non una molla — la fisica
+    ha senso su una posizione, non su una tinta.
+  */
   .btn {
     display: inline-flex;
     align-items: center;
@@ -636,10 +1419,24 @@
     transition:
       background-color var(--duration-fast) ease,
       border-color var(--duration-fast) ease,
-      transform var(--duration-fast) var(--ease-out-civic);
+      box-shadow var(--duration-fast) var(--ease-out-civic),
+      transform var(--molla-tattile-durata) var(--molla-tattile);
   }
+  /*
+    La pressione AFFONDA il rilievo invece di rimpicciolire l'oggetto.
+
+    Era `scale(0.98)`: un bottone che si rimpicciolisce si **allontana**, che è
+    l'opposto di quello che fa una cosa premuta. Qui la luce va sotto e l'ombra
+    entra (`--elev-premuto`), e l'oggetto scende di 1px — la metafora fisica
+    giusta, e il feedback al clic più credibile che esista.
+
+    ⚠️ Sulla pressione la molla non serve e fa danno: il ritorno deve essere
+    immediato quanto il dito. 90ms lineari.
+  */
   .btn:active:not(:disabled) {
-    transform: scale(0.98);
+    transform: translateY(1px);
+    box-shadow: var(--elev-premuto);
+    transition-duration: 90ms;
   }
   .btn:disabled,
   .btn[aria-disabled="true"] {
@@ -650,21 +1447,34 @@
   /* Primario: tinta piena, nessun gradiente e NESSUN alone colorato. Il vecchio
      bottone aveva un'ombra teal diffusa — esattamente il bagliore che il
      sistema ha eliminato dalle superfici. */
+  /* ⚠️ Sul pieno il SOTTOSQUADRO sparisce: un inset scuro dentro una tinta
+     satura si legge come sporco, non come spessore. Sul primario il rilievo
+     è quindi solo il filo in cima più la proiezione. */
   .btn-primary {
     background-color: var(--color-accent);
     color: var(--color-on-accent);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.28),
+      0 1px 1px color-mix(in srgb, var(--color-shadow) 14%, transparent),
+      0 8px 18px -8px color-mix(in srgb, var(--color-accent) 50%, transparent);
   }
   .btn-primary:hover:not(:disabled) {
     background-color: color-mix(in srgb, var(--color-accent) 88%, black);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.34),
+      0 2px 3px color-mix(in srgb, var(--color-shadow) 16%, transparent),
+      0 14px 26px -10px color-mix(in srgb, var(--color-accent) 60%, transparent);
   }
 
   .btn-secondary {
     background-color: var(--surface);
     border: 1px solid var(--border-strong);
     color: var(--foreground);
+    box-shadow: var(--elev-rest);
   }
   .btn-secondary:hover:not(:disabled) {
     background-color: var(--surface-2);
+    box-shadow: var(--elev-hover);
   }
 
   /*
@@ -876,38 +1686,217 @@
     animation: rise-in 0.45s var(--ease-out-civic) both;
   }
 
-  /* Orchestrazione hero: titolo → contenuto → dettagli, stagger 50ms.
-     Da applicare a UN solo contenitore per pagina. */
+  /*
+    ORCHESTRAZIONE D'INGRESSO — tre MOVIMENTI, non cinque passi uguali
+    (2026-08-14).
+
+    Prima erano cinque gradini da 50ms con la stessa distanza e la stessa
+    durata per tutti. Corretto e anonimo: cinque passi identici non raccontano
+    una gerarchia, raccontano una coda.
+
+    I tre movimenti, e perché sono tre:
+
+    1. **IL DATO** — la striscia entra per prima, corta (0,4×) e veloce
+       (0,62×). È un'informazione, non una scena: chi arriva deve sapere
+       subito che il sito è vivo, e quel numero deve stabilizzarsi mentre il
+       resto è ancora in viaggio.
+    2. **LA VOCE** — titolo e sommario salgono insieme, a distanza piena.
+       Sono la stessa frase in due taglie: farli entrare separati li
+       spezzerebbe.
+    3. **LA MATERIA** — le superfici si posano per ultime, più lente (1,18×)
+       e da più lontano (1,5×). Sono oggetti pesanti, e si posano.
+
+    ⚠️ Resta **una sola orchestrazione per pagina** e resta su
+    `--ease-out-civic`: le molle stanno sui controlli, non sugli ingressi —
+    su una distanza lunga il sorpasso diventa un ondeggiamento.
+  */
   .stagger > * {
     animation: rise-in 0.5s var(--ease-out-civic) both;
   }
+  /* 1° movimento — il dato */
   .stagger > :nth-child(1) {
+    --rise: 4px;
+    animation-duration: 0.31s;
     animation-delay: 0ms;
   }
+  /* 2° movimento — la voce */
   .stagger > :nth-child(2) {
-    animation-delay: 50ms;
+    animation-delay: 98ms;
   }
   .stagger > :nth-child(3) {
-    animation-delay: 100ms;
+    animation-delay: 126ms;
   }
+  /* 3° movimento — la materia */
   .stagger > :nth-child(4) {
-    animation-delay: 150ms;
+    --rise: 15px;
+    animation-duration: 0.59s;
+    animation-delay: 238ms;
   }
   .stagger > :nth-child(5) {
-    animation-delay: 200ms;
+    --rise: 15px;
+    animation-duration: 0.59s;
+    animation-delay: 294ms;
   }
   .stagger > :nth-child(n + 6) {
-    animation-delay: 250ms;
+    --rise: 15px;
+    animation-duration: 0.59s;
+    animation-delay: 330ms;
   }
 
   @keyframes rise-in {
     from {
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(var(--rise, 10px));
     }
     to {
       opacity: 1;
       transform: none;
+    }
+  }
+
+  /*
+    RIVELAZIONE ALLO SCROLL, una tantum e senza JavaScript (P23).
+
+    `animation-timeline: view()` gira sul **compositore**: non tocca il thread
+    che deve rispondere al dito, che è la ragione per cui questa è la forma
+    difendibile di «effetti durante lo scrolling» e il parallax non lo era.
+
+    Dove non è supportato (~16% al 2026-08) non succede niente: l'elemento è
+    semplicemente visibile. Nessun `IntersectionObserver`, nessun fallback da
+    mantenere, nessuna riga che possa restare a `opacity: 0` se lo script non
+    parte — che è il modo in cui questa famiglia di effetti fa danno.
+
+    ⚠️ Va sui BLOCCHI, mai sulle righe di una lista: se ogni riga si rivela da
+    sé, leggere sei atti vuol dire aspettarli uno a uno.
+  */
+  @supports (animation-timeline: view()) {
+    @media not (prefers-reduced-motion: reduce) {
+      .rivela {
+        animation: rise-in 0.5s var(--ease-out-civic) both;
+        animation-timeline: view();
+        /* Comincia quando il blocco entra dal basso e finisce quando ne ha
+           scoperto un quarto: più corto e sembra uno scatto, più lungo e si
+           legge mentre è ancora in movimento. */
+        animation-range: entry 0% cover 22%;
+      }
+    }
+  }
+
+  /*
+    IL TITOLO CHE SI COMPONE — un solo titolo per pagina.
+
+    Le parole salgono da sotto una maschera, 40ms l'una dall'altra. È il gesto
+    editoriale che nei riferimenti fa leggere l'apertura come un'apertura e
+    non come una riga di testo — e si può fare solo perché è **una** per
+    schermata: su tre titoli diventerebbe un tic.
+
+    Il testo resta testo: la maschera è sul contenitore della parola, quindi
+    niente è nascosto a chi legge con una tecnologia assistiva e niente va
+    tenuto allineato a mano.
+  */
+  .titolo-composto {
+    /* Serve al ritaglio delle parole; senza, le discendenti (g, p, q) vengono
+       tagliate mentre salgono. Il padding lo compensa e il margine lo annulla. */
+    display: inline-block;
+  }
+  .titolo-composto .parola {
+    display: inline-block;
+    overflow: hidden;
+    /* Senza, le discendenti (g, p, q) vengono tagliate mentre salgono: il
+       padding fa spazio dentro la maschera e il margine negativo lo annulla
+       nel flusso, così l'interlinea del titolo non cambia di un pixel. */
+    padding-bottom: 0.14em;
+    margin-bottom: -0.14em;
+    vertical-align: bottom;
+  }
+  .titolo-composto .parola > span {
+    display: inline-block;
+    animation: parola-su 0.62s var(--ease-out-civic) both;
+    animation-delay: calc(var(--i, 0) * 40ms + var(--r, 120ms));
+  }
+  @keyframes parola-su {
+    from {
+      transform: translateY(105%);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  /*
+    LA BARRA CHE SI DISEGNA (2026-08-14).
+
+    `both` e un ritardo fisso, non uno stato: un'animazione legata a un segnale
+    che potrebbe non arrivare lascerebbe la barra a zero, e una barra a zero non
+    è un'animazione mancata — è un dato sbagliato. Così arriva sempre a
+    `--larghezza`, e con `prefers-reduced-motion` la durata va a zero e la barra
+    è semplicemente già piena.
+  */
+  .barra-disegna {
+    width: var(--larghezza);
+    animation: barra-cresce 0.72s var(--ease-out-civic) both;
+    animation-delay: var(--ritardo, 0ms);
+    transform-origin: left center;
+  }
+  @keyframes barra-cresce {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  /*
+    L'UNITÀ ARRIVA QUANDO IL NUMERO HA FINITO.
+
+    «€ all'anno» accanto a una cifra che sta ancora contando si legge come
+    un'unità appiccicata a un valore intermedio. Comparendo alla fine diventa
+    il segnale visivo di «adesso il numero è definitivo» — lo stesso che la
+    live region dà a chi ascolta (P24).
+
+    Il ritardo combacia con la durata del conteggio di `DisplayNumber` (0,88s)
+    più il ritardo d'ingresso del blocco.
+  */
+  .display-number__unit {
+    animation: unita-appare 0.34s ease both;
+    animation-delay: 1.02s;
+  }
+  @keyframes unita-appare {
+    from {
+      opacity: 0;
+      transform: translateX(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /*
+    IL PALLINO CHE RESPIRA — la sola animazione a riposo della piattaforma.
+
+    Si guadagna la deroga perché **il movimento è il dato**: dice «la lettura
+    dell'albo sta girando». Dove la lettura è ferma il pallino diventa ambra e
+    questa classe non c'è, e quell'assenza porta informazione quanto la
+    presenza — che è la prova che non sta decorando.
+
+    3,4 secondi a ciclo, e la lentezza è il punto: a un secondo sarebbe un
+    allarme, a 3,4 è un battito. Anima solo `opacity` e `box-shadow` su un
+    elemento di 6px, quindi il compositore non ridisegna niente attorno.
+  */
+  .pallino-vivo {
+    animation: respiro 3.4s ease-in-out infinite;
+  }
+  @keyframes respiro {
+    0%,
+    100% {
+      opacity: 1;
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--highlight) 45%, transparent);
+    }
+    50% {
+      opacity: 0.72;
+      box-shadow: 0 0 0 5px color-mix(in srgb, var(--highlight) 0%, transparent);
     }
   }
 
