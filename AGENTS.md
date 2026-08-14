@@ -1147,6 +1147,32 @@ sessione che navighi il web da agente.
    prima di scartare la fonte. Se resta un CAPTCHA vero, la fonte si scarta —
    mai aggirarlo.
 
+### Il CSS nuovo non compare finché non cancelli `.next` (Turbopack, 2026-08-14)
+
+Pagata **tre volte in una sessione** prima di riconoscerla, e vale oltre il caso.
+
+1. **Il sintomo:** aggiungi una classe nuova in `globals.css` (una utility, un
+   componente, un `@keyframes`), l'elemento la porta nel DOM, ma **non prende
+   stile**. Il CSS servito dal dev server è una copia vecchia: la classe nuova
+   non c'è affatto nel foglio compilato. Il typecheck è verde, il lint è verde,
+   il markup è corretto — non c'è niente da trovare nel codice.
+2. **La causa:** Turbopack tiene il CSS compilato in `.next/`, e per le classi
+   **nuove** non sempre lo rigenera. **Riavviare il dev server NON basta** — la
+   cache vive su disco e sopravvive al riavvio. Solo `rm -rf .next` la svuota.
+   (È la stessa famiglia del «`.next` stantio» che qui sopra fa rispondere 404
+   alle rotte annidate: la cartella di build che mente.)
+3. **Come si riconosce senza perderci un'ora:** non fidarsi di un controllo con
+   una regex sul foglio servito — una regex sbagliata dà la classe per assente
+   quando c'è, e manda a caccia nel posto sbagliato (successo anche questo). La
+   verifica che **non mente** è il dump diretto: scaricare il `.css` servito e
+   cercare il **selettore letterale** (`grep '\.chip-dato'`), oppure leggere in
+   `getComputedStyle` una proprietà che quella classe imposta.
+
+**La regola operativa:** quando una modifica al CSS «non si vede» e il codice è
+corretto, **`rm -rf .next` e riavvia PRIMA di diagnosticare altro.** Modificare
+un valore in una regola esistente di solito passa per l'HMR; **aggiungere una
+classe nuova quasi sempre no.**
+
 ---
 
 ## 4. Comandi

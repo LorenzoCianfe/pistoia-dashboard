@@ -332,6 +332,38 @@ l'opposto della regola precedente ed è voluto.
 
   Contrasto verificato: **16,8:1 (chiaro) e 16,0:1 (scuro)** — AAA in entrambi.
   Il vetro non costa leggibilità perché è denso e la tela è di tono vicino.
+
+  > 🔁 **Rivisto il 2026-08-14, da Lorenzo, sui riferimenti (`refs/` — `4.jpg`
+  > e i ritagli).** «Niente ombre diffuse» resta, ma va precisato: vietava
+  > l'**alone colorato ATTORNO** alla card (il vecchio bottone teal ne aveva
+  > uno), non la **proiezione direzionale SOTTO**. Un alone circonda; una
+  > proiezione cade da una parte sola perché c'è una sorgente di luce in alto.
+  > La prima è decorazione, la seconda è fisica.
+  >
+  > **Il modello di luce completo ha tre strati** (`--elev-rest` in
+  > `globals.css`), non uno: il **filo** in cima (`inset 0 1px 0`, c'era già),
+  > il **sottosquadro** in basso (`inset 0 -1px 0`, dà spessore) e la
+  > **proiezione** morbida e spostata in basso (`0 10px 24px -10px`). Con solo
+  > il filo la card legge come *ritagliata dentro* la tela; coi tre strati come
+  > *appoggiata sopra* — ed è la differenza fra «piatto» e «premium» che tre
+  > giri di ritocchi non avevano risolto.
+  >
+  > Da qui due quote nuove: `--elev-capsula` (le superfici che galleggiano
+  > *sopra* il contenuto: la striscia dei dati, la barra) e `--elev-premuto`
+  > (il rilievo che **si inverte** alla pressione — la luce va sotto, l'ombra
+  > entra — al posto del vecchio `scale(0.98)` che rimpiccioliva e basta). ⚠️
+  > Il sottosquadro **non** va sul pieno (bottone primario): un inset scuro
+  > dentro una tinta satura legge come sporco.
+
+- 🆕 **La scena dietro il vetro** (2026-08-14). Il vetro ha bisogno di **materia
+  da sfocare**, e la grana della tela non bastava a farlo leggere come premium.
+  La prima pagina (gruppo `(vetrina)`) mette **una fotografia di Pistoia** dietro
+  l'apertura — di giorno in tema chiaro, di notte in tema scuro (`brand/scena.tsx`,
+  due `<picture>` in AVIF/WebP a tre misure, ~90 KB scaricati). Adesso
+  `backdrop-filter` ha una città da sfocare, e le card leggono come vetro vero.
+  ⚠️ Il vetro sopra la foto è **più denso** (88%) di quello sopra la tela: sotto
+  c'è un cielo quasi bianco e dei tetti, e a opacità normale il contrasto del
+  testo ballerebbe. È §6 applicata al caso peggiore.
 - **Densità.** Aria generosa di default; **la densità aumenta solo nelle viste
   dati** (bilancio, admin). I riferimenti sono ariosi perché mostrano ~10 dati
   per schermata: il bilancio ne ha centinaia, e copiare l'ariosità lì sarebbe
@@ -556,6 +588,41 @@ sobria, mai giocosa. **Livello 3 su 5**: sicura e orchestrata, mai ambientale.
 
 **Librerie.** Motion per tutto ciò che è React. Anime.js solo per lavoro
 nativamente SVG. Nessun GSAP, nessuno sfondo WebGL — vedi `REFERENCES.md` §6.
+
+### Il grado sale sulla prima pagina, con quattro strumenti nuovi (2026-08-14)
+
+Lorenzo ha chiesto la prima pagina «molto più dinamica, moderna, premium».
+Il livello resta 3 su 5 nel resto del prodotto; **sulla vetrina (`(vetrina)`)
+sale, e le regole qui sopra si precisano invece di rovesciarsi.**
+
+- **Molle vere, in CSS puro** (`--molla-*`, generate da `scripts/molle.mjs`).
+  Sono l'equazione della molla campionata in `linear()`: **zero byte**, non una
+  libreria. Vanno **solo su ciò che si tocca** (bottoni, tessere, interruttori);
+  gli ingressi e le card grandi restano su `--ease-out-civic`, perché su una
+  distanza lunga il sorpasso diventa ondeggiamento. La molla di sistema è la
+  **tattile** (2% di sorpasso: si legge come «ha risposto», non come rimbalzo).
+  ⚠️ «Mai bounce» resta: il **rimbalzo** (16%) è riservato ai tre momenti di
+  festa, non è la curva di default.
+- **L'ingresso in tre movimenti**, non cinque passi uguali: *il dato* (la
+  striscia, corta e veloce), *la voce* (titolo + sommario insieme), *la materia*
+  (le superfici, più lente e da più lontano). L'ordine si legge come gerarchia,
+  non come coda. Resta **una sola orchestrazione per pagina**.
+- **Il titolo che si compone** parola per parola (`signature/titolo-composto.tsx`):
+  gesto editoriale, **uno per schermata** come la cifra display. Il testo resta
+  testo — la maschera è sul contenitore della parola, non un duplicato nascosto.
+- 🆕 **Il cambio di tema è un'ora del giorno che passa** (`brand/transizione-scena.tsx`):
+  premendo l'interruttore, un time-lapse di Pistoia copre la scena mentre i
+  colori si accompagnano sotto (~1,2s). **Due video nativi**, uno per verso
+  (giorno→notte e il suo rovescio) — *non* un solo elemento con la sorgente che
+  si scambia, che si resetta a metà: sono due `<video>` stabili. Scarica solo
+  sull'intenzione (passaggio del mouse), non parte con `prefers-reduced-motion`,
+  e se non è pronto il tema cambia lo stesso.
+
+⚠️ **L'unica deroga a «mai ambientale»: il pallino della striscia respira**
+(3,4s), e *solo quando la lettura è viva*. Si guadagna il posto perché **il
+movimento È il dato** — dice «la macchina gira», come gli «Online 4/6» dei
+riferimenti — e la sua assenza (pallino ambra, fermo) è informazione quanto la
+presenza. È l'eccezione che conferma la regola, non la sua fine.
 
 ### La goccia: come si fa «vivo» senza fare «ambientale» (2026-08-12)
 

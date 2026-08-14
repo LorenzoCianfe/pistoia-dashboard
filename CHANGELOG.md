@@ -5,6 +5,86 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.52.0] — 2026-08-14 · La prima pagina prende un luogo: Pistoia dietro il vetro, giorno e notte
+
+> Tre giri di ritocchi non avevano tolto a Lorenzo la sensazione di «piatto e
+> insignificante». La diagnosi, guardando i suoi riferimenti (`refs/`): **non
+> mancavano animazioni, mancava un modello di luce e mancava un luogo.** La
+> prima pagina è stata rifatta sul mockup che ha scelto, con una fotografia
+> vera della città dietro il vetro.
+
+### Aggiunto — la vetrina: una schermata sola, sopra la città
+- **Nuovo gruppo `(vetrina)`, solo per `/`**: una prima pagina a **schermata
+  intera** (`100dvh`, nessuno scorrimento su desktop) con la testata che
+  galleggia sulla scena e la riga di firma al piede — il guscio `(pubblico)`
+  non poteva ospitarla (tetto, padding, footer appeso). Sotto `lg` si scioglie
+  e torna a scorrere, perché «tutto in una schermata» su un telefono vuol dire
+  nascondere.
+- 🆕 **La scena — Pistoia fotografata dietro il vetro** (`brand/scena.tsx`):
+  giorno in tema chiaro, notte in tema scuro. Due `<picture>` in AVIF/WebP a tre
+  misure (94/77 KB, il browser ne scarica una), con segnaposto sfocato inline da
+  132 byte. Risolve la cosa che nessuna ombra risolveva: `backdrop-filter` ora ha
+  **una città da sfocare**, e le card leggono come vetro vero.
+- **Griglia bento di quattro tessere** (`prima-pagina/tessera.tsx`): costo della
+  giunta **con gli stipendi** (sindaco, vicesindaca, assessori), il sindaco
+  (ritratto a iniziali — nessuna foto reale fra gli asset), gli atti dell'anno,
+  l'atto del giorno. Via il totale d'archivio.
+- **Nuova rotta pubblica `/atti`**: dove è traslocato il contenuto che si LEGGE
+  (fatto del giorno per esteso, fiume, oggetto ufficiale integrale) quando la
+  home è diventata il posto da cui si *parte*.
+
+### Aggiunto — il modello di luce completo, e quattro strumenti di motion
+- **`--elev-rest` a tre strati** (filo + sottosquadro + proiezione direzionale):
+  la card smette di sembrare *ritagliata dentro* la tela e sembra *appoggiata
+  sopra*. Con due quote nuove — `--elev-capsula` (galleggia sopra il contenuto)
+  e `--elev-premuto` (il rilievo si **inverte** alla pressione). Rivede
+  consapevolmente «niente ombre diffuse» di `DESIGN.md` §6: no all'alone attorno,
+  sì alla proiezione sotto.
+- **Molle vere in CSS puro** (`--molla-*`, da `scripts/molle.mjs`): l'equazione
+  della molla in `linear()`, zero byte, sui controlli. La **tattile** (2% di
+  sorpasso) è la curva di sistema; il **rimbalzo** resta ai tre momenti di festa.
+- **Ingresso in tre movimenti** (dato → voce → materia), **titolo che si compone**
+  parola per parola (`signature/titolo-composto.tsx`), **chip-dato** e altri
+  elementi dai riferimenti (`ui/chip-dato.tsx`).
+- 🆕 **Il cambio di tema è un'ora del giorno**: un time-lapse di Pistoia copre la
+  scena mentre i colori si accompagnano (`brand/transizione-scena.tsx`). Usa il
+  girato originale e il suo **rovescio** — **due `<video>` nativi**, uno per
+  verso, perché scambiare la sorgente su un solo elemento lo resetta a metà (il
+  difetto per cui il ritorno al giorno non partiva). Scarica solo sull'intento,
+  salta con `prefers-reduced-motion`.
+- ⚠️ **Unica deroga a «mai ambientale»: il pallino respira** (3,4s) solo quando
+  la lettura è viva — il movimento È il dato, e la sua assenza informa quanto la
+  presenza.
+
+### Cambiato — meno cromo, più carattere (scelte di Lorenzo, 2026-08-14)
+- Via il pulsante «Accedi» e l'icona di ricerca dalla testata: l'ingresso è uno
+  solo, **«Entra nella mia città»** nell'apertura. Via «Come lavoriamo» →
+  **«Esplora la città in 3D»** con pastiglia «presto» (feature futura dichiarata).
+- **Copy rifatto**: sottotitolo che incuriosisce, firma riscritta
+  («Informazione pubblica su Pistoia, curata in modo indipendente») senza la
+  negazione «non è il sito del Comune» e senza unicode decorativo. Via la riga
+  «la lettura dell'albo è ferma».
+- **Alone bianco rimosso**: tolta la velatura che in tema chiaro leggeva come una
+  cornice; la leggibilità la tiene la composizione (il testo sta sul cielo).
+
+### Deciso, non ancora montato
+- **Base UI** è la libreria di primitive scelta (dagli autori di Radix, v1.0
+  2026, default di shadcn) — si aggiunge al primo popover, non prima. **Lenis**
+  (scorrimento con inerzia) non aggiunto. La versione **leggera dei video**
+  (~13 MB tenuti per la revisione) è un passo successivo: `scripts/alba.mjs` è
+  lo strumento.
+
+### 🔴 Verificato
+- **Verde:** `next build` di produzione (tutte le rotte, incluse `(vetrina)` e
+  `/atti`) · typecheck · lint su tutto `src` · **334 unit** · zero traboccamento
+  orizzontale da 360 a 1600px · entrambi i temi · transizione fluida e ripetibile
+  nei due versi · nessun errore JS, nessuna risposta HTTP ≥400.
+
+### Rimasto orfano dalla riscrittura (da chiudere)
+- `StrisciaDati`, `Monumento` (l'isola scura) e `ChipDato` non sono più usati da
+  nessuna rotta: compilano, ma vanno cancellati o riusati (il monumento su
+  `/trasparenza`). Deciso di lasciarli in sospeso invece di cancellarli d'ufficio.
+
 ## [0.51.0] — 2026-08-12 · L'isola di vetro, e il sito smette di usare metà schermo
 
 > Nasce da una domanda di Lorenzo — *«il menù è sempre laterale a sinistra? è
