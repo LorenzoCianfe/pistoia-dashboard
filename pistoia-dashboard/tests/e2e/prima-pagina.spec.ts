@@ -4,7 +4,6 @@ import { test, expect } from "@playwright/test";
 import { CITTADINO, MODERATORE, login, posata, pretendiAtterraggio } from "./helpers";
 import {
   ATTI_DEL_GIORNO,
-  ATTI_TOTALI,
   OGGETTO_CORTO,
   OGGETTO_CURATO,
   OGGETTO_CURATO_FRAMMENTO,
@@ -60,30 +59,80 @@ test.beforeAll(() => atti("semina"));
 test.afterAll(() => atti("pulisci"));
 
 test.describe("la prima pagina, pubblica", () => {
-  test("apre col fatto del giorno curato, e porta con sé l'oggetto ufficiale", async ({
+  /*
+    ⚠️ **RIALLINEATO IL 2026-08-15, e non è una manutenzione: è un cambio di
+    CONTRATTO della home.**
+
+    Fra il 13 e il 15 agosto la prima pagina è stata rifatta (`2ecf1ff`,
+    `1050938`). Il fatto del giorno **per intero** — didascalia e oggetto
+    ufficiale — è migrato su `/atti`, dove `FattoDelGiorno` vive adesso; sulla
+    home ne resta il solo titolo curato dentro la tessera «L'atto del giorno»,
+    che è un richiamo. Anche il fiume è su `/atti`.
+
+    Le asserzioni sul contenuto migrato **non sono state cancellate**: sono nel
+    test «l'atto per intero vive su /atti» qui sotto. Sono invece uscite quelle
+    su ciò che il prodotto non promette più — la striscia dei dati col totale
+    d'archivio e le tre porte, i cui componenti sono rimasti orfani. Un cancello
+    che pretende ciò che il prodotto non promette non protegge niente: blocca.
+
+    🔴 Il difetto vero che questo rosso nascondeva **non era nel prodotto**: la
+    home funziona. Era che i quattro test sono rimasti fermi al 13/08 e la CI è
+    rossa da allora — quattro commit spinte sopra un cancello bloccante.
+  */
+  test("apre con la tessera dell'atto del giorno, e coi numeri della giunta", async ({
     page,
   }) => {
     await page.goto("/");
 
-    /*
-      La striscia dei dati: i conteggi vengono dal database, non dalla lista.
-
-      ⚠️ Il selettore guarda **etichetta e numero insieme**. Con la sola
-      «In archivio» il test cadeva per *strict mode*: `getByText` cerca
-      sottostringhe senza distinguere le maiuscole, e la nota in fondo al fiume
-      dice «…sono in archivio: l'elenco completo…». Due elementi, un rosso che
-      non parlava di conteggi.
-    */
-    await expect(
-      page.getByText(new RegExp(`In archivio\\s*${ATTI_TOTALI}`, "i")),
-    ).toBeVisible();
     // La voce dell'anno c'è, ma il suo NUMERO non si fissa qui: il conteggio è
     // «dal 1º gennaio», quindi in un giro dei primi giorni di gennaio gli atti
     // seminati tre giorni fa cadono nell'anno prima e il totale non combacia.
     // Un test che fallisce una volta l'anno è peggio di uno che afferma meno.
     await expect(page.getByText(/Atti nel \d{4}/i)).toBeVisible();
 
-    // Il titolo umano, scritto dalla redazione.
+    /*
+      L'ATTO DEL GIORNO — la tessera c'è, e porta il titolo scritto dalla
+      redazione.
+
+      ⚠️ `getByText` e non `getByRole("heading")` per il titolo curato: nella
+      composizione nuova l'intestazione della tessera è la sua ETICHETTA, e il
+      titolo è il contenuto (`.tessera__frase`, un `<p>`). Pretenderlo come
+      intestazione è ciò che teneva rosso questo test — e il rango giusto per
+      quel titolo è una scelta di prodotto, decisa il 2026-08-15: resta un `<p>`,
+      perché l'atto con la sua intestazione vive su `/atti`.
+    */
+    await expect(
+      page.getByRole("heading", { name: "L'atto del giorno" }),
+    ).toBeVisible();
+    await expect(page.getByText(TITOLO_CURATO)).toBeVisible();
+    // Il numero VERO del giorno, che viene da un `count` e non dalla lista.
+    await expect(
+      page.getByText(new RegExp(`${ATTI_DEL_GIORNO} atti pubblicati`)),
+    ).toBeVisible();
+
+    // Le due tessere alte: quanto costa la giunta, e chi è il sindaco. Il nome
+    // e il modo in cui si arriva alla carica vengono dallo stesso dato.
+    await expect(page.getByText("Costo della giunta").first()).toBeVisible();
+    await expect(page.getByText("Giovanni Capecchi")).toBeVisible();
+    await expect(page.getByText("eletto dai cittadini")).toBeVisible();
+
+    // 🔴 Mai il partito: la ragione è misurata in fonti-organigramma §2.2.
+    const testo = (await page.locator("main").innerText()).toLowerCase();
+    expect(testo).not.toContain("partito democratico");
+  });
+
+  test("l'atto per intero vive su /atti: titolo, didascalia e oggetto ufficiale", async ({
+    page,
+  }) => {
+    /*
+      Ciò che la home ha smesso di portare non ha smesso di essere un impegno:
+      si è spostato. `/atti` monta `FattoDelGiorno` e `FiumeAtti`, cioè
+      esattamente i due componenti usciti dalla prima pagina, e le asserzioni
+      che li riguardavano sono queste — trasferite, non riscritte.
+    */
+    await page.goto("/atti");
+
+    // Qui il titolo curato È un'intestazione: `FattoDelGiorno` lo rende in `<h2>`.
     await expect(page.getByRole("heading", { name: TITOLO_CURATO })).toBeVisible();
     await expect(page.getByText(SOMMARIO_CURATO)).toBeVisible();
 
@@ -101,26 +150,13 @@ test.describe("la prima pagina, pubblica", () => {
     await expect(oggetto).toBeVisible();
     expect((await oggetto.textContent())?.trim()).toBe(OGGETTO_CURATO);
 
-    // Il monumento: la cifra, i nomi, e il modo in cui si arriva alla carica.
-    await expect(page.getByText("Costo della giunta").first()).toBeVisible();
-    await expect(page.getByText("Giovanni Capecchi")).toBeVisible();
-    await expect(page.getByText("Stefania Nesi")).toBeVisible();
-    await expect(page.getByText("eletto dai cittadini")).toBeVisible();
-
-    // 🔴 Mai il partito: la ragione è misurata in fonti-organigramma §2.2.
-    const testo = (await page.locator("main").innerText()).toLowerCase();
-    expect(testo).not.toContain("partito democratico");
-
     // Il fiume, con il numero VERO del giorno accanto a una lista troncata.
-    await expect(page.getByRole("heading", { name: "Il giorno in città" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Il giorno in città" }),
+    ).toBeVisible();
     await expect(
       page.getByText(new RegExp(`${ATTI_DEL_GIORNO} atti pubblicati`)),
     ).toBeVisible();
-
-    // Le tre porte.
-    await expect(page.getByRole("link", { name: /Il tuo quartiere/ })).toBeVisible();
-    await expect(page.getByRole("link", { name: /La pagella della città/ })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Segnala un problema/ })).toBeVisible();
   });
 
   test("è la stessa pagina per chi ha un account: nessun reindirizzamento", async ({
@@ -137,7 +173,9 @@ test.describe("la prima pagina, pubblica", () => {
     await login(page, CITTADINO);
     await page.goto("/");
     await pretendiAtterraggio(page, "/");
-    await expect(page.getByRole("heading", { name: TITOLO_CURATO })).toBeVisible();
+    // Non basta essere su `/`: la pagina deve aver reso il suo contenuto, non
+    // uno scheletro. Il titolo curato è il segno che l'ha fatto.
+    await expect(page.getByText(TITOLO_CURATO)).toBeVisible();
   });
 
   for (const tema of ["light", "dark"] as const) {
@@ -172,7 +210,7 @@ test.describe("la prima pagina, pubblica", () => {
 });
 
 test.describe("la cura del fatto del giorno", () => {
-  test("senza cura la home NON finge un'apertura: apre col fiume", async ({
+  test("senza cura la home NON finge un'apertura: la tessera torna al conteggio", async ({
     page,
   }) => {
     await login(page, MODERATORE);
@@ -186,13 +224,24 @@ test.describe("la cura del fatto del giorno", () => {
     await page.getByRole("button", { name: "Togli la cura" }).click();
     await expect(page.getByText("Nessun fatto del giorno")).toBeVisible();
 
-    // 🔴 La home apre col fiume, e NON con un'apertura vuota.
+    /*
+      🔴 Senza cura la home NON mostra un'apertura vuota: la tessera cambia
+      mestiere. L'etichetta passa da «L'atto del giorno» a «Il giorno in città»
+      e il contenuto diventa il conteggio — un fatto, invece di un buco vestito
+      da titolo.
+
+      È la stessa promessa di prima («la home non finge»), misurata sul markup
+      di adesso: prima la teneva il fiume, che da `1050938` sta su `/atti`.
+    */
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: TITOLO_CURATO })).toHaveCount(0);
+    await expect(page.getByText(TITOLO_CURATO)).toHaveCount(0);
+    await expect(
+      page.getByRole("heading", { name: "L'atto del giorno" }),
+    ).toHaveCount(0);
     await expect(
       page.getByRole("heading", { name: "Il giorno in città" }),
     ).toBeVisible();
-    // Il monumento resta: senza cura la home ha comunque due cose da dire.
+    // Il costo della giunta resta: senza cura la home ha comunque cose da dire.
     await expect(page.getByText("Costo della giunta").first()).toBeVisible();
 
     // Si rimette com'era: così l'ordine dei casi non conta.
@@ -207,7 +256,7 @@ test.describe("la cura del fatto del giorno", () => {
     await expect(page.getByText("Fatto del giorno aggiornato")).toBeVisible();
 
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: TITOLO_CURATO })).toBeVisible();
+    await expect(page.getByText(TITOLO_CURATO)).toBeVisible();
   });
 
   test("rifiuta il titolo che è l'oggetto ufficiale ricopiato", async ({
@@ -236,6 +285,6 @@ test.describe("la cura del fatto del giorno", () => {
 
     // E la prima pagina non è cambiata: il rifiuto non ha salvato niente.
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: TITOLO_CURATO })).toBeVisible();
+    await expect(page.getByText(TITOLO_CURATO)).toBeVisible();
   });
 });

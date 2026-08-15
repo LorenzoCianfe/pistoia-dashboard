@@ -300,33 +300,53 @@ test("con prefers-reduced-motion la goccia si posiziona, non anima", async ({
         return { y: Math.round(m.m42), scaleY: +m.m22.toFixed(2) };
       };
       const visti: { y: number; scaleY: number }[] = [leggi()];
-      // Il fuoco da TASTIERA: è anche il percorso che una goccia legata al solo
-      // mouse non coprirebbe.
-      const voci = document.querySelectorAll<HTMLElement>(
-        "nav[aria-label='Navigazione principale'] a",
+      /*
+        Il fuoco da TASTIERA: è anche il percorso che una goccia legata al solo
+        mouse non coprirebbe.
+
+        ⚠️ **Le voci si prendono dalla barra che possiede QUESTA goccia**, non
+        da un selettore per `aria-label`, ed è un rosso già pagato (2026-08-15):
+        `bottom-nav.tsx` e `side-nav.tsx` dichiarano **lo stesso**
+        `aria-label="Navigazione principale"`, quindi il selettore raccoglieva i
+        link di tutte e due. L'ultimo era della barra in basso, che da `lg` in su
+        è `display: none` — e `focus()` su un elemento non renderizzato **non fa
+        nulla, in silenzio**. La goccia restava ferma e il test accusava il
+        prodotto di non seguire la tastiera, che invece la segue.
+      */
+      const barra = el!.closest("nav")!;
+      // L'ULTIMA voce che non è già quella attiva: puntare l'attiva sarebbe un
+      // non-movimento legittimo, e il test si autocertificherebbe.
+      const voci = [...barra.querySelectorAll<HTMLElement>("a")].filter(
+        (a) => !a.hasAttribute("data-attiva"),
       );
-      voci[voci.length - 1].focus();
+      const bersaglio = voci.at(-1) ?? null;
+      bersaglio?.focus();
       for (let i = 0; i < (quanti as number); i++) {
         await new Promise((r) => requestAnimationFrame(() => r(null)));
         visti.push(leggi());
       }
-      return visti;
+      return { visti, bersaglio: bersaglio?.textContent?.trim() ?? null };
     },
     [GOCCIA, 40] as const,
   );
 
-  const posizioni = [...new Set(campioni.map((c) => c.y))];
+  expect(
+    campioni.bersaglio,
+    "nella barra non c'è nessuna voce diversa dall'attiva: il test non prova niente",
+  ).not.toBeNull();
+
+  const posizioni = [...new Set(campioni.visti.map((c) => c.y))];
   expect(
     posizioni.length,
     `la goccia è passata da ${posizioni.length} posizioni (${posizioni.join(", ")}): ` +
       "con prefers-reduced-motion deve posizionarsi, non animare",
   ).toBeLessThanOrEqual(2);
   expect(
-    campioni.at(-1)!.y,
-    "la goccia non si è mossa affatto: il fuoco da tastiera non la sposta",
+    campioni.visti.at(-1)!.y,
+    `la goccia non si è mossa affatto: il fuoco da tastiera su «${campioni.bersaglio}» non la sposta`,
   ).not.toBe(riposo!.y);
 
-  const deformazioni = [...new Set(campioni.map((c) => c.scaleY))];
+  const deformazioni = [...new Set(campioni.visti.map((c) => c.scaleY))];
   expect(
     deformazioni,
     "la goccia si deforma anche con la preferenza attiva: lo schiacciamento " +
