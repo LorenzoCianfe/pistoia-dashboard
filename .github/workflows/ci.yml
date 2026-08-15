@@ -1,6 +1,12 @@
-# CI della Dashboard di Pistoia (Fase 0).
-# lint → typecheck → unit test → drift delle migrazioni → build.
-# Gli E2E Playwright girano in un job separato, bloccante dal 2026-08-06.
+# CI di Pistoia.app.
+#
+#   controlli ─┐  (lint · typecheck · unit · audit · drift — non blocca nessuno)
+#   build ─────┼──► e2e         (Playwright, bloccante dal 2026-08-06)
+#              └──► lighthouse  (soglie misurate, bloccante dal 2026-08-06)
+#
+# Quattro job, tutti bloccanti: se uno è rosso, il workflow è rosso. Nessuno
+# però può rendere INVISIBILE un altro — il perché è scritto sopra `controlli`,
+# ed è costato quattro commit senza misure.
 name: CI
 
 on:
@@ -18,8 +24,38 @@ defaults:
     working-directory: pistoia-dashboard
 
 jobs:
-  quality:
-    name: Lint · Typecheck · Test · Build
+  # ══════════════════════════════════════════════════════════════════════════
+  # 🔴 DUE JOB DOVE PRIMA CE N'ERA UNO (2026-08-15)
+  #
+  # `quality` mescolava due responsabilità — i CONTROLLI (lint, typecheck, unit,
+  # audit, drift) e la PRODUZIONE della build — ed `e2e` e `lighthouse` avevano
+  # entrambi `needs: quality`.
+  #
+  # Il costo, misurato: dal 14 al 15 agosto un'advisory `high` su una transitiva
+  # ha reso rosso `quality`, e con lei **E2E e Lighthouse non sono falliti: sono
+  # stati SALTATI**, per quattro commit. `skipped` non è rosso, e in un log da
+  # 400 righe non lo legge nessuno. Nel frattempo quattro test erano rotti e
+  # nessuno lo sapeva; l'ultima misura di prestazioni era del 13/08.
+  #
+  # ⚠️ La cura NON è `if: always()`, ed è il punto. Né `e2e` né `lighthouse`
+  # consumano l'artefatto di `quality`: fanno `npm ci` per conto proprio e
+  # `lighthouse` ricostruisce da zero. Quel `needs` non era una dipendenza di
+  # dati, era un cancello messo dove capitava. Separare le responsabilità dice
+  # la verità sulla struttura, e i cinque comportamenti che vogliamo escono da
+  # soli dalla semantica di `needs`, senza scavalcarla:
+  #
+  #   1. tutto verde              → E2E e Lighthouse girano
+  #   2. lint/audit rossi, build ok → girano LO STESSO (dipendono da `build`)
+  #   3. build fallita            → saltati (non c'è niente da provare)
+  #   4. E2E o Lighthouse rossi   → il workflow è rosso
+  #   5. esecuzione annullata     → non parte lavoro inutile
+  #
+  # `controlli` non dipende da nulla e non blocca nessuno: se è rosso, il
+  # workflow è rosso — ma gli altri cancelli hanno detto la loro nella stessa
+  # passata. L'obiettivo è vedere PIÙ errori per giro, non nasconderne uno.
+  # ══════════════════════════════════════════════════════════════════════════
+  controlli:
+    name: Lint · Typecheck · Test · Audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -67,6 +103,27 @@ jobs:
         # exit 2 se lo schema diverge dalle migrazioni committate.
         run: npx prisma migrate diff --from-migrations prisma/migrations --to-schema prisma/schema.prisma --exit-code
 
+  # Il job che produce l'artefatto, e l'unico da cui abbia senso far dipendere
+  # chi misura: se il codice non compila, non c'è niente da provare né da
+  # cronometrare. Gira in parallelo a `controlli`, che non lo blocca.
+  build:
+    name: Build di produzione
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: pistoia-dashboard/package-lock.json
+
+      - name: Installa dipendenze (esegue anche prisma generate)
+        run: npm ci
+
+      # Resta qui com'era: il build non legge il database, ma la preparazione
+      # costa secondi e toglierla significherebbe scoprire per caso, un giorno,
+      # che una rotta lo leggeva davvero.
       - name: Prepara database (migrate + seed)
         run: npx prisma migrate deploy && npx tsx prisma/seed.ts
 
@@ -76,7 +133,7 @@ jobs:
   e2e:
     name: E2E (Playwright)
     runs-on: ubuntu-latest
-    needs: quality
+    needs: build
     # BLOCCANTE dal 2026-08-06. Nasceva `continue-on-error` «finché la suite non
     # è stata rodata in CI»: è rodata — 48 test verdi in locale, e verde in CI su
     # ogni passata da settimane. La riga è l'ultima della famiglia chiusa oggi
@@ -118,7 +175,7 @@ jobs:
     # adesso giudica, e il documento non può restare indietro sul codice.
     name: Lighthouse (soglie misurate)
     runs-on: ubuntu-latest
-    needs: quality
+    needs: build
     # BLOCCANTE dal 2026-08-06. Era `continue-on-error: true` «finché non
     # esiste una soglia misurata»: adesso esiste, e sta in `lighthouserc.js`
     # con la tabella della prima misura vera accanto. Le soglie stanno cinque
