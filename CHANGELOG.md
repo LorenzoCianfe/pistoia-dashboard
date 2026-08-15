@@ -19,11 +19,11 @@
   cosa c'è sotto: 26% dove i controlli poggiano sul pannello di Homepage_2, 62%
   dove poggiano sulla fotografia nuda di Homepage_1. Col 26% «Entra nella mia
   città» era leggibile solo sapendo cosa c'era scritto.
-- **Vetro rosso sull'azione principale**, su tutte e due le prime pagine: la
-  superficie è tinta al 58%, non solo l'inchiostro. Un filo e delle lettere rosse
-  su vetro neutro non fanno un accento — da lontano il pulsante resta grigio.
-  ⚠️ Inchiostro bianco fisso nei due temi: sotto c'è una superficie rossa in
-  entrambi, e un inchiostro che segue il tema diventerebbe near-black sul rosso.
+- **L'azione resta teal su Homepage_1** e rossa su Homepage_2, come dichiara
+  `DESIGN.md` §6: il rosso-azione è della variante editoriale. Portarlo anche su
+  Homepage_1, e alzarlo a superficie piena invece che a inchiostro, è stato
+  provato lo stesso giorno e ritirato insieme all'effetto — cambia identità, non
+  stile.
 
 ### Aggiunto — `/home-1b`, l'anteprima del linguaggio su Homepage_1
 - 🔴 **`/` non è stata toccata.** La pagina d'anteprima è **una riga di JSX**:

@@ -1457,16 +1457,22 @@
     soglia è 4,5:1 e `--red` pieno ne farebbe 4,3 — è la misura già pagata sul
     footer, scritta in testa a `wordmark.tsx`.
   */
+  /*
+    L'AZIONE PRINCIPALE, in rosso.
+
+    Il velo di tinta è al 14%: sopra ci vive `--red-ink`, che è il rosso
+    corretto per la funzione testuale (`DESIGN.md` §4). A 13px in peso 600 la
+    soglia è 4,5:1 e `--red` pieno ne farebbe 4,3 — è la misura già pagata sul
+    footer, scritta in testa a `wordmark.tsx`.
+  */
   .ctrl--rosso {
-    /* Vetro rosso, come su `/home-1b`: la superficie è tinta, l'inchiostro è
-       bianco fisso nei due temi perché il fondo è rosso in tutti e due. */
-    color: #fff;
-    border-color: color-mix(in oklab, var(--red) 85%, transparent);
-    background-color: color-mix(in oklab, var(--red) 58%, transparent);
+    color: var(--red-ink);
+    border-color: color-mix(in oklab, var(--red) 45%, transparent);
+    background-color: color-mix(in oklab, var(--red) 14%, transparent);
   }
   .ctrl--rosso:hover {
-    background-color: color-mix(in oklab, var(--red) 70%, transparent);
-    border-color: var(--red);
+    background-color: color-mix(in oklab, var(--red) 22%, transparent);
+    border-color: color-mix(in oklab, var(--red) 70%, transparent);
   }
 
   /* Il grado muto: la promessa dichiarata, presente ma non attiva. */
@@ -1625,31 +1631,33 @@
     superficie a metà effetto. La classe ripetuta porta a (0,4,0) e toglie la
     gara di mezzo invece di vincerla per un pelo.
   */
+  /*
+    L'AZIONE PRINCIPALE RESTA TEAL su Homepage_1, e non è una dimenticanza:
+    `DESIGN.md` §6 dichiara che il rosso come colore dell'AZIONE vale sulla
+    variante editoriale, mentre qui l'azione è il verde-acqua dei vivai da
+    sempre. Il rosso di qua è stato provato il 2026-08-15 e tolto insieme
+    all'effetto: cambia identità, non stile, e va preso apposta.
+  */
   [data-stile="vetro"] .btn.btn-primary,
   [data-stile="vetro"] .btn.btn-primary:hover {
-    /*
-      🔴 VETRO ROSSO: la superficie È rossa, non solo l'inchiostro (Lorenzo,
-      2026-08-15, dopo due giri in cui il rosso «non si vedeva»). Un filo e delle
-      lettere rosse su vetro neutro non fanno un accento: da lontano il pulsante
-      resta grigio. Qui il velo è **tinto** al 58% — abbastanza da leggersi
-      rosso a colpo d'occhio, abbastanza trasparente da lasciar passare la città
-      e la rifrazione della goccia.
-
-      ⚠️ L'inchiostro è bianco FISSO nei due temi, e non è una svista: sotto c'è
-      una superficie rossa in tutti e due, quindi un inchiostro che segue il tema
-      diventerebbe near-black sul rosso nel tema scuro. Su `--red` (#D63A57) il
-      bianco fa **4,57:1** — la misura è quella già scritta in `wordmark.tsx`.
-    */
-    color: #fff;
-    background-color: color-mix(in oklab, var(--red) 58%, transparent);
-    border-color: color-mix(in oklab, var(--red) 85%, transparent);
+    color: var(--teal-strong);
+    background-color: color-mix(
+      in srgb,
+      var(--color-background-card) var(--ctrl-velo),
+      transparent
+    );
+    border-color: color-mix(in oklab, var(--color-accent) 55%, transparent);
     box-shadow:
       inset 0 1px 0 var(--glass-sheen),
       inset 0 -1px 0 var(--glass-underside);
   }
   [data-stile="vetro"] .btn.btn-primary:hover {
-    background-color: color-mix(in oklab, var(--red) 70%, transparent);
-    border-color: var(--red);
+    background-color: color-mix(
+      in srgb,
+      var(--color-background-card) calc(var(--ctrl-velo) + 20%),
+      transparent
+    );
+    border-color: color-mix(in oklab, var(--color-accent) 80%, transparent);
   }
   [data-stile="vetro"] .btn.btn-secondary {
     color: var(--muted);

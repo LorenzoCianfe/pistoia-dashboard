@@ -708,10 +708,14 @@ mosse, e nessuna è un ornamento:
 il «.app» del marchio, l'azione principale. Le prime due sono §4 alla lettera —
 il rosso dello stemma è «brand», e `wordmark.tsx` colora il «.app» da sempre. La
 terza **estende** §4: il rosso non era mai stato il colore di un'azione. La
-decisione è di Lorenzo (2026-08-15) e, **rivista lo stesso giorno, vale su tutte
-e due le prime pagine**: nel primo giro l'avevo tenuta alla sola variante
-editoriale e l'avevo dichiarata come una scelta d'identità da prendere apposta.
-È stata presa. Il rosso dello stemma è il colore dell'azione, punto.
+decisione è di Lorenzo (2026-08-15) e vale **su questa variante soltanto**: su
+Homepage_1 l'azione resta il verde-acqua dei vivai. Portarla anche di là è stato
+provato lo stesso giorno e ritirato — cambia identità, non stile, e va presa
+apposta.
+
+⚠️ E resta il **grado**: il rosso è l'inchiostro e il filo, non il pieno. Un velo
+di tinta al 14% sotto `--red-ink`, non una superficie rossa: sul pulsante a 13px
+la soglia è 4,5:1 e `--red` pieno ne farebbe 4,3.
 
 ⚠️ **Come testo su superficie vale `--red-ink`, non `--red`**: alla scala della
 testata il marchio è testo grande (soglia 3:1) e `--red` basta, ma sul pulsante a
