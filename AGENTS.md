@@ -1244,7 +1244,9 @@ npm run test:e2e       # playwright (comprende il cancello di accessibilità)
 npm run a11y           # SOLO il cancello a11y: axe, 21 pagine × 2 temi, WCAG AA + 2.2
 npm run bersagli       # SOLO il cancello dei 44px: 21 pagine × 2 viewport (1280 e 360)
 npm run contenimento   # SOLO il cancello del ritaglio: nessun controllo esce dal proprio contenitore
-npm run lighthouse     # Lighthouse sulla build di produzione — misura, non giudica
+npm run lighthouse     # Lighthouse: costruisce da sé una build PULITA, poi GIUDICA (soglie bloccanti)
+npm run impronta       # cattura i 213 token come il browser li risolve, nei due temi
+npm run impronta:confronta   # esce 1 se un solo token si è mosso — il cancello del design
 npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
 npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
 node scripts/shots.mjs --simple --width=360   # modalità semplice, viewport minima
@@ -1395,6 +1397,15 @@ significa riaprire esattamente il difetto che l'isolamento ha chiuso.
 1 se una pagina scorre di lato. È l'unico difetto di layout che una schermata a
 piena pagina non mostra: il viewport si allarga fino a contenerlo e lo fa
 sparire.
+
+Dal 2026-08-15 esiste un registro di **eccezioni misurate** in testa a
+`shots.mjs` (`TRABOCCAMENTI_NOTI`): una pagina già nota trabocca senza far
+cadere il cancello **fino al valore rilevato**, e lo fa cadere appena lo supera.
+Serve alle rotte congelate, dove correggere significherebbe lavorare su codice
+che potrebbe essere buttato. ⚠️ Ogni voce deve portare la propria **condizione
+di uscita**: un'eccezione senza la riga che dice quando sparisce è un difetto
+promosso a regola. I tollerati si stampano **anche a esito verde**, perché
+un'eccezione silenziosa diventa permanente.
 
 **Il browser di `shots` si RILANCIA a ogni passata**, e non è pigrizia: con
 quattro regimi invece di due, un solo processo Chromium moriva a metà giro

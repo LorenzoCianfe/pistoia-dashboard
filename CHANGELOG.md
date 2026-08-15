@@ -5,6 +5,65 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.54.1] — 2026-08-15 · La baseline torna verde, e i cancelli smettono di nascondersi a vicenda
+
+> Primo passo del **rework architetturale**: ricostruire uno stato verificabile
+> prima di toccare l'architettura. `main` era rosso da quattro commit, e nessuno
+> dei rossi era quello che sembrava. **Zero file di prodotto toccati.**
+
+### Corretto — i quattro rossi
+- 🔴 **La goccia della barra laterale: difetto nel TEST, non nel prodotto.**
+  `side-nav` e `bottom-nav` dichiarano lo stesso `aria-label`, quindi il
+  selettore raccoglieva i link di entrambe e focalizzava l'ultimo — che da `lg`
+  in su è `display: none`. **`.focus()` su un elemento non renderizzato non fa
+  nulla e non segnala nulla**: la goccia restava ferma e il test accusava il
+  prodotto di non seguire la tastiera. Ora le voci si prendono dalla barra che
+  possiede quella goccia, escludendo l'attiva.
+- **Quattro casi della prima pagina fermi al contratto del 13/08.** Fra il 13 e
+  il 15 la home ha cambiato *contratto*, non solo aspetto: il fatto del giorno
+  per intero e il fiume sono su `/atti`, e in home resta il titolo curato dentro
+  una tessera — un `<p>`, non un'intestazione. Le asserzioni sul contenuto
+  migrato sono state **trasferite** al nuovo caso su `/atti`, non cancellate.
+- **`npm audit`: 1 high su `nanoid`** (transitiva via `postcss`), chiusa con un
+  salto di patch. Era il rosso di `quality` — e quindi la causa per cui E2E e
+  Lighthouse non venivano nemmeno eseguiti.
+
+### Aggiunto — due strumenti
+- 🆕 **`scripts/misura.mjs`**, l'unico posto del repository che cancella `.next`
+  e l'unica strada per produrre un artefatto da misurare. Ci passano
+  `lighthouse`, `impronta`, `impronta:confronta` e `pretest:e2e`.
+- 🆕 **`scripts/impronta.mjs`**, l'impronta dei token: legge ogni custom property
+  **come il browser la risolve**, nei due temi. Leggere le variabili non basta —
+  `--bg` vale `light-dark(…)` in entrambi — quindi ogni token passa per una
+  proprietà vera. Il tema si sceglie dal negozio di next-themes e si *pretende*:
+  scriverlo su `<html>` non funziona, next-themes lo riscrive. **213 token, 93
+  dei quali cambiano col tema**, in `tests/impronta/token.json`.
+- **Registro delle eccezioni al traboccamento** in `shots.mjs`: `/home-1b`
+  trabocca di 35px a 360px ed è una vetrina **congelata**. Tollerato fino al
+  valore misurato, rosso appena lo supera, stampato anche a esito verde — e con
+  la condizione di uscita scritta accanto.
+
+### Corretto — la CI non nasconde più i propri cancelli
+- 🔴 **`e2e` e `lighthouse` avevano entrambi `needs: quality`.** Un'advisory su
+  una transitiva ha reso rosso `quality`, e con lei i due cancelli che misurano
+  davvero il prodotto **non sono falliti: sono stati SALTATI**, per quattro
+  commit. `skipped` in un log da 400 righe non lo legge nessuno.
+- **La cura non è `if: always()`**: quel `needs` non era una dipendenza di dati
+  — né `e2e` né `lighthouse` consumano quell'artefatto. `quality` si spacca in
+  `controlli` (lint · typecheck · unit · audit · drift, non blocca nessuno) e
+  `build`, da cui dipendono i due che misurano. I cinque comportamenti voluti
+  escono dalla semantica di `needs`, senza scavalcarla.
+
+### Trovato e NON corretto (difetto di misura, non di prodotto)
+- 🔴 **Un `.next` sporco produce metriche false e CSS mutilo.** Una build fatta
+  sopra quella di sviluppo lasciata dagli E2E ha dato `CLS 0,938` con varianza
+  zero su tre passate — credibilissimo, e costato una bisezione su quattro
+  commit per scoprire che il codice non c'entrava (con `.next` pulito: **0,165
+  su ogni commit**). Lo stesso artefatto serviva un foglio di stile **mutilo di
+  62 token**, e l'unico strumento che se ne è accorto è stato `impronta.mjs`.
+  La trappola era già in `AGENTS.md` §3 come nota: ricordarsela non è bastato,
+  quindi ora è automatica.
+
 ## [0.54.0] — 2026-08-15 · Un linguaggio di controlli per tutto il progetto, e `/home-1b` per provarlo
 
 > I controlli nati su Homepage_2 diventano **famiglia di progetto** (`.ctrl`).
