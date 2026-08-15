@@ -52,6 +52,24 @@ function atti(azione: "semina" | "pulisci") {
   execFileSync("npx", ["tsx", "tests/e2e/semina-atti.ts", azione], {
     stdio: "inherit",
     shell: true,
+    /*
+      🔴 **`DATABASE_URL` ESPLICITO, e senza questa riga il file non passa in CI**
+      (trovato il 2026-08-15, alla prima passata in cui gli E2E hanno girato
+      davvero dopo tre commit in cui erano stati *saltati*).
+
+      `semina-atti.ts` risolve `process.env.DATABASE_URL ?? "file:./prisma/e2e.db"`.
+      In locale nessuno esporta quella variabile, quindi il ripiego è giusto e
+      tutto passa. **In CI il workflow la dichiara a livello di job** — punta a
+      `dev.db`, che serve a `migrate deploy` e al seed generale — e il processo
+      figlio la eredita: gli atti finiscono in `dev.db` mentre il server di
+      Playwright legge `e2e.db`, che `playwright.config.ts` gli passa a parte.
+
+      Il sintomo non nomina mai il database: i test cadono su elementi mancanti
+      («In prima pagina adesso» assente su `/redazione`), cioè sembrano una
+      regressione dell'interfaccia. È lo stesso schema che `global-setup.ts` già
+      risolve costruendo un `env` esplicito per i propri figli; qui mancava.
+    */
+    env: { ...process.env, DATABASE_URL: "file:./prisma/e2e.db" },
   });
 }
 
