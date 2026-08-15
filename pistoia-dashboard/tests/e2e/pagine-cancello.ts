@@ -51,6 +51,32 @@ export const PAGINE_ANONIME: PaginaCancello[] = [
     modifica che ce l'ha portata.
   */
   { nome: "prima pagina (home pubblica)", url: "/" },
+  /*
+    HOMEPAGE_2 — la variante editoriale, entrata il 2026-08-15 **insieme alla
+    rotta**, non dopo.
+
+    ⚠️ È la trappola di §3 presa dal verso giusto per una volta: una rotta
+    pubblica nuova che nessun cancello attraversa è una superficie che nessuno
+    misura, e su questo progetto è già successo — `/` stessa ci è vissuta fuori
+    fino al 2026-08-12, e `/redazione` senza nemmeno un collegamento. Qui la
+    riga entra nello stesso commit del `page.tsx`.
+
+    Non è un doppione di `/`: **impianto visivo diverso** (vetro a colonna,
+    marchio spezzato, indice tipografico invece delle tessere), che è esattamente
+    il criterio di scelta dichiarato in testa a questo file.
+
+    ⚠️ Corollario, valido al primo giro: i rossi che escono possono essere suoi
+    di nascita, non della modifica che ce l'ha portata.
+  */
+  { nome: "home-2 (variante editoriale)", url: "/home-2" },
+  /*
+    HOMEPAGE_1 COL LINGUAGGIO NUOVO (2026-08-15). Non è una composizione in
+    più — rende quella di `/` — ma è **materiale diverso**: i controlli sono
+    vetro piatto con l'effetto liquido, e sono proprio loro che i tre cancelli
+    devono misurare (bersagli ≥ 44px, contrasto, contenimento). Se il
+    linguaggio verrà adottato questa riga sparisce insieme alla rotta.
+  */
+  { nome: "home-1b (anteprima del linguaggio)", url: "/home-1b" },
   { nome: "login", url: "/login" },
   { nome: "valutazioni (barra anonima)", url: "/valutazioni" },
   { nome: "metodologia (documento lungo)", url: "/metodologia" },

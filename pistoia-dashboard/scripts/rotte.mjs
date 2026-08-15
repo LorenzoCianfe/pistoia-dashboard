@@ -70,7 +70,11 @@ function sorveglia(page) {
  * liste, perché gli id vengono dal seed e cambiano a ogni `db:reset`.
  */
 const ROTTE = [
-  "/", "/login", "/registrati",
+  // `/home-2` è la variante editoriale della prima pagina (2026-08-15): rotta
+  // pubblica vera, quindi entra qui insieme al suo `page.tsx`. Vive in un
+  // gruppo di rotte a parte — è anche il modo per accorgersi se quel gruppo
+  // smettesse di essere servito.
+  "/", "/home-2", "/home-1b", "/login", "/registrati",
   "/la-mia-citta",
   "/partecipa", "/segnalazioni", "/proposte", "/sondaggi", "/priorita",
   "/question-time", "/volontariato", "/patti", "/progetti",

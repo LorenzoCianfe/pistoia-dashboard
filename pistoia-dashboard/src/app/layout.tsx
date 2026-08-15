@@ -86,13 +86,16 @@ export default async function RootLayout({
             Serviva a evitare che il cambio di tema animasse ogni superficie
             in modo disordinato, e ha funzionato finché il cambio era uno
             scatto. Adesso sulla prima pagina il tema è **un'ora del giorno che
-            passa** — un time-lapse di 1,2s sulla città — e uno scatto secco
-            dei colori sotto un filmato che sfuma è la cosa che si nota di più.
+            passa** — il time-lapse della città, a velocità originale — e i
+            colori corrono con lui, per la stessa durata e con lo stesso
+            avanzamento. Uno scatto secco sotto un filmato che scorre è la cosa
+            che si nota di più.
 
             Il disordine che il flag preveniva è tenuto a bada da
             `globals.css`: le transizioni di colore si accendono solo mentre
             `html[data-transizione-tema]` esiste, cioè per la durata del
-            cambio, e le mette e toglie `CambioTema`.
+            cambio, e le mette e toglie `passaLOra` in
+            `brand/transizione-scena.tsx`.
           */
           nonce={nonce}
         >

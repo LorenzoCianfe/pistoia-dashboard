@@ -5,6 +5,214 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.54.0] — 2026-08-15 · Un linguaggio di controlli per tutto il progetto, e `/home-1b` per provarlo
+
+> I controlli nati su Homepage_2 diventano **famiglia di progetto** (`.ctrl`).
+> Un linguaggio che vive in una pagina sola non è un linguaggio: è uno stile.
+
+### Aggiunto — `.ctrl`, la famiglia dei controlli
+- **Promossa da `home2__ctrl` a nomi di progetto** (`.ctrl`, `.ctrl-menu`,
+  `.ctrl-tondo`, `.ctrl-nota`): vetro leggero, filo di 1px, nessuna ombra, raggio
+  piccolo e **monospaziato maiuscolo**, che è la mossa che fa leggere controlli e
+  dati come la stessa famiglia.
+- 🆕 **`--ctrl-velo`, il velo come variabile.** Quanto vetro serve dipende da che
+  cosa c'è sotto: 26% dove i controlli poggiano sul pannello di Homepage_2, 62%
+  dove poggiano sulla fotografia nuda di Homepage_1. Col 26% «Entra nella mia
+  città» era leggibile solo sapendo cosa c'era scritto.
+- **Vetro rosso sull'azione principale**, su tutte e due le prime pagine: la
+  superficie è tinta al 58%, non solo l'inchiostro. Un filo e delle lettere rosse
+  su vetro neutro non fanno un accento — da lontano il pulsante resta grigio.
+  ⚠️ Inchiostro bianco fisso nei due temi: sotto c'è una superficie rossa in
+  entrambi, e un inchiostro che segue il tema diventerebbe near-black sul rosso.
+
+### Aggiunto — `/home-1b`, l'anteprima del linguaggio su Homepage_1
+- 🔴 **`/` non è stata toccata.** La pagina d'anteprima è **una riga di JSX**:
+  rende la stessa `PrimaPagina` dentro un guscio con `data-stile="vetro"`, e sono
+  le regole di `globals.css` a rivestirne i `.btn`. Copiarne la composizione
+  avrebbe voluto dire trecento righe che divergono al primo ritocco; così invece
+  **l'anteprima non può mentire**: qualunque cosa cambi su `/` compare qui allo
+  stesso istante.
+- Le regole dell'anteprima **non ridichiarano l'aspetto**: il selettore
+  `[data-stile="vetro"] .btn` è stato aggiunto *accanto* a `.ctrl`. Se il
+  linguaggio verrà adottato, il blocco sparisce e `.ctrl` diventa `.btn`.
+
+### Corretto
+- 🔴 **Il pieno teal si riprendeva il bottone.** `.btn-primary:hover:not(:disabled)`
+  fa (0,3,0), esattamente quanto `[data-stile] .btn-primary:hover`: a parità
+  decide l'ordine nel foglio, e vinceva il sistema. La classe ripetuta
+  (`.btn.btn-primary`) porta a (0,4,0) e toglie la gara di mezzo.
+
+### Provato e tolto — l'effetto «goccia d'acqua»
+- Nello stesso giorno i controlli hanno avuto una rifrazione ottica vera —
+  filtro SVG di spostamento su `backdrop-filter`, calotta calcolata per elemento,
+  frangia cromatica, riflesso speculare, ombra di contatto, molle sullo spessore.
+  **Funzionava** e **è stato tolto per intero** su richiesta di Lorenzo, dopo tre
+  giri di taratura.
+- Ciò che si è imparato resta in `DESIGN.md` §6, perché la prossima volta non si
+  ricominci da zero: **WebGL non può leggere ciò che ha dietro**; `scale` di
+  `feDisplacementMap` non è uno spostamento in pixel; la SDF corta del rettangolo
+  arrotondato vale solo negli angoli; e soprattutto il costo — **26 fps** con
+  otto gocce sopra il filmato della transizione, cioè il gesto principale della
+  prima pagina che paga per un ornamento.
+
+## [0.53.0] — 2026-08-15 · Homepage_2: la variante editoriale, accanto alla prima e non al suo posto
+
+> Due composizioni della stessa prima pagina, vive nello stesso momento e
+> confrontabili aprendo due schede. **Homepage_1 resta `/` e non è stata
+> toccata**: la nuova nasce su `/home-2`, con nomi di classe tutti suoi.
+
+### Aggiunto — `/home-2`, dal riferimento portato da Lorenzo
+- **Un gruppo di rotte a parte** (`app/(vetrina-2)/`), non una sottocartella di
+  `(vetrina)`: un layout annidato si somma a quello sopra e avrebbe disegnato
+  due testate. Qui la testata è diversa — **menu e interruttore insieme a
+  destra**, in una capsula di vetro.
+- 🆕 **Il marchio spezzato in diagonale**: «Pistoia» in alto dentro il pannello
+  di vetro, «.app» in basso a destra sulla fotografia. Un `<h1>` solo con due
+  `<span>`: un lettore di schermo sente «Pistoia.app», una parola sola — la
+  diagonale è **posizione**, non contenuto.
+- 🆕 **Pannello di vetro a bordo netto** sul 46% sinistro, col filo di luce del
+  modello a tre strati. Il suo `backdrop-filter` sfoca la fotografia **e il
+  filmato mentre corre**, quindi la transizione giorno↔notte si vede anche
+  attraverso il vetro senza una riga in più.
+- 🆕 **I dati istituzionali come indice tipografico**, non come card: `01 ──
+  Costo della giunta` e `02 —— Atti nel 2026`, cifra grande e leggera, filetti
+  al posto dei contenitori. Stessa fonte dati di Homepage_1
+  (`costoAnnuoGiunta`, `getPrimaPagina`): due varianti che mostrassero due
+  numeri diversi sarebbero peggio di una variante in meno.
+- **I due CTA**: «Esplora la città» (porta a `/la-mia-citta`) ed «Esplora in 3D»
+  con la pastiglia «presto» e `aria-disabled`, come di là — la promessa è la
+  stessa e non può cambiare tono fra due varianti.
+- **Il giorno↔notte è identico**: `CambioTema` e `<Scena />` sono gli stessi
+  componenti, quindi `--tema-t`, il lucchetto e la sincronia col filmato valgono
+  qui senza modifiche. Misurato su `/home-2`: scarto fra `--tema-t` e
+  l'avanzamento del video **≤ 0,003**, arrivo esatto, nessun residuo.
+
+### Corretto — due difetti trovati guardando, non da un cancello
+- **Il menu era illeggibile sulla fotografia.** A destra le voci cadono sui
+  tetti — chiari di giorno, scuri di notte — e `--muted` lì non significa più
+  quello per cui è stato misurato. Ora vivono in una **capsula di vetro**, che
+  è ciò che ridà loro una superficie.
+- 🔴 **«.app» era bianco su vetro bianco a 375px.** Sotto `lg` il vetro è a
+  tutta pagina, quindi il suffisso non sta più sulla foto ma sul pannello: col
+  bianco fisso a ogni larghezza, sul telefono in tema chiaro spariva.
+  L'inchiostro ora cambia con la larghezza, perché cambia **il fondo su cui
+  cade**. Nessun cancello lo avrebbe detto: non è traboccamento, non è una
+  regola axe — l'ha trovato la cattura a 375px.
+
+### Cancelli
+- `/home-2` entra **nello stesso commit del suo `page.tsx`** in tutti e tre:
+  `pagine-cancello.ts` (axe, bersagli, contenimento), `rotte.mjs`, `shots.mjs`.
+  Una rotta pubblica che nessun cancello attraversa è la trappola già pagata due
+  volte su questo progetto (`/` fino al 2026-08-12, `/redazione` senza nemmeno
+  un collegamento).
+
+### Cambiato — un linguaggio solo, e il rosso come accento (stesso giorno)
+- 🆕 **Il logotipo diventa una testata di rivista.** Non è un titolo più grande:
+  è **maiuscole** con la spaziatura ottica corretta (−0,02em, meno negativa che
+  sul tondo perché le caps hanno contro-forme più larghe), un **filo rosso**
+  pieno sopra il nome largo quanto la colonna, e una **riga di servizio** in
+  monospaziato spaziato — sottotitolo a sinistra, anno a destra, allineati agli
+  estremi del filo. Il logotipo è **giustificato alla misura** della colonna
+  (94% della larghezza).
+  ⚠️ Le maiuscole le fa il CSS: nel DOM resta «Pistoia», quindi il nome
+  accessibile è ancora `Pistoia.app` — verificato con `textContent`.
+- 🔴 **«.app» torna rosso**, che è il marchio canonico: `brand/wordmark.tsx`
+  rende da sempre `Pistoia<span class="text-red">.app</span>` («i colori del
+  Comune, non verde», 2026-08-12) e la versione gigante quel rosso l'aveva perso.
+- 🆕 **Un solo linguaggio per tutto ciò che si preme** (`.home2__ctrl`): i due
+  pulsanti, il menu e l'interruttore del tema parlano ora come le righe
+  dell'indice — **nessuna ombra** (via `--elev-rest`), vetro al **26%** invece
+  dell'86% della capsula, raggio piccolo invece della pastiglia, e soprattutto
+  **monospaziato maiuscolo**, che è la mossa che fa leggere controlli e dati come
+  la stessa famiglia. L'azione principale è rossa: qui la gerarchia la fa **la
+  temperatura**, non il pieno. «Presto» perde la pastiglia viola e diventa una
+  postilla dopo un filo verticale.
+  ⚠️ Restano alti **46px**: un linguaggio più minuto non è un bersaglio più
+  piccolo.
+
+### Corretto — tre difetti trovati guardando
+- **«.app» era finito sopra il nome.** Rendendo la testata `position: absolute`
+  è diventata lei il riferimento del suffisso, che è assoluto e vive nel suo
+  `<h1>`: `bottom: 5.5rem` contava dal fondo della testata invece che da quello
+  della scena. La testata è tornata in flusso.
+- 🔴 **Il logotipo era tagliato a 375px.** Col passaggio alle maiuscole «PISTOIA»
+  è passato da 3,43em a **4,43em**: a 25vw misurava **415px in una colonna da
+  343**. E nessun cancello lo avrebbe detto — `.home2` ha `overflow: hidden`,
+  quindi il traboccamento non arriva mai allo `scrollWidth` che `shots.mjs`
+  misura. È §3 «un controllo può uscire dal proprio contenitore senza che nessun
+  cancello lo veda», applicata al marchio.
+- **Il rosso sui tetti si scioglieva nel fondo.** I tetti di Pistoia sono
+  terracotta, cioè la tinta più vicina al rosso dello stemma che ci sia in quella
+  fotografia. Due ombre invece di una: una stretta che **incide il contorno**,
+  una larga che **abbassa il fondo**.
+
+### Aperto
+- **Quale delle due va in `/`.** La decisione è di Lorenzo e si chiude
+  guardandole: `npm run shots` le fotografa entrambe, nei due temi e a 360px.
+  Finché non è chiusa, `/` resta Homepage_1.
+- **L'anello di fuoco resta teal** anche su Homepage_2, dove tutto il resto è
+  rosso. È deliberato: `--ring` è un segnale di sistema, uguale su tutta la
+  piattaforma, e un anello rosso su una pagina dove il rosso significa anche
+  «urgenza» si leggerebbe come uno stato d'errore. Se la coerenza cromatica
+  dovesse vincere, la leva è un `--ring` locale a `.home2`.
+
+## [0.52.1] — 2026-08-15 · Il filmato diventa l'orologio: tema e time-lapse allo stesso passo
+
+> Il cambio di tema c'era già ed era già un time-lapse, ma filmato e interfaccia
+> **non si guardavano**: i video correvano accelerati a ~4× per stare in 1,25s,
+> i colori facevano una loro dissolvenza di 520ms con una curva diversa, e a
+> metà filmato l'interfaccia era arrivata da un pezzo. Adesso c'è **un orologio
+> solo, ed è il filmato**.
+
+### Cambiato — la meccanica della transizione (`brand/transizione-scena.tsx`)
+- **Velocità originale.** `playbackRate` torna a **1**: i due file durano
+  **5,04s** e la transizione dura 5,04s. L'accelerazione a 4× faceva saltare
+  fotogrammi al decodificatore e non faceva arrivare `ended` in modo affidabile
+  — il codice di allora aveva già una «rete di sicurezza» proprio per quello.
+- 🆕 **`--tema-t`, l'ora del giorno come numero.** A ogni fotogramma il modulo
+  scrive su `<html>` `currentTime / duration` del filmato (0 = giorno, 1 =
+  notte), e in `globals.css` **ogni token del tema è una miscela** fra il proprio
+  valore diurno e il proprio valore notturno presa a quel punto. A metà filmato
+  l'interfaccia è a metà perché è **lo stesso numero**: sincronia ad anello
+  chiuso, non due cronometri partiti insieme. Misurato: scarto fra `--tema-t` e
+  l'avanzamento del video **≤ 0,003** per tutta la corsa.
+- **L'interruttore si chiude a chiave per tutta la corsa** e si riapre solo a
+  filmato finito e velo sfumato. Prima non c'era nessun lucchetto, e due clic
+  ravvicinati facevano tre danni insieme: il secondo `setTimeout` toglieva le
+  transizioni a metà della corsa nuova, il filmato del primo verso restava in
+  riproduzione **sotto** quello nuovo, e il suo `ended` spegneva il velo di
+  quello in corsa. Provato: **sei clic in raffica → un solo cambio**, e
+  **quattro cambi consecutivi** senza residui.
+- **`aria-disabled`, non `disabled`.** Un `disabled` su un elemento che ha il
+  fuoco glielo toglie, e chi naviga da tastiera verrebbe rimbalzato in cima al
+  documento a metà animazione.
+
+### Corretto — il testo non arrivava mai a destinazione
+- 🔴 **Una transizione CSS su una proprietà EREDITATA si rompe se anche un
+  antenato la transisce.** Il tappeto `* { transition-property: … color … }`
+  funzionava per sfondi, bordi e ombre, ma la transizione del figlio veniva
+  ribersagliata a ogni fotogramma da quella del genitore: il titolo della prima
+  pagina, a filmato finito, era al **62%** del percorso e ci arrivava **di
+  scatto** quando l'attributo veniva tolto. Da qui la scelta di miscelare i
+  **token** invece di transire le **proprietà**. Isolamento del difetto, prova in
+  laboratorio e regola generale in `AGENTS.md` §3.
+- **Nessun `!important` su `*`.** Ne discende anche che durante la transizione i
+  passaggi del mouse non diventano più molli, come invece succedeva.
+
+### Aggiunto — il cancello che tiene onesta la copia
+- **`tests/unit/tema-transizione.test.ts`**: rilegge `pistoia.css` (generato) e
+  `globals.css` e pretende che ogni `light-dark(a, b)` abbia la sua miscela con
+  gli stessi due estremi. Senza, un ritocco ai token farebbe convergere la
+  transizione sul colore vecchio, in silenzio. **Provato rosso** nei tre versi:
+  estremo divergente, miscela mancante, token `.dark` scoperto.
+
+### Aperto
+- ⚠️ **Il crepuscolo costa contrasto.** Inchiostro e carta si scambiano di posto
+  e a metà corsa passano per la stessa luminanza: per ~1s il testo sulle
+  superfici è poco leggibile. È la geometria di un incrocio, non un difetto
+  dell'implementazione. Le leve (curva a S su `--tema-t`, oppure far passare
+  l'inchiostro per una tinta) sono in `DESIGN.md` §6: **decisione di Lorenzo**.
+
 ## [0.52.0] — 2026-08-14 · La prima pagina prende un luogo: Pistoia dietro il vetro, giorno e notte
 
 > Tre giri di ritocchi non avevano tolto a Lorenzo la sensazione di «piatto e

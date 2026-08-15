@@ -1000,29 +1000,909 @@
     object-position: center 42%;
     opacity: 0;
     pointer-events: none;
+    /* Lo stesso numero sta in `transizione-scena.tsx` come `USCITA`: di là
+       decide quando il lucchetto del bottone si riapre, di qua quanto ci mette
+       il velo a sparire. Se cambia uno, cambia l'altro. */
     transition: opacity 260ms ease;
   }
   .transizione-scena[data-attiva] {
     opacity: 1;
+    /* In ENTRATA il velo non sfuma: il primo fotogramma È la fotografia di
+       adesso, quindi una dissolvenza in ingresso mostrerebbe due volte la
+       stessa immagine, sfalsata. */
     transition-duration: 0ms;
   }
 
   /*
-    I COLORI SI ACCOMPAGNANO, ma solo durante il cambio di tema.
+    ==========================================================================
+    L'ORA CHE PASSA — un numero solo, e tutto il tema lo segue (2026-08-15).
 
-    `disableTransitionOnChange` è stato tolto da `layout.tsx` perché il salto
-    secco stonava col filmato. Una transizione permanente su ogni superficie
-    però renderebbe molle ogni passaggio del mouse: l'attributo lo mette
-    `CambioTema` e lo toglie dopo 1,25s.
+    `--tema-t` è **l'ora del giorno**: 0 = pieno giorno, 1 = piena notte. Lo
+    scrive `transizione-scena.tsx` a ogni fotogramma, leggendolo dal `<video>`
+    (`currentTime / duration`). Finché la corsa dura, ogni token del tema è una
+    MISCELA fra il proprio valore diurno e il proprio valore notturno, presa a
+    quel punto esatto: a metà filmato l'interfaccia è a metà, perché è
+    letteralmente lo stesso numero.
+
+    ## 🔴 Perché NON è una transizione CSS (il difetto pagato il 2026-08-15)
+
+    La stesura precedente stendeva `transition-property: … color …` su `*` con
+    `!important`. Sfondi, bordi e ombre andavano benissimo; **il testo no**, e
+    per una ragione che non produce nessun errore: `color` è una proprietà
+    **ereditata**, e se un antenato la sta transendo, la transizione del
+    discendente viene ribersagliata a ogni fotogramma. Il risultato è una
+    curva esponenziale che **non arriva mai**: misurata sulla prima pagina, a
+    filmato finito (5,04s) il titolo era al 62% del percorso, e ci arrivava di
+    scatto solo quando l'attributo veniva tolto. Cioè: proprio lo stacco finale
+    che tutta questa meccanica esiste per evitare.
+
+    ⚠️ Isolata in laboratorio, la regola è netta: **basta UN antenato che
+    transisca `color` per rompere quella del figlio.** Con la stessa dichiarazione
+    su un elemento solo, la transizione è esatta e lineare; con la stessa
+    dichiarazione anche su un antenato, decade. Vale per ogni proprietà
+    ereditata — `color`, `fill`, `stroke`, `caret-color`, `accent-color` — e
+    quindi per tutto il testo e tutte le icone, che qui sono `currentColor`.
+
+    Miscelare i **token** invece di transire le **proprietà** toglie il problema
+    alla radice: non c'è nessuna transizione da ribersagliare, c'è un solo
+    valore che si muove, e tutto ciò che ne discende — le ombre composte con
+    `color-mix`, il vetro, la grana — si muove con lui senza essere elencato.
+
+    ## Tre note per chi tocca questo blocco
+
+    1. **Vive solo durante la corsa.** Fuori di qui comanda `light-dark()`,
+       esattamente come prima: l'architettura dei token non cambia di una riga.
+       A `--tema-t` 0 e 1 le miscele valgono ESATTAMENTE i due estremi, quindi
+       quando `passaLOra` toglie l'attributo non si vede niente — è già lì.
+    2. **Le coppie sono ricopiate, e un test le sorveglia.** Metà nasce in
+       `src/themes/generated/pistoia.css`, che è generato e non si tocca a mano.
+       `tests/unit/tema-transizione.test.ts` rilegge tutti e due i file e
+       pretende che ogni `light-dark(a, b)` abbia qui la sua miscela con gli
+       stessi due estremi: senza quel cancello, cambiare un token in
+       `pistoia.ts` farebbe convergere la transizione sul colore sbagliato,
+       in silenzio.
+    3. **`in oklab`** perché è lo spazio in cui una luminanza a metà strada
+       *sembra* a metà strada. In sRGB il crepuscolo si schiaccia sul chiaro.
+    ==========================================================================
   */
-  html[data-transizione-tema] *,
-  html[data-transizione-tema] *::before,
-  html[data-transizione-tema] *::after {
-    transition-property: background-color, border-color, color, fill, stroke,
-      box-shadow, opacity !important;
-    transition-duration: 520ms !important;
-    transition-timing-function: ease !important;
-    transition-delay: 0s !important;
+  html[data-transizione-tema] {
+    /* --- i token di sistema (sorgente: src/themes/pistoia.ts) ----------- */
+    --color-accent: color-mix(in oklab, #2FD0BD calc(var(--tema-t, 0) * 100%), #0A756B);
+    --color-accent-muted: color-mix(in oklab, color-mix(in srgb, var(--color-accent) 25%, transparent) calc(var(--tema-t, 0) * 100%), color-mix(in srgb, var(--color-accent) 20%, transparent));
+    --color-on-accent: color-mix(in oklab, #0A1F1D calc(var(--tema-t, 0) * 100%), #FFFFFF);
+    --color-neutral: color-mix(in oklab, #DCE4E333 calc(var(--tema-t, 0) * 100%), #171D1C1A);
+    --color-background-surface: color-mix(in oklab, #1C1B1A calc(var(--tema-t, 0) * 100%), #FFFFFF);
+    --color-background-body: color-mix(in oklab, #131211 calc(var(--tema-t, 0) * 100%), #E8E7E4);
+    --color-overlay: color-mix(in oklab, #171D1C99 calc(var(--tema-t, 0) * 100%), #171D1C66);
+    --color-overlay-hover: color-mix(in oklab, #FFFFFF0D calc(var(--tema-t, 0) * 100%), #171D1C0D);
+    --color-overlay-pressed: color-mix(in oklab, #FFFFFF1A calc(var(--tema-t, 0) * 100%), #171D1C1A);
+    --color-background-muted: color-mix(in oklab, #232221 calc(var(--tema-t, 0) * 100%), #F2F1EF);
+    --color-text-primary: color-mix(in oklab, #F5F4F2 calc(var(--tema-t, 0) * 100%), #16181A);
+    --color-text-secondary: color-mix(in oklab, #A3A19E calc(var(--tema-t, 0) * 100%), #5A5D61);
+    --color-text-disabled: color-mix(in oklab, #66645F calc(var(--tema-t, 0) * 100%), #A8AAAD);
+    --color-text-accent: color-mix(in oklab, #2FD0BD calc(var(--tema-t, 0) * 100%), #0A756B);
+    --color-icon-primary: color-mix(in oklab, #DCE4E3 calc(var(--tema-t, 0) * 100%), #171D1C);
+    --color-icon-secondary: color-mix(in oklab, #9FAEAC calc(var(--tema-t, 0) * 100%), #3C4947);
+    --color-icon-disabled: color-mix(in oklab, #53615F calc(var(--tema-t, 0) * 100%), #859491);
+    --color-background-card: color-mix(in oklab, #1C1B1A calc(var(--tema-t, 0) * 100%), #FFFFFF);
+    --color-background-popover: color-mix(in oklab, #232221 calc(var(--tema-t, 0) * 100%), #FFFFFF);
+    --color-background-inverted: color-mix(in oklab, #F5F4F2 calc(var(--tema-t, 0) * 100%), #16181A);
+    --color-border: color-mix(in oklab, #2C2A28 calc(var(--tema-t, 0) * 100%), #E4E3E0);
+    --color-border-emphasized: color-mix(in oklab, #3D3A37 calc(var(--tema-t, 0) * 100%), #C9C7C3);
+    --color-skeleton: color-mix(in oklab, #262422 calc(var(--tema-t, 0) * 100%), #EDECEA);
+    --color-track: color-mix(in oklab, #3C4947 calc(var(--tema-t, 0) * 100%), #9FAEAC);
+    --color-shadow: color-mix(in oklab, rgba(0, 0, 0, 0.55) calc(var(--tema-t, 0) * 100%), rgba(28, 26, 24, 0.10));
+    --color-tint-hover: color-mix(in oklab, white calc(var(--tema-t, 0) * 100%), black);
+    --color-success: color-mix(in oklab, #45D089 calc(var(--tema-t, 0) * 100%), #187A4D);
+    --color-error: color-mix(in oklab, #F06A82 calc(var(--tema-t, 0) * 100%), #D63A57);
+    --color-on-error: color-mix(in oklab, #2A0910 calc(var(--tema-t, 0) * 100%), #FFFFFF);
+    --color-on-success: color-mix(in oklab, #062117 calc(var(--tema-t, 0) * 100%), #FFFFFF);
+    --color-data-neutral: color-mix(in oklab, #7A7874 calc(var(--tema-t, 0) * 100%), #8B8985);
+
+    /* --- i token di estensione Pistoia --------------------------------- */
+    --surface-3: color-mix(in oklab, #2a2826 calc(var(--tema-t, 0) * 100%), #e9e8e5);
+    --muted-2: color-mix(in oklab, #8e8b87 calc(var(--tema-t, 0) * 100%), #65686c);
+    --teal-strong: color-mix(in oklab, #5ce0d1 calc(var(--tema-t, 0) * 100%), #075f57);
+    --teal-soft: color-mix(in oklab, #0c2e2b calc(var(--tema-t, 0) * 100%), #dff3f0);
+    --viola: color-mix(in oklab, #a596f6 calc(var(--tema-t, 0) * 100%), #675cb4);
+    --viola-strong: color-mix(in oklab, #8a7bf0 calc(var(--tema-t, 0) * 100%), #524a90);
+    --viola-soft: color-mix(in oklab, #211e38 calc(var(--tema-t, 0) * 100%), #eae7fd);
+    --amber: color-mix(in oklab, #fbbf52 calc(var(--tema-t, 0) * 100%), #965a19);
+    --amber-soft: color-mix(in oklab, #33280f calc(var(--tema-t, 0) * 100%), #fbebd3);
+    --red-soft: color-mix(in oklab, #341419 calc(var(--tema-t, 0) * 100%), #fbe2e6);
+    --green-soft: color-mix(in oklab, #0d2519 calc(var(--tema-t, 0) * 100%), #d9f2e5);
+    --red-ink: color-mix(in oklab, #f06a82 calc(var(--tema-t, 0) * 100%), #be344d);
+    --isola: color-mix(in oklab, #262422 calc(var(--tema-t, 0) * 100%), #1a1918);
+    --isola-ink: color-mix(in oklab, #f2f0ed calc(var(--tema-t, 0) * 100%), #f7f6f4);
+    --isola-muted: color-mix(in oklab, #a5a09a calc(var(--tema-t, 0) * 100%), #a8a49f);
+    --isola-border: color-mix(in oklab, #3b3733 calc(var(--tema-t, 0) * 100%), #332f2c);
+
+    /*
+      --- ciò che di sera cambia SENZA essere un colore -------------------
+      Sono gli otto valori del blocco `.dark` qui sopra: se restassero fermi,
+      il vetro e la grana scatterebbero a metà di una scena che scorre. Un
+      `calc()` sulla stessa `--tema-t` li porta con sé.
+    */
+    --grain-opacity: calc(0.16 + 0.06 * var(--tema-t, 0));
+    --glass-opacity: calc(72% + 4% * var(--tema-t, 0));
+    --glass-opacity-hover: calc(84% + 4% * var(--tema-t, 0));
+    --glass-saturate: calc(180% - 20% * var(--tema-t, 0));
+    --glass-edge: rgb(255 255 255 / calc(0.55 - 0.45 * var(--tema-t, 0)));
+    --glass-edge-strong: rgb(255 255 255 / calc(0.85 - 0.67 * var(--tema-t, 0)));
+    --glass-sheen: rgb(255 255 255 / calc(0.9 - 0.76 * var(--tema-t, 0)));
+    --glass-underside: color-mix(in oklab, rgb(0 0 0 / 0.30) calc(var(--tema-t, 0) * 100%), rgb(22 24 26 / 0.055));
+  }
+
+  /*
+    ==========================================================================
+    HOMEPAGE_2 — la variante editoriale (2026-08-15).
+
+    Vive su `/home-2` e **non tocca niente di Homepage_1**: nomi di classe
+    tutti suoi, nessuna regola condivisa. Le due varianti condividono i TOKEN
+    (quindi il tema, il vetro, il modello di luce e la transizione giorno↔notte)
+    e nient'altro — è ciò che permette di buttarne via una senza toccare
+    l'altra.
+
+    La composizione, dal riferimento portato da Lorenzo: fotografia a tutta
+    pagina, **pannello di vetro a bordo netto** sulla sinistra, marchio
+    **spezzato in diagonale** — il nome in alto dentro il vetro, il suffisso in
+    basso a destra sulla fotografia.
+    ==========================================================================
+  */
+  .home2 {
+    position: relative;
+    min-height: 100dvh;
+    overflow: hidden;
+    /* Un contesto di impilamento suo: senza, il velo del filmato di
+       transizione si intrometterebbe fra il vetro e il testo. */
+    isolation: isolate;
+
+    /*
+      🔴 LA LARGHEZZA DEL VETRO È UN NUMERO, non una percentuale, ed è
+      deliberato: serve **due volte** — a larghezza del pannello e a corpo del
+      marchio, che dev'essere quello che ci sta dentro. Tenendola senza unità la
+      si moltiplica una volta per `1%` e una per `1vw`, e le due cose non
+      possono più divergere. Cambia questo numero e la scritta lo segue.
+    */
+    --home2-vetro: 46;
+    --home2-orlo: 1.25rem;
+    /*
+      Sotto `lg` il vetro è a tutta pagina, quindi qui la finestra E la colonna
+      coincidono e `vw` è la misura giusta.
+
+      ⚠️ **20vw, e il numero è cambiato due volte per la stessa ragione.** Prima
+      15vw lasciava il marchio grande la metà del posto che aveva; poi 25vw è
+      diventato troppo col passaggio alle maiuscole — misurato a 375px, il nome
+      occupava **415px in una colonna da 343**, cioè veniva tagliato.
+
+      🔴 E nessun cancello lo avrebbe detto: `.home2` ha `overflow: hidden`,
+      quindi il traboccamento **non arriva mai allo `scrollWidth`** che
+      `shots.mjs` misura. È la famiglia di §3 «un controllo può uscire dal
+      proprio contenitore senza che nessun cancello lo veda», applicata al
+      logotipo. Si trova solo guardando, o misurando il testo con un `Range`.
+    */
+    --home2-corpo: clamp(2.5rem, 20vw, 6rem);
+  }
+
+  /*
+    IL PANNELLO DI VETRO.
+
+    Sopra la scena e sotto il contenuto: il `backdrop-filter` sfoca la
+    fotografia — **e il filmato, mentre corre**, quindi la transizione
+    giorno↔notte si vede anche attraverso il vetro senza una riga in più.
+
+    ⚠️ A tutta pagina sotto `lg`, e non è un ripiego: a 375px una colonna al 46%
+    darebbe 172px di testo, cioè meno del min-content di «Pistoia». La variante
+    di base si scrive per prima (`AGENTS.md` §3, ondata 7, 5).
+  */
+  .home2__vetro {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background-color: color-mix(
+      in srgb,
+      var(--color-background-card) var(--glass-opacity),
+      transparent
+    );
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  }
+
+  .home2__scena-contenuto {
+    position: relative;
+    z-index: 2;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    /* 6rem in cima liberano la testata, che è `absolute` e alta 5rem. */
+    padding: 6rem 1rem 1.5rem;
+    max-width: var(--container-guscio);
+    margin-inline: auto;
+  }
+  @media (min-width: 640px) {
+    .home2__scena-contenuto {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  /* --- LA TESTATA --------------------------------------------------------- */
+  /*
+    ==========================================================================
+    IL LOGOTIPO COME TESTATA DI RIVISTA (2026-08-15, richiesta di Lorenzo:
+    «editoriale, sofisticato, distintivo — non un titolo web standard»).
+
+    Che cosa distingue una testata da un titolo grande, in concreto:
+
+    1. 🔴 **Le maiuscole.** Un nome in caps con la spaziatura ottica corretta
+       legge come una testata; lo stesso nome in tondo legge come un `<h1>`.
+       Il riferimento portato da Lorenzo fa esattamente questo (ICE / LEND).
+       ⚠️ Le maiuscole le fa il CSS, **non il DOM**: nel markup resta
+       «Pistoia», così chi usa un lettore di schermo sente il nome e non
+       l'acronimo, e la ricerca in pagina lo trova.
+    2. **Il filo di testata.** Una riga piena sopra il nome, larga quanto la
+       colonna. È il segno che in edicola dice «qui comincia la pubblicazione»,
+       e costa 2px.
+    3. **La riga di servizio.** Sottotitolo a sinistra e anno a destra, in
+       monospaziato spaziato largo, allineati agli estremi del filo. È la
+       gerarchia di una gabbia tipografica, non di una pagina web.
+    4. **La spaziatura NEGATIVA sulle caps**, ma meno che sul tondo: le
+       maiuscole hanno già le loro contro-forme, e a −0,045em si toccherebbero.
+
+    ⚠️ Il filo è **rosso**, ed è la terza e ultima presenza del rosso in pagina
+    insieme al marchio e all'azione principale. Il rosso dello stemma è
+    dichiarato «brand» in `DESIGN.md` §4: qui marca l'identità, non un allarme.
+    ==========================================================================
+  */
+  .home2__testata {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .home2__filo {
+    display: block;
+    height: 2px;
+    background-color: var(--red);
+  }
+
+  .home2__testata-riga {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.625rem 0 0.75rem;
+  }
+
+  .home2__tagline {
+    margin: 0;
+    font-family: var(--font-family-code);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .home2__anno {
+    font-family: var(--font-family-code);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    color: var(--muted-2);
+    font-variant-numeric: tabular-nums;
+    flex: none;
+  }
+
+  /* --- il marchio spezzato ------------------------------------------------ */
+  /*
+    Un `<h1>` solo, due `<span>`: chi legge con un lettore di schermo sente
+    «Pistoia.app», una parola sola. La diagonale è POSIZIONE, non contenuto —
+    ed è il motivo per cui i due pezzi non sono due elementi separati.
+  */
+  .home2__marchio {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-family-heading);
+    font-weight: 800;
+    line-height: 0.84;
+    /* Meno negativa che sul tondo: le maiuscole hanno contro-forme più larghe
+       e a −0,045em «ST» e «OI» si toccherebbero. */
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    /* Il marchio non intercetta il puntatore: sotto ci passano i controlli. */
+    pointer-events: none;
+  }
+
+  .home2__nome {
+    font-size: var(--home2-corpo);
+    color: var(--foreground);
+  }
+
+  /*
+    🔴 IL SUFFISSO CAMBIA INCHIOSTRO CON LA LARGHEZZA, e non è un vezzo: cambia
+    **il fondo su cui cade**.
+
+    Sotto `lg` il vetro è a tutta pagina, quindi «.app» sta sul vetro come tutto
+    il resto e prende l'inchiostro del tema. Da `lg` in su esce dal pannello e
+    finisce sulla fotografia, cioè sull'unica zona della pagina dove il colore
+    di sotto non lo decide il tema ma la foto — tetti caldi di giorno, tetti
+    scuri di notte: lì un inchiostro di tema sparirebbe metà delle volte.
+
+    ⚠️ Il difetto era già scritto e l'ha trovato la cattura a 375px: col bianco
+    fisso a ogni larghezza, sul telefono in tema chiaro «.app» era bianco su
+    vetro bianco — **invisibile**. Nessun cancello lo avrebbe detto: non è un
+    traboccamento, non è un contrasto che axe misura (è testo grande dentro un
+    `<h1>` che axe legge comunque come presente), ed è visibile solo guardando.
+  */
+  /*
+    🔴 «.app» PORTA IL ROSSO, e non è una scelta nuova: è il marchio che torna
+    canonico. `brand/wordmark.tsx` rende da sempre
+    `Pistoia<span class="text-red">.app</span>` — «i colori del Comune, non
+    verde», deciso da Lorenzo il 2026-08-12 — e la versione gigante di questa
+    pagina quel rosso l'aveva perso per strada.
+
+    Alla scala della testata è **testo grande** (soglia 3:1), quindi vale
+    `--red` e non `--red-ink`: è la stessa regola misurata che sta in testa a
+    `wordmark.tsx`, dove il rosso cambia con la taglia perché a 13,5px la
+    soglia sale a 4,5:1 e `--red` fa 4,3:1.
+  */
+  .home2__suffisso {
+    align-self: flex-end;
+    font-size: calc(var(--home2-corpo) * 1.15);
+    color: var(--red);
+  }
+
+  /* --- il piede: occhiello, azioni, indice, firma -------------------------- */
+  .home2__piede {
+    margin-top: auto;
+    padding-top: 2rem;
+    max-width: 34rem;
+  }
+
+  .home2__azioni {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+  }
+
+  /*
+    ==========================================================================
+    I CONTROLLI — un linguaggio solo per tutto ciò che si preme (2026-08-15).
+
+    ⚠️ Nato dentro Homepage_2 come `home2__ctrl`, **promosso a famiglia di
+    progetto** lo stesso giorno perché Lorenzo lo ha chiesto anche per
+    Homepage_1: un linguaggio che vive in una pagina sola non è un linguaggio,
+    è uno stile. Da qui i nomi senza prefisso — `.ctrl`, `.ctrl-menu`,
+    `.ctrl-tondo` — e la collocazione fuori dal blocco `home2`.
+
+    Richiesta di Lorenzo: i due pulsanti, il menu in alto a destra e
+    l'interruttore del tema devono parlare come le righe «Costo della giunta» e
+    «Atti nel 2026», cioè **piatto, minimale, vetro leggero**.
+
+    Che cosa vuol dire, tradotto in cinque decisioni:
+
+    1. **Nessuna ombra.** `.btn` di sistema porta `--elev-rest` (filo,
+       sottosquadro, proiezione): è il modello di luce di Homepage_1, e qui è
+       proprio ciò che fa sembrare i controlli oggetti appoggiati invece che
+       segni sulla pagina. Qui c'è un **filo di 1px** e basta.
+    2. **Vetro leggero, non pieno.** La `.capsula` di sistema sta all'86% di
+       superficie; questi al 26%: si vede la città sotto, che è il senso di
+       avere una fotografia.
+    3. **Raggio piccolo, non pastiglia.** `--radius-sm` (10,5px) invece di
+       `--radius-pill`: una pastiglia è un oggetto, un rettangolo appena
+       smussato è un campo tipografico.
+    4. 🔴 **Monospaziato maiuscolo**, lo stesso di `01 ── COSTO DELLA GIUNTA`.
+       È la mossa che fa leggere pulsanti e dati come **la stessa famiglia**,
+       ed è ciò che nessuna delle altre quattro da sola otterrebbe.
+    5. **Il colore distingue, non il rilievo.** L'azione principale è rossa —
+       inchiostro, filo e un velo di tinta — le altre sono neutre. In
+       Homepage_1 la gerarchia la fa il pieno teal; qui la fa la temperatura.
+
+    ⚠️ Restano alti **46px**: `DESIGN.md` §11.6 vuole ≥44 e `bersagli.spec.ts`
+    lo misura. Un linguaggio più minuto non è un linguaggio più piccolo.
+    ==========================================================================
+  */
+  .ctrl,
+  [data-stile="vetro"] .btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5625rem;
+    min-height: 2.875rem;
+    padding: 0 1.25rem;
+    border: 1px solid var(--glass-edge);
+    border-radius: var(--radius-sm);
+    /*
+      🔴 IL VELO È UNA VARIABILE, e non è pignoleria: **quanto vetro serve
+      dipende da che cosa c'è sotto.** Su Homepage_2 i controlli poggiano sul
+      pannello, che è già una superficie, e al 26% si vede la città attraverso —
+      che è il punto. Su Homepage_1 poggiano sulla **fotografia nuda**, e lo
+      stesso 26% ha reso l'azione principale praticamente illeggibile alla prima
+      cattura. Un numero solo non poteva servire due fondi diversi.
+    */
+    background-color: color-mix(
+      in srgb,
+      var(--color-background-card) var(--ctrl-velo, 26%),
+      transparent
+    );
+    backdrop-filter: blur(18px) saturate(var(--glass-saturate));
+    font-family: var(--font-family-code);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--foreground);
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color 160ms linear,
+      border-color 160ms linear,
+      color 160ms linear;
+  }
+  .ctrl:hover,
+  [data-stile="vetro"] .btn:hover {
+    background-color: color-mix(
+      in srgb,
+      var(--color-background-card) calc(var(--ctrl-velo, 26%) + 20%),
+      transparent
+    );
+    border-color: var(--glass-edge-strong);
+  }
+
+  /*
+    L'AZIONE PRINCIPALE, in rosso.
+
+    Il velo di tinta è al 14%: sopra ci vive `--red-ink`, che è il rosso
+    corretto per la funzione testuale (`DESIGN.md` §4). A 13px in peso 600 la
+    soglia è 4,5:1 e `--red` pieno ne farebbe 4,3 — è la misura già pagata sul
+    footer, scritta in testa a `wordmark.tsx`.
+  */
+  .ctrl--rosso {
+    /* Vetro rosso, come su `/home-1b`: la superficie è tinta, l'inchiostro è
+       bianco fisso nei due temi perché il fondo è rosso in tutti e due. */
+    color: #fff;
+    border-color: color-mix(in oklab, var(--red) 85%, transparent);
+    background-color: color-mix(in oklab, var(--red) 58%, transparent);
+  }
+  .ctrl--rosso:hover {
+    background-color: color-mix(in oklab, var(--red) 70%, transparent);
+    border-color: var(--red);
+  }
+
+  /* Il grado muto: la promessa dichiarata, presente ma non attiva. */
+  .ctrl--muto {
+    color: var(--muted);
+  }
+  .ctrl[aria-disabled="true"] {
+    pointer-events: none;
+  }
+
+  /*
+    «PRESTO» perde la pastiglia viola e diventa una postilla dopo un filo
+    verticale: è la stessa informazione con un ornamento in meno, che è
+    letteralmente ciò che «flat e minimale» chiede.
+  */
+  .ctrl-nota {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5625rem;
+    color: var(--muted-2);
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+  }
+  .ctrl-nota::before {
+    content: "";
+    width: 1px;
+    height: 0.875rem;
+    background-color: var(--border-strong);
+    flex: none;
+  }
+
+  /* Il menu: una barra sola col filo intorno, le voci dentro senza contorno
+     proprio — un contorno per voce farebbe cinque oggetti dove ce n'è uno. */
+  .ctrl-menu {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    padding: 0 0.25rem;
+  }
+  .ctrl-menu__voce {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.625rem;
+    padding: 0 0.875rem;
+    border-radius: calc(var(--radius-sm) - 4px);
+    font-family: var(--font-family-code);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition:
+      color 150ms linear,
+      background-color 150ms linear;
+  }
+  .ctrl-menu__voce:hover {
+    color: var(--foreground);
+    background-color: var(--color-overlay-hover);
+  }
+
+  /* L'interruttore: lo stesso guscio, quadrato. */
+  .ctrl-tondo {
+    width: 2.875rem;
+    padding: 0;
+    flex: none;
+    /* Tondo vero: su un quadrato la calotta piega lungo le diagonali e la goccia
+       legge come un cuscino. Su un cerchio è una calotta sferica e basta. */
+    border-radius: var(--radius-pill);
+  }
+  .ctrl-tondo[aria-disabled="true"] {
+    opacity: 0.5;
+  }
+
+  /*
+    ==========================================================================
+    L'ANTEPRIMA DEL LINGUAGGIO SU HOMEPAGE_1 (2026-08-15).
+
+    🔴 `/` NON si tocca. Homepage_1 è congelata dal 2026-08-15, e provare un
+    linguaggio nuovo modificandola vorrebbe dire non avere più il termine di
+    paragone proprio mentre si decide. Qui c'è invece un **interruttore di
+    contesto**: `/home-1b` avvolge la stessa identica composizione in un
+    `data-stile="vetro"`, e sono queste righe a rivestire i suoi `.btn` senza
+    che il suo `page.tsx` cambi di un carattere.
+
+    ⚠️ Le regole qui sotto NON ridichiarano l'aspetto: il selettore
+    `[data-stile="vetro"] .btn` è stato **aggiunto accanto a `.ctrl`** nel
+    blocco sopra. Due copie dello stesso aspetto divergerebbero al primo
+    ritocco, ed è la regola che questo progetto ripete da `AGENTS.md` §3
+    (ondata 7): due definizioni della stessa cosa sono peggio di una sola.
+    Restano qui solo le cose da **spegnere** e le due varianti di colore.
+
+    Se il linguaggio verrà adottato, questo blocco sparisce e le regole di
+    `.ctrl` diventano quelle di `.btn`. È una via, non una biforcazione.
+    ==========================================================================
+  */
+  /*
+    🔴 QUI IL VELO SALE A 62%, e la ragione è tutta nel fondo: su questa pagina
+    i controlli non hanno un pannello sotto, hanno la **fotografia**. Alla prima
+    cattura, col 26% di Homepage_2, «Entra nella mia città» era teal su teal
+    trasparente sopra i tetti illuminati — leggibile solo sapendo cosa c'era
+    scritto. Il velo si dichiara sul guscio, così lo prendono insieme la testata
+    e i pulsanti dentro la pagina.
+
+    ⚠️ È lo stesso compromesso del crepuscolo, e va detto invece che nascosto:
+    **la trasparenza costa contrasto.** Su una fotografia con le luci della città
+    accese, un vetro leggero e un testo leggibile non possono coesistere: si
+    sceglie quanto vetro ci si può permettere. 62% è il punto in cui l'azione si
+    legge sui tetti illuminati e la città si intravede ancora.
+  */
+  [data-stile="vetro"] {
+    --ctrl-velo: 62%;
+  }
+
+  [data-stile="vetro"] .btn {
+    /* `.btn` porta la pastiglia e il modello di luce a tre strati: qui
+       comandano il raggio piccolo e l'anello, quindi il rilievo va spento —
+       ma solo quello di RIPOSO, perché l'anello di `.ctrl` è già nel `box-shadow`
+       ereditato dal blocco sopra. */
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  /* `.btn-lg` alza il bersaglio: si tiene, perché 44px è un vincolo e non uno
+     stile. Cambia solo il respiro orizzontale, che nel monospaziato serve meno. */
+  [data-stile="vetro"] .btn-lg {
+    min-height: 3rem;
+    padding-inline: 1.25rem;
+    font-size: 0.8125rem;
+  }
+
+  /*
+    🔴 L'AZIONE PRINCIPALE È ROSSA ANCHE QUI (Lorenzo, 2026-08-15).
+
+    Nel primo giro l'avevo lasciata teal citando `DESIGN.md` §6, che dava il
+    rosso-azione alla sola variante editoriale, e l'avevo dichiarato come una
+    decisione d'identità da prendere apposta. È stata presa: il rosso dello
+    stemma è il colore dell'azione **su tutte e due** le prime pagine, e §6 è
+    stato aggiornato di conseguenza invece di restare in disaccordo col codice.
+
+    ⚠️ Sul pulsante vale `--red-ink` e non `--red`: a 13px la soglia è 4,5:1 e
+    `--red` ne fa 4,3. È la misura già pagata sul footer.
+  */
+  /*
+    ⚠️ L'identità la portano **l'inchiostro e l'anello**, non un velo colorato:
+    un velo teal sopra un velo di vetro somma due trasparenze e il risultato non
+    è né l'una né l'altra — è il modo più rapido di riperdere la leggibilità
+    appena guadagnata col 52%.
+  */
+  /*
+    ⚠️ **`.btn.btn-primary` e non `.btn-primary`**, ed è la differenza fra
+    funzionare e no. Il sistema dichiara `.btn-primary:hover:not(:disabled)`, che
+    fa (0,3,0) — esattamente quanto `[data-stile] .btn-primary:hover`. A parità
+    di specificità decide l'ordine nel foglio, e il vincitore era il pieno teal:
+    misurato al primo passaggio del mouse, `background-color` tornava
+    `srgb(0.16 0.72 0.65)`, cioè il bottone di sistema che si riprendeva la
+    superficie a metà effetto. La classe ripetuta porta a (0,4,0) e toglie la
+    gara di mezzo invece di vincerla per un pelo.
+  */
+  [data-stile="vetro"] .btn.btn-primary,
+  [data-stile="vetro"] .btn.btn-primary:hover {
+    /*
+      🔴 VETRO ROSSO: la superficie È rossa, non solo l'inchiostro (Lorenzo,
+      2026-08-15, dopo due giri in cui il rosso «non si vedeva»). Un filo e delle
+      lettere rosse su vetro neutro non fanno un accento: da lontano il pulsante
+      resta grigio. Qui il velo è **tinto** al 58% — abbastanza da leggersi
+      rosso a colpo d'occhio, abbastanza trasparente da lasciar passare la città
+      e la rifrazione della goccia.
+
+      ⚠️ L'inchiostro è bianco FISSO nei due temi, e non è una svista: sotto c'è
+      una superficie rossa in tutti e due, quindi un inchiostro che segue il tema
+      diventerebbe near-black sul rosso nel tema scuro. Su `--red` (#D63A57) il
+      bianco fa **4,57:1** — la misura è quella già scritta in `wordmark.tsx`.
+    */
+    color: #fff;
+    background-color: color-mix(in oklab, var(--red) 58%, transparent);
+    border-color: color-mix(in oklab, var(--red) 85%, transparent);
+    box-shadow:
+      inset 0 1px 0 var(--glass-sheen),
+      inset 0 -1px 0 var(--glass-underside);
+  }
+  [data-stile="vetro"] .btn.btn-primary:hover {
+    background-color: color-mix(in oklab, var(--red) 70%, transparent);
+    border-color: var(--red);
+  }
+  [data-stile="vetro"] .btn.btn-secondary {
+    color: var(--muted);
+  }
+
+  /*
+    La pastiglia d'invito è un LINK, quindi è un controllo: prende lo stesso
+    materiale piatto. Perde `--elev-capsula` — l'unica ombra che restava in
+    prima pagina — e tiene la forma a pastiglia, perché lì la forma È il
+    significato (una riga che invita, non un pulsante).
+  */
+  [data-stile="vetro"] .capsula {
+    background-color: color-mix(
+      in srgb,
+      var(--color-background-card) 32%,
+      transparent
+    );
+    box-shadow:
+      inset 0 0 0 1px var(--glass-edge),
+      inset 0 1px 0 var(--glass-sheen);
+  }
+
+  /*
+    L'INDICE DEI DATI — «01 ──  COSTO DELLA GIUNTA / 689.724 € all'anno».
+
+    È il vocabolario del riferimento («01 ○ ○ ○ · DISCOVER TOURS») portato su
+    due fatti veri. 🔴 **Nessun contenitore**: niente card, niente riquadro,
+    niente icona colorata — solo filetti e tipografia. È la differenza di
+    linguaggio fra questa variante e le tessere di Homepage_1.
+  */
+  .home2__indice {
+    margin: 1.75rem 0 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--border);
+  }
+  .home2__indice > li {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .home2__voce {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 0 1rem;
+    /* ≥44px: è il minimo dichiarato in `DESIGN.md` §11.6 e misurato da
+       `bersagli.spec.ts`. Una riga di indice resta un bersaglio. */
+    min-height: 3.5rem;
+    padding: 0.875rem 0.25rem;
+    color: inherit;
+    text-decoration: none;
+    transition: background-color 150ms var(--ease-out-civic);
+  }
+  .home2__voce:hover {
+    background-color: var(--color-overlay-hover);
+  }
+
+  .home2__voce-n {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-family-code);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--muted-2);
+  }
+  .home2__voce-n::after {
+    content: "";
+    width: 1rem;
+    height: 1px;
+    background-color: currentColor;
+    flex: none;
+  }
+
+  .home2__voce-corpo {
+    display: block;
+  }
+  .home2__voce-etichetta {
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  /*
+    La cifra: grande e LEGGERA, come la cifra display di `DESIGN.md` §8 — è
+    l'inversione di peso che fa leggere un numero come un fatto e non come
+    un'etichetta. Tabellare, perché due cifre incolonnate non devono ballare.
+  */
+  .home2__voce-cifra {
+    display: block;
+    margin-top: 0.125rem;
+    font-family: var(--font-family-code);
+    font-size: 1.625rem;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--foreground);
+  }
+  .home2__voce-unita {
+    margin-left: 0.4375rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--muted);
+  }
+  .home2__voce-nota {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--muted-2);
+  }
+
+  .home2__voce-freccia {
+    align-self: center;
+    color: var(--muted-2);
+    transition:
+      transform 200ms var(--ease-out-civic),
+      color 150ms linear;
+  }
+  .home2__voce:hover .home2__voce-freccia {
+    transform: translate(2px, -2px);
+    color: var(--foreground);
+  }
+
+  .home2__firma {
+    margin-top: 1.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  /* ------------------------------------------------------------------------
+     ≥ lg — QUI la composizione si spezza in due.
+
+     Sotto questa soglia tutto resta impilato sopra un vetro a tutta pagina: la
+     diagonale ha bisogno di due colonne vere, e su un telefono «due colonne»
+     vuol dire due colonne strette, cioè nessuna delle due.
+     ------------------------------------------------------------------------ */
+  @media (min-width: 1024px) {
+    .home2 {
+      /*
+        🔴 IL CORPO SI RICAVA DALLA COLONNA, non dalla finestra.
+
+        `46vw` è la larghezza del pannello; meno l'orlo su due lati resta lo
+        spazio vero del testo; diviso la larghezza di «Pistoia» in em con questo
+        peso e questa spaziatura, dà il corpo che ci sta esatto. Scriverlo come
+        una frazione di `vw` a occhio è la trappola già pagata: `vw` è la
+        finestra, non la colonna (`AGENTS.md` §3, ondata 10).
+
+        ⚠️ Il divisore è **misurato, non stimato**, e il 2026-08-15 è cambiato
+        col passaggio alle maiuscole: in tondo «Pistoia» misurava 3,43em, in
+        caps ne misura di più, perché una maiuscola è più larga di una minuscola
+        e non ci sono più le aste discendenti a stringere il gruppo. Qui c'è
+        4,7 — misurato a schermo: «PISTOIA» in caps occupa **4,547em**, e con
+        4,55 riempiva la colonna al pixel. Un logotipo giustificato alla misura
+        è il gesto giusto, ma senza un filo d'aria il carattere di ripiego —
+        più largo, e visibile nell'istante prima che Schibsted sia caricato —
+        sborderebbe e verrebbe tagliato dall'`overflow` della scena.
+      */
+      --home2-orlo: 3rem;
+      --home2-corpo: clamp(
+        3rem,
+        calc((var(--home2-vetro) * 1vw - var(--home2-orlo) * 2) / 4.7),
+        9rem
+      );
+    }
+
+    /* Il bordo NETTO, col filo di luce del modello a tre strati (`DESIGN.md`
+       §6): una riga chiara sullo spigolo e un'ombra larga che cade a destra,
+       così il pannello legge come appoggiato sopra la città e non ritagliato
+       dentro. */
+    .home2__vetro {
+      inset: 0 auto 0 0;
+      width: calc(var(--home2-vetro) * 1%);
+      border-right: 1px solid var(--glass-edge-strong);
+      box-shadow:
+        inset -2px 0 0 -1px var(--glass-sheen),
+        16px 0 48px -28px var(--color-shadow);
+    }
+
+    .home2__scena-contenuto {
+      display: block;
+      padding: 6.5rem var(--home2-orlo) 0;
+      max-width: none;
+    }
+
+    /*
+      LA TESTATA È UN BLOCCO POSIZIONATO, e il nome ci sta dentro in flusso: il
+      filo, la riga di servizio e il logotipo devono restare incolonnati sullo
+      stesso orlo, e tre posizionamenti assoluti separati li farebbero divergere
+      al primo ritocco di una misura.
+
+      Solo «.app» resta assoluto, perché è l'unico pezzo che vive **fuori dal
+      vetro**: il suo riferimento è la scena intera, non la colonna.
+    */
+    /*
+      🔴 LA TESTATA RESTA IN FLUSSO, e non è indifferente: `position: absolute`
+      su di lei la rende **il riferimento** di «.app», che è assoluto e vive
+      dentro il suo `<h1>`. Provato: il suffisso è finito in alto a sinistra
+      sopra il nome, perché `bottom: 5.5rem` contava dal fondo della testata
+      invece che da quello della scena. Il posto del blocco lo fa il padding del
+      contenitore; qui resta solo la misura della colonna.
+    */
+    .home2__testata {
+      width: calc(var(--home2-vetro) * 1% - var(--home2-orlo) * 2);
+    }
+    .home2__marchio {
+      display: block;
+    }
+    .home2__nome {
+      display: block;
+      margin-top: 0.25rem;
+    }
+    /*
+      Qui «.app» esce dal vetro e cade sulla fotografia. Resta ROSSO — è il
+      marchio — ma con un'ombra **scura e larghissima** sotto: i tetti sono
+      terracotta in tutti e due i temi, cioè la tinta più vicina al rosso dello
+      stemma che ci sia in quella foto, e senza uno stacco il logotipo ci si
+      scioglierebbe dentro.
+
+      ⚠️ Non è l'«alone bianco» tolto il 2026-08-14: quello sfumava verso il
+      chiaro e faceva cornice attorno alla pagina; questa fa il contrario,
+      abbassa il fondo sotto le lettere e basta.
+    */
+    .home2__suffisso {
+      position: absolute;
+      right: max(var(--home2-orlo), 4vw);
+      bottom: 5.5rem;
+      /*
+        DUE ombre, non una, e sono misurate sul problema: **i tetti di Pistoia
+        sono terracotta**, cioè la tinta più vicina al rosso dello stemma che ci
+        sia in quella fotografia. Con un'ombra sola e larga il logotipo ci si
+        scioglieva dentro — visto nella cattura di giorno. La prima ombra è
+        stretta e serve a **incidere il contorno**, la seconda è larga e serve
+        ad **abbassare il fondo**: insieme staccano il rosso dal rosso.
+      */
+      text-shadow:
+        0 0.015em 0.05em rgb(0 0 0 / 0.6),
+        0 0.05em 0.34em rgb(0 0 0 / 0.7);
+    }
+
+    .home2__piede {
+      position: absolute;
+      left: var(--home2-orlo);
+      bottom: 2.5rem;
+      width: calc(var(--home2-vetro) * 1% - var(--home2-orlo) * 2);
+      margin-top: 0;
+      padding-top: 0;
+      max-width: none;
+    }
   }
 
   /*

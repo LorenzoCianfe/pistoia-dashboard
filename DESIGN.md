@@ -612,11 +612,168 @@ sale, e le regole qui sopra si precisano invece di rovesciarsi.**
   testo — la maschera è sul contenitore della parola, non un duplicato nascosto.
 - 🆕 **Il cambio di tema è un'ora del giorno che passa** (`brand/transizione-scena.tsx`):
   premendo l'interruttore, un time-lapse di Pistoia copre la scena mentre i
-  colori si accompagnano sotto (~1,2s). **Due video nativi**, uno per verso
+  colori si accompagnano sotto. **Due video nativi**, uno per verso
   (giorno→notte e il suo rovescio) — *non* un solo elemento con la sorgente che
   si scambia, che si resetta a metà: sono due `<video>` stabili. Scarica solo
   sull'intenzione (passaggio del mouse), non parte con `prefers-reduced-motion`,
-  e se non è pronto il tema cambia lo stesso.
+  e se non è pronto il tema cambia lo stesso (dissolvenza di 520ms).
+
+  **Il filmato è l'orologio, e l'orologio è un numero solo** (2026-08-15). I due
+  file girano a `playbackRate` **1** — velocità originale, **5,04s** — e a ogni
+  fotogramma il modulo scrive su `<html>` la variabile `--tema-t`
+  (`currentTime / duration`, 0 = giorno, 1 = notte). In `globals.css` **ogni
+  token del tema è una miscela** fra il proprio valore diurno e il proprio
+  valore notturno presa a quel punto: a metà filmato l'interfaccia è a metà
+  perché è **letteralmente lo stesso numero**. Sincronia ad anello *chiuso* — il
+  tempo non viene da un cronometro partito insieme, viene dal filmato: se la
+  decodifica rallenta, rallentano i colori.
+
+  Ne discendono tre regole:
+
+  1. **L'interruttore si chiude a chiave per tutta la corsa** (`aria-disabled`,
+     più un lucchetto vero nel modulo) e si riapre solo a filmato finito e velo
+     sfumato. Clic ripetuti non sovrappongono né riavviano niente.
+  2. **La durata NON si accorcia accelerando il filmato.** Se 5s fossero troppi,
+     la leva è rimontare i sorgenti più corti: `--tema-t` li segue da sé.
+  3. 🔴 **Non è una transizione CSS, e non può esserlo.** `color` è una proprietà
+     *ereditata*: se un antenato la transisce, la transizione del figlio viene
+     ribersagliata a ogni fotogramma e non arriva mai (misurato: il titolo al 62%
+     a filmato finito, poi uno scatto). Vedi `AGENTS.md` §3.
+
+  ⚠️ **Il crepuscolo costa contrasto, ed è inevitabile.** Inchiostro e carta si
+  scambiano di posto, quindi a metà corsa passano per la stessa luminanza: per
+  circa un secondo il testo sulle superfici è poco leggibile. Non è un difetto
+  dell'implementazione, è la geometria di un incrocio; le uniche leve sono
+  attraversarlo più in fretta (una curva a S su `--tema-t`, che però allenta il
+  «a metà video, a metà tema») o far passare l'inchiostro per una tinta invece
+  che per il grigio. **Al 2026-08-15 la decisione è aperta.**
+
+### Due composizioni della prima pagina (2026-08-15)
+
+Da qui convivono **due varianti** della stessa pagina, e la scelta fra loro è
+aperta: `/` è **Homepage_1** (la griglia: colonna di testo più quattro tessere),
+`/home-2` è **Homepage_2** (l'editoriale, da un riferimento portato da Lorenzo).
+
+Non sono due temi della stessa cosa: cambia **la gerarchia**. Homepage_1 apre con
+una frase e distribuisce quattro fatti in una griglia — è uno strumento.
+Homepage_2 ha un protagonista solo, il **nome della città a scala di manifesto**,
+e schiaccia tutto il resto al piede come l'indice di una copertina: nessuna card,
+nessun contenitore, nessuna icona colorata. Solo tipografia sopra il vetro.
+
+Le tre decisioni che la governano, prese da Lorenzo sul riferimento:
+
+1. **Il marchio è spezzato in diagonale** dal bordo del vetro — «Pistoia» in alto
+   dentro il pannello, «.app» in basso a destra sulla fotografia. Resta **un
+   `<h1>` solo**: la diagonale è posizione, non contenuto, o un lettore di
+   schermo sentirebbe due frammenti al posto di un nome.
+2. **Il taglio è netto e verticale**, col filo di luce del modello a tre strati.
+   Il pannello legge come appoggiato sopra la città, non ritagliato dentro.
+3. **I dati istituzionali sono un indice numerato** (`01`, `02`), non delle
+   tessere: è il vocabolario del riferimento portato su due fatti veri.
+
+⚠️ **Ciò che le due varianti CONDIVIDONO deve restare condiviso**: marchio,
+token, scena fotografica, filmati e tutto il meccanismo giorno↔notte. I dati
+vengono dalle stesse due funzioni — due prime pagine che mostrassero due numeri
+diversi della stessa città sarebbero peggio di una variante in meno (è la regola
+di §3, ondata 7, applicata alle composizioni invece che agli indicatori). Ciò che
+NON condividono sono i nomi di classe: `home2__*` non tocca `prima-pagina__*`, ed
+è la condizione per poterne buttare via una senza toccare l'altra.
+
+⚠️ **La scala del marchio si misura sulla COLONNA, non sulla finestra.** Il nome
+vive in un pannello al 46%: `--home2-vetro` è un numero senza unità proprio
+perché serve due volte — moltiplicato per `1%` fa la larghezza del pannello, per
+`1vw` fa il corpo del testo. Cambiare il numero fa seguire la scritta. Scrivere
+il corpo come una frazione di `vw` a occhio è la trappola già pagata (§3, Fase C,
+5): `vw` è la finestra, non la colonna.
+
+#### Il logotipo come testata, e il rosso come accento (2026-08-15)
+
+Su Homepage_2 il marchio non è un titolo grande: è una **testata**. Quattro
+mosse, e nessuna è un ornamento:
+
+1. **Maiuscole**, con la spaziatura ottica corretta a −0,02em — meno negativa che
+   sul tondo, perché le caps hanno contro-forme più larghe e a −0,045em «ST» e
+   «OI» si toccano. ⚠️ Le maiuscole le fa il **CSS**: nel DOM resta «Pistoia»,
+   così il nome accessibile è `Pistoia.app` e la ricerca in pagina lo trova.
+2. **Il filo di testata**: una riga piena sopra il nome, larga quanto la colonna.
+   È il segno che in edicola dice «qui comincia la pubblicazione».
+3. **La riga di servizio**: sottotitolo a sinistra, anno a destra, monospaziato
+   spaziato largo, allineati agli estremi del filo. Gerarchia da gabbia
+   tipografica, non da pagina web.
+4. **Il logotipo giustificato alla misura**: il corpo si ricava dividendo la
+   colonna per la larghezza reale del nome in em (**4,43em** in caps, misurata a
+   schermo, non stimata).
+
+**Il rosso è l'accento, e ha tre presenze e non una di più**: il filo di testata,
+il «.app» del marchio, l'azione principale. Le prime due sono §4 alla lettera —
+il rosso dello stemma è «brand», e `wordmark.tsx` colora il «.app» da sempre. La
+terza **estende** §4: il rosso non era mai stato il colore di un'azione. La
+decisione è di Lorenzo (2026-08-15) e, **rivista lo stesso giorno, vale su tutte
+e due le prime pagine**: nel primo giro l'avevo tenuta alla sola variante
+editoriale e l'avevo dichiarata come una scelta d'identità da prendere apposta.
+È stata presa. Il rosso dello stemma è il colore dell'azione, punto.
+
+⚠️ **Come testo su superficie vale `--red-ink`, non `--red`**: alla scala della
+testata il marchio è testo grande (soglia 3:1) e `--red` basta, ma sul pulsante a
+13px la soglia sale a 4,5:1 e `--red` ne fa 4,3. È la misura già pagata sul
+footer, scritta in testa a `wordmark.tsx`.
+
+⚠️ **Sulla fotografia il rosso vuole due ombre, non una.** I tetti di Pistoia
+sono terracotta, cioè la tinta più vicina al rosso dello stemma che ci sia in
+quella foto: una stretta che incide il contorno, una larga che abbassa il fondo.
+
+**I controlli parlano come i dati** (`.ctrl`, famiglia di progetto): niente
+ombre, vetro leggero, raggio piccolo, e **monospaziato maiuscolo** — che è la
+mossa che fa leggere pulsanti, menu, interruttore e righe dell'indice come la
+stessa famiglia. La gerarchia fra le due azioni la fa **la temperatura**, non il
+pieno.
+
+⚠️ **Quanto vetro serve dipende da che cosa c'è sotto** (`--ctrl-velo`): 26% dove
+i controlli poggiano su un pannello, **62%** dove poggiano sulla fotografia. Un
+numero solo non può servire due fondi diversi — col 26% sopra i tetti illuminati
+l'azione principale era leggibile solo sapendo cosa c'era scritto. È il
+compromesso del crepuscolo da un'altra porta: **la trasparenza costa contrasto**.
+
+#### La goccia d'acqua: provata e tolta (2026-08-15)
+
+Fra il 15 agosto e la sera dello stesso giorno i controlli hanno avuto un effetto
+«goccia d'acqua»: rifrazione vera dello sfondo con un filtro SVG di spostamento
+su `backdrop-filter`, calotta sferica calcolata per elemento, frangia cromatica a
+tre passate, riflesso speculare, ombra di contatto e molle sullo spessore.
+**Funzionava** — deformava davvero testo, card, fotografia e filmato — ed è stato
+**tolto per intero** su richiesta di Lorenzo, che dopo tre giri di taratura non ci
+ha riconosciuto l'acqua che aveva in mente.
+
+Resta qui perché la prossima volta non si ricominci da zero:
+
+1. 🔴 **WebGL non è la strada.** Un canvas non può leggere i pixel già disegnati
+   dal browser: per rifrangere il testo di una card dovrebbe ridisegnare quella
+   card. Saprebbe deformare solo ciò che gli si passa come texture — la
+   fotografia e il filmato — lasciando fermo tutto il resto.
+2. **La strada che funziona** è `backdrop-filter: url(#filtro)` con un
+   `feDisplacementMap`: rifrange lo sfondo vero, vivo, senza ridisegnare niente.
+   Chromium soltanto (Safari e Firefox non accettano `url()` lì dentro).
+3. ⚠️ **`scale` di `feDisplacementMap` non è uno spostamento in pixel**: la
+   formula è `P' = P + scale · (canale/255 − 0,5)`. Con una mappa che culmina a
+   0,43, «9» vale 3,9 px. È l'errore che ha fatto sembrare l'effetto assente per
+   un intero giro.
+4. ⚠️ **La SDF corta del rettangolo arrotondato** (`raggio − hypot(q)`) vale solo
+   negli angoli: nella fascia dritta si ferma a `raggio`, quindi su una card alta
+   287px il centro dichiara 31px invece di 143 e la lente diventa una cornice.
+   Serve il termine interno.
+5. 🔴 **Il costo è il vero limite.** Otto gocce sopra il filmato della transizione
+   giorno↔notte: **26 fps** mediani, 18 senza il rimedio della passata singola.
+   Su una prima pagina che ha un time-lapse di cinque secondi come gesto
+   principale, è il gesto principale a pagare.
+
+E la lezione di metodo, che vale oltre questo caso: **la rifrazione da sola non
+fa l'acqua.** L'acqua si riconosce da quattro segnali insieme — rifrazione,
+riflesso speculare, ombra di contatto, frangia cromatica — e i primi due giri ne
+avevano uno.
+
+⚠️ **L'anello di fuoco resta teal**, ed è deliberato: `--ring` è un segnale di
+sistema, uguale su tutta la piattaforma, e un anello rosso dove il rosso significa
+anche «urgenza» si leggerebbe come uno stato d'errore.
 
 ⚠️ **L'unica deroga a «mai ambientale»: il pallino della striscia respira**
 (3,4s), e *solo quando la lettura è viva*. Si guadagna il posto perché **il

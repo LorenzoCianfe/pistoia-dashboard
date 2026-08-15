@@ -1173,6 +1173,64 @@ corretto, **`rm -rf .next` e riavvia PRIMA di diagnosticare altro.** Modificare
 un valore in una regola esistente di solito passa per l'HMR; **aggiungere una
 classe nuova quasi sempre no.**
 
+### Tre trappole della transizione giorno↔notte (2026-08-15)
+
+Pagate rifacendo il cambio di tema della prima pagina perché seguisse davvero il
+time-lapse. Come sempre: **nessuna produce un errore.**
+
+1. 🔴 **Una transizione CSS su una proprietà EREDITATA si rompe se anche un
+   antenato la transisce.** Il tappeto era
+   `html[data-transizione-tema] * { transition-property: … color …; }`. Sfondi,
+   bordi e ombre arrivavano puntuali; **il testo no**: la transizione del figlio
+   viene ribersagliata a ogni fotogramma da quella del genitore e degrada in
+   un'esponenziale che **non converge**. Misurato sulla prima pagina: a filmato
+   finito (5,04s) il titolo era al **62%** del percorso, e ci arrivava di scatto
+   solo quando l'attributo veniva tolto — cioè proprio lo stacco finale che si
+   voleva togliere.
+
+   Isolata in laboratorio la regola è netta: stessa dichiarazione su **un solo**
+   elemento → interpolazione esatta e lineare; la stessa dichiarazione **anche su
+   un antenato** → decadimento. Basta **un** antenato: escludere `html` e `body`
+   non serve se in mezzo c'è un `<div>` qualsiasi. Vale per tutte le ereditate —
+   `color`, `fill`, `stroke`, `caret-color`, `accent-color` — cioè per tutto il
+   testo e tutte le icone, che qui sono `currentColor`. Le NON ereditate
+   (`background-color`, `border-color`, `box-shadow`, `backdrop-filter`) sono
+   immuni, ed è per questo che il difetto sembrava «solo il testo è lento».
+
+   La via d'uscita non è un selettore più furbo: è **non transire le proprietà**.
+   Si fa camminare un numero (`--tema-t`) e si scrivono i token come miscele
+   (`color-mix`) di quel numero — un valore solo che si muove, nessuna
+   transizione da ribersagliare, e tutto ciò che ne discende (ombre composte,
+   vetro, grana) si muove con lui senza essere elencato.
+
+2. **Il prezzo di quella scelta è una copia, quindi vuole un cancello.** Le
+   coppie chiaro/scuro finiscono ricopiate in `globals.css`, e **metà nascono in
+   un file generato** (`src/themes/generated/pistoia.css`). Senza guardia, un
+   ritocco a `pistoia.ts` farebbe convergere la transizione sul colore VECCHIO e
+   scattare su quello nuovo alla fine. Da qui
+   `tests/unit/tema-transizione.test.ts`, **provato rosso nei tre versi** che
+   contano: estremo divergente, miscela mancante, token del blocco `.dark`
+   scoperto.
+
+   ⚠️ E una nota sul provarlo: la prima verifica leggeva `stdout` con una regex e
+   dichiarava «verde» due cancelli che erano rossi. **L'esito di un processo è il
+   suo exit code**, non il suo output — è §3 (Fase A/B, 3) da un'altra porta.
+
+3. **Il pannello Browser non fa avanzare né transizioni né `requestAnimationFrame`.**
+   §3 (Fase A/B, 1) lo dice per `IntersectionObserver` e rAF; vale identico per
+   le transizioni CSS, e il sintomo è peggiore perché **plausibile**: i colori
+   restano fermi al valore di partenza per tutta la corsa *e anche dopo*, cioè
+   sembra esattamente «il cambio di tema non funziona». Il filmato invece va,
+   perché la decodifica video è indipendente. Una diagnosi intera è stata
+   costruita su quella lettura prima di accorgersene: **ciò che si muove nel
+   tempo si misura col DevTools MCP su un Chrome vero**, mai nel pannello.
+
+E una che non è una trappola ma un vincolo da conoscere: **incrociare due temi
+costa contrasto a metà strada.** Inchiostro e carta si scambiano di posto,
+quindi passano per la stessa luminanza: per circa un secondo il testo sulle
+superfici è poco leggibile. Non si ripara con l'implementazione — è la geometria
+di un incrocio. `DESIGN.md` §6 la dichiara aperta.
+
 ---
 
 ## 4. Comandi

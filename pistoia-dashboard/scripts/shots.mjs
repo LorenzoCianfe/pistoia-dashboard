@@ -71,6 +71,16 @@ const PAGES = [
     i lucchetti sulle tre porte.
   */
   { name: "prima-pagina", url: "/", ruolo: "anonimo" },
+  /*
+    HOMEPAGE_2 — la variante editoriale (2026-08-15). Sta qui perché è una
+    **composizione diversa**, non una pagina in più: le due varianti si
+    confrontano guardandole, e questo è lo strumento con cui le si guarda nei
+    due temi e alla viewport minima.
+  */
+  { name: "home-2", url: "/home-2", ruolo: "anonimo" },
+  // L'anteprima del linguaggio liquido su Homepage_1: sta qui perché è
+  // esattamente la cosa che si giudica guardandola, nei due temi e a 360px.
+  { name: "home-1b", url: "/home-1b", ruolo: "anonimo" },
   { name: "login", url: "/login", auth: false },
   { name: "la-mia-citta", url: "/la-mia-citta" },
   // Le tre pagine-contenitore (Fase A): sono il primo livello della
