@@ -5,6 +5,67 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.54.2] — 2026-08-15 · La potatura: 124 KB di CSS che nessuna pagina indossava
+
+> **Fase 1 del rework architetturale.** Esce dal prodotto ciò che non lo tocca.
+> **Zero file di prodotto modificati**: tre file in tutto, e nessuno sotto
+> `src/` a parte il foglio globale.
+
+### Rimosso
+- **`@import "@astryxdesign/core/astryx.css"` da `globals.css`.** Sono
+  **124.056 byte** di CSS compilato in meno — misurati, non stimati: il foglio
+  servito passa da **259.388 a 135.332 byte**, cioè **−47,8%**. Vestiva
+  **1.524 classi atomiche StyleX** per i ~160 componenti di Astryx, e questa
+  app non ne monta nessuno: le 1.524 classi **non compaiono in una sola riga**
+  dei 6,7 MB di sorgente.
+- **Il layer `astryx-base`** dalla dichiarazione d'ordine: era popolato solo da
+  quel file. L'ordine emesso resta `properties → reset → theme → base →
+  astryx-theme → pistoia → components → utilities`.
+- **`@astryxdesign/theme-neutral`**, zero riferimenti in tutto il repository.
+
+### Cambiato
+- **`@astryxdesign/cli` da `dependencies` a `devDependencies`.** Serve solo a
+  `theme:build`, e il tema compilato è committato: nessuno script di avvio, di
+  CI o del `Dockerfile` lo invoca. Provato: rilanciato dopo lo spostamento
+  riproduce i tre file generati **identici byte per byte**, salvo il timestamp.
+
+### La prova che il design non si è mosso
+Tre misure indipendenti, nessuna delle quali si fida delle altre due:
+1. **`npm run impronta:confronta`: 213 token invariati** nei due temi, prima e
+   dopo. Verde anche sulla rimozione da sola, prima di ogni compensazione.
+2. **Il CSS compilato è identico regola per regola, ordine compreso**, in tutti
+   e tre i chunk. L'unica differenza in tutta la build è il blocco
+   `@layer astryx-base{…}` che non c'è più: 0 regole comparse, 0 spostate.
+3. **Zero occorrenze** delle 1.524 classi nel sorgente.
+
+### Trovato — e la ragione per cui la rimozione è stata neutra non è quella che sembrava
+- 🔴 **`--font-weight-normal|medium|semibold` erano dichiarati SOLO in
+  `astryx.css`**, e il tema compilato li **consuma senza dichiararli**:
+  `:where(h1…h6)`, `:where(p)`, `:where(small)` e undici token `--text-*-weight`
+  passano di lì. Toglierli avrebbe fatto cadere in eredità il peso di ogni
+  titolo e di ogni paragrafo, **senza un errore da nessuna parte**.
+  Non è successo perché **`tailwindcss/theme.css` dichiara gli stessi nomi con
+  gli stessi numeri** (400 · 500 · 600 · 700): la scala dei pesi è passata da
+  Astryx a Tailwind senza che nulla lo dicesse. È una dipendenza **in
+  prestito** — se un giorno si azzera il tema di Tailwind, quei tre tornano
+  indefiniti e la tipografia cade in silenzio. Scritto accanto all'import in
+  `globals.css`, con la fase che la chiude (la 5, i token propri).
+  ⚠️ **La previsione statica diceva 11 token rossi; la misura ne ha dati zero**,
+  e le due cose rispondono a domande diverse. *Chi possiede* un token si
+  stabilisce dal grafo delle sorgenti e delle dipendenze, `node_modules`
+  compreso — e lì la previsione era **incompleta**, non sbagliata di metodo:
+  guardava il repository e non ciò che è installato. *Quale valore* un token
+  risolve davvero lo dice solo il runtime, ed è ciò di cui l'impronta è giudice.
+  L'impronta ha certificato il comportamento; **la proprietà di quei tre nomi
+  l'ha scoperta l'analisi, non la misura.**
+- **`npm` non disinstalla un peer opzionale che ha già installato.** Tolto
+  `@astryxdesign/theme-neutral` da `package.json`, sia `npm install` sia
+  `npm uninstall` l'hanno **lasciato nel lockfile** — marcato `dev`, `optional`,
+  `peer` del CLI — mentre una risoluzione da zero non lo include affatto. E il
+  lockfile è ciò che `npm ci` esegue in CI e nel `Dockerfile`: sarebbe rimasto
+  nell'immagine senza che niente lo dicesse. Chiuso togliendo la voce dal
+  lockfile e validando con `npm ci` (636 pacchetti, 0 vulnerabilità).
+
 ## [0.54.1] — 2026-08-15 · La baseline torna verde, e i cancelli smettono di nascondersi a vicenda
 
 > Primo passo del **rework architetturale**: ricostruire uno stato verificabile

@@ -101,10 +101,14 @@ Design system open source di Meta (React + StyleX, ~160 componenti, in Beta).
 
 ### Costo reale, misurato
 
-`astryx.css` 127 KB (22,6 KB gzip) + tema 11 KB (2,2 KB gzip) ≈ **25 KB gzip**
-di CSS. StyleX è peer dependency obbligatoria ma non richiede plugin di build:
-il `dist` è precompilato. Verificato: `next build` passa su tutte le rotte senza
-alcuna configurazione di bundler.
+Dal 2026-08-16 (Fase 1 del rework) **`astryx.css` non è più importato**: il suo
+costo servito è **zero**. Restano il solo tema compilato (11 KB, 2,2 KB gzip) e
+`reset.css`. Il foglio complessivo dell'app è passato da 259.388 a 135.332 byte.
+
+Prima della Fase 1: `astryx.css` 127 KB (22,6 KB gzip) + tema ≈ **25 KB gzip**.
+StyleX resta peer dependency obbligatoria di `@astryxdesign/core` ma non richiede
+plugin di build: il `dist` è precompilato. Verificato: `next build` passa su
+tutte le rotte senza alcuna configurazione di bundler.
 
 > **Quando usarla:** per ogni primitiva di interfaccia (bottoni, campi, tabelle,
 > overlay, navigazione) e per ogni token di sistema. Prima di scrivere un

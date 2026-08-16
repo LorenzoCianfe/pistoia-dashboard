@@ -1,19 +1,19 @@
 # Prompt per la sessione successiva
 
-> Riscritta il **2026-08-15 (sera)**, a chiusura della sessione che ha aperto il
-> **rework architetturale** e chiuso la **Fase 0** (baseline verde) più la
-> correzione isolata della CI.
+> Riscritta il **2026-08-16**, a chiusura della **Fase 1** (la potatura).
+> La Fase 0 e la correzione di CI erano già chiuse e pushate.
 >
-> **Fidati di questa, non di quello che ricordi.** La consegna precedente
-> parlava dell'Ondata 10 e di un debito di verifica: entrambi superati.
+> **Fidati di questa, non di quello che ricordi.** ⚠️ La Fase 1 è fatta ma
+> **NON è ancora committata**: le modifiche sono nell'albero di lavoro, e il
+> commit lo chiede Lorenzo.
 
 ---
 
 ## Il prompt da incollare
 
 ```
-Pistoia.app — REWORK ARCHITETTURALE. La Fase 0 è CHIUSA e pushata su `main`.
-Riprendi dalla FASE 1.
+Pistoia.app — REWORK ARCHITETTURALE. Le Fasi 0, 0b e 1 sono CHIUSE.
+Riprendi dalla FASE 2a.
 
 LEGGI PRIMA, in quest'ordine:
 - docs/prossima-sessione.md — è questa: la fonte principale.
@@ -22,14 +22,18 @@ LEGGI PRIMA, in quest'ordine:
 - docs/direzione-prodotto.md — la carta del prodotto.
 
 ⚠️ AGENTS.md, ARCHITECTURE.md e REFERENCES.md descrivono ancora Astryx come
-sorgente dei token e il vecchio stack: sono VERI OGGI ma diventeranno falsi
-durante il rework. Si consolidano in FASE 13, non prima e non a pezzi.
+sorgente dei token e il vecchio stack: sono VERI OGGI. Il consolidamento
+generale dei 33 .md è la FASE 13 — ma una riga che una fase rende FALSA si
+corregge subito, minima e senza riorganizzare. La Fase 13 non è l'alibi per
+lasciare in giro documentazione operativa che descrive uno stato che non
+esiste più.
 
-La prossima azione è la FASE 1 — la potatura. È a rischio zero e non tocca
-nessun file di prodotto. Il cancello è `npm run impronta:confronta`: deve
-restare verde, cioè nessuno dei 213 token deve muoversi.
+La prossima azione è la FASE 2a — fissare la versione di pnpm e OSSERVARE
+quali dipendenze vengono davvero bloccate sugli script di install. È una
+fase di misura: non si migra ancora niente. La 2b (pnpm vera) viene dopo,
+da sola.
 
-NON iniziare nessun'altra fase senza chiudere la 1.
+NON iniziare nessun'altra fase senza chiudere la 2a.
 Fermati e chiedi nei punti di ritorno elencati in questa consegna.
 ```
 
@@ -70,9 +74,10 @@ Un'app Next.js sola (non un monorepo), in `pistoia-dashboard/`.
 | Server Actions | 25 moduli |
 | Prisma | 61 modelli · 18 migrazioni · SQLite |
 | Test | 339 unit (Vitest) · 192 E2E (Playwright) |
-| `globals.css` | **2.894 righe** — è il vero design system |
+| `globals.css` | **2.912 righe** — è il vero design system |
 | `components/ui/` | 19 primitive, quasi tutte di sola resa |
-| Dipendenze | 19 runtime · 15 sviluppo · 767 nel lockfile |
+| Dipendenze | 17 runtime · 16 sviluppo · 765 nel lockfile *(dopo la Fase 1)* |
+| CSS servito | **135.332 byte** — era 259.388 prima della Fase 1 |
 
 **L'architettura è già RSC-first e disciplinata**: i Server Components leggono
 via `lib/data/*` e restituiscono DTO, le Server Actions scrivono con
@@ -204,8 +209,8 @@ visualizzazioni), vietato per decorazioni ottenibili con CSS/Motion. `AGENTS.md`
 |---|---|---|
 | **0** | Baseline verificabile | ✅ **CHIUSA** |
 | **0b** | Correzione CI (commit isolato) | ✅ **CHIUSA** |
-| **1** | **Potatura**: via l'import di `astryx.css` (−127 KB), via `theme-neutral`, `cli` → `devDependencies` | ⏭️ **PROSSIMA** |
-| **2a** | Versione pnpm fissata (`packageManager`) → si osserva quali dipendenze vengono davvero bloccate sugli script di install → si configura il meccanismo corretto **per quella versione**, sui soli pacchetti che lo richiedono | |
+| **1** | **Potatura**: via l'import di `astryx.css` (−124.056 byte di CSS servito), via `theme-neutral`, `cli` → `devDependencies` | ✅ **CHIUSA** *(non committata)* |
+| **2a** | Versione pnpm fissata (`packageManager`) → si osserva quali dipendenze vengono davvero bloccate sugli script di install → si configura il meccanismo corretto **per quella versione**, sui soli pacchetti che lo richiedono | ⏭️ **PROSSIMA** |
 | **2b** | **pnpm**, da sola. Superficie: `start.bat` (4 chiamate) · CI (17) · `Dockerfile` (2) · `docker-entrypoint.sh` (3) · `package.json` · 193 occorrenze nei `.md` su 18 file, **da triare**. Cancello: CI `--frozen-lockfile`, `package-lock.json` rimosso a validazione fatta, **avvio e runtime reali provati** | |
 | **3** | Docker multi-stage (attività separata da pnpm) | |
 | **4** | Prettier + `prettier-plugin-tailwindcss`, reformat meccanico isolato in un commit suo, `.prettierignore` + `.git-blame-ignore-revs`. **Commenti non toccati nel contenuto né nella struttura semantica** | |
@@ -224,58 +229,90 @@ visualizzazioni), vietato per decorazioni ottenibili con CSS/Motion. `AGENTS.md`
 
 ---
 
-## 7. Che cosa ha fatto questa sessione
+## 7. Che cosa ha fatto questa sessione — la FASE 1
 
-### I tre commit
-
-| | |
-|---|---|
-| `b9341e5` | `fix(fase-0): la baseline torna verde, e la build di misura si pulisce da sola` |
-| `6476b16` | `fix(ci): un cancello rosso non può più nasconderne altri due` |
-| `2b0f4ae` | `fix(e2e): gli atti finivano nel database sbagliato, e solo la CI poteva dirlo` |
-
-### La CI dopo il push
-
-La ristrutturazione **funziona**: `controlli` e `build` partono in parallelo, e
-`e2e` e `lighthouse` partono appena `build` finisce. **Lighthouse è verde in CI
-per la prima volta dal 13/08.**
-
-La prima passata ha però scoperto un difetto **preesistente** che i cancelli
-saltati tenevano nascosto: `prima-pagina.spec.ts` **non è mai passato in CI**.
-`semina-atti.ts` risolve `process.env.DATABASE_URL ?? "file:./prisma/e2e.db"`, e
-in CI il workflow dichiara quella variabile verso `dev.db`: gli atti finivano lì
-mentre il server di Playwright legge `e2e.db`. Corretto in `2b0f4ae` con un `env`
-esplicito, come già fa `global-setup.ts`.
-
-⚠️ **La prova locale non discrimina**: il `dev.db` di sviluppo contiene già
-l'archivio vero (26.644 atti, incluso quello curato), quindi senza la correzione
-il test passa comunque — dal database sbagliato. In CI `dev.db` nasce vuoto e la
-differenza si vede. Il giudice è stata la passata di CI, ed è stata netta.
-
-**Esito finale (run `31903180029`, commit `2b0f4ae`): tutti e quattro i job
-verdi.** `main` è verde per la prima volta dal **12/08**.
-
-| Job | Esito |
-|---|---|
-| Lint · Typecheck · Test · Audit | ✅ |
-| Build di produzione | ✅ |
-| E2E (Playwright) | ✅ |
-| Lighthouse (soglie misurate) | ✅ |
-
-### File toccati nella Fase 0 — **zero file di prodotto**
+### I file toccati — **zero file di prodotto**, e nessun commit
 
 ```
-M  package.json                    4 script (pretest:e2e e lighthouse ricablati, 2 nuovi)
-M  package-lock.json               nanoid 3.3.17 → 3.3.18 (advisory high)
-M  scripts/shots.mjs               registro delle eccezioni al traboccamento
-M  tests/e2e/porte.spec.ts         il selettore della goccia
-M  tests/e2e/prima-pagina.spec.ts  riallineamento + nuovo caso su /atti
-A  scripts/misura.mjs              NUOVO
-A  scripts/impronta.mjs            NUOVO
-A  tests/impronta/token.json       NUOVO — la baseline dei token
+M  pistoia-dashboard/src/app/globals.css   via l'import di astryx.css + il layer astryx-base
+M  pistoia-dashboard/package.json          via theme-neutral · cli → devDependencies
+M  pistoia-dashboard/package-lock.json     la voce di theme-neutral, tolta a mano (vedi sotto)
+M  ARCHITECTURE.md                         una riga: l'ordine dei layer
+M  REFERENCES.md                           quattro righe: il costo servito di astryx.css è zero
+M  CHANGELOG.md                            voce [0.54.2]
+M  docs/prossima-sessione.md               questa
 ```
 
-### I due strumenti nuovi
+### Il guadagno, misurato
+
+Il foglio servito passa da **259.388 a 135.332 byte: −124.056, cioè −47,8%.**
+Il blocco che sparisce vestiva **1.524 classi atomiche StyleX**, e nessuna delle
+1.524 compare nei 6,7 MB di sorgente.
+
+### La prova che il design non si è mosso — tre misure indipendenti
+
+1. **`npm run impronta:confronta`: 213 token invariati** nei due temi. Verde
+   **anche sulla rimozione da sola**, prima di ogni compensazione.
+2. **Il CSS compilato è identico regola per regola, ordine compreso**, in tutti
+   e tre i chunk: 0 regole comparse, 0 spostate, 0 sparite oltre il blocco
+   `@layer astryx-base{…}`. L'ordine dei layer emessi resta
+   `properties → reset → theme → base → astryx-theme → pistoia → components →
+   utilities`.
+3. **Zero occorrenze** delle 1.524 classi nel sorgente.
+
+### 🔴 Due trappole pagate qui — vanno in `AGENTS.md` §3 alla Fase 13
+
+1. **La scala dei pesi è passata da Astryx a Tailwind senza che nulla lo
+   dicesse.** `--font-weight-normal|medium|semibold` erano dichiarati **solo**
+   in `astryx.css`, e il tema compilato li **consuma senza dichiararli**
+   (`:where(h1…h6)`, `:where(p)`, `:where(small)`, undici token
+   `--text-*-weight`). L'analisi statica prevedeva **11 token rossi**; la misura
+   ne ha dati **zero**, perché `tailwindcss/theme.css` dichiara gli stessi nomi
+   con gli stessi numeri (400 · 500 · 600 · 700).
+   *La regola, in due metà che non si sostituiscono a vicenda:*
+   - **Chi POSSIEDE un token** — provenienza, proprietà semantica, chi lo
+     dichiara — si stabilisce dal **grafo delle sorgenti e delle dipendenze**,
+     `node_modules` compreso. La previsione ha sbagliato non perché fosse
+     statica, ma perché era **incompleta**: guardava le sorgenti del repository
+     e non quelle installate.
+   - **Quale VALORE un token risolve davvero** lo dice solo il **runtime**, e
+     l'impronta è il giudice di quello.
+
+   L'impronta ha detto il vero sul comportamento — zero token mossi — e **non
+   dice niente** su chi possieda quei tre nomi: che oggi li dichiari Tailwind è
+   una scoperta dell'analisi, non della misura. Un'impronta verde su un token
+   di cui non si sa la provenienza è un comportamento verificato e una proprietà
+   ignota. Servono tutte e due le domande.
+
+   La dipendenza è **in prestito** ed è scritta accanto all'import, con la fase
+   che la chiude (la 5, i token Pistoia).
+2. **`npm` non disinstalla un peer opzionale che ha già installato.** Tolto
+   `@astryxdesign/theme-neutral` da `package.json`, **sia `npm install` sia
+   `npm uninstall` l'hanno lasciato nel lockfile** — marcato `dev`, `optional`,
+   `peer` del CLI — mentre una risoluzione da zero (provata in una cartella
+   pulita) non lo include affatto. **E il lockfile è ciò che `npm ci` esegue in
+   CI e nel `Dockerfile`**: sarebbe rimasto nell'immagine senza che niente lo
+   dicesse. Chiuso togliendo la voce a mano e **validando con `npm ci`**, che
+   fallisce rumorosamente se lockfile e `package.json` divergono.
+
+### Uno strumento NON promosso, e perché — da riprendere in Fase 6
+
+La prova nº2 qui sopra è stata ottenuta con uno script usa-e-getta che spezza
+due build del CSS compilato in regole di primo livello e le confronta **come
+sequenze, chunk per chunk**. Ha funzionato ed è stato **cancellato di
+proposito**: leggeva due percorsi scritti a mano, richiedeva di catturare le due
+build a mano e non aveva né baseline né codice d'uscita. Era un'impalcatura, non
+un cancello — e promuoverla adesso sarebbe stato *tecnologia in cerca di un
+utilizzo*, cioè il verso vietato dal principio in §2.
+
+⚠️ **Ma la Fase 6 dichiara esattamente quel cancello** («peso del CSS globale
+misurato prima/dopo»), e ora si sa che cosa deve fare per essere utile: non solo
+pesare i byte — **il peso da solo non distingue una regola spostata da una
+persa** — ma confrontare la sequenza delle regole. In Fase 1 è ciò che ha
+permesso di dire «0 comparse, 0 spostate, 0 sparite oltre il blocco atteso»
+invece del solo «−47,8%».
+
+### I due strumenti (dalla Fase 0, restano il manuale operativo)
 
 **`scripts/misura.mjs`** — l'**unico** posto del repository che cancella `.next`,
 e l'unica strada per produrre un artefatto da misurare. Ci passano `lighthouse`,
@@ -297,15 +334,18 @@ npm run impronta            # cattura la baseline
 npm run impronta:confronta  # esce 1 se un solo valore si è mosso
 ```
 
-### Le baseline
+### Le baseline, e come stanno dopo la Fase 1
 
 | | |
 |---|---|
-| **E2E** | **192 test verdi** (Playwright) |
-| **Unit** | 339 test su 28 file |
-| **Lighthouse** | `/login` 100 · `/valutazioni` 99 · `/valutazioni/pulizia` 92 · `/metodologia` 92 — soglia 0,90 |
-| **Token** | **213 token**, 93 dei quali cambiano col tema · `tests/impronta/token.json` |
-| **Audit** | 0 vulnerabilità |
+| **Token** | **213 token**, 93 dei quali cambiano col tema · `tests/impronta/token.json` — ✅ invariati |
+| **Unit** | 339 test su 28 file — ✅ 339/339 |
+| **Lint · Typecheck** | ✅ · ✅ |
+| **Rotte** | **68 rotte, 0 con problemi** (tre passate: admin, moderatore, anonima) |
+| **Shots** | ✅ nei due regimi (1440 e 360 semplice). L'unico traboccamento è quello **già registrato**: `/home-1b` ≤ 35px, rotta congelata |
+| **E2E** | ✅ **192/192 in 20,4 min** — rilanciata dopo un `node_modules` ricostruito da zero, comprende a11y (42 casi), bersagli (42) e contenimento (42) |
+| **Lighthouse** | `/login` 100 · `/valutazioni` 99 · `/valutazioni/pulizia` 92 · `/metodologia` 92 — soglia 0,90. **Non rilanciato nella Fase 1** |
+| **Audit** | 0 vulnerabilità · `npm ci` 636 pacchetti |
 
 ---
 
@@ -318,7 +358,9 @@ npm run impronta:confronta  # esce 1 se un solo valore si è mosso
 | **`ATTI_TOTALI`** in `tests/e2e/costanti-atti.ts` — senza consumatori da quando la striscia dati è uscita dalla home | **Fase 6**, stessa rimozione |
 | **CLS 0,165** — lo scheletro di `(pubblico)/loading.tsx` viene sostituito e il footer salta (`FOOTER.card 785→0`). **Preesistente** alla baseline verde del 06/08, sopra il «buono» di 0,1 ma sotto soglia | **Fase 12** |
 | **33 `.md`** con istruzioni che diventeranno false: `AGENTS.md` §0/§3/§4/§8, `ARCHITECTURE.md` §1/§2/§3/§6/§7, `REFERENCES.md` §1/§6, `ROADMAP.md` ondata 5, `DOCUMENTATION.md` §2/§4/§8, `README.md`, `FEATURES.md` §5, `SECURITY.md` §7 | **Fase 13** |
-| ⚠️ **DISCREPANZA NOTA, da non correggere di slancio**: `package.json` dichiara `0.52.0`, `CHANGELOG.md` è arrivato a `0.54.1`. Lo scarto è **preesistente** — il lockfile era fermo a `0.48.0` fino al 2026-08-15 — e non è stato toccato di proposito | Si chiude quando Lorenzo determina **la fonte canonica della versione** e la **politica di versionamento** (chi la alza, quando, e se il `CHANGELOG` può correre avanti). Finché quella decisione non c'è, allineare i numeri sarebbe scegliere al posto suo |
+| ✅ **Due righe che la Fase 1 aveva reso false — CORRETTE il 2026-08-16**: `ARCHITECTURE.md` §«Ordine dei layer» (via `astryx-base` dalla lista) e `REFERENCES.md` §«Costo reale, misurato» (il costo servito di `astryx.css` è **zero**). Correzioni minime, nessuna riorganizzazione | **Chiuso.** 🔴 E fissa la regola per le fasi che seguono: **la documentazione operativa non resta a descrivere uno stato che non esiste più.** La Fase 13 è il consolidamento generale dei 33 `.md`, non l'alibi per lasciare in giro istruzioni false nel frattempo |
+| **La scala dei pesi tipografici arriva da `tailwindcss/theme.css`**, non più da una sorgente nostra. Nessun effetto oggi (stessi nomi, stessi numeri), ma è una dipendenza **in prestito**: se il tema di Tailwind viene azzerato, `:where(h1…h6)` e `:where(p)` perdono il peso **senza un errore** | **Fase 5**, che porta i token in casa. Nota scritta accanto all'import in `globals.css` |
+| ⚠️ **DISCREPANZA NOTA, da non correggere di slancio**: `package.json` dichiara `0.52.0`, `CHANGELOG.md` è arrivato a `0.54.2`. Lo scarto è **preesistente** — il lockfile era fermo a `0.48.0` fino al 2026-08-15 — e non è stato toccato di proposito | Si chiude quando Lorenzo determina **la fonte canonica della versione** e la **politica di versionamento** (chi la alza, quando, e se il `CHANGELOG` può correre avanti). Finché quella decisione non c'è, allineare i numeri sarebbe scegliere al posto suo |
 
 ---
 
@@ -351,34 +393,72 @@ nome (niente `Co-Authored-By`) · il deploy lo lancia lui.
 
 ## 10. La prossima azione, esatta
 
-### FASE 1 — la potatura
+### Prima di tutto: la Fase 1 è nell'albero, non nella storia
 
-**Cosa deve fare**, e nient'altro:
+Cinque file modificati, **nessun commit**. Se Lorenzo lo chiede, il commit è uno
+solo e non tocca nulla di prodotto. Se invece vuole rifare la misura da sé:
 
-1. Rimuovere l'`@import "@astryxdesign/core/astryx.css"` da `src/app/globals.css`
-   (riga 26). Verificato in questa sessione: **zero token usati dall'app sono
-   dichiarati solo lì**. Sono 127 KB / 1.524 classi per ~160 componenti mai
-   importati.
-2. Disinstallare `@astryxdesign/theme-neutral` — zero riferimenti in tutto il
-   repository, l'unica occorrenza è la riga di `package.json`.
-3. Spostare `@astryxdesign/cli` da `dependencies` a `devDependencies`.
+```bash
+npm run impronta:confronta   # 213 token, deve dire «invariata»
+npm run lint && npm run typecheck && npm test
+npm run rotte                # 68 rotte, 0 con problemi
+```
+
+### FASE 2a — misurare pnpm prima di adottarlo
+
+È una fase di **osservazione**, non di migrazione: alla fine `npm` è ancora il
+gestore. Serve a non arrivare alla 2b indovinando.
+
+**Cosa deve fare:**
+
+1. Fissare la versione con il campo `packageManager` in `package.json`
+   (`pnpm@<versione>`). ⚠️ **La versione va decisa e scritta**, perché il
+   meccanismo del punto 3 cambia da una minore all'altra: configurarlo «in
+   generale» significa configurarlo per una versione che non è quella in uso.
+2. Fare un'installazione di prova **in una cartella fuori dal repository** (o in
+   un worktree usa-e-getta) e **leggere che cosa pnpm blocca**. Non dedurlo:
+   pnpm stampa l'elenco dei pacchetti a cui ha rifiutato lo script di install.
+3. Configurare il meccanismo corretto per quella versione **sui soli pacchetti
+   che lo richiedono davvero**, uno per uno, non con un permesso generale.
+
+**Il punto di partenza, già misurato in questa sessione.** I pacchetti con
+`hasInstallScript` nel lockfile sono **nove**, più la radice:
+
+```
+@astryxdesign/cli   @astryxdesign/core   @prisma/engines   better-sqlite3
+esbuild             fsevents             playwright/…/fsevents
+prisma              unrs-resolver
+```
+
+⚠️ **Questo elenco è ciò che npm registra, non ciò che pnpm bloccherà**: è la
+lista da cui partire per leggere l'output vero, non la risposta. I tre che fanno
+male se restano a metà sono `better-sqlite3` (binario nativo — è la ragione per
+cui il `Dockerfile` sta su Debian e non su Alpine) e `@prisma/engines` + `prisma`
+(scrivono il client in `src/generated/prisma`). Un install «riuscito» con quegli
+script saltati **non dà errore e rompe l'avvio**.
+
+Nota per non sbagliare diagnosi: `@node-rs/argon2` — l'altro pacchetto con
+binari nativi, e quello dell'autenticazione — **non** ha script di install, li
+distribuisce come dipendenze opzionali per piattaforma. Se sotto pnpm l'accesso
+si rompe, la causa non è lì.
 
 **Cosa NON deve fare:**
 
-- ❌ non toccare `@astryxdesign/core`: serve ancora a `defineTheme` (Fase 5) e la
-  decisione sui suoi componenti è di Fase 7b;
-- ❌ non toccare `src/themes/pistoia.ts` né `generated/pistoia.css`;
-- ❌ non toccare `@astryxdesign/core/reset.css` — muove la tipografia, ed è Fase 5;
-- ❌ nessun file di prodotto;
-- ❌ non passare a pnpm (è la Fase 2, e va isolata).
+- ❌ non convertire ancora `start.bat`, la CI, il `Dockerfile`, l'entrypoint né i
+  `.md` — è tutta Fase 2b, e va isolata in un intervento suo;
+- ❌ non rimuovere `package-lock.json`: esce solo a validazione fatta, nella 2b;
+- ❌ nessun file di prodotto.
 
-**Il cancello:**
+**Il cancello della 2a:** un'installazione pnpm che arriva in fondo **con
+l'elenco dei bloccati letto e la configurazione scritta**, e `npm` ancora
+funzionante nel repository. Se pnpm blocca qualcosa che non sta nell'elenco
+qui sopra, **quello è il risultato della fase**: si scrive e si tiene.
 
-```bash
-npm run impronta:confronta   # deve restare VERDE: nessuno dei 213 token si muove
-npm run lint && npm run typecheck && npm test
-npm run shots                # schermate identiche
-```
+### Poi la FASE 2b — pnpm davvero
 
-Se un solo token si muove, la rimozione non era neutra: fermarsi e capire quale
-e perché, prima di proseguire.
+Superficie da convertire, già contata: `start.bat` (4 chiamate) · CI (17) ·
+`Dockerfile` (2) · `docker-entrypoint.sh` (3) · `package.json` · **193
+occorrenze nei `.md` su 18 file, da triare** (non tutte vanno cambiate: quelle
+dentro un racconto storico restano). Cancello: CI con `--frozen-lockfile`,
+`package-lock.json` rimosso a validazione fatta, **avvio e runtime reali
+provati** — non solo la build.

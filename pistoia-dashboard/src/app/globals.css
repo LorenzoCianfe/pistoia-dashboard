@@ -16,14 +16,32 @@
  * silenziosamente il colore di quelle occorrenze. Adottiamo quindi il ponte in
  * modo selettivo qui sotto: raggi, tipo e durate arrivano da Astryx, mentre
  * resta la nomenclatura cromatica storica dell'app.
+ *
+ * NON importiamo nemmeno `@astryxdesign/core/astryx.css` (tolto il 2026-08-15).
+ * Vestiva 1.524 classi atomiche StyleX per i ~160 componenti di Astryx, e
+ * questa app non ne monta nessuno: **nessuna delle 1.524 compare nel
+ * sorgente**. Il foglio servito è passato da 259.388 a 135.332 byte, cioè
+ * −124.056 (−47,8%). Con lui sparisce il layer `astryx-base`, che era popolato
+ * solo da quel file.
+ *
+ * ⚠️ Quel foglio dichiarava anche `--font-weight-normal|medium|semibold`, che
+ * il tema compilato CONSUMA senza dichiarare (`:where(h1…h6)`, `:where(p)`,
+ * `--text-*-weight`). Non si sono mossi di un valore perché
+ * `tailwindcss/theme.css` dichiara gli stessi nomi con gli stessi numeri
+ * (400 · 500 · 600 · 700): la scala dei pesi arriva ora da Tailwind invece che
+ * da Astryx, ed è la sola cosa che il prodotto perdeva togliendo l'import.
+ * Verificato dall'impronta, non dedotto — i 213 token sono rimasti identici
+ * nei due temi. Se un giorno si azzera il tema di Tailwind (`@theme {}` con
+ * reset), quei tre tornano indefiniti e la tipografia del tema generato cade
+ * in eredità senza che nulla dia errore: la Fase 5, che porta i token in casa,
+ * è dove questa dipendenza in prestito va chiusa.
  * ========================================================================== */
 
-@layer reset, theme, base, astryx-base, astryx-theme, pistoia, components, utilities;
+@layer reset, theme, base, astryx-theme, pistoia, components, utilities;
 
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/preflight.css" layer(base);
 @import "@astryxdesign/core/reset.css";
-@import "@astryxdesign/core/astryx.css";
 @import "../themes/generated/pistoia.css";
 @import "tailwindcss/utilities.css" layer(utilities);
 

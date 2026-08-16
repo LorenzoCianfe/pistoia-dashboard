@@ -43,9 +43,7 @@
     "ios_saf >= 17.5"
   ],
   "dependencies": {
-    "@astryxdesign/cli": "^0.1.8",
     "@astryxdesign/core": "^0.1.8",
-    "@astryxdesign/theme-neutral": "^0.1.8",
     "@node-rs/argon2": "^2.0.2",
     "@prisma/adapter-better-sqlite3": "^7.9.1",
     "@prisma/client": "^7.9.1",
@@ -64,6 +62,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@astryxdesign/cli": "^0.1.8",
     "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",

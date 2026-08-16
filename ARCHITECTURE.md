@@ -79,8 +79,11 @@ Il punto più delicato dell'architettura, perché tre sistemi di stile convivono
 ### Ordine dei layer
 
 ```css
-@layer reset, theme, base, astryx-base, astryx-theme, pistoia, components, utilities;
+@layer reset, theme, base, astryx-theme, pistoia, components, utilities;
 ```
+
+> `astryx-base` è uscito dalla lista il 2026-08-16 (Fase 1 del rework): era
+> popolato solo da `astryx.css`, che non importiamo più.
 
 L'ordine è vincolante: `pistoia` deve venire **dopo** `astryx-theme` perché il
 ponte di retrocompatibilità sovrascriva i default, e **prima** di `utilities`
