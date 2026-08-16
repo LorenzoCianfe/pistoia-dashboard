@@ -3,9 +3,11 @@
 > Riscritta il **2026-08-16**, a chiusura della **Fase 1** (la potatura).
 > La Fase 0 e la correzione di CI erano già chiuse e pushate.
 >
-> **Fidati di questa, non di quello che ricordi.** ⚠️ La Fase 1 è fatta ma
-> **NON è ancora committata**: le modifiche sono nell'albero di lavoro, e il
-> commit lo chiede Lorenzo.
+> **Fidati di questa, non di quello che ricordi.**
+>
+> ✅ **Fase 1 chiusa, committata e pushata: `6621e07`.**
+> CI [`31937260780`](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/31937260780)
+> **verde su tutti e quattro i job.** `main` è verde.
 
 ---
 
@@ -209,7 +211,7 @@ visualizzazioni), vietato per decorazioni ottenibili con CSS/Motion. `AGENTS.md`
 |---|---|---|
 | **0** | Baseline verificabile | ✅ **CHIUSA** |
 | **0b** | Correzione CI (commit isolato) | ✅ **CHIUSA** |
-| **1** | **Potatura**: via l'import di `astryx.css` (−124.056 byte di CSS servito), via `theme-neutral`, `cli` → `devDependencies` | ✅ **CHIUSA** *(non committata)* |
+| **1** | **Potatura**: via l'import di `astryx.css` (−124.056 byte di CSS servito), via `theme-neutral`, `cli` → `devDependencies` | ✅ **CHIUSA** · `6621e07` · CI verde |
 | **2a** | Versione pnpm fissata (`packageManager`) → si osserva quali dipendenze vengono davvero bloccate sugli script di install → si configura il meccanismo corretto **per quella versione**, sui soli pacchetti che lo richiedono | ⏭️ **PROSSIMA** |
 | **2b** | **pnpm**, da sola. Superficie: `start.bat` (4 chiamate) · CI (17) · `Dockerfile` (2) · `docker-entrypoint.sh` (3) · `package.json` · 193 occorrenze nei `.md` su 18 file, **da triare**. Cancello: CI `--frozen-lockfile`, `package-lock.json` rimosso a validazione fatta, **avvio e runtime reali provati** | |
 | **3** | Docker multi-stage (attività separata da pnpm) | |
@@ -231,7 +233,7 @@ visualizzazioni), vietato per decorazioni ottenibili con CSS/Motion. `AGENTS.md`
 
 ## 7. Che cosa ha fatto questa sessione — la FASE 1
 
-### I file toccati — **zero file di prodotto**, e nessun commit
+### I file toccati — **zero file di prodotto** · commit `6621e07`
 
 ```
 M  pistoia-dashboard/src/app/globals.css   via l'import di astryx.css + il layer astryx-base
@@ -344,8 +346,9 @@ npm run impronta:confronta  # esce 1 se un solo valore si è mosso
 | **Rotte** | **68 rotte, 0 con problemi** (tre passate: admin, moderatore, anonima) |
 | **Shots** | ✅ nei due regimi (1440 e 360 semplice). L'unico traboccamento è quello **già registrato**: `/home-1b` ≤ 35px, rotta congelata |
 | **E2E** | ✅ **192/192 in 20,4 min** — rilanciata dopo un `node_modules` ricostruito da zero, comprende a11y (42 casi), bersagli (42) e contenimento (42) |
-| **Lighthouse** | `/login` 100 · `/valutazioni` 99 · `/valutazioni/pulizia` 92 · `/metodologia` 92 — soglia 0,90. **Non rilanciato nella Fase 1** |
+| **Lighthouse** | ✅ **in CI**, identico alla baseline: `/login` 100 · `/valutazioni` 99 · `/valutazioni/pulizia` 92 · `/metodologia` 92 — soglia 0,90. Accessibilità **100 su tutte e quattro** |
 | **Audit** | 0 vulnerabilità · `npm ci` 636 pacchetti |
+| **CI** | run [`31937260780`](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/31937260780) — ✅ Controlli · ✅ Build · ✅ E2E · ✅ Lighthouse |
 
 ---
 
@@ -393,10 +396,10 @@ nome (niente `Co-Authored-By`) · il deploy lo lancia lui.
 
 ## 10. La prossima azione, esatta
 
-### Prima di tutto: la Fase 1 è nell'albero, non nella storia
+### Il punto di partenza
 
-Cinque file modificati, **nessun commit**. Se Lorenzo lo chiede, il commit è uno
-solo e non tocca nulla di prodotto. Se invece vuole rifare la misura da sé:
+`main` è a **`6621e07`**, CI verde su tutti e quattro i job, albero pulito.
+Non c'è niente da recuperare. Per rifare la misura da sé:
 
 ```bash
 npm run impronta:confronta   # 213 token, deve dire «invariata»
