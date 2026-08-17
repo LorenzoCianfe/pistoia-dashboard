@@ -5,6 +5,80 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.54.3] — 2026-08-16 · Fase 2a: si misura pnpm prima di adottarlo, e si trova un bloccante
+
+> Fase di **osservazione**, non di migrazione. Nel repository lascia **una riga**:
+> `packageManager` in `package.json`. Nessun `pnpm-lock.yaml`,
+> `package-lock.json` intatto, CI/Docker/script/documentazione non toccati.
+> Tutto il resto è stato provato in banchi fuori dal progetto, costruiti con
+> `git archive HEAD:pistoia-dashboard`.
+
+### Deciso
+- **`pnpm@11.22.0`**, fissato con `packageManager`. Node richiesto **≥ 22.13**;
+  il progetto è su 22 ovunque (locale 22.17.0, CI `node-version: 22`, Docker
+  `node:22-bookworm-slim`). Verificato che `npm ci` esce **0** con il campo
+  presente: la catena attuale non si rompe.
+- **Allowlist minima: una voce.** `better-sqlite3: true`, gli altri sei
+  **negati esplicitamente** in `allowBuilds` — con lint, typecheck e build di
+  produzione tutti verdi. Elencarli tutti e sette è deliberato: un pacchetto non
+  elencato è «non revisionato» e fa fallire l'install, quindi uno script nuovo
+  non passa in silenzio.
+
+### Trovato
+- 🔴 **Il meccanismo non è quello che si ricordava.** Da pnpm 10.26
+  `onlyBuiltDependencies` è sostituito da **`allowBuilds`**, e **da pnpm 11 le
+  impostazioni non si leggono più dal campo `pnpm` di `package.json`**: vanno in
+  `pnpm-workspace.yaml`, anche senza workspace. Configurarlo a memoria avrebbe
+  prodotto il meccanismo di una versione diversa da quella in uso.
+- **I bloccati sono 7, non i 9 dell'inventario npm**: i due `fsevents` sono solo
+  macOS. **La lista dipende dalla piattaforma**, e questa è stata letta su
+  Windows — va riletta su Linux prima della 2b.
+- **Un install che ignora build script esce 1** (`ERR_PNPM_IGNORED_BUILDS`): il
+  fallimento silenzioso che si temeva non si verifica.
+- **`@node-rs/argon2` funziona senza alcuno script** (hash e verify reali). Non
+  è per quel motivo un candidato all'allowlist — ma resta obbligatoria la
+  validazione runtime dopo la migrazione, e per lui il test è l'accesso vero.
+
+### 🔴 Il bloccante che non c'era — MAX_PATH, e il banco che se l'era procurato
+Il primo referto diceva «il layout isolato di pnpm rompe Vitest, serve
+`nodeLinker: hoisted`». **Era sbagliato.**
+
+- **La causa:** per risolvere un `#import` Node risale al `package.json` più
+  vicino e ci cerca la chiave `imports`. Quella lettura è soggetta al **MAX_PATH
+  di Windows**, e quando fallisce **Node non riporta un errore di I/O: riporta
+  che il pacchetto non dichiara quell'import.** Il messaggio accusa il manifesto
+  di una mancanza che non ha. Soglia bisezionata al carattere su una
+  riproduzione minima: **259 caratteri risolve, 260 fallisce.**
+- 🔴 **Conta il percorso del `package.json`, non quello del file che importa.**
+  Con `virtualStoreDirMaxLength: 40` il chunk citato nell'errore resta a 273
+  caratteri — sopra soglia — e i test **passano**, perché il `package.json`
+  scende da 272 a 252. Chi seguisse il file nel messaggio cercherebbe nel posto
+  sbagliato.
+- **Che cosa c'entra pnpm:** il layout isolato antepone
+  `.pnpm/<nome>@<versione>_<peer>_<hash>/node_modules/<nome>/`, cioè ~90
+  caratteri per ogni `package.json`. Non rompe niente: **avvicina al limite.**
+- **Il limite l'aveva superato il banco**, che stava nello scratchpad (radice
+  159 caratteri) invece che nel progetto (68). Le quattro spiegazioni escluse
+  prima — versione di vitest, shim di `.bin`, manifesto, versione di pnpm —
+  sbagliavano tutte bersaglio perché **condividevano lo stesso banco**.
+- ⚠️ `LongPathsEnabled` vale 1 su questa macchina e **non salva** quella
+  lettura: le `fs.*` leggono file a 288 caratteri, il resolver ESM no.
+
+**Alla lunghezza reale del progetto il layout ISOLATO passa tutto**: install,
+lint, typecheck, **339/339**, build. `package.json` più lungo **233**, zero
+oltre soglia. **`nodeLinker: hoisted` non serve** — funzionava solo perché
+accorciava i percorsi, barattando l'intero modello di rigidità delle dipendenze
+per un problema di lunghezza.
+
+### Deciso
+- **Il layout resta `isolated`**, quello predefinito. `nodeLinker` non si tocca.
+- **`virtualStoreDirMaxLength: 40`** entra in `pnpm-workspace.yaml` nella Fase
+  2b — e va descritto per quello che è: **una protezione preventiva contro il
+  MAX_PATH di Windows nei package scope del virtual store di pnpm**, non un
+  «workaround Vitest». Non ripara un difetto attuale: il progetto reale passa già
+  col default. Misurato: `package.json` più lungo da 233 a **213**, margine dalla
+  soglia **da 26 a 46**, 339/339.
+
 ## [0.54.2] — 2026-08-15 · La potatura: 124 KB di CSS che nessuna pagina indossava
 
 > **Fase 1 del rework architetturale.** Esce dal prodotto ciò che non lo tocca.

@@ -5,17 +5,24 @@
 >
 > **Fidati di questa, non di quello che ricordi.**
 >
-> ✅ **Fase 1 chiusa, committata e pushata: `6621e07`.**
-> CI [`31937260780`](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/31937260780)
-> **verde su tutti e quattro i job.** `main` è verde.
+> ✅ **Fase 1 chiusa, committata e pushata: `6621e07`** (+ `cc33cbd`, la
+> finalizzazione di questa consegna).
+> CI verde su tutti e quattro i job su **entrambi** i commit —
+> [`31937260780`](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/31937260780)
+> e [`31938356339`](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/31938356339),
+> quest'ultima **attesa e verificata**, non data per verde perché toccava solo
+> un `.md`. `main` è verde.
+>
+> ⚠️ E qui la catena si ferma: l'esito di un commit di documentazione **non
+> genera un altro commit di documentazione**.
 
 ---
 
 ## Il prompt da incollare
 
 ```
-Pistoia.app — REWORK ARCHITETTURALE. Le Fasi 0, 0b e 1 sono CHIUSE.
-Riprendi dalla FASE 2a.
+Pistoia.app — REWORK ARCHITETTURALE. Le Fasi 0, 0b, 1 e 2a sono CHIUSE.
+Riprendi dalla FASE 2b.
 
 LEGGI PRIMA, in quest'ordine:
 - docs/prossima-sessione.md — è questa: la fonte principale.
@@ -30,12 +37,15 @@ corregge subito, minima e senza riorganizzare. La Fase 13 non è l'alibi per
 lasciare in giro documentazione operativa che descrive uno stato che non
 esiste più.
 
-La prossima azione è la FASE 2a — fissare la versione di pnpm e OSSERVARE
-quali dipendenze vengono davvero bloccate sugli script di install. È una
-fase di misura: non si migra ancora niente. La 2b (pnpm vera) viene dopo,
-da sola.
+La prossima azione è la FASE 2b. Nessun bloccante tecnico è aperto: il
+layout ISOLATO di pnpm (quello predefinito) passa tutti i cancelli alla
+lunghezza di percorso reale del progetto. `nodeLinker: hoisted` NON serve
+e non va introdotto — §10 punto 9 spiega perché sembrava servire.
 
-NON iniziare nessun'altra fase senza chiudere la 2a.
+⚠️ Leggi §10 punto 9 prima di toccare pnpm: il margine sul MAX_PATH di
+Windows è di 26 caratteri, e il difetto che ne deriva MENTE sul proprio
+messaggio d'errore.
+
 Fermati e chiedi nei punti di ritorno elencati in questa consegna.
 ```
 
@@ -212,8 +222,8 @@ visualizzazioni), vietato per decorazioni ottenibili con CSS/Motion. `AGENTS.md`
 | **0** | Baseline verificabile | ✅ **CHIUSA** |
 | **0b** | Correzione CI (commit isolato) | ✅ **CHIUSA** |
 | **1** | **Potatura**: via l'import di `astryx.css` (−124.056 byte di CSS servito), via `theme-neutral`, `cli` → `devDependencies` | ✅ **CHIUSA** · `6621e07` · CI verde |
-| **2a** | Versione pnpm fissata (`packageManager`) → si osserva quali dipendenze vengono davvero bloccate sugli script di install → si configura il meccanismo corretto **per quella versione**, sui soli pacchetti che lo richiedono | ⏭️ **PROSSIMA** |
-| **2b** | **pnpm**, da sola. Superficie: `start.bat` (4 chiamate) · CI (17) · `Dockerfile` (2) · `docker-entrypoint.sh` (3) · `package.json` · 193 occorrenze nei `.md` su 18 file, **da triare**. Cancello: CI `--frozen-lockfile`, `package-lock.json` rimosso a validazione fatta, **avvio e runtime reali provati** | |
+| **2a** | Versione pnpm fissata (`pnpm@11.22.0`) · inventario e comportamento reale misurati · politica degli script determinata (**una voce a `true`**) · falso bloccante Vitest smontato fino alla causa | ✅ **CHIUSA** |
+| **2b** | **pnpm**, da sola. Superficie ricontata: CI (26) · `start.bat` (6) · `docker-entrypoint.sh` (3) · `Dockerfile` (2) · `package.json` · 204 occorrenze nei `.md` su 18 file, **da triare**. Cancello: CI `--frozen-lockfile`, `package-lock.json` rimosso a validazione fatta, **avvio e runtime reali provati** | ⏭️ **PROSSIMA** — nessun bloccante tecnico aperto |
 | **3** | Docker multi-stage (attività separata da pnpm) | |
 | **4** | Prettier + `prettier-plugin-tailwindcss`, reformat meccanico isolato in un commit suo, `.prettierignore` + `.git-blame-ignore-revs`. **Commenti non toccati nel contenuto né nella struttura semantica** | |
 | **5** | Token propri: `styles/tokens/*.ts` + generatore · via `defineTheme` · reset proprio. ⚠️ il reset muove la tipografia: diff visivo obbligatorio | |
@@ -387,6 +397,12 @@ determinate dal piano.
    prodotto, fermarsi prima di modificarlo.
 8. **Le tre vetrine** (`(vetrina)`, `(vetrina-1b)`, `(vetrina-2)`) sono
    **congelate**: WIP, non si toccano finché Lorenzo non sceglie.
+9. **`nodeLinker` sotto pnpm — CHIUSO, e non era una decisione.** Sembrava un
+   compromesso fra rigidità delle dipendenze e test funzionanti; era il
+   MAX_PATH di Windows, e il banco di prova che lo superava. Si resta sul
+   layout **isolato**. Resta a Lorenzo la sola scelta se aggiungere
+   `virtualStoreDirMaxLength` (§10 punto 9): non ripara niente di rotto, allarga
+   un margine da 26 a 46 caratteri.
 
 **Regole permanenti che valgono comunque**: niente commit o push senza richiesta
 esplicita · niente dipendenze nuove senza chiedere · i commit portano solo il suo
@@ -407,61 +423,290 @@ npm run lint && npm run typecheck && npm test
 npm run rotte                # 68 rotte, 0 con problemi
 ```
 
-### FASE 2a — misurare pnpm prima di adottarlo
+### FASE 2a — CHIUSA. Tutto misurato fuori dal repository
 
-È una fase di **osservazione**, non di migrazione: alla fine `npm` è ancora il
-gestore. Serve a non arrivare alla 2b indovinando.
+Nel repository la 2a ha lasciato **una riga sola**: `packageManager` in
+`package.json`. Niente `pnpm-lock.yaml`, `package-lock.json` intatto, CI/Docker/
+script/documentazione non toccati. Il resto è stato provato in tre banchi nello
+scratchpad, costruiti con `git archive HEAD:pistoia-dashboard` — cioè
+esattamente i file da cui costruiscono CI e Docker.
 
-**Cosa deve fare:**
+**1 · Versione proposta: `pnpm@11.22.0`.** Motivazione:
 
-1. Fissare la versione con il campo `packageManager` in `package.json`
-   (`pnpm@<versione>`). ⚠️ **La versione va decisa e scritta**, perché il
-   meccanismo del punto 3 cambia da una minore all'altra: configurarlo «in
-   generale» significa configurarlo per una versione che non è quella in uso.
-2. Fare un'installazione di prova **in una cartella fuori dal repository** (o in
-   un worktree usa-e-getta) e **leggere che cosa pnpm blocca**. Non dedurlo:
-   pnpm stampa l'elenco dei pacchetti a cui ha rifiutato lo script di install.
-3. Configurare il meccanismo corretto per quella versione **sui soli pacchetti
-   che lo richiedono davvero**, uno per uno, non con un permesso generale.
+- Il meccanismo di autorizzazione **cambia con la versione**, e la scelta va
+  fatta prima di configurarlo: fino a 10.25 era `onlyBuiltDependencies` (una
+  lista), da **10.26** è **`allowBuilds`** (una mappa, con pinning per versione).
+- Da **pnpm 11 le impostazioni NON si leggono più dal campo `pnpm` di
+  `package.json`**: vanno in `pnpm-workspace.yaml`, anche in un progetto che non
+  è un workspace. Adottare la 10 significherebbe pagare quella migrazione dopo.
+- Con pnpm 11 un'installazione che ignora build script **esce 1**
+  (`ERR_PNPM_IGNORED_BUILDS`) — misurato. Il modo di fallire che questo progetto
+  teme di più, l'install «riuscito a metà e silenzioso», **non si verifica**.
+- Il bloccante del punto 9 **non dipende dalla versione**: pnpm 10.34.5 si
+  comporta identico. Quindi non c'è ragione di restare indietro.
 
-**Il punto di partenza, già misurato in questa sessione.** I pacchetti con
-`hasInstallScript` nel lockfile sono **nove**, più la radice:
+**2 · Compatibilità Node.** pnpm 11 pretende **Node ≥ 22.13** (la 10 si accontenta
+di 18.12). Il progetto è su Node 22 ovunque: locale **22.17.0**, CI
+`node-version: 22`, Docker `node:22-bookworm-slim`. Nessun costo.
+⚠️ Ma quelle due sono **etichette mobili**: oggi risolvono sopra 22.13, e nulla
+lo garantisce. La 2b aggiunga `engines.node: ">=22.13"`, così un Node più vecchio
+fallisce dicendolo invece di morire ai piedi di pnpm.
+
+**3 · Inventario reale (ciò che npm registra).** Nove pacchetti con
+`hasInstallScript`, più la radice: `@astryxdesign/cli`, `@astryxdesign/core`,
+`@prisma/engines`, `better-sqlite3`, `esbuild`, `fsevents`,
+`playwright/…/fsevents`, `prisma`, `unrs-resolver`.
+
+**4 · Comportamento osservato in installazione pulita** (pnpm 11.22.0, nessuna
+configurazione): risolve 767, aggiunge 625, **esce 1** con
+`ERR_PNPM_IGNORED_BUILDS` e l'elenco dei bloccati. Il `postinstall` **della
+radice gira** — `prisma generate` ha scritto il client: pnpm blocca gli script
+delle *dipendenze*, non i propri.
+⚠️ **E segnala una deprecazione che npm non diceva**: `prebuild-install@7.1.3`.
+
+**5 · Pacchetti effettivamente bloccati: SETTE, non nove.**
 
 ```
 @astryxdesign/cli   @astryxdesign/core   @prisma/engines   better-sqlite3
-esbuild             fsevents             playwright/…/fsevents
-prisma              unrs-resolver
+esbuild             prisma               unrs-resolver
 ```
 
-⚠️ **Questo elenco è ciò che npm registra, non ciò che pnpm bloccherà**: è la
-lista da cui partire per leggere l'output vero, non la risposta. I tre che fanno
-male se restano a metà sono `better-sqlite3` (binario nativo — è la ragione per
-cui il `Dockerfile` sta su Debian e non su Alpine) e `@prisma/engines` + `prisma`
-(scrivono il client in `src/generated/prisma`). Un install «riuscito» con quegli
-script saltati **non dà errore e rompe l'avvio**.
+🔴 I due `fsevents` **non compaiono perché sono solo macOS**: la lista dipende
+dalla piattaforma. Questa è stata letta **su Windows**; CI e Docker sono Linux,
+e su macOS sarebbero nove. **La 2b rilegga l'elenco sulla piattaforma di CI
+prima di fissare la configurazione.**
 
-Nota per non sbagliare diagnosi: `@node-rs/argon2` — l'altro pacchetto con
-binari nativi, e quello dell'autenticazione — **non** ha script di install, li
-distribuisce come dipendenze opzionali per piattaforma. Se sotto pnpm l'accesso
-si rompe, la causa non è lì.
+**6 · Chi ha davvero bisogno dell'autorizzazione: UNO.** Provato negando tutti e
+sette e guardando che cosa si rompe:
 
-**Cosa NON deve fare:**
+| | |
+|---|---|
+| `better-sqlite3` | 🔴 **serve** — senza: «Could not locate the bindings file» |
+| `@astryxdesign/cli` · `@astryxdesign/core` · `@prisma/engines` · `esbuild` · `prisma` · `unrs-resolver` | ✅ **negati, e tutto passa**: lint · typecheck · **build di produzione** |
 
-- ❌ non convertire ancora `start.bat`, la CI, il `Dockerfile`, l'entrypoint né i
-  `.md` — è tutta Fase 2b, e va isolata in un intervento suo;
-- ❌ non rimuovere `package-lock.json`: esce solo a validazione fatta, nella 2b;
-- ❌ nessun file di prodotto.
+`esbuild` funziona lo stesso (`--version` → 0.28.2) perché il binario arriva dal
+pacchetto per piattaforma, non dal `postinstall`. Il `preinstall` di `prisma` è
+un controllo d'ambiente. E `prisma generate` **riesce** con `@prisma/engines`
+negato.
 
-**Il cancello della 2a:** un'installazione pnpm che arriva in fondo **con
-l'elenco dei bloccati letto e la configurazione scritta**, e `npm` ancora
-funzionante nel repository. Se pnpm blocca qualcosa che non sta nell'elenco
-qui sopra, **quello è il risultato della fase**: si scrive e si tiene.
+**7 · Configurazione minima proposta** — `pnpm-workspace.yaml`, dove ogni script
+è **revisionato**, non solo permesso:
 
-### Poi la FASE 2b — pnpm davvero
+```yaml
+allowBuilds:
+  better-sqlite3: true
+  '@astryxdesign/cli': false
+  '@astryxdesign/core': false
+  '@prisma/engines': false
+  esbuild: false
+  prisma: false
+  unrs-resolver: false
+```
 
-Superficie da convertire, già contata: `start.bat` (4 chiamate) · CI (17) ·
-`Dockerfile` (2) · `docker-entrypoint.sh` (3) · `package.json` · **193
-occorrenze nei `.md` su 18 file, da triare** (non tutte vanno cambiate: quelle
-dentro un racconto storico restano). Cancello: CI con `--frozen-lockfile`,
-`package-lock.json` rimosso a validazione fatta, **avvio e runtime reali
-provati** — non solo la build.
+🔴 **Non è un'allowlist: è una POLITICA degli script di build**, e i tre stati
+sono distinti apposta:
+
+| stato | significato | effetto |
+|---|---|---|
+| `true` | serve, e lo si è visto rompersi senza | lo script gira |
+| `false` | **revisionato e giudicato non necessario** | non gira, e l'install prosegue |
+| non elencato | **non revisionato** | **l'install si ferma** |
+
+Elencarli tutti e sette è quindi il punto, non la forma: un pacchetto che domani
+introduce uno script **non passa in silenzio**, rompe e chiede una decisione. È
+§3 applicata alle dipendenze — *un cancello deve distinguere «verificato e a
+posto» da «non verificato»*.
+
+⚠️ **Questa politica NON è definitiva.** I sette sono ciò che è stato osservato
+**su Windows**; i nove `hasInstallScript` restano solo l'inventario iniziale di
+npm. La 2b deve **rivalidarla**, e almeno su questi tre fronti:
+
+1. **l'ambiente Linux della CI** — dove i due `fsevents` non ci sono e l'elenco
+   dei bloccati può differire;
+2. **la build Docker di destinazione** — `npm ci --include=dev` diventa un
+   comando pnpm, e l'immagine è l'unico posto dove i binari girano su glibc;
+3. **i moduli nativi**, uno per uno: `better-sqlite3`, `@node-rs/argon2` e
+   Prisma/`@prisma/engines`. Per l'argon2 il test è **l'accesso reale**, non la
+   build; per Prisma è una **query vera**, non `generate`.
+
+La politica si congela **lì**, non qui.
+
+**8 · Moduli nativi e dipendenze per piattaforma.** Provati a runtime, non
+dedotti dal manifesto:
+
+| | |
+|---|---|
+| `better-sqlite3` | ✅ con la sua voce a `true`: `select 1+1` → 2 |
+| `@node-rs/argon2` | ✅ **hash e verify reali, senza alcuno script** |
+
+`@node-rs/argon2` **non presenta un install script e non è quindi un candidato
+diretto all'allowlist per quel motivo**. Questo non lo mette al riparo dalla
+migrazione: dipendenze optional/per-piattaforma, risoluzione, layout di
+`node_modules` e caricamento dei binari nativi possono comportarsi diversamente
+sotto pnpm. **Resta obbligatoria la validazione runtime dopo la migrazione**, e
+per questo pacchetto il test è **l'accesso reale**, non la build. La prova fatta
+qui vale per **Windows/x64**: va ripetuta su Linux e dentro l'immagine.
+
+**9 · 🔴 IL FALSO BLOCCANTE — MAX_PATH, e il banco che se l'era procurato**
+
+Il primo referto di questa fase diceva: «sotto il layout isolato di pnpm Vitest
+non parte, serve `nodeLinker: hoisted`». **Era sbagliato**, e vale la pena di
+sapere perché ha resistito a quattro controlli.
+
+Il sintomo:
+
+```
+TypeError [ERR_PACKAGE_IMPORT_NOT_DEFINED]:
+Package import specifier "#module-evaluator" is not defined
+  imported from …/vitest/dist/chunks/cli-api.….js
+```
+
+Quattro spiegazioni escluse misurandole — **e tutte e quattro sbagliavano
+bersaglio, perché condividevano lo stesso banco**: non è la versione di vitest
+(4.1.8, la stessa di npm, fallisce identico), non è lo shim di `.bin` (fallisce
+anche per percorso reale), non è un manifesto rovinato (`imports` è presente e
+identico a quello che vede npm), non è la versione di pnpm (10.34.5 identico).
+
+**La causa vera.** Per risolvere un `#import` Node esegue `LOOKUP_PACKAGE_SCOPE`:
+risale dal file importante finché trova un `package.json`, e ci cerca la chiave
+`imports`. Quella lettura passa per una chiamata soggetta al **MAX_PATH di
+Windows**. Se il percorso del `package.json` supera il limite, la lettura non
+riesce — e **Node non riporta un errore di I/O: riporta che il pacchetto non
+dichiara quell'import.** Il messaggio accusa il manifesto di una mancanza che
+non ha.
+
+La soglia, isolata con una riproduzione minima e bisezionata al carattere:
+
+| percorso del `package.json` | esito |
+|---|---|
+| 259 caratteri | ✓ risolto |
+| **260 caratteri** | ✗ `ERR_PACKAGE_IMPORT_NOT_DEFINED` |
+
+🔴 **Conta il `package.json`, NON il file che importa.** La prova: con
+`virtualStoreDirMaxLength: 40` il chunk che importa resta a **273** caratteri —
+sopra soglia — e i test **passano**, perché il `package.json` scende da **272 a
+252**. Chi guardasse il file citato nel messaggio d'errore cercherebbe nel posto
+sbagliato.
+
+**Che cosa c'entra pnpm.** Il layout isolato inserisce
+`.pnpm/<nome>@<versione>_<peer>_<hash a 32 cifre>/node_modules/<nome>/` davanti a
+ogni pacchetto: **~90 caratteri in più** per ogni `package.json` rispetto al
+`node_modules` piatto di npm. Non rompe niente da solo: **avvicina al limite**.
+
+**E il limite l'avevo superato io.** Il banco stava nello scratchpad, radice
+**159** caratteri; il progetto vero ne ha **68**. Novantuno di differenza, cioè
+esattamente il margine che mancava.
+
+⚠️ `LongPathsEnabled` vale **1** su questa macchina: il supporto ai percorsi
+lunghi è attivo e **non salva** questa lettura. Le `fs.*` leggono senza problemi
+file a 288 caratteri; il resolver ESM no.
+
+**Alla lunghezza reale del progetto (radice 68), pnpm ISOLATO passa tutto:**
+
+| | |
+|---|---|
+| `pnpm install` | ✅ |
+| lint · typecheck | ✅ · ✅ |
+| **test** | ✅ **339/339** |
+| build di produzione | ✅ |
+| `package.json` più lungo | **233** caratteri · **0** oltre soglia |
+| quello di vitest | **181** (nel banco era 272) |
+
+**`nodeLinker: hoisted` non serve.** Funzionava solo perché accorciava i
+percorsi: barattava l'intero modello di rigidità delle dipendenze per un problema
+di lunghezza.
+
+**Il margine, però, è la cosa da tenere d'occhio: 26 caratteri.** Tanto può
+crescere la radice del checkout prima che il primo `package.json` sfori.
+
+### ✅ Deciso (2026-08-16): il layout resta `isolated`
+
+`nodeLinker` **non si tocca**. Nessuna ulteriore indagine: la questione è chiusa.
+
+Approvata invece, **per la Fase 2b**, una riga in `pnpm-workspace.yaml`:
+
+```yaml
+virtualStoreDirMaxLength: 40
+```
+
+🔴 **Come va descritta, e come NON va descritta.** Non è un «workaround Vitest» e
+non ripara niente di rotto: **il progetto reale passa già con il default**. È una
+**protezione preventiva contro il MAX_PATH di Windows nei package scope del
+virtual store di pnpm**, motivata dal difetto riprodotto qui sopra e dal margine
+relativamente ridotto del checkout attuale. Misurata nel banco a lunghezza reale:
+`package.json` più lungo da **233 a 213**, margine **da 26 a 46**, install verde,
+**339/339**.
+
+**10 · I test che la 2b deve superare** — non basta la build:
+
+1. `pnpm install --frozen-lockfile` da zero, su **Linux**, con l'elenco dei
+   bloccati riletto lì.
+2. `lint` · `typecheck` · `test` (339) · `build`.
+3. **Runtime, non compilazione**: `npm run rotte` (68 rotte, tre passate) e la
+   suite E2E completa — è l'unica che prova **l'accesso reale**, cioè
+   `@node-rs/argon2`, e le scritture, cioè `better-sqlite3`.
+4. **Avvio vero**: `docker-entrypoint.sh` fa `prisma migrate deploy`, `db:seed`
+   e `next start`; `start.bat` fa install, migrate, seed e `dev`. Vanno eseguiti,
+   non letti.
+5. Immagine Docker **costruita e avviata**, perché è l'unico posto dove i binari
+   nativi girano su Linux/glibc.
+
+**11 · La superficie esatta della 2b** — ricontata il 2026-08-16
+(`npm `/`npx `/`package-lock`):
+
+| Superficie | Occorrenze |
+|---|---|
+| `.github/workflows/ci.yml` | **26** |
+| `start.bat` | **6** (install · migrate · seed · dev) |
+| `pistoia-dashboard/docker-entrypoint.sh` | **3** (`npx prisma migrate deploy`, `npm run db:seed`, `npx next start`) |
+| `pistoia-dashboard/Dockerfile` | **2** (`npm ci --include=dev`, `npm run build`) |
+| `pistoia-dashboard/package.json` | gli script che invocano `npx` |
+| `stop.bat` | **0** — non va toccato |
+| **18 file `.md`** | **204 occorrenze, da triare**: quelle dentro un racconto storico (`CHANGELOG`, le trappole di `AGENTS.md`) **restano**, perché riferiscono ciò che accadde allora |
+
+Cancello della 2b: CI con `--frozen-lockfile`, `package-lock.json` rimosso
+**solo a validazione fatta**, e i punti 3–5 qui sopra eseguiti davvero.
+
+**12 · Il `pnpm-workspace.yaml` approvato** — da creare **in 2b**, non prima,
+in `pistoia-dashboard/`:
+
+```yaml
+# Protezione preventiva contro il MAX_PATH di Windows nei package scope del
+# virtual store di pnpm. NON ripara un difetto attuale: il progetto passa già
+# col default. Accorcia i nomi delle cartelle di `.pnpm/`, che il layout
+# isolato antepone a ogni package.json (~90 caratteri). Misurato: package.json
+# più lungo 233 → 213, margine dalla soglia 26 → 46 caratteri.
+# Il layout resta ISOLATO: `nodeLinker` non si tocca.
+virtualStoreDirMaxLength: 40
+
+# POLITICA degli script di build, non una semplice allowlist.
+#   true      = revisionato e NECESSARIO (visto rompersi senza)
+#   false     = revisionato e deliberatamente NEGATO
+#   assente   = NON revisionato → l'installazione si ferma
+# ⚠️ Osservata su Windows. Va rivalidata in 2b su Linux/CI, sulla build Docker
+# di destinazione e sui moduli nativi, e congelata lì.
+allowBuilds:
+  better-sqlite3: true
+  '@astryxdesign/cli': false
+  '@astryxdesign/core': false
+  '@prisma/engines': false
+  esbuild: false
+  prisma: false
+  unrs-resolver: false
+```
+
+**13 · Il piano operativo della 2b, in ordine**
+
+1. `pnpm import` da `package-lock.json` → `pnpm-lock.yaml`, **preservando le
+   versioni risolte**. ⚠️ Un `pnpm install` dai range le rialza tutte: nel banco
+   aveva alzato `@node-rs/argon2`, `better-sqlite3`, `lucide-react`,
+   `@playwright/test` e altre. La 2b cambia gestore, **non versioni**.
+2. Creare `pnpm-workspace.yaml` col contenuto del punto 12.
+3. `engines.node: ">=22.13"` in `package.json` — pnpm 11 lo pretende, e oggi ci
+   affidiamo a due etichette mobili (`node-version: 22`, `node:22-bookworm-slim`).
+4. Rileggere l'elenco dei bloccati **su Linux** e correggere la politica.
+5. Convertire le superfici del punto 11, in quest'ordine: `package.json` → CI →
+   `Dockerfile` → `docker-entrypoint.sh` → `start.bat`. I `.md` per ultimi, e
+   **triati**.
+6. Eseguire i test del punto 10 — compresa l'immagine Docker costruita e avviata.
+7. **Solo a quel punto** rimuovere `package-lock.json`.

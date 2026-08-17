@@ -3,6 +3,8 @@
   "version": "0.52.0",
   "private": true,
   "license": "UNLICENSED",
+  "//packageManager": "Fissato in Fase 2a (2026-08-16). pnpm 11 pretende Node >=22.13: qui è 22.17, in CI `node-version: 22`, in Docker `node:22-bookworm-slim`. Il gestore in uso resta npm finché la Fase 2b non converte CI, Docker, script e documentazione: verificato che `npm ci` esce 0 con questo campo presente.",
+  "packageManager": "pnpm@11.22.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
