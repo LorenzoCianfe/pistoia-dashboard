@@ -2,24 +2,25 @@
 
 > Riscritta il **2026-08-18**. **Fidati di questa, non di quello che ricordi.**
 >
-> ⏸️ **FASE 2b — IMPLEMENTAZIONE LOCALE COMPLETA, IN ATTESA DELLA VALIDAZIONE
-> REALE SU GITHUB ACTIONS.** Non è chiusa, e non va descritta come chiusa: la
-> CI era **un cancello previsto** e non è ancora stato eseguito. Il lavoro sta
-> sopra `5e1f151`, non committato. Il checkpoint temporaneo
+> ✅ **FASE 2b CHIUSA — npm → pnpm, validata dalla CI vera.**
+> Prima esecuzione su GitHub Actions **verde su tutti e quattro i job**
+> ([run 32138836321](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32138836321)),
+> con `package-lock.json` ancora presente. Questo commit lo **rimuove
+> definitivamente**, e la seconda esecuzione sulla stessa PR lo conferma senza.
+>
+> Il lavoro vive sul branch `chore/pnpm-migration-phase-2b`
+> ([PR #3, draft](https://github.com/LorenzoCianfe/pistoia-dashboard/pull/3)),
+> **non ancora unita a `main`**. Il checkpoint temporaneo
 > `docs/rework/SESSION_HANDOFF_PHASE_2B.md` è stato cancellato: il suo
-> contenuto vive qui, in §7b.
+> contenuto vive qui, in §7b e §7c.
 >
-> 🔴 **I DUE LOCKFILE CONVIVONO DI PROPOSITO.** `package-lock.json` è stato
-> **ripristinato** da `5e1f151` (byte-identico) e resta lì finché la CI non è
-> verde. Non è un residuo da pulire, ed è **temporaneo per decisione**: nessun
-> cancello va indebolito o cancellato per la sua presenza. Lo legge solo lo
-> strumento della deriva; pnpm installa da `pnpm-lock.yaml` e ignora l'altro.
->
-> ⚠️ **Il rollback NON è «ripristinare `package-lock.json`».** Sarebbe
+> ⚠️ **Il rollback non è «ripristinare `package-lock.json`».** Sarebbe
 > insufficiente: CI, `Dockerfile`, `docker-entrypoint.sh`, `start.bat`, gli
-> script e i test **sono già convertiti a pnpm**, e un lockfile npm da solo non
-> li fa tornare indietro. **Il rollback completo è il commit precedente**,
-> `5e1f151`.
+> script e i test sono convertiti a pnpm, e un lockfile npm da solo non li fa
+> tornare indietro. **Il punto di ritorno è il commit** `5e1f151`.
+>
+> ⚠️ E lo strumento della deriva **non è più eseguibile**: gli serviva
+> `package-lock.json` come secondo termine. Il suo referto resta in §7b.
 >
 > ✅ **Fase 1 chiusa, committata e pushata: `6621e07`** (+ `cc33cbd`, la
 > finalizzazione di questa consegna).
@@ -41,20 +42,15 @@
 ## Il prompt da incollare
 
 ```
-Pistoia.app — REWORK ARCHITETTURALE. Le Fasi 0, 0b, 1 e 2a sono CHIUSE.
-La FASE 2b (npm → pnpm) è IMPLEMENTATA LOCALMENTE e IN ATTESA DELLA CI.
-Non è chiusa. Guarda `git log` e `git status` prima di dare per scontato
-che sia stata committata.
+Pistoia.app — REWORK ARCHITETTURALE. Le Fasi 0, 0b, 1, 2a e 2b sono CHIUSE.
+La 2b (npm → pnpm) è validata dalla CI vera, due esecuzioni verdi.
 
-🔴 LA PROSSIMA AZIONE È VALIDARE LA CI DELLA FASE 2b, non aprire una fase
-   nuova. Serve un push su un branch, che decide Lorenzo. Finché quella CI
-   non è verde:
-     · NON rimuovere `package-lock.json` (è ripristinato apposta);
-     · NON marcare la 2b come chiusa;
-     · NON passare alla Fase 3.
-   A CI verde, l'ordine è: togliere `package-lock.json` → aggiornare i
-   documenti → **rieseguire la CI senza il lockfile npm** → solo allora
-   la Fase 3.
+⚠️ IL LAVORO NON È SU `main`: vive sul branch
+   `chore/pnpm-migration-phase-2b`, PR #3 in bozza, NON unita. Il merge
+   lo decide Lorenzo. Guarda `git branch --show-current` e `git log`
+   prima di dare per scontato dove ti trovi.
+
+Il gestore è pnpm e si invoca `corepack pnpm …`, MAI `pnpm` nudo.
 
 LEGGI PRIMA, in quest'ordine:
 - docs/prossima-sessione.md — è questa: la fonte principale.
@@ -69,10 +65,11 @@ corregge subito, minima e senza riorganizzare. La Fase 13 non è l'alibi per
 lasciare in giro documentazione operativa che descrive uno stato che non
 esiste più.
 
-Dopo la 2b verrà la FASE 3 (Docker multi-stage), ma NON prima che la CI
-sia verde: la 2b ha già portato il Dockerfile su pnpm e l'immagine è stata
-costruita, avviata e provata a runtime, quindi la 3 è un'attività separata
-che può aspettare.
+La prossima azione è la FASE 3: Docker multi-stage — togliere le
+devDependencies dall'immagine di esecuzione, che oggi pesa 2,82GB e costa
+quel disco a ogni deploy (AGENTS.md §8). È un'attività SEPARATA da pnpm:
+la 2b ha già portato il Dockerfile su pnpm e l'immagine è stata costruita,
+avviata e provata a runtime.
 
 ⚠️ Il gestore è pnpm e si invoca `corepack pnpm …`, MAI `pnpm` nudo: su
 questa macchina `corepack enable` fallisce con EPERM (vuole i permessi di
@@ -257,7 +254,7 @@ visualizzazioni), vietato per decorazioni ottenibili con CSS/Motion. `AGENTS.md`
 | **0b** | Correzione CI (commit isolato) | ✅ **CHIUSA** |
 | **1** | **Potatura**: via l'import di `astryx.css` (−124.056 byte di CSS servito), via `theme-neutral`, `cli` → `devDependencies` | ✅ **CHIUSA** · `6621e07` · CI verde |
 | **2a** | Versione pnpm fissata (`pnpm@11.22.0`) · inventario e comportamento reale misurati · politica degli script determinata (**una voce a `true`**) · falso bloccante Vitest smontato fino alla causa | ✅ **CHIUSA** |
-| **2b** | **pnpm**, da sola. CI · `start.bat` · `docker-entrypoint.sh` · `Dockerfile` · `package.json` · `playwright.config.ts` · `global-setup.ts` · `misura.mjs` · `lighthouserc.js` + la documentazione operativa triata | ⏸️ **implementazione locale COMPLETA, in attesa della CI reale** (§7b). `package-lock.json` **ripristinato** apposta: esce a CI verde |
+| **2b** | **pnpm**, da sola. CI · `start.bat` · `docker-entrypoint.sh` · `Dockerfile` · `package.json` · `playwright.config.ts` · `global-setup.ts` · `misura.mjs` · `lighthouserc.js` + la documentazione operativa triata. `package-lock.json` rimosso | ✅ **CHIUSA** · CI verde ([run 32138836321](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32138836321)) · §7b e §7c |
 | **3** | Docker multi-stage (attività separata da pnpm) | |
 | **4** | Prettier + `prettier-plugin-tailwindcss`, reformat meccanico isolato in un commit suo, `.prettierignore` + `.git-blame-ignore-revs`. **Commenti non toccati nel contenuto né nella struttura semantica** | |
 | **5** | Token propri: `styles/tokens/*.ts` + generatore · via `defineTheme` · reset proprio. ⚠️ il reset muove la tipografia: diff visivo obbligatorio | |
@@ -434,7 +431,7 @@ nessun refactor: cambia il *gestore*.
 | **accesso reale via HTTP** | ✅ login vero nel container + **seconda rotta protetta** (il difetto del cookie `Secure` si vedeva solo lì) |
 | `docker-entrypoint.sh` | ✅ **eseguito**: migrate deploy + seed + `next start` |
 | `start.bat` | ✅ **eseguito**: guardia corepack, migrazioni, `corepack pnpm dev`, HTTP 200 |
-| **CI su GitHub Actions** | 🔴 **NON verificata** — richiede un push. È ciò che tiene aperta la fase; la configurazione è stata rifatta, vedi **§7c** |
+| **CI su GitHub Actions** | ✅ **verde su tutti e quattro i job** — [run 32138836321](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32138836321), trigger `pull_request` sulla PR #3. Dettaglio in **§7c** |
 
 ### Le tre cose trovate misurando, che il checkpoint non sapeva
 
@@ -554,7 +551,7 @@ che il passo della cache funzioni su un runner. Solo l'esecuzione lo dice.
 | ✅ **Due righe che la Fase 1 aveva reso false — CORRETTE il 2026-08-16**: `ARCHITECTURE.md` §«Ordine dei layer» (via `astryx-base` dalla lista) e `REFERENCES.md` §«Costo reale, misurato» (il costo servito di `astryx.css` è **zero**). Correzioni minime, nessuna riorganizzazione | **Chiuso.** 🔴 E fissa la regola per le fasi che seguono: **la documentazione operativa non resta a descrivere uno stato che non esiste più.** La Fase 13 è il consolidamento generale dei 33 `.md`, non l'alibi per lasciare in giro istruzioni false nel frattempo |
 | **La scala dei pesi tipografici arriva da `tailwindcss/theme.css`**, non più da una sorgente nostra. Nessun effetto oggi (stessi nomi, stessi numeri), ma è una dipendenza **in prestito**: se il tema di Tailwind viene azzerato, `:where(h1…h6)` e `:where(p)` perdono il peso **senza un errore** | **Fase 5**, che porta i token in casa. Nota scritta accanto all'import in `globals.css` |
 | ⚠️ **DISCREPANZA NOTA, da non correggere di slancio**: `package.json` dichiara `0.52.0`, `CHANGELOG.md` è arrivato a `0.54.2`. Lo scarto è **preesistente** — il lockfile era fermo a `0.48.0` fino al 2026-08-15 — e non è stato toccato di proposito | Si chiude quando Lorenzo determina **la fonte canonica della versione** e la **politica di versionamento** (chi la alza, quando, e se il `CHANGELOG` può correre avanti). Finché quella decisione non c'è, allineare i numeri sarebbe scegliere al posto suo |
-| 🔴 **La CI su GitHub Actions non è mai stata eseguita con pnpm.** È l'unico cancello previsto e non eseguito, e ciò che tiene la 2b aperta | **Al primo push su un branch.** La configurazione è già stata rifatta per togliere il rischio alla radice (§7c): `setup-node` **senza** cache interna, percorso dello store calcolato da un passo `run` dentro `pistoia-dashboard`, `actions/cache` con quel percorso. A CI verde: togliere `package-lock.json` → aggiornare i documenti → **rieseguire la CI senza il lockfile npm** → poi la Fase 3 |
+| ✅ **La CI con pnpm è stata eseguita e verde** — era l'ultimo cancello previsto della 2b, ed è ciò che l'ha chiusa | **Chiuso.** Due esecuzioni verdi sulla PR #3: la prima con `package-lock.json` ancora presente, la seconda dopo averlo rimosso |
 | **Lo Scheduled Task di Coolify dice ancora `npm run atti`.** Vive nell'interfaccia di Coolify, **fuori dal repository**: cambiare `docs/pipeline-atti-schedulata.md` non lo cambia. Misurato che **non è urgente**: dentro l'immagine `npm run <script>` funziona anche su un albero installato da pnpm (provato con `npm run db:generate`, uscita 0) | Si aggiorna a mano in Coolify, quando Lorenzo apre l'interfaccia. ⚠️ Ciò che **non** va più fatto lì è `npm ci` (fallirà: il lockfile npm non c'è più) o `npm install` (ne scriverebbe uno nuovo, scavalcando pnpm) |
 | **`pistoia-dashboard/README.md` è ancora lo scheletro di `create-next-app`** al netto del comando corretto in 2b | **Fase 13**, col consolidamento dei `.md` |
 
@@ -597,10 +594,9 @@ nome (niente `Co-Authored-By`) · il deploy lo lancia lui.
 
 ### Il punto di partenza
 
-`main` è a **`5e1f151`** (Fase 2a). Sopra c'è la **Fase 2b implementata e non
-committata**: `pnpm-lock.yaml` e `pnpm-workspace.yaml` creati,
-`package-lock.json` **ripristinato e ancora presente** finché la CI non è
-verde.
+`main` è ancora a **`5e1f151`** (Fase 2a): la Fase 2b vive sul branch
+`chore/pnpm-migration-phase-2b`, **non unita**. `pnpm-lock.yaml` e
+`pnpm-workspace.yaml` creati, `package-lock.json` **rimosso**.
 
 Per rifare la misura da sé — e `corepack pnpm`, mai `pnpm` nudo (§7b):
 
@@ -614,8 +610,9 @@ corepack pnpm rotte                # 68 rotte, 0 con problemi
 🔴 **Se serve tornare indietro, il punto di ritorno è il COMMIT, non il
 lockfile.** Ripristinare `package-lock.json` da solo non riporterebbe indietro
 niente: CI, `Dockerfile`, `docker-entrypoint.sh`, `start.bat`, gli script e i
-test sono già convertiti a pnpm, e un lockfile npm accanto a loro non li fa
-tornare npm. Il rollback vero è `5e1f151`.
+test sono convertiti a pnpm, e un lockfile npm accanto a loro non li fa tornare
+npm. Il rollback vero è `5e1f151` — e finché la PR #3 non è unita, `main` **è**
+già quel punto.
 
 ### FASE 2a — CHIUSA. Tutto misurato fuori dal repository
 

@@ -7,18 +7,18 @@
 
 ## [0.54.4] — 2026-08-18 · Fase 2b: il gestore diventa pnpm, e quattro punti lo scoprono
 
-> ⏸️ **Fase 2b: implementazione locale completa, IN ATTESA della validazione
-> reale su GitHub Actions.** Non è chiusa: la CI era un cancello previsto e non
-> è ancora stato eseguito.
+> ✅ **Fase 2b chiusa**, e validata dalla CI vera: prima esecuzione verde su
+> tutti e quattro i job con `package-lock.json` ancora presente
+> ([run 32138836321](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32138836321)),
+> seconda esecuzione verde dopo averlo rimosso.
 >
 > Migrazione **npm → pnpm**, e nient'altro: nessun upgrade di dipendenza,
-> nessun refactor. `pnpm-lock.yaml` e `pnpm-workspace.yaml` entrano;
-> **`package-lock.json` resta di proposito** finché la CI non è verde — i due
-> lockfile convivono, e nessun cancello è stato indebolito per questo.
+> nessun refactor. `pnpm-lock.yaml` e `pnpm-workspace.yaml` entrano,
+> `package-lock.json` esce.
 >
 > 🔴 **Il rollback non è «ripristinare `package-lock.json`»**: CI, Docker,
-> `start.bat`, script e test sono già convertiti, e un lockfile npm accanto a
-> loro non li fa tornare indietro. Il punto di ritorno è il commit precedente.
+> `start.bat`, script e test sono convertiti, e un lockfile npm accanto a loro
+> non li fa tornare indietro. Il punto di ritorno è il commit precedente.
 
 ### Cambiato
 - **Gestore `pnpm@11.22.0`**, fissato in `packageManager` **con l'hash di
