@@ -235,8 +235,8 @@ per tipo — parola del portale — e per **tema civico**, che la card dichiara
 «dedotto dall'ufficio che li propone» perché è una deduzione nostra (72,3%
 misurato dal 2026-08-11, quando «Sociale e casa» ha preso i tre uffici del
 welfare e dell'abitare: 940 atti), non un conteggio. A base dati senza atti dice «Mai letto» e il
-comando per uscirne. La lettura: `npm run atti` (l'albo, ~2s: ogni atto vi
-resta ~15 giorni) · `--tutte` per il carico iniziale · `npm run
+comando per uscirne. La lettura: `corepack pnpm atti` (l'albo, ~2s: ogni atto vi
+resta ~15 giorni) · `--tutte` per il carico iniziale · `corepack pnpm
 atti:freschezza` per il cancello (7 controlli, «bloccata dal WAF» distinta da
 «fuori servizio»). Ricognizione e trappole in `docs/fonti-atti.md`; le pagine
 pubbliche nascono in **Ondata 11**.
@@ -274,7 +274,7 @@ monitor che dichiara «Aggiornato».
 | Elemento | Stato | Dove |
 |---|---|---|
 | **Tema Pistoia su Astryx** | ✅ | `src/themes/pistoia.ts` → 112 token, 6 override di componente |
-| Build del tema per SSR | ✅ | `npm run theme:build` → `generated/pistoia.css` (2,2 KB gzip) |
+| Build del tema per SSR | ✅ | `corepack pnpm theme:build` → `generated/pistoia.css` (2,2 KB gzip) |
 | Tela grigio-calda + superfici squircle | ✅ | `--color-background-body` · `--radius-container` 32px |
 | **Card a vetro in stile Apple** | ✅ | `backdrop-filter: blur(24px) saturate(180%)`, filo di luce interno, nessun alone. Contrasto misurato **16,8:1 / 16,0:1 → AAA** |
 | Grana sulla tela come substrato del vetro | ✅ | `--canvas-grain-opacity: 0.045` — senza, il vetro non ha materia da sfocare |
@@ -284,7 +284,7 @@ monitor che dichiara «Aggiornato».
 | Ponte di retrocompatibilità | ✅ | ~1050 utility storiche adottano i nuovi token senza toccare le rotte |
 | Palette data-viz civica | ✅ | `--color-data-*` ritinti |
 | Vetrina del design system | ✅ | `/design-system` (esclusa dall'indicizzazione) |
-| Script di revisione visiva | ✅ | `npm run shots` — pagine chiave, temi chiaro e scuro |
+| Script di revisione visiva | ✅ | `corepack pnpm shots` — pagine chiave, temi chiaro e scuro |
 | Bottoni come classi su token, condivise con i link | ✅ | `.btn` in `globals.css` · `Button` + `buttonClasses` |
 | Rimosso ogni gradiente/alone residuo dai controlli | ✅ | bottone primario, barre di avanzamento, 3 bottoni fatti a mano |
 
@@ -312,7 +312,7 @@ Nessuno dei quattro introduce dipendenze: niente GSAP, niente WebGL.
 | `DotScatterTimeline` in uso | ✅ | Segnalazioni: altezza = arrivate, diametro = chiuse, colore = settimana in pari |
 | **Transizione a elemento condiviso** | ✅ | `segnalazioni/report-link.tsx` + `lib/view-transitions.ts` — View Transitions native, non `layoutId` (vedi `DESIGN.md` §7) |
 | Inchiostro leggibile sopra il mesh | ✅ | `.mesh-surface` imposta `--highlight-ink`; contrasti misurati per tono in `DESIGN.md` §8 |
-| Revisione visiva in modalità semplice | ✅ | `npm run shots -- --simple --width=360`, con misura del traboccamento orizzontale |
+| Revisione visiva in modalità semplice | ✅ | `node scripts/shots.mjs --simple --width=360`, con misura del traboccamento orizzontale |
 
 ### La copertura oltre le pagine di punta
 
@@ -441,7 +441,7 @@ su una persona reale non è un dato dimostrativo»):
 | Test unitari (Vitest) + E2E (Playwright) | ✅ |
 | **Cancello di accessibilità automatico** (axe-core negli E2E, **21 pagine × 2 temi**, regole WCAG **AA + 2.2**, nessuna esclusione) | ✅ 2026-08-05, esteso il 2026-08-06 e il 2026-08-07 — ha trovato un **debito di tavolozza preesistente** alla nascita, e altri **due difetti seri** quando `/admin/*` e `/redazione` vi sono entrate: `ROADMAP.md`, traccia «Qualità continua» |
 | **Lighthouse CI** sulla build di produzione | 🚧 impostato il 2026-08-05 — **misura, non giudica**: le soglie si scrivono dopo le prime passate |
-| **Audit dipendenze in CI** (`npm audit`) | ✅ 2026-08-05 — e `npm audit` riporta **zero vulnerabilità** (erano 12) |
+| **Audit dipendenze in CI** (`pnpm audit`, era `npm audit` fino al 2026-08-17) | ✅ 2026-08-05 — zero vulnerabilità (erano 12). Dal 2026-08-17 il cancello significa «zero High/Critical **non esplicitamente approvate**»: una deroga nominata, `GHSA-ggr8-5vv4-36mx`, con la sua condizione di uscita in `pnpm-workspace.yaml` |
 | Grafo di conoscenza del codice | ✅ `graphify-out/` |
 
 ---

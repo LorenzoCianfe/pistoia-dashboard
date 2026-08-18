@@ -55,7 +55,7 @@ function client() {
   if (process.env.E2E_BASE_URL) {
     throw new Error(
       "semina-atti: con E2E_BASE_URL il database non è isolato e questa semina " +
-        "finirebbe su dev.db. Lancia `npm run test:e2e` senza E2E_BASE_URL.",
+        "finirebbe su dev.db. Lancia `corepack pnpm test:e2e` senza E2E_BASE_URL.",
     );
   }
   return new PrismaClient({
@@ -294,8 +294,8 @@ export async function rimuoviAttiDiProva() {
   di Prisma e invece è il caricatore. `tsx` lo carica senza storie, ed è già il
   modo in cui `global-setup.ts` lancia il seed.
 
-      npx tsx tests/e2e/semina-atti.ts semina
-      npx tsx tests/e2e/semina-atti.ts pulisci
+      corepack pnpm exec tsx tests/e2e/semina-atti.ts semina
+      corepack pnpm exec tsx tests/e2e/semina-atti.ts pulisci
 */
 const comando = process.argv[2];
 if (comando === "semina" || comando === "pulisci") {

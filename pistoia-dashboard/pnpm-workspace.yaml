@@ -1,0 +1,119 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Impostazioni di pnpm — Pistoia.app
+#
+#  ⚠️ Questo file esiste anche se il progetto NON è un workspace: da pnpm 11 le
+#  impostazioni non si leggono più dal campo `pnpm` di `package.json`, e questa
+#  è l'unica sede prevista. Non aggiungerci un campo `packages:`: non c'è nulla
+#  da orchestrare, c'è un'app sola.
+#
+#  Il layout resta quello PREDEFINITO (`isolated`). `nodeLinker` non si tocca:
+#  la rigidità delle dipendenze è la ragione per cui pnpm è stato scelto.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# AUDIT — «zero vulnerabilità High/Critical NON esplicitamente approvate».
+#
+# La soglia NON si abbassa e non si usa `--ignore-unfixable`: si nomina la
+# singola advisory, così qualunque altra continua a far fallire il cancello.
+#
+# ⚠️ Questa è una RISK ACCEPTANCE esplicita, decisa da Lorenzo il 2026-08-17, ed
+# è logicamente separata dalla migrazione a pnpm: l'advisory è comparsa quel
+# giorno e `npm audit` la riporta identica sull'albero invariato. Non è un
+# difetto introdotto dalla Fase 2b né una sua correzione.
+#
+# GHSA-ggr8-5vv4-36mx — `deepmerge-ts <8.0.0`, esaurimento dello stack sui grafi
+# ricorsivi. Transitiva via Prisma, e **a monte non esiste ancora una catena
+# corretta**: `@prisma/config@7.9.1` (l'ultima pubblicata) fissa
+# `deepmerge-ts` a `7.1.5` esatto, non a un range — nessun aggiornamento può
+# raggiungere la 8.x.
+#
+# Raggiungibilità verificata, non presunta:
+#   · è usata in un solo punto, `loadConfigTsOrJs()`, come `merger` passato a
+#     c12 per leggere `prisma.config.ts`: fonde il NOSTRO file di config con i
+#     default, mai dati di rete o input di utenti;
+#   · gira nella CLI di Prisma (`generate`, `migrate`), non nel server;
+#   · l'artefatto servito non la contiene: `.next/server` e `.next/static` hanno
+#     ZERO occorrenze di `deepmerge`, `@prisma/config` e `prisma.config`. Le due
+#     uniche corrispondenze in `.next` stanno in `cache/` — `.tsbuildinfo` e la
+#     cache di Turbopack — che non vengono né serviti né eseguiti;
+#   · l'app parla al database via `@prisma/client` + `@prisma/adapter-better-sqlite3`
+#     (`src/lib/db.ts`), e `@prisma/client` dichiara `prisma` come peer
+#     OPZIONALE: il percorso `--prod` esiste solo perché pnpm installa i peer
+#     opzionali, non perché il runtime li carichi.
+#
+# DA TOGLIERE appena Prisma adotta `deepmerge-ts >=8.0.0`. Finché la riga è qui,
+# è un debito con un nome e una condizione di uscita.
+audit:
+  level: high
+  ignore:
+    - GHSA-ggr8-5vv4-36mx
+
+# IL VINCOLO SU NODE DIVENTA VINCOLANTE SOLO DA QUI.
+#
+# `package.json` dichiara `engines.node: ">=22.13"` — la soglia che pnpm 11
+# pretende per sé. Ma dichiararlo non basta, ed è stato misurato invece che
+# supposto: con il comportamento PREDEFINITO pnpm si limita a
+#
+#     [WARN] Unsupported engine: wanted: {"node":">=99.0.0"} (current: …)
+#
+# ed esce **0**. Provato con una soglia impossibile apposta, per vedere il
+# rifiuto e non il silenzio. Con `engineStrict: true` lo stesso caso esce **1**
+# con `ERR_PNPM_UNSUPPORTED_ENGINE`.
+#
+# Serve perché oggi la versione di Node ci arriva da due etichette MOBILI —
+# `node-version: 22` in CI e `node:22-bookworm-slim` nel Dockerfile: reggono la
+# soglia adesso, e nulla garantisce che continuino. Meglio un install che
+# fallisce dicendolo che una risoluzione `#import` che mente sul proprio errore.
+#
+# ⚠️ Non verificato: se pnpm 11 rifiuti DA SÉ di partire sotto 22.13 (dichiara
+# `node>=22.13` nel proprio manifesto). Su questa macchina non c'era un Node
+# più vecchio per provarlo, quindi non ci si appoggia: il meccanismo su cui
+# contiamo è questo, ed è misurato.
+engineStrict: true
+
+# PROTEZIONE PREVENTIVA CONTRO IL MAX_PATH DI WINDOWS nei package scope del
+# virtual store di pnpm.
+#
+# Non ripara un difetto attuale: col valore predefinito il progetto passa già
+# tutti i cancelli. È un margine, e il margine è stretto.
+#
+# Il perché, misurato in Fase 2a. Per risolvere un `#import` Node risale al
+# `package.json` più vicino e ci cerca la chiave `imports`; quella lettura è
+# soggetta al MAX_PATH di Windows, e quando fallisce **Node non riporta un
+# errore di I/O: dichiara che il pacchetto non definisce quell'import**. Il
+# messaggio accusa il manifesto di una mancanza che non ha, e manda a cercare
+# nel posto sbagliato. Soglia bisezionata al carattere: 259 risolve, 260 no —
+# e conta il percorso del `package.json`, NON quello del file citato
+# nell'errore.
+#
+# Il layout isolato antepone `.pnpm/<nome>@<versione>_<peer>_<hash>/…`, cioè
+# ~90 caratteri per ogni `package.json`: non rompe niente, avvicina al limite.
+# Misurato alla lunghezza reale del checkout: `package.json` più lungo
+# 233 → 213 caratteri, margine dalla soglia 26 → 46.
+virtualStoreDirMaxLength: 40
+
+# POLITICA DEGLI SCRIPT DI BUILD — non una semplice allowlist.
+#
+#   true     = revisionato e NECESSARIO (visto rompersi senza)
+#   false    = revisionato e deliberatamente NEGATO
+#   assente  = NON revisionato → l'installazione si FERMA
+#
+# Il terzo stato è il punto: un pacchetto che domani introduce uno script non
+# passa in silenzio, rompe e chiede una decisione. È la regola di AGENTS.md §3
+# applicata alle dipendenze — un cancello deve distinguere «verificato e a
+# posto» da «non verificato».
+#
+# `better-sqlite3` è l'unico a `true`, e non per prudenza: senza il suo
+# `prebuild-install || node-gyp rebuild` il binding nativo non c'è e
+# `require('better-sqlite3')` fallisce con «Could not locate the bindings
+# file». Gli altri sei sono stati negati e i cancelli sono rimasti verdi:
+# `esbuild` prende il binario dal pacchetto per piattaforma, il `preinstall`
+# di `prisma` è un controllo d'ambiente, e `prisma generate` riesce con
+# `@prisma/engines` negato.
+allowBuilds:
+  better-sqlite3: true
+  '@astryxdesign/cli': false
+  '@astryxdesign/core': false
+  '@prisma/engines': false
+  esbuild: false
+  prisma: false
+  unrs-resolver: false

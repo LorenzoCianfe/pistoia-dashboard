@@ -15,20 +15,29 @@ RUN apt-get update \
 WORKDIR /app
 ENV NODE_ENV=production
 
+# pnpm arriva da corepack, che è già dentro l'immagine node:22. La versione la
+# decide `packageManager` in package.json, quindi qui non si scrive un numero:
+# averlo in due posti significa vederli divergere.
+# `--activate` scarica e mette in cache pnpm ORA, in fase di build: l'entrypoint
+# lo usa a runtime, e a runtime il container può non avere rete.
+COPY package.json ./
+RUN corepack enable pnpm && corepack prepare --activate
+
 COPY . .
 
 # Le devDependencies servono davvero: `next build` le usa, e il seed gira con
-# tsx. Non si potano. Il postinstall lancia `prisma generate`, che scrive il
-# client in src/generated/prisma (percorso custom dello schema).
+# tsx. Non si potano — e pnpm le installa per default (le toglie `--prod`).
+# Il postinstall lancia `prisma generate`, che scrive il client in
+# src/generated/prisma (percorso custom dello schema).
 # DATABASE_URL è richiesta da prisma.config.ts anche solo per generare: qui è
 # un valore usa-e-getta, quello vero arriva a runtime.
 ENV DATABASE_URL="file:/tmp/build.db"
-RUN npm ci --include=dev
+RUN pnpm install --frozen-lockfile
 
 # src/lib/env.ts valida le variabili con Zod e blocca l'avvio se mancano.
 # Segnaposto solo per superare il build; a runtime li sostituisce Coolify.
 ENV SESSION_SECRET="build-time-placeholder-replaced-at-runtime-0123456789"
-RUN npm run build
+RUN pnpm build
 
 # Il database vive sul volume persistente, non nell'immagine.
 ENV DATABASE_URL="file:/data/pistoia.db"

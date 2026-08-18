@@ -101,7 +101,7 @@ un big bang.
 
 ### Tre vincoli non negoziabili
 
-1. **Il tema DEVE essere compilato** (`npm run theme:build`). L'iniezione a
+1. **Il tema DEVE essere compilato** (`corepack pnpm theme:build`). L'iniezione a
    runtime verrebbe bloccata dalla CSP con nonce.
 2. **Niente provider `<Theme>` di Astryx**: applica `color-scheme` sul proprio
    wrapper e ribalta le `light-dark()` dei discendenti appena diverge da `<html>`.
@@ -132,7 +132,7 @@ scuro e sembra tutto a posto.
 
 ```
 src/themes/pistoia.ts   (defineTheme: scale + token + override di componente)
-        │  npm run theme:build
+        │  corepack pnpm theme:build
         ▼
 src/themes/generated/pistoia.css   @scope([data-astryx-theme="pistoia"])
         │  @import in globals.css

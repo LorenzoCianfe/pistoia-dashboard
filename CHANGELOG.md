@@ -5,6 +5,76 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
+## [0.54.4] — 2026-08-18 · Fase 2b: il gestore diventa pnpm, e quattro punti lo scoprono
+
+> ⏸️ **Fase 2b: implementazione locale completa, IN ATTESA della validazione
+> reale su GitHub Actions.** Non è chiusa: la CI era un cancello previsto e non
+> è ancora stato eseguito.
+>
+> Migrazione **npm → pnpm**, e nient'altro: nessun upgrade di dipendenza,
+> nessun refactor. `pnpm-lock.yaml` e `pnpm-workspace.yaml` entrano;
+> **`package-lock.json` resta di proposito** finché la CI non è verde — i due
+> lockfile convivono, e nessun cancello è stato indebolito per questo.
+>
+> 🔴 **Il rollback non è «ripristinare `package-lock.json`»**: CI, Docker,
+> `start.bat`, script e test sono già convertiti, e un lockfile npm accanto a
+> loro non li fa tornare indietro. Il punto di ritorno è il commit precedente.
+
+### Cambiato
+- **Gestore `pnpm@11.22.0`**, fissato in `packageManager` **con l'hash di
+  integrità** (`+sha512.1ff870c4…`). Provato nei due versi: con l'hash giusto
+  corepack esegue, con **un solo carattere** alterato rifiuta con «Mismatch
+  hashes».
+- **CI, `Dockerfile`, `docker-entrypoint.sh`, `start.bat`, `package.json`,
+  `playwright.config.ts`, `global-setup.ts`, `misura.mjs`, `lighthouserc.js`**
+  convertiti. La forma canonica è **`corepack pnpm …`**, mai `pnpm` nudo: non
+  dipende dagli shim nel PATH né da `corepack enable`, che su Windows vuole i
+  permessi di amministratore.
+- **CI: la cache di pnpm è calcolata esplicitamente.** `setup-node` **senza**
+  `cache:`, il percorso dello store letto da un passo `run` dentro
+  `pistoia-dashboard` (l'unico posto dove il pin `packageManager` esiste), e
+  `actions/cache` con quel percorso. Le due azioni sono **pinnate al commit**,
+  non al tag. Niente azioni di terze parti. La documentazione **operativa** segue; quella **storica**
+  (`CHANGELOG`, le trappole di `AGENTS.md` §3, i `docs/piano-*`) resta in forma
+  `npm`, perché riferisce ciò che accadde allora.
+- `engines.node ">=22.13"`, reso **vincolante** da `engineStrict: true` —
+  senza, pnpm si limita a un `[WARN]` ed esce 0.
+
+### Trovato
+- 🔴 **`pnpm` non è nel PATH, e non basta lanciare le cose *attraverso* pnpm.**
+  `corepack enable` su Windows vuole i permessi di amministratore (`EPERM`,
+  uscita 1), e pnpm nel PATH dei propri script mette `node_modules/.bin`
+  **non sé stesso**. Erano **quattro** i punti che ci contavano, non uno:
+  `playwright.config.ts`, `global-setup.ts` e `lighthouserc.js` oltre a
+  `misura.mjs` — e `global-setup` avrebbe fatto cadere **l'intera suite E2E**,
+  cioè proprio il cancello che non era mai stato eseguito.
+- **`pnpm x -- --flag` passa il `--` alla lettera** (`["--","--tutte"]`), dove
+  npm se lo mangia. Convertire l'idioma npm a mano consegnava un argomento in
+  più — anche nel testo mostrato all'operatore in `/admin`.
+- **La policy `allowBuilds` è identica su Linux e Windows: sette pacchetti.**
+  Nessuna scelta di piattaforma da fare. ⚠️ La prima lettura diceva **quattro**,
+  e il numero sbagliato era plausibile: il glob non vedeva i pacchetti con
+  scope.
+- **`@prisma/config` non entra nel runtime distribuito — dimostrato, non
+  dedotto.** 74 `*.nft.json` e 15.338 voci tracciate senza una sola occorrenza
+  della catena; e la prova che chiude: **cancellati** `deepmerge-ts`,
+  `@prisma/config` e `c12` dall'immagine, il container serve tutto.
+
+### Verificato
+- **E2E 192/192** · **rotte 68/68** · unit **339/339** · lint · typecheck ·
+  build · **impronta 213 token invariati** · audit (con la deroga nominata
+  `GHSA-ggr8-5vv4-36mx`) · **deriva zero non approvata**.
+- **shots** verdi nei due regimi; unico traboccamento l'eccezione già
+  registrata `/home-1b` ≤35px.
+- **Lighthouse** identico alla baseline: `/login` 100 · `/valutazioni` 99 ·
+  `/valutazioni/pulizia` 92 · `/metodologia` 92, **accessibilità 100** su tutte
+  e quattro.
+- **Immagine Docker costruita e avviata**; moduli nativi su glibc provati per
+  quello che sono: better-sqlite3 con una scrittura vera, Prisma con una
+  **query vera**, `@node-rs/argon2` con la **verifica dell'hash reale del
+  seed** e con un **accesso HTTP vero** seguito da una seconda rotta protetta.
+- `docker-entrypoint.sh` e `start.bat` **eseguiti**, non letti.
+
 ## [0.54.3] — 2026-08-16 · Fase 2a: si misura pnpm prima di adottarlo, e si trova un bloccante
 
 > Fase di **osservazione**, non di migrazione. Nel repository lascia **una riga**:

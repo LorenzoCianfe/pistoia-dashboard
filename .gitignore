@@ -33,7 +33,7 @@ mockups-o10/
 /test-results/
 /playwright-report/
 
-# Schermate delle singole ondate: sono artefatti rigenerabili con `npm run shots`
+# Schermate delle singole ondate: artefatti rigenerabili con `corepack pnpm shots`
 # e pesavano 39 MB su 43 di repository. Restano su disco e nella storia git, ma
 # fuori dai commit nuovi: i deploy usano `git clone --depth=1` e scaricavano
 # quei megabyte a ogni build per costruire un'app che ne occupa quattro.

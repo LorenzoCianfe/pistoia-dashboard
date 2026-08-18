@@ -3,8 +3,12 @@
   "version": "0.52.0",
   "private": true,
   "license": "UNLICENSED",
-  "//packageManager": "Fissato in Fase 2a (2026-08-16). pnpm 11 pretende Node >=22.13: qui è 22.17, in CI `node-version: 22`, in Docker `node:22-bookworm-slim`. Il gestore in uso resta npm finché la Fase 2b non converte CI, Docker, script e documentazione: verificato che `npm ci` esce 0 con questo campo presente.",
-  "packageManager": "pnpm@11.22.0",
+  "//packageManager": "Fissato in Fase 2a (2026-08-16). Da pnpm 11 le impostazioni non si leggono più da qui ma da pnpm-workspace.yaml: questo campo è di Node/corepack, non di pnpm, e resta l'unica sede giusta per la versione del gestore. L'hash è lo sha512 del tarball del registro (9.273.377 byte) e corepack lo VERIFICA a ogni scaricamento: senza, il numero di versione da solo non dice nulla su che cosa venga eseguito davvero, perché una versione pubblicata può essere sostituita. Provato nei due versi in Fase 2b: con l'hash giusto corepack esegue, con un hash alterato rifiuta (ERR_INVALID_ARG_VALUE / 'Mismatch hashes').",
+  "packageManager": "pnpm@11.22.0+sha512.1ff870c4c6133dfd88fb2afc46dd13d47f09c9794b438c6fdb47ca98caf3bc16381ee0be93a091b8e3824cf01f889f46d7d9e20910fb0be1ab0fb5baa80dd621",
+  "//engines": "pnpm 11.22.0 dichiara a sua volta node>=22.13. Senza questo vincolo ci affideremmo a due etichette MOBILI — `node-version: 22` in CI e `node:22-bookworm-slim` nel Dockerfile — che oggi risolvono sopra la soglia e nulla garantisce che continuino. ⚠️ Dichiararlo NON basta: misurato in Fase 2b, pnpm col comportamento predefinito si limita a `[WARN] Unsupported engine` ed esce 0. A renderlo vincolante è `engineStrict: true` in pnpm-workspace.yaml, che fa uscire 1 con ERR_PNPM_UNSUPPORTED_ENGINE.",
+  "engines": {
+    "node": ">=22.13"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -27,7 +31,7 @@
     "a11y": "playwright test accessibilita",
     "bersagli": "playwright test bersagli",
     "contenimento": "playwright test contenimento",
-    "lighthouse": "node scripts/misura.mjs -- npx --yes @lhci/cli@0.15.1 autorun",
+    "lighthouse": "node scripts/misura.mjs -- corepack pnpm dlx @lhci/cli@0.15.1 autorun",
     "shots": "node scripts/shots.mjs",
     "impronta": "node scripts/misura.mjs --server -- node scripts/impronta.mjs",
     "impronta:confronta": "node scripts/misura.mjs --server -- node scripts/impronta.mjs --confronta",

@@ -112,7 +112,7 @@ tutte le rotte senza alcuna configurazione di bundler.
 
 > **Quando usarla:** per ogni primitiva di interfaccia (bottoni, campi, tabelle,
 > overlay, navigazione) e per ogni token di sistema. Prima di scrivere un
-> componente nuovo, controlla se Astryx ce l'ha già: `npm run astryx component`.
+> componente nuovo, controlla se Astryx ce l'ha già: `corepack pnpm astryx component`.
 
 ---
 

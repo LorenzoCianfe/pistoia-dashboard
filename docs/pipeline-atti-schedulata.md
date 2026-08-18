@@ -11,9 +11,22 @@
 
 ## 0. In una riga
 
-Un solo **Scheduled Task di Coolify** che lancia `npm run atti` una volta al
+Un solo **Scheduled Task di Coolify** che lancia `pnpm atti` una volta al
 giorno. Il primo scatto si accorge che l'archivio è vuoto e fa il carico
 completo (~3 minuti); tutti gli altri leggono l'albo in **~2 secondi**.
+
+> ⚠️ **Il comando è cambiato con la Fase 2b (2026-08-17): era `npm run atti`.**
+> Il Task vive nell'interfaccia di Coolify, **non in questo repository**, quindi
+> il campo va aggiornato **a mano** — cambiare questa pagina non cambia il
+> Task.
+>
+> Non è però urgente, ed è stato **misurato invece che supposto**: dentro
+> l'immagine `npm run <script>` continua a funzionare anche su un albero
+> installato da pnpm (npm si limita a eseguire la stringa dello script con
+> `node_modules/.bin` nel PATH; provato con `npm run db:generate`, uscita 0).
+> Ciò che **non** va più fatto lì dentro è `npm ci` o `npm install`: il primo
+> fallirà appena `package-lock.json` esce dal repository, il secondo ne
+> scriverebbe uno nuovo scavalcando la risoluzione di pnpm.
 
 ---
 
@@ -89,7 +102,7 @@ Adesso ne esiste uno sulla forma vera, con le posizioni misurate.
 | Campo | Valore | Perché |
 |---|---|---|
 | **Name** | `lettura-atti` | |
-| **Command** | `npm run atti` | Il giro breve. Il primo scatto fa da sé il carico completo (§1.2) |
+| **Command** | `pnpm atti` | Il giro breve. Il primo scatto fa da sé il carico completo (§1.2). Era `npm run atti` fino al 2026-08-17: il campo si aggiorna in Coolify, non da qui (§0) |
 | **Frequency** | `0 21 * * *` | Una volta al giorno, alle 21 |
 | **Container** | il container dell'applicazione | Il database sta sul volume, che solo lui monta |
 
@@ -115,7 +128,7 @@ il carico iniziale. Non serve prepararlo a mano.
 Come si verifica, senza fidarsi dei log di Coolify:
 
 ```bash
-npm run atti:freschezza      # 7 controlli; dice se la lettura gira e se l'archivio è fresco
+corepack pnpm atti:freschezza   # 7 controlli; dice se la lettura gira e se l'archivio è fresco
 ```
 
 e sul cruscotto, `/admin`, la card «Archivio degli atti» passa da **«Mai
@@ -142,7 +155,7 @@ letto»** a **«Aggiornato»** con il conteggio vero.
   crontab sul server:
 
   ```cron
-  0 21 * * * docker exec $(docker ps -qf name=w148lovopnak9eshxuy13b1i) npm run atti >> /var/log/atti.log 2>&1
+  0 21 * * * docker exec $(docker ps -qf name=w148lovopnak9eshxuy13b1i) pnpm atti >> /var/log/atti.log 2>&1
   ```
 
   con il costo dichiarato: Coolify non lo sa, i log stanno solo là sopra, e un

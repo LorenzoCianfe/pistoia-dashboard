@@ -39,10 +39,13 @@
  */
 import { spawn } from "node:child_process";
 import fs from "node:fs";
+import { createRequire } from "node:module";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const RADICE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const richiedi = createRequire(import.meta.url);
 
 const argv = process.argv.slice(2);
 const sep = argv.indexOf("--");
@@ -64,11 +67,26 @@ export function pulisciNext() {
 }
 
 /*
-  `shell: true` su Windows non è pigrizia: `next` e `npx` sono `.cmd`, e senza
-  shell non si risolvono. È la stessa scelta già motivata in
-  `tests/e2e/prima-pagina.spec.ts`, e resta senza superficie di iniezione
-  perché gli argomenti arrivano dagli script di `package.json`, non da un input.
+  `shell: true` resta il predefinito perché il comando DA MISURARE arriva dalla
+  riga di `package.json` e può essere qualunque cosa (`corepack pnpm dlx …`,
+  `taskkill`), cioè nomi che senza shell non si risolvono su Windows. Non c'è
+  superficie di iniezione: gli argomenti vengono dagli script, non da un input.
+
+  Chi invoca un binario di `node_modules` passa invece `shell: false` — vedi
+  `eseguiNode` qui sotto.
+
+  ⚠️ L'esito è propagato FEDELMENTE. Un processo ucciso da un segnale esce con
+  `code === null` e `signal` valorizzato: schiacciarlo su 1 confonderebbe «la
+  build ha fallito» con «la build è stata uccisa», e la seconda non è un difetto
+  del codice. Si usa la convenzione POSIX 128+n, che è anche ciò che una shell
+  riporterebbe.
 */
+const esitoDa = (code, signal) => {
+  if (code !== null && code !== undefined) return code;
+  if (signal) return 128 + (os.constants.signals[signal] ?? 0);
+  return 1;
+};
+
 const esegui = (cmd, args, opts = {}) =>
   new Promise((risolvi) => {
     const p = spawn(cmd, args, {
@@ -77,8 +95,37 @@ const esegui = (cmd, args, opts = {}) =>
       shell: true,
       ...opts,
     });
-    p.on("close", (code) => risolvi(code ?? 1));
+    // Senza questo, uno spawn fallito (ENOENT) lascerebbe cadere un'eccezione
+    // non gestita invece di diventare un esito rosso leggibile.
+    p.on("error", (e) => {
+      console.error(`✗ impossibile eseguire ${cmd}: ${e.message}`);
+    });
+    p.on("close", (code, signal) => risolvi(esitoDa(code, signal)));
   });
+
+/**
+ * Esegue un CLI di `node_modules` con QUESTO Node, senza shell.
+ *
+ * 🔴 Pagato in Fase 2b, in tre modi diversi prima di arrivarci.
+ *
+ * 1. `npx next build` (la forma originale) muore con npm.
+ * 2. `pnpm exec next build` non regge: `pnpm` esiste solo dopo un
+ *    `corepack enable`, che su Windows **vuole i permessi di amministratore**
+ *    (`EPERM` su `C:\Program Files\nodejs`) — misurato, non supposto. E non
+ *    basta invocare lo script *attraverso* pnpm: nel PATH degli script pnpm
+ *    mette `node_modules/.bin`, **non sé stesso**. Verificato: da un figlio di
+ *    pnpm, `pnpm --version` risponde «non è riconosciuto come comando».
+ * 3. `node_modules/.bin/next` con `shell: true` funziona, ma resta appeso alla
+ *    shell — e con `shell: true` il percorso non viene quotato, quindi un
+ *    percorso assoluto si spezza sugli spazi di «Progetti - AI».
+ *
+ * La forma che non dipende da nulla di tutto ciò: `process.execPath` più il
+ * modulo risolto da Node, con `shell: false`. Niente `.cmd`, niente PATH,
+ * niente quoting — quindi il percorso può tornare ASSOLUTO senza rischi.
+ * E chi misura non deve sapere quale gestore ha installato le dipendenze.
+ */
+const eseguiNode = (moduloCli, args, opts = {}) =>
+  esegui(process.execPath, [moduloCli, ...args], { shell: false, ...opts });
 
 async function aspettaProntezza(url, tentativi = 60) {
   for (let i = 0; i < tentativi; i++) {
@@ -109,7 +156,13 @@ if (comando.length === 0) {
   process.exit(1);
 }
 
-const esitoBuild = await esegui("npx", ["next", "build"]);
+/*
+  `next/dist/bin/next` è il percorso dichiarato da `bin` nel manifesto di Next,
+  e Node lo risolve: verificato che il suo `exports` non lo blocchi (non è
+  scontato — `tsx/dist/cli.mjs` risponde `ERR_PACKAGE_PATH_NOT_EXPORTED`).
+*/
+const NEXT = richiedi.resolve("next/dist/bin/next");
+const esitoBuild = await eseguiNode(NEXT, ["build"]);
 if (esitoBuild !== 0) {
   console.error(`\n✗ la build è fallita (${esitoBuild}): non c'è niente da misurare.`);
   process.exit(esitoBuild);
@@ -117,10 +170,10 @@ if (esitoBuild !== 0) {
 
 let server = null;
 if (flag("server")) {
-  server = spawn("npx", ["next", "start", "-p", PORTA], {
+  server = spawn(process.execPath, [NEXT, "start", "-p", PORTA], {
     cwd: RADICE,
     stdio: "ignore",
-    shell: true,
+    shell: false,
     detached: false,
   });
   if (!(await aspettaProntezza(BASE))) {

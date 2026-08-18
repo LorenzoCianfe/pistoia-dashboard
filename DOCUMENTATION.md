@@ -12,7 +12,7 @@
 | [§1](#1-cosè) | **Cos'è** | Descrizione del progetto, vision, link al repository GitHub |
 | [§2](#2-stack-tecnico) | **Stack tecnico** | Framework, DB, auth, mappe, icone, animazioni |
 | [§3](#3-come-avviare-il-progetto) | **Come avviare il progetto** | Istruzioni rapide (start.bat) e manuali, script npm, variabili d'ambiente, account di test |
-| [§3.1](#script-npm-utili) | ↳ Script npm | Tabella completa comandi disponibili |
+| [§3.1](#script-utili) | ↳ Script utili | Tabella completa comandi disponibili |
 | [§3.2](#variabili-dambiente-env) | ↳ Variabili d'ambiente | `DATABASE_URL`, `SESSION_SECRET` |
 | [§3.3](#account-dimostrativi-creati-dal-seed) | ↳ Account dimostrativi | Email e password dei 7 profili creati dal seed |
 | [§4](#4-architettura) | **Architettura** | Struttura cartelle, routing, pattern dati (Server Components + Actions) |
@@ -88,35 +88,43 @@ server su <http://localhost:3000> e apre il browser. Per fermare: `stop.bat`.
 
 ```bash
 # 1. Installa le dipendenze (genera anche il client Prisma via postinstall)
-npm install
+corepack pnpm install --frozen-lockfile
 
 # 2. Crea il database SQLite + applica le migrazioni
-npm run db:migrate        # oppure: npm run setup (migrate + seed in un colpo)
+corepack pnpm db:migrate    # oppure: corepack pnpm setup (migrate + seed insieme)
 
 # 3. Popola il database con i dati mockup
-npm run db:seed
+corepack pnpm db:seed
 
 # 4. Avvia in sviluppo
-npm run dev
+corepack pnpm dev
 ```
 
 Poi apri http://localhost:3000.
 
-### Script npm utili
+> **Perché `corepack pnpm` e non `pnpm`.** Il gestore è pnpm dalla Fase 2b
+> (2026-08-17) e la sua versione la fissa `packageManager` in `package.json`;
+> a procurarlo è **corepack**, che arriva dentro Node. Il comando `pnpm` nudo
+> esiste solo dopo `corepack enable`, che su Windows vuole i permessi di
+> amministratore (`EPERM` su `C:\Program Files\nodejs`): `corepack pnpm …`
+> funziona in tutti e due i casi. Chi ha già fatto `enable` può omettere il
+> prefisso.
+
+### Script utili
 | Script | Cosa fa |
 |---|---|
-| `npm run dev` | Avvia il server di sviluppo |
-| `npm run build` / `npm start` | Build di produzione / avvio |
-| `npm run db:migrate` | Applica le migrazioni Prisma |
-| `npm run db:seed` | Inserisce i dati mockup |
-| `npm run db:reset` | Reset DB + reseed |
-| `npm run db:studio` | Apre Prisma Studio |
-| `npm run setup` | `migrate` + `seed` |
-| `npm test` / `npm run test:watch` | Unit test Vitest (one-shot / watch) |
-| `npm run test:e2e` | E2E Playwright (avvia da solo il dev server sulla porta 3939) |
-| `npm run a11y` | Solo il cancello di accessibilità (axe-core, 8 pagine × 2 temi) |
-| `npm run lighthouse` | Lighthouse CI sulla build di produzione — **misura, non giudica** (nessuna soglia finché non ne esiste una misurata) |
-| `npm run typecheck` | `tsc --noEmit` |
+| `corepack pnpm dev` | Avvia il server di sviluppo |
+| `corepack pnpm build` / `corepack pnpm start` | Build di produzione / avvio |
+| `corepack pnpm db:migrate` | Applica le migrazioni Prisma |
+| `corepack pnpm db:seed` | Inserisce i dati mockup |
+| `corepack pnpm db:reset` | Reset DB + reseed |
+| `corepack pnpm db:studio` | Apre Prisma Studio |
+| `corepack pnpm setup` | `migrate` + `seed` |
+| `corepack pnpm test` / `corepack pnpm test:watch` | Unit test Vitest (one-shot / watch) |
+| `corepack pnpm test:e2e` | E2E Playwright (avvia da solo il dev server sulla porta 3939) |
+| `corepack pnpm a11y` | Solo il cancello di accessibilità (axe-core, 8 pagine × 2 temi) |
+| `corepack pnpm lighthouse` | Lighthouse CI sulla build di produzione — **misura, non giudica** (nessuna soglia finché non ne esiste una misurata) |
+| `corepack pnpm typecheck` | `tsc --noEmit` |
 
 ### Variabili d'ambiente (`.env`)
 
@@ -395,11 +403,11 @@ esecuzione (Server Actions, sessioni, database). Opzioni gratuite valide:
 Il client Prisma 7 è **dialect-specific**: il passaggio SQLite → PostgreSQL/Neon non è uno switch a
 runtime ma una migrazione una-tantum, da fare **mentre i dati sono ancora mock** (zero rischio):
 
-1. `npm i @prisma/adapter-pg pg` e in `prisma/schema.prisma`: `datasource db { provider = "postgresql" }`.
+1. `corepack pnpm add @prisma/adapter-pg pg` e in `prisma/schema.prisma`: `datasource db { provider = "postgresql" }`.
 2. Rigenerare la baseline delle migrazioni (le SQL sono dialect-specific):
-   svuotare `prisma/migrations/`, poi `npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script > prisma/migrations/0_init/migration.sql` e `npx prisma migrate resolve --applied 0_init` sul DB nuovo (o semplicemente `npx prisma migrate dev --name init` puntando al Postgres vuoto).
+   svuotare `prisma/migrations/`, poi `corepack pnpm exec prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script > prisma/migrations/0_init/migration.sql` e `corepack pnpm exec prisma migrate resolve --applied 0_init` sul DB nuovo (o semplicemente `corepack pnpm exec prisma migrate dev --name init` puntando al Postgres vuoto).
 3. In `src/lib/db.ts`: sostituire `PrismaBetterSqlite3` con `PrismaPg` (`new PrismaPg({ connectionString: url })`) e rimuovere il guard anti-Postgres.
-4. `DATABASE_URL=postgres://…` in `.env`, poi `npx prisma generate`, `migrate deploy`, `db:seed`.
+4. `DATABASE_URL=postgres://…` in `.env`, poi `corepack pnpm exec prisma generate`, `migrate deploy`, `db:seed`.
 5. Aggiornare la CI (servizio Postgres o Neon branch) e rimuovere `better-sqlite3` dalle dipendenze.
 
 ## 10. Decisioni e changelog

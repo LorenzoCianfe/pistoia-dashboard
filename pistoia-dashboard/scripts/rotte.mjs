@@ -18,7 +18,7 @@
  * «abbiamo cancellato metà applicazione» finché qualcuno non apre quelle rotte
  * una per una: questo script le apre tutte.
  *
- * Nota: gli E2E **non** sono immuni. `playwright.config.ts` avvia `npm run dev`
+ * Nota: gli E2E **non** sono immuni. `playwright.config.ts` avvia `corepack pnpm dev`
  * sulla 3939 — processo diverso, stessa cartella `.next` — quindi possono
  * fallire su tre test annidati senza che nulla sia rotto.
  *
@@ -34,8 +34,8 @@
  *   giravano gli E2E che scrivevano quegli errori nel log.
  *
  * Uso:
- *   npm run dev      # in un altro terminale
- *   npm run rotte
+ *   corepack pnpm dev      # in un altro terminale
+ *   corepack pnpm rotte
  */
 import { chromium } from "@playwright/test";
 

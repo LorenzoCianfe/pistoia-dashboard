@@ -35,14 +35,15 @@
 
   **`@lhci/cli` non è una dipendenza del progetto**, e non è una dimenticanza:
   installarlo costa **285 pacchetti** e cinque avvisi propri (`tmp` è high), e
-  il `Dockerfile` fa `npm ci --include=dev` — quindi finirebbero tutti
-  nell'immagine di produzione di un servizio pubblico. Si esegue con `npx` a
-  **versione pinnata** (`npm run lighthouse`, o il job in CI): senza pin, `npx`
+  il `Dockerfile` installa anche le dipendenze di sviluppo
+  (`pnpm install --frozen-lockfile`) — quindi finirebbero tutti nell'immagine di
+  produzione di un servizio pubblico. Si esegue con `pnpm dlx` a **versione
+  pinnata** (`corepack pnpm lighthouse`, o il job in CI): senza pin si
   scaricherebbe l'ultima versione, cioè codice che nessuno ha deciso.
 
   Quattro scelte che non sono ovvie:
 
-  1. **Si misura la build di PRODUZIONE** (`npm start`), mai `next dev`: in
+  1. **Si misura la build di PRODUZIONE** (`corepack pnpm start`), mai `next dev`: in
      sviluppo il bundle non è minificato, c'è l'overlay degli strumenti e i
      numeri non somigliano a quelli di nessun cittadino.
   2. **Solo pagine pubbliche.** Lighthouse apre un browser senza sessione:
@@ -62,7 +63,15 @@
 module.exports = {
   ci: {
     collect: {
-      startServerCommand: "npm start",
+      /*
+        `corepack pnpm start`, non `pnpm start`: `lhci` viene lanciato da
+        `pnpm dlx`, che nel PATH mette il proprio pacchetto temporaneo — non
+        `pnpm` stesso — e su Windows senza `corepack enable` (che vuole i
+        permessi di amministratore) `pnpm` non è comunque nel PATH. `corepack`
+        arriva dentro Node ed è sempre raggiungibile; la versione la decide
+        `packageManager` in package.json.
+      */
+      startServerCommand: "corepack pnpm start",
       startServerReadyPattern: "Ready in",
       url: [
         "http://localhost:3000/login",

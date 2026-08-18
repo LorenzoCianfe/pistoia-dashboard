@@ -4,10 +4,14 @@
   `src/lib/atti.ts` ed è coperta dai test; qui c'è solo ciò che tocca la rete e
   il database.
 
-    npx tsx scripts/atti.ts              # il giro quotidiano: l'albo, ~2s
-    npx tsx scripts/atti.ts --storico    # il carico iniziale: 26.588 righe, ~3 min
-    npx tsx scripts/atti.ts --tutte      # tutte e quattro le griglie
-    npx tsx scripts/atti.ts --prova      # legge e conta, senza scrivere
+    corepack pnpm atti              # il giro quotidiano: l'albo, ~2s
+    corepack pnpm atti --storico    # il carico iniziale: 26.588 righe, ~3 min
+    corepack pnpm atti --tutte      # tutte e quattro le griglie
+    corepack pnpm atti --prova      # legge e conta, senza scrivere
+
+  ⚠️ Niente `--` prima delle opzioni: è l'idioma di npm, e pnpm lo passa
+  ALLA LETTERA allo script (misurato in Fase 2b: `pnpm x -- --tutte` consegna
+  `["--","--tutte"]`). Con pnpm le opzioni si scrivono di seguito.
 
   PERCHÉ L'ALBO BASTA PER IL GIRO QUOTIDIANO. Un atto resta sull'albo per la
   propria finestra di pubblicazione legale (mediana 15 giorni, misurata) e nel

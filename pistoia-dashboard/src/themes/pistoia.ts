@@ -12,7 +12,7 @@
  * Astryx v0.1.8 non accetta nomi di token custom in `tokens`: è un vincolo
  * del tipo, non una scelta stilistica.
  *
- * Build: `npm run theme:build` → pistoia.css + pistoia.js (SSR-safe).
+ * Build: `corepack pnpm theme:build` → pistoia.css + pistoia.js (SSR-safe).
  * L'iniezione a runtime NON è utilizzabile qui: la CSP con nonce del proxy
  * bloccherebbe il tag <style> generato al momento dell'hydration.
  */

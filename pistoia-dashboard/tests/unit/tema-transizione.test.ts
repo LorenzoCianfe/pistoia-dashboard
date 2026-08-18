@@ -14,7 +14,7 @@ import { describe, expect, it } from "vitest";
 
   🔴 Il prezzo di quella scelta è che **le coppie di colori sono ricopiate**, e
   metà nascono in un file GENERATO (`src/themes/generated/pistoia.css`, da
-  `npm run theme:build`) che nessuno modifica a mano. Senza un cancello, il
+  `corepack pnpm theme:build`) che nessuno modifica a mano. Senza un cancello, il
   giorno in cui qualcuno ritocca un token in `pistoia.ts` la transizione
   continuerebbe a girare — convergendo però sul colore VECCHIO, e riscattando
   su quello nuovo solo alla fine. Un difetto che non produce nessun errore, che
