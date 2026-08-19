@@ -1,26 +1,51 @@
 # Prompt per la sessione successiva
 
-> Riscritta il **2026-08-18**. **Fidati di questa, non di quello che ricordi.**
+> Riscritta il **2026-08-19**. **Fidati di questa, non di quello che ricordi.**
 >
-> ✅ **FASE 2b CHIUSA — npm → pnpm, validata dalla CI vera.**
-> Prima esecuzione su GitHub Actions **verde su tutti e quattro i job**
-> ([run 32138836321](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32138836321)),
-> con `package-lock.json` ancora presente. Questo commit lo **rimuove
-> definitivamente**, e la seconda esecuzione sulla stessa PR lo conferma senza.
+> ✅ **FASE 2b CHIUSA, VALIDATA E INTEGRATA IN `main`** — npm → pnpm.
 >
-> Il lavoro vive sul branch `chore/pnpm-migration-phase-2b`
-> ([PR #3, draft](https://github.com/LorenzoCianfe/pistoia-dashboard/pull/3)),
-> **non ancora unita a `main`**. Il checkpoint temporaneo
-> `docs/rework/SESSION_HANDOFF_PHASE_2B.md` è stato cancellato: il suo
-> contenuto vive qui, in §7b e §7c.
+> **PR [#3](https://github.com/LorenzoCianfe/pistoia-dashboard/pull/3) unita il
+> 2026-08-19** con un **merge commit** — `32364e1a4d9cf59c474390ddc6d47fc4b1906abf`
+> — e la strategia è stata scelta, non subita: è **l'unica** che lascia i due
+> commit della fase raggiungibili da `main`. Lo squash li avrebbe fusi in un
+> commit nuovo, il rebase riscritti. Verificato con
+> `git merge-base --is-ancestor`, non dedotto dal grafo:
+>
+> | SHA | Che cosa porta | Raggiungibile da `main` |
+> |---|---|---|
+> | `8cac472` | la migrazione, con `package-lock.json` **ancora presente** | ✅ |
+> | `1905ce3` | rimozione **definitiva** di `package-lock.json` | ✅ |
+>
+> **Tre esecuzioni della CI, tutte verdi su quattro job**, in quest'ordine:
+>
+> | Run | Dove | `package-lock.json` |
+> |---|---|---|
+> | [32138836321](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32138836321) | PR #3 | **presente** |
+> | [32141282203](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32141282203) | PR #3 | **assente** — è la conferma che conta |
+> | [32255534703](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32255534703) | **`main`**, dal push del merge | **assente** |
+>
+> La terza è quella che chiude l'integrazione: fino a lì la 2b era validata ma
+> non integrata, e le due cose non sono la stessa. `package-lock.json` è
+> **definitivamente assente** dal repository.
+>
+> Il checkpoint temporaneo `docs/rework/SESSION_HANDOFF_PHASE_2B.md` è stato
+> cancellato: il suo contenuto vive qui, in §7b e §7c.
+>
+> ⚠️ **La FASE 3 NON è iniziata**, e non parte senza che Lorenzo la autorizzi.
 >
 > ⚠️ **Il rollback non è «ripristinare `package-lock.json`».** Sarebbe
 > insufficiente: CI, `Dockerfile`, `docker-entrypoint.sh`, `start.bat`, gli
 > script e i test sono convertiti a pnpm, e un lockfile npm da solo non li fa
-> tornare indietro. **Il punto di ritorno è il commit** `5e1f151`.
+> tornare indietro. **Il punto di ritorno è il commit** `5e1f151` — che dopo il
+> merge è il **primo genitore** del merge commit, quindi `git revert -m 1` lo
+> raggiunge in un colpo.
 >
 > ⚠️ E lo strumento della deriva **non è più eseguibile**: gli serviva
-> `package-lock.json` come secondo termine. Il suo referto resta in §7b.
+> `package-lock.json` come secondo termine del confronto, e quel termine non
+> esiste più. Era un controllo **specifico della migrazione**, non un cancello
+> permanente: **non va ricostruito né rimpianto.** Il suo referto resta in §7b
+> come registro storico — 725 pacchetti in entrambi i lockfile, zero deriva non
+> approvata.
 >
 > ✅ **Fase 1 chiusa, committata e pushata: `6621e07`** (+ `cc33cbd`, la
 > finalizzazione di questa consegna).
@@ -43,12 +68,15 @@
 
 ```
 Pistoia.app — REWORK ARCHITETTURALE. Le Fasi 0, 0b, 1, 2a e 2b sono CHIUSE.
-La 2b (npm → pnpm) è validata dalla CI vera, due esecuzioni verdi.
+La 2b (npm → pnpm) è validata dalla CI vera E INTEGRATA in `main`.
 
-⚠️ IL LAVORO NON È SU `main`: vive sul branch
-   `chore/pnpm-migration-phase-2b`, PR #3 in bozza, NON unita. Il merge
-   lo decide Lorenzo. Guarda `git branch --show-current` e `git log`
-   prima di dare per scontato dove ti trovi.
+✅ IL LAVORO È SU `main`. PR #3 unita il 2026-08-19 con un MERGE COMMIT
+   (`32364e1`), e la CI partita dal push su `main` è verde su tutti e
+   quattro i job (run 32255534703). I due commit della fase, `8cac472`
+   e `1905ce3`, restano raggiungibili da `main`: la strategia è stata
+   scelta apposta per questo.
+   Guarda comunque `git branch --show-current` e `git log` prima di dare
+   per scontato dove ti trovi.
 
 Il gestore è pnpm e si invoca `corepack pnpm …`, MAI `pnpm` nudo.
 
@@ -70,6 +98,16 @@ devDependencies dall'immagine di esecuzione, che oggi pesa 2,82GB e costa
 quel disco a ogni deploy (AGENTS.md §8). È un'attività SEPARATA da pnpm:
 la 2b ha già portato il Dockerfile su pnpm e l'immagine è stata costruita,
 avviata e provata a runtime.
+
+⚠️ La FASE 3 NON è iniziata, e non parte senza autorizzazione di Lorenzo.
+   Va aperta su un branch SUO, non su quello della 2b.
+
+⚠️ Lo Scheduled Task di Coolify dice ancora `npm run atti`, e vive FUORI
+   dal repository. Funziona (misurato), quindi non blocca niente — ma va
+   convertito in `corepack pnpm atti` durante la Fase 3 o al prossimo
+   aggiornamento operativo del deployment. Non toccare Coolify senza
+   autorizzazione. Lì dentro NON si fa più `npm ci` (il lockfile npm non
+   c'è più) né `npm install` (ne scriverebbe uno nuovo, scavalcando pnpm).
 
 ⚠️ Il gestore è pnpm e si invoca `corepack pnpm …`, MAI `pnpm` nudo: su
 questa macchina `corepack enable` fallisce con EPERM (vuole i permessi di
@@ -254,8 +292,8 @@ visualizzazioni), vietato per decorazioni ottenibili con CSS/Motion. `AGENTS.md`
 | **0b** | Correzione CI (commit isolato) | ✅ **CHIUSA** |
 | **1** | **Potatura**: via l'import di `astryx.css` (−124.056 byte di CSS servito), via `theme-neutral`, `cli` → `devDependencies` | ✅ **CHIUSA** · `6621e07` · CI verde |
 | **2a** | Versione pnpm fissata (`pnpm@11.22.0`) · inventario e comportamento reale misurati · politica degli script determinata (**una voce a `true`**) · falso bloccante Vitest smontato fino alla causa | ✅ **CHIUSA** |
-| **2b** | **pnpm**, da sola. CI · `start.bat` · `docker-entrypoint.sh` · `Dockerfile` · `package.json` · `playwright.config.ts` · `global-setup.ts` · `misura.mjs` · `lighthouserc.js` + la documentazione operativa triata. `package-lock.json` rimosso | ✅ **CHIUSA** · CI verde ([run 32138836321](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32138836321)) · §7b e §7c |
-| **3** | Docker multi-stage (attività separata da pnpm) | |
+| **2b** | **pnpm**, da sola. CI · `start.bat` · `docker-entrypoint.sh` · `Dockerfile` · `package.json` · `playwright.config.ts` · `global-setup.ts` · `misura.mjs` · `lighthouserc.js` + la documentazione operativa triata. `package-lock.json` rimosso | ✅ **CHIUSA E INTEGRATA** · PR #3 unita con merge commit `32364e1` il 2026-08-19 · tre CI verdi ([32138836321](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32138836321) · [32141282203](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32141282203) · [32255534703](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32255534703) su `main`) · §7b e §7c |
+| **3** | Docker multi-stage (attività separata da pnpm) | ⛔ **NON INIZIATA** — è la prossima, su un branch suo e con autorizzazione |
 | **4** | Prettier + `prettier-plugin-tailwindcss`, reformat meccanico isolato in un commit suo, `.prettierignore` + `.git-blame-ignore-revs`. **Commenti non toccati nel contenuto né nella struttura semantica** | |
 | **5** | Token propri: `styles/tokens/*.ts` + generatore · via `defineTheme` · reset proprio. ⚠️ il reset muove la tipografia: diff visivo obbligatorio | |
 | **6** | `globals.css`: **prima si classifica, poi si colloca**. Globale = reset/base, token, tipografia fondamentale, `@theme`, materiali e pattern davvero condivisi. Specifico = vicino a rotta/feature/componente (anche CSS Modules dove porta isolamento reale, **senza** migrazione obbligatoria). Qui si rimuovono anche gli orfani. Cancello: **peso del CSS globale misurato prima/dopo** | |
@@ -431,7 +469,7 @@ nessun refactor: cambia il *gestore*.
 | **accesso reale via HTTP** | ✅ login vero nel container + **seconda rotta protetta** (il difetto del cookie `Secure` si vedeva solo lì) |
 | `docker-entrypoint.sh` | ✅ **eseguito**: migrate deploy + seed + `next start` |
 | `start.bat` | ✅ **eseguito**: guardia corepack, migrazioni, `corepack pnpm dev`, HTTP 200 |
-| **CI su GitHub Actions** | ✅ **verde su tutti e quattro i job** — [run 32138836321](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32138836321), trigger `pull_request` sulla PR #3. Dettaglio in **§7c** |
+| **CI su GitHub Actions** | ✅ **tre esecuzioni, tutte verdi su quattro job.** [32138836321](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32138836321) (`pull_request`, con `package-lock.json`) · [32141282203](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32141282203) (`pull_request`, **senza**) · [32255534703](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32255534703) (`push` su **`main`**, dopo il merge). Dettaglio in **§7c** |
 
 ### Le tre cose trovate misurando, che il checkpoint non sapeva
 
@@ -551,8 +589,10 @@ che il passo della cache funzioni su un runner. Solo l'esecuzione lo dice.
 | ✅ **Due righe che la Fase 1 aveva reso false — CORRETTE il 2026-08-16**: `ARCHITECTURE.md` §«Ordine dei layer» (via `astryx-base` dalla lista) e `REFERENCES.md` §«Costo reale, misurato» (il costo servito di `astryx.css` è **zero**). Correzioni minime, nessuna riorganizzazione | **Chiuso.** 🔴 E fissa la regola per le fasi che seguono: **la documentazione operativa non resta a descrivere uno stato che non esiste più.** La Fase 13 è il consolidamento generale dei 33 `.md`, non l'alibi per lasciare in giro istruzioni false nel frattempo |
 | **La scala dei pesi tipografici arriva da `tailwindcss/theme.css`**, non più da una sorgente nostra. Nessun effetto oggi (stessi nomi, stessi numeri), ma è una dipendenza **in prestito**: se il tema di Tailwind viene azzerato, `:where(h1…h6)` e `:where(p)` perdono il peso **senza un errore** | **Fase 5**, che porta i token in casa. Nota scritta accanto all'import in `globals.css` |
 | ⚠️ **DISCREPANZA NOTA, da non correggere di slancio**: `package.json` dichiara `0.52.0`, `CHANGELOG.md` è arrivato a `0.54.2`. Lo scarto è **preesistente** — il lockfile era fermo a `0.48.0` fino al 2026-08-15 — e non è stato toccato di proposito | Si chiude quando Lorenzo determina **la fonte canonica della versione** e la **politica di versionamento** (chi la alza, quando, e se il `CHANGELOG` può correre avanti). Finché quella decisione non c'è, allineare i numeri sarebbe scegliere al posto suo |
-| ✅ **La CI con pnpm è stata eseguita e verde** — era l'ultimo cancello previsto della 2b, ed è ciò che l'ha chiusa | **Chiuso.** Due esecuzioni verdi sulla PR #3: la prima con `package-lock.json` ancora presente, la seconda dopo averlo rimosso |
-| **Lo Scheduled Task di Coolify dice ancora `npm run atti`.** Vive nell'interfaccia di Coolify, **fuori dal repository**: cambiare `docs/pipeline-atti-schedulata.md` non lo cambia. Misurato che **non è urgente**: dentro l'immagine `npm run <script>` funziona anche su un albero installato da pnpm (provato con `npm run db:generate`, uscita 0) | Si aggiorna a mano in Coolify, quando Lorenzo apre l'interfaccia. ⚠️ Ciò che **non** va più fatto lì è `npm ci` (fallirà: il lockfile npm non c'è più) o `npm install` (ne scriverebbe uno nuovo, scavalcando pnpm) |
+| ✅ **La CI con pnpm è stata eseguita e verde** — era l'ultimo cancello previsto della 2b, ed è ciò che l'ha chiusa | **Chiuso.** Due esecuzioni verdi sulla PR #3 (la prima con `package-lock.json` ancora presente, la seconda dopo averlo rimosso) e **una terza su `main`** dopo il merge, [32255534703](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32255534703): è quella che distingue *validata* da *integrata* |
+| ✅ **Il comparatore della deriva npm/pnpm non è più eseguibile** — confrontava `package-lock.json` e `pnpm-lock.yaml`, e il primo non esiste più | **Chiuso, e non è un debito.** Era un controllo **specifico della migrazione**, non un cancello permanente: non va ricostruito. Resta il **referto storico** in §7b — 725 pacchetti in entrambi i lockfile, 0 presenti in uno solo, zero deriva non approvata, con le sole convergenze approvate `picomatch` 4.0.4→4.0.5 e `semver` 7.8.2→7.8.5 |
+| ⚠️ **Risk acceptance temporanea su `GHSA-ggr8-5vv4-36mx`** (`deepmerge-ts <8.0.0`, transitiva via Prisma), dichiarata in `pnpm-workspace.yaml`. La soglia **non** è abbassata, `--ignore-unfixable` **non** è usato: il cancello significa «zero High/Critical non esplicitamente approvate», e qualunque altra advisory continua a farlo fallire | **ANCORA ATTIVA.** Si toglie **appena Prisma adotta `deepmerge-ts >=8.0.0`** — oggi impossibile a monte: `@prisma/config@7.9.1`, l'ultima pubblicata, fissa `deepmerge-ts` a `7.1.5` **esatto**, non a un range. Raggiungibilità verificata: solo in `loadConfigTsOrJs()`, nella CLI di Prisma, mai su dati di rete, e **fuori dal runtime distribuito** (dimostrato su 74 `*.nft.json` e 15.338 voci) |
+| **Lo Scheduled Task di Coolify dice ancora `npm run atti`** — verificato che al 2026-08-19 è ancora così. Vive nell'interfaccia di Coolify, **fuori dal repository**: cambiare `docs/pipeline-atti-schedulata.md` non lo cambia. Misurato che **non è urgente** e che non ha bloccato il merge: dentro l'immagine `npm run <script>` funziona anche su un albero installato da pnpm (provato con `npm run db:generate`, uscita 0) | Va convertito in **`corepack pnpm atti`** durante la **Fase 3** o al prossimo aggiornamento operativo del deployment. ⚠️ **Non modificare Coolify senza autorizzazione.** ⚠️ Ciò che **non** va più fatto lì è `npm ci` (fallisce: il lockfile npm non c'è più) o `npm install` (ne scriverebbe uno nuovo, scavalcando la risoluzione di pnpm) |
 | **`pistoia-dashboard/README.md` è ancora lo scheletro di `create-next-app`** al netto del comando corretto in 2b | **Fase 13**, col consolidamento dei `.md` |
 
 ---
@@ -594,9 +634,15 @@ nome (niente `Co-Authored-By`) · il deploy lo lancia lui.
 
 ### Il punto di partenza
 
-`main` è ancora a **`5e1f151`** (Fase 2a): la Fase 2b vive sul branch
-`chore/pnpm-migration-phase-2b`, **non unita**. `pnpm-lock.yaml` e
-`pnpm-workspace.yaml` creati, `package-lock.json` **rimosso**.
+`main` è a **`32364e1`**, il merge commit della PR #3 (unita il 2026-08-19,
+strategia **merge commit**). La Fase 2b è **integrata**: `pnpm-lock.yaml` e
+`pnpm-workspace.yaml` ci sono, `package-lock.json` **non esiste più**, e la CI
+partita dal push su `main` è verde su tutti e quattro i job
+([run 32255534703](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32255534703)).
+
+I due commit della fase restano raggiungibili da `main` — `8cac472` (la
+migrazione) e `1905ce3` (la rimozione del lockfile) — ed è il motivo per cui la
+strategia è stata **merge commit** e non squash né rebase.
 
 Per rifare la misura da sé — e `corepack pnpm`, mai `pnpm` nudo (§7b):
 
@@ -611,8 +657,9 @@ corepack pnpm rotte                # 68 rotte, 0 con problemi
 lockfile.** Ripristinare `package-lock.json` da solo non riporterebbe indietro
 niente: CI, `Dockerfile`, `docker-entrypoint.sh`, `start.bat`, gli script e i
 test sono convertiti a pnpm, e un lockfile npm accanto a loro non li fa tornare
-npm. Il rollback vero è `5e1f151` — e finché la PR #3 non è unita, `main` **è**
-già quel punto.
+npm. Il rollback vero è `5e1f151`, che dopo il merge è il **primo genitore** del
+merge commit: `git revert -m 1 32364e1` riporta `main` a quello stato in un
+colpo, senza riscrivere la storia.
 
 ### FASE 2a — CHIUSA. Tutto misurato fuori dal repository
 

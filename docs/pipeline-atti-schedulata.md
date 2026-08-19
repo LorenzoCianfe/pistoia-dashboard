@@ -11,21 +11,28 @@
 
 ## 0. In una riga
 
-Un solo **Scheduled Task di Coolify** che lancia `pnpm atti` una volta al
-giorno. Il primo scatto si accorge che l'archivio è vuoto e fa il carico
-completo (~3 minuti); tutti gli altri leggono l'albo in **~2 secondi**.
+Un solo **Scheduled Task di Coolify** che legge gli atti una volta al giorno.
+Il primo scatto si accorge che l'archivio è vuoto e fa il carico completo
+(~3 minuti); tutti gli altri leggono l'albo in **~2 secondi**.
 
-> ⚠️ **Il comando è cambiato con la Fase 2b (2026-08-17): era `npm run atti`.**
-> Il Task vive nell'interfaccia di Coolify, **non in questo repository**, quindi
-> il campo va aggiornato **a mano** — cambiare questa pagina non cambia il
-> Task.
+> 🔴 **Il Task è ancora configurato con `npm run atti`, e questa pagina non lo
+> cambia.** Verificato al 2026-08-19, dopo che la Fase 2b è stata integrata in
+> `main`: il Task vive nell'interfaccia di Coolify, **fuori da questo
+> repository**, quindi il campo va aggiornato **a mano**.
 >
-> Non è però urgente, ed è stato **misurato invece che supposto**: dentro
-> l'immagine `npm run <script>` continua a funzionare anche su un albero
-> installato da pnpm (npm si limita a eseguire la stringa dello script con
-> `node_modules/.bin` nel PATH; provato con `npm run db:generate`, uscita 0).
-> Ciò che **non** va più fatto lì dentro è `npm ci` o `npm install`: il primo
-> fallirà appena `package-lock.json` esce dal repository, il secondo ne
+> **Il valore a cui va portato è `corepack pnpm atti`**, che è la forma canonica
+> di `AGENTS.md` §4. ⚠️ **Non modificare Coolify senza autorizzazione di
+> Lorenzo**: la conversione si fa durante la **Fase 3** o al prossimo
+> aggiornamento operativo del deployment.
+>
+> **Non è urgente, ed è stato misurato invece che supposto**: dentro l'immagine
+> `npm run <script>` continua a funzionare anche su un albero installato da pnpm
+> (npm si limita a eseguire la stringa dello script con `node_modules/.bin` nel
+> PATH; provato con `npm run db:generate`, uscita 0). È la ragione per cui non
+> ha bloccato il merge della Fase 2b.
+>
+> ⚠️ Ciò che lì dentro **non va più fatto** è `npm ci` — che ora **fallisce**,
+> perché `package-lock.json` è uscito dal repository — né `npm install`, che ne
 > scriverebbe uno nuovo scavalcando la risoluzione di pnpm.
 
 ---
@@ -102,7 +109,7 @@ Adesso ne esiste uno sulla forma vera, con le posizioni misurate.
 | Campo | Valore | Perché |
 |---|---|---|
 | **Name** | `lettura-atti` | |
-| **Command** | `pnpm atti` | Il giro breve. Il primo scatto fa da sé il carico completo (§1.2). Era `npm run atti` fino al 2026-08-17: il campo si aggiorna in Coolify, non da qui (§0) |
+| **Command** | 🔴 oggi `npm run atti` · **da portare a `corepack pnpm atti`** | Il giro breve. Il primo scatto fa da sé il carico completo (§1.2). ⚠️ Il campo si aggiorna **in Coolify**, non da qui, e non senza autorizzazione: vedi §0 |
 | **Frequency** | `0 21 * * *` | Una volta al giorno, alle 21 |
 | **Container** | il container dell'applicazione | Il database sta sul volume, che solo lui monta |
 

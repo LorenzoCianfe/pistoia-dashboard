@@ -5,20 +5,21 @@
 > [SemVer](https://semver.org/lang/it/) in fase 0.x (demo mock, nessuna API pubblica stabile).
 > Il dettaglio tecnico di ogni voce è in [DOCUMENTATION.md §10](DOCUMENTATION.md); il piano è in [ROADMAP.md](ROADMAP.md).
 
-## [0.54.4] — 2026-08-18 · Fase 2b: il gestore diventa pnpm, e quattro punti lo scoprono
+## [0.54.4] — 2026-08-18, integrata in `main` il 2026-08-19 · Fase 2b: il gestore diventa pnpm, e quattro punti lo scoprono
 
-> ✅ **Fase 2b chiusa**, e validata dalla CI vera: prima esecuzione verde su
-> tutti e quattro i job con `package-lock.json` ancora presente
-> ([run 32138836321](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32138836321)),
-> seconda esecuzione verde dopo averlo rimosso.
+> ✅ **Fase 2b chiusa, validata e INTEGRATA.** Il lavoro è nato sul branch
+> `chore/pnpm-migration-phase-2b`, è stato validato dalla CI vera sulla
+> [PR #3](https://github.com/LorenzoCianfe/pistoia-dashboard/pull/3), e il
+> 2026-08-19 è entrato in `main`.
 >
 > Migrazione **npm → pnpm**, e nient'altro: nessun upgrade di dipendenza,
 > nessun refactor. `pnpm-lock.yaml` e `pnpm-workspace.yaml` entrano,
-> `package-lock.json` esce.
+> `package-lock.json` esce **definitivamente**.
 >
 > 🔴 **Il rollback non è «ripristinare `package-lock.json`»**: CI, Docker,
 > `start.bat`, script e test sono convertiti, e un lockfile npm accanto a loro
-> non li fa tornare indietro. Il punto di ritorno è il commit precedente.
+> non li fa tornare indietro. Il punto di ritorno è `5e1f151`, che dopo il merge
+> è il **primo genitore** del merge commit.
 
 ### Cambiato
 - **Gestore `pnpm@11.22.0`**, fissato in `packageManager` **con l'hash di
@@ -74,6 +75,49 @@
   **query vera**, `@node-rs/argon2` con la **verifica dell'hash reale del
   seed** e con un **accesso HTTP vero** seguito da una seconda rotta protetta.
 - `docker-entrypoint.sh` e `start.bat` **eseguiti**, non letti.
+
+### Integrato — 2026-08-19
+
+- **PR [#3](https://github.com/LorenzoCianfe/pistoia-dashboard/pull/3) unita in
+  `main` con un MERGE COMMIT**: `32364e1a4d9cf59c474390ddc6d47fc4b1906abf`.
+  La strategia è stata **scelta, non subita**: è l'unica che lascia i due commit
+  della fase raggiungibili da `main`. Lo squash li avrebbe fusi in un commit
+  nuovo, il rebase riscritti — e in entrambi i casi gli SHA citati dai documenti
+  sarebbero diventati falsi.
+- **`8cac472` e `1905ce3` raggiungibili da `main`**, verificato con
+  `git merge-base --is-ancestor` e non dedotto dal grafo.
+- **Tre esecuzioni della CI, tutte verdi su quattro job:**
+
+  | Run | Trigger | `package-lock.json` |
+  |---|---|---|
+  | [32138836321](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32138836321) | `pull_request` sulla PR #3 | **presente** |
+  | [32141282203](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32141282203) | `pull_request` sulla PR #3 | **assente** |
+  | [32255534703](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32255534703) | `push` su **`main`**, dal merge | **assente** |
+
+  La terza è ciò che distingue **validata** da **integrata**, e le due cose non
+  sono la stessa: fino a lì il lavoro girava verde su un branch che nessuno
+  serviva.
+- **`package-lock.json` definitivamente assente** dal repository.
+- ⚠️ **La Fase 3 (Docker multi-stage) NON è iniziata.** È la prossima attività,
+  e va aperta su un branch suo.
+- ⚠️ **Il comparatore della deriva npm/pnpm non è più eseguibile** e **non va
+  ricostruito**: gli serviva `package-lock.json` come secondo termine del
+  confronto. Era un controllo specifico della migrazione, non un cancello
+  permanente. Il referto resta come registro storico — 725 pacchetti in
+  entrambi i lockfile, zero deriva non approvata, sole convergenze approvate
+  `picomatch` 4.0.4→4.0.5 e `semver` 7.8.2→7.8.5.
+- ⚠️ **Lo Scheduled Task di Coolify è ancora configurato con `npm run atti`.**
+  Vive fuori dal repository e funziona (misurato: dentro l'immagine
+  `npm run <script>` gira anche su un albero installato da pnpm), quindi non ha
+  bloccato il merge. **Da convertire in `corepack pnpm atti`** in Fase 3 o al
+  prossimo aggiornamento operativo del deployment. Lì dentro non si fa più
+  `npm ci` né `npm install`.
+- ⚠️ **La risk acceptance su `GHSA-ggr8-5vv4-36mx` resta ATTIVA.** La soglia non
+  è abbassata e `--ignore-unfixable` non è usato: il cancello significa «zero
+  High/Critical non esplicitamente approvate». **Condizione di uscita: si toglie
+  appena Prisma adotta `deepmerge-ts >=8.0.0`** — oggi impossibile a monte,
+  perché `@prisma/config@7.9.1` fissa `deepmerge-ts` a `7.1.5` esatto e non a un
+  range.
 
 ## [0.54.3] — 2026-08-16 · Fase 2a: si misura pnpm prima di adottarlo, e si trova un bloccante
 
