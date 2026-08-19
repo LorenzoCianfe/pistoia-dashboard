@@ -1,7 +1,7 @@
 /*
   IL CANCELLO DI FRESCHEZZA DEGLI ATTI.
 
-    npx tsx scripts/atti-freschezza.ts
+    corepack pnpm exec tsx scripts/atti-freschezza.ts
 
   Risponde a una domanda sola: **l'archivio degli atti è ancora vero?** Un
   archivio che ha smesso di aggiornarsi non somiglia a un guasto — somiglia a

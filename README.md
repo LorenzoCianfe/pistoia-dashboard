@@ -51,10 +51,16 @@ avvia l'app su <http://localhost:3000>. Per fermarla: **`stop.bat`**.
 
 ```bash
 cd pistoia-dashboard
-npm install
-npm run setup     # crea il DB + migrazioni + dati mockup
-npm run dev       # http://localhost:3000
+corepack pnpm install --frozen-lockfile
+corepack pnpm setup     # crea il DB + migrazioni + dati mockup
+corepack pnpm dev       # http://localhost:3000
 ```
+
+> **Il gestore è pnpm**, e la sua versione la fissa `packageManager` in
+> `package.json`: non si installa a parte, lo procura **corepack**, che arriva
+> dentro Node. Si scrive `corepack pnpm …` e non `pnpm …` perché `corepack
+> enable` — la riga che metterebbe `pnpm` nel PATH — su Windows vuole i permessi
+> di amministratore. Chi l'ha già eseguito può omettere il prefisso.
 
 **Account dimostrativi**
 

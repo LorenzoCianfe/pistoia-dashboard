@@ -4,7 +4,8 @@
 > Questo documento descrive cosa è già implementato, cosa è deliberatamente
 > fuori portata, e come segnalare un problema.
 >
-> Aggiornato: 2026-08-06 (§7: `npm audit` è bloccante in CI)
+> Aggiornato: 2026-08-17 (§7: l'audit è bloccante in CI, ora `pnpm audit`, con
+> una deroga nominata e la sua condizione di uscita). Prima: 2026-08-06.
 
 ---
 
@@ -249,8 +250,17 @@ passate che le hanno chiuse:
 | **`next` 16.2.7 → 16.3.0** | la voce a priorità più alta: **bypass di middleware in App Router**, più otto avvisi suoi | 8 → 5. Porta con sé `postcss` 8.5.23 e `sharp` 0.35.3, che erano due delle voci |
 | **`prisma` 7.8.0 → 7.9.1** (con `@prisma/client` e l'adapter allineati) | la catena `@prisma/dev` → `hono`, `@hono/node-server`, `valibot` — il server locale di Prisma Studio | 5 → **0** |
 
-**Il passo `npm audit` in CI è BLOCCANTE dal 2026-08-06**: `npm audit
---audit-level=high`, senza `|| true`.
+**Il passo di audit in CI è BLOCCANTE dal 2026-08-06**: `pnpm audit
+--audit-level=high`, senza `|| true`. (Era `npm audit` fino alla Fase 2b del
+2026-08-17, che ha cambiato il gestore.)
+
+⚠️ **Dal 2026-08-17 la soglia significa «zero High/Critical NON esplicitamente
+approvate»**, e c'è **una** deroga nominata:
+`GHSA-ggr8-5vv4-36mx` (`deepmerge-ts <8.0.0`, transitiva via Prisma), dichiarata
+in `pistoia-dashboard/pnpm-workspace.yaml` con la propria condizione di uscita —
+si toglie appena Prisma adotta `deepmerge-ts >=8.0.0`. La soglia **non** è stata
+abbassata e `--ignore-unfixable` **non** è stato usato: qualunque altra advisory
+continua a far cadere la pipeline, ed è stato provato nei due versi.
 
 > Questo paragrafo diceva «diventerà bloccante quando lo zero avrà retto qualche
 > settimana». Ha retto **un giorno**, e la riga è stata chiusa lo stesso, per
@@ -324,9 +334,11 @@ Due note per chi toccherà di nuovo queste versioni:
   l'aggiornamento **non** commuta React di nascosto.
 - **`@lhci/cli` non è una dipendenza del progetto** ed è una scelta: installarlo
   costa **285 pacchetti** e cinque avvisi propri (`tmp` è high), e il
-  `Dockerfile` fa `npm ci --include=dev` — finirebbero nell'immagine di
-  produzione. Gira con `npx` a versione pinnata (`npm run lighthouse`, job in
-  CI). La stessa domanda va fatta a ogni strumento di misura futuro.
+  `Dockerfile` installa **anche le dipendenze di sviluppo**
+  (`pnpm install --frozen-lockfile`; a toglierle sarebbe `--prod`) — finirebbero
+  nell'immagine di produzione. Gira con `pnpm dlx` a versione pinnata
+  (`corepack pnpm lighthouse`, job in CI). La stessa domanda va fatta a ogni
+  strumento di misura futuro.
 
 ---
 

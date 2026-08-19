@@ -47,7 +47,7 @@ yarn-error.log*
 next-env.d.ts
 test-results/
 
-# Schermate di verifica prodotte da `npm run shots`: sono un artefatto di
+# Schermate di verifica prodotte da `corepack pnpm shots`: sono un artefatto di
 # controllo, rigenerabile in un comando, e ogni giro ne scrive ~24 a 2x. Le
 # schermate scelte per raccontare il progetto stanno nella `screenshots/` della
 # radice, e quelle sì sono versionate.

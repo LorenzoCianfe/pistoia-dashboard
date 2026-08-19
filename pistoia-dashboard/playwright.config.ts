@@ -12,10 +12,11 @@ import { defineConfig, devices } from "@playwright/test";
   automatico.
 
   Serve perché Next rifiuta due dev server sulla stessa directory: con un
-  `npm run dev` aperto, il `webServer` qui sotto fallisce sempre — e la risposta
-  giusta non è spegnere il server di chi sta lavorando, è girargli contro.
+  `corepack pnpm dev` aperto, il `webServer` qui sotto fallisce sempre — e la
+  risposta giusta non è spegnere il server di chi sta lavorando, è girargli
+  contro.
 
-      E2E_BASE_URL=http://localhost:3000 npx playwright test
+      E2E_BASE_URL=http://localhost:3000 corepack pnpm exec playwright test
 */
 const BASE_ESTERNA = process.env.E2E_BASE_URL;
 
@@ -44,7 +45,16 @@ export default defineConfig({
           Prima di cercare nel diff: cancella `.next` e rilancia.
         */
         webServer: {
-          command: "npm run dev",
+          /*
+            `corepack pnpm`, non `pnpm` — misurato in Fase 2b. `pnpm` sta nel
+            PATH solo dopo `corepack enable`, che su Windows vuole i permessi di
+            amministratore (`EPERM` su `C:\Program Files\nodejs`); e pnpm nel
+            PATH dei propri script mette `node_modules/.bin`, non sé stesso,
+            quindi nemmeno lanciare la suite con pnpm basterebbe. `corepack`
+            invece arriva dentro Node ed è sempre lì. La versione la decide
+            `packageManager` in package.json, come ovunque.
+          */
+          command: "corepack pnpm dev",
           url: "http://localhost:3939/login",
           reuseExistingServer: !process.env.CI,
           timeout: 120_000,

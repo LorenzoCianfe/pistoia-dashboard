@@ -6,7 +6,7 @@
  * rework può dimostrare di non aver mosso niente: si rilancia e si confronta.
  *
  * Uso:
- *   npm run dev                     # in un altro terminale
+ *   corepack pnpm dev               # in un altro terminale
  *   node scripts/impronta.mjs                 # scrive la nuova impronta
  *   node scripts/impronta.mjs --confronta     # confronta con quella salvata
  *   node scripts/impronta.mjs --out=/tmp/x.json --url=/metodologia

@@ -5,10 +5,16 @@
  * chiude guardando le pagine, non solo facendo passare i test.
  *
  * Uso:
- *   npm run dev            # in un altro terminale
- *   npm run shots          # → screenshots/wave/
- *   npm run shots -- --out=/tmp/x --only=bilancio,opere
- *   npm run shots -- --simple --width=360   # modalità semplice, viewport minima
+ *   corepack pnpm dev      # in un altro terminale
+ *   corepack pnpm shots    # → screenshots/wave/
+ *   node scripts/shots.mjs --out=/tmp/x --only=bilancio,opere
+ *   node scripts/shots.mjs --simple --width=360   # modalità semplice, viewport minima
+ *
+ * ⚠️ Le OPZIONI si passano a `node`, non al gestore. Sotto npm `--only` veniva
+ * intercettato come configurazione di npm; sotto pnpm il `--` di separazione
+ * viene passato ALLA LETTERA allo script (misurato in Fase 2b:
+ * `pnpm x -- --simple` consegna `["--","--simple"]`). Chiamare `node` toglie
+ * la domanda di mezzo, in tutti e due i casi.
  *
  * `--simple` attiva la modalità semplice (`html.simple-mode`, scala 115%), che
  * `AGENTS.md` §5 elenca fra le condizioni perché una modifica sia "fatta".
@@ -427,7 +433,7 @@ async function capture(ctx, theme, ruolo) {
         E NON DEV'ESSERE UNA PAGINA D'ERRORE, che l'atterraggio non vede.
 
         Pagato il 2026-08-07, portando qui le sei sottopagine di `/admin`: con
-        `.next` stantio — lo stato in cui `npm run test:e2e` lascia sempre la
+        `.next` stantio — lo stato in cui `corepack pnpm test:e2e` lascia sempre la
         cartella, perché la cancella e il server di Playwright la ricostruisce
         altrove — le rotte **annidate** rispondono «Errore 404 · Pagina non
         trovata». L'indirizzo però resta quello chiesto, quindi il controllo

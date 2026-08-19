@@ -81,7 +81,7 @@
  * stretto del buco di prima, e non c'è modo di chiuderlo dall'esterno.
  *
  * Uso:
- *   npm run produzione
+ *   corepack pnpm produzione
  *
  * Variabili: `PROD_BASE_URL`, `PROD_EMAIL`, `PROD_PASSWORD`, `PROD_SSH_HOST`,
  * `PROD_APP_UUID`.

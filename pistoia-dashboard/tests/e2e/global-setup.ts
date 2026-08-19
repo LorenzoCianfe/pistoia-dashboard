@@ -1,5 +1,6 @@
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 
 /*
@@ -22,6 +23,42 @@ import path from "node:path";
 */
 
 const DB_FILE = "prisma/e2e.db";
+
+/*
+  I CLI SI INVOCANO CON QUESTO NODE, non attraverso un gestore di pacchetti.
+
+  🔴 Pagato in Fase 2b. La conversione ovvia di `npx prisma …` era
+  `pnpm exec prisma …`, e non regge dove serve di più: `pnpm` esiste solo dopo
+  `corepack enable`, che su Windows **vuole i permessi di amministratore**
+  (`EPERM` su `C:\Program Files\nodejs`). Peggio: nel PATH degli script pnpm
+  mette `node_modules/.bin`, **non sé stesso** — quindi nemmeno lanciare la
+  suite con `pnpm test:e2e` rende `pnpm` visibile da qui. Misurato: da un figlio
+  di pnpm, `pnpm --version` risponde «non è riconosciuto come comando».
+
+  Il sintomo sarebbe stato un `globalSetup` rosso su un database mai migrato,
+  cioè l'intera suite caduta per una ragione che non ha niente a che vedere coi
+  test — la categoria di rossi che AGENTS.md §3 (2026-08-11) insegna a
+  riconoscere e che costa più di tutte.
+
+  Si legge il `bin` dal manifesto invece di comporre il percorso a mano perché
+  la scorciatoia NON è generale: `prisma/build/index.js` si risolve,
+  `tsx/dist/cli.mjs` no — il suo `exports` risponde
+  `ERR_PACKAGE_PATH_NOT_EXPORTED`. Il manifesto è l'unica fonte che vale per
+  tutti e due.
+
+  `process.cwd()` come ancora: questo file lo usa già per il database, e
+  Playwright gira dalla radice del progetto.
+*/
+const richiedi = createRequire(path.join(process.cwd(), "package.json"));
+
+function cliDi(pacchetto: string): string {
+  const manifesto = richiedi.resolve(`${pacchetto}/package.json`);
+  const bin = richiedi(`${pacchetto}/package.json`).bin as
+    | string
+    | Record<string, string>;
+  const relativo = typeof bin === "string" ? bin : bin[pacchetto];
+  return path.join(path.dirname(manifesto), relativo);
+}
 
 export default function globalSetup() {
   // Con `E2E_BASE_URL` i test girano contro un server GIÀ IN ASCOLTO, e il
@@ -59,12 +96,12 @@ export default function globalSetup() {
   });
 
   const env = { ...process.env, DATABASE_URL: `file:./${DB_FILE}` };
-  // `execSync` passa da una shell, ma qui i comandi sono costanti scritte a
-  // mano: nessun input esterno viene interpolato, quindi non c'è superficie di
-  // command injection. La shell serve davvero, perché su Windows `npx` è un
-  // `.cmd` che `execFile` senza shell non saprebbe risolvere.
-  execSync("npx prisma migrate deploy", { stdio: "inherit", env });
-  execSync("npx tsx prisma/seed.ts", { stdio: "inherit", env });
+  // Niente shell: si passa il modulo a `node`, quindi non c'è nulla da
+  // risolvere nel PATH e nulla da quotare — e il percorso di questo progetto
+  // contiene spazi («Progetti - AI»), che con una shell di mezzo si spezzano.
+  const opzioni = { stdio: "inherit", env } as const;
+  execFileSync(process.execPath, [cliDi("prisma"), "migrate", "deploy"], opzioni);
+  execFileSync(process.execPath, [cliDi("tsx"), "prisma/seed.ts"], opzioni);
 
   /*
     ⚠️ **Gli atti NON si seminano qui**, ed è una lezione pagata il 2026-08-12.

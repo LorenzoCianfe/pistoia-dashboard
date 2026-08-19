@@ -49,7 +49,7 @@ async function wipe() {
   // l'archivio — che costa una lettura da tre minuti — e soprattutto il seed
   // non deve mai avere l'occasione di RIEMPIRLI, perché una delibera inventata
   // attribuisce alla giunta una decisione che non ha preso.
-  // Per rileggerli: `npm run atti -- --tutte`.
+  // Per rileggerli: `corepack pnpm atti --tutte`.
 
   // Child-first deletion to satisfy foreign keys.
   // O4 — Territorio & partecipazione

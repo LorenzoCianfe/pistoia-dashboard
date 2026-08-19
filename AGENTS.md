@@ -6,7 +6,15 @@
 >
 > **Leggilo per intero all'inizio di ogni sessione, prima di toccare codice.**
 >
-> Aggiornato: 2026-08-12 (**la prima pagina**: le cinque trappole di §3 — *un
+> Aggiornato: 2026-08-17 (**il cambio di gestore**, Fase 2b: da npm a **pnpm**.
+> §4 e §5 portano la forma corrente dei comandi — `corepack pnpm …` —, §3 le
+> cinque trappole nuove: *pnpm non è nel PATH e non basta passare da pnpm*, *il
+> `--` di npm viene passato alla lettera*, *pnpm richiama sé stesso per nome*,
+> *un glob su `.pnpm` non vede i pacchetti con scope*, *cercare per sottostringa
+> trova hash*. ⚠️ I comandi **dentro le trappole di §3 restano in forma `npm`**:
+> raccontano ciò che accadde allora.)
+>
+> Prima: 2026-08-12 (**la prima pagina**: le cinque trappole di §3 — *un
 > `<fieldset>` non si stringe*, *`vw` è la finestra e non la colonna, anche per
 > le lunghezze*, *`line-clamp` accanto a `block` non tronca*, *l'italiano elide
 > davanti a otto e undici*, *una rotta può non stare in nessun cancello*, *una
@@ -78,9 +86,16 @@ L'app vive in `pistoia-dashboard/`. La documentazione vive nella radice.
 
 ## 3. Design system — le regole che si sbagliano più spesso
 
-> §3 raccoglie **cinquantotto trappole già pagate**. Sono raggruppate per
+> §3 raccoglie **sessantatré trappole già pagate**. Sono raggruppate per
 > ondata solo perché è così che sono emerse: leggile tutte, valgono tutte
 > ancora.
+>
+> ⚠️ **I comandi citati qui dentro sono nella forma `npm` dell'epoca, e restano
+> così di proposito**: una trappola riferisce ciò che accadde allora, e
+> riscriverla la falsificherebbe. Dal 2026-08-17 il gestore è **pnpm** (Fase
+> 2b): la forma corrente di ogni comando è in **§4**, e la lezione della
+> trappola vale identica. Dove qui sotto leggi `npm run X`, oggi si scrive
+> `corepack pnpm X`.
 
 **Prima di tutto: Astryx è la sorgente dei TOKEN, non lo strato di primitive.**
 Le primitive in `components/ui/` restano Pistoia, e non è pigrizia: ogni caso è
@@ -90,12 +105,12 @@ troppo pesante inline, `ProgressBar` perde lo stagger). Non "sistemarle"
 migrandole ad Astryx senza aver letto quei commenti e `ROADMAP.md` ondata 5.
 
 Per un componente **nuovo**, invece, guarda prima se Astryx ce l'ha:
-`npm run astryx component <Nome>`.
+`corepack pnpm astryx component <Nome>`.
 
 
 
 1. **I token di sistema stanno in `src/themes/pistoia.ts`**, non in
-   `globals.css`. Dopo averlo modificato: `npm run theme:build`. Il CSS
+   `globals.css`. Dopo averlo modificato: `corepack pnpm theme:build`. Il CSS
    compilato in `src/themes/generated/` è generato — non modificarlo a mano.
 2. **I token che Astryx non modella** (lime `--highlight`, stop dei mesh,
    griglia dot-matrix) stanno in `globals.css`, nel layer `pistoia`. Astryx
@@ -1231,28 +1246,97 @@ quindi passano per la stessa luminanza: per circa un secondo il testo sulle
 superfici è poco leggibile. Non si ripara con l'implementazione — è la geometria
 di un incrocio. `DESIGN.md` §6 la dichiara aperta.
 
+### Cinque trappole del cambio di gestore (2026-08-17, Fase 2b)
+
+Le prime tre riguardano **pnpm**, le ultime due il **modo di verificarlo** — che
+è la categoria che qui costa di più.
+
+1. 🔴 **`pnpm` non è nel PATH, e non basta lanciare le cose *attraverso* pnpm.**
+   Il comando `pnpm` esiste solo dopo `corepack enable`, che su Windows vuole i
+   permessi di amministratore: qui fallisce con `EPERM: operation not
+   permitted, open 'C:\Program Files\nodejs\pnpx'`, uscita 1. E pnpm, nel PATH
+   che dà ai propri script, mette `node_modules/.bin` — **non sé stesso**:
+   misurato, da un figlio di pnpm `pnpm --version` risponde «non è
+   riconosciuto come comando».
+
+   Quindi `pnpm exec …` scritto dentro uno script, un config o un `.bat`
+   **non regge**, nemmeno quando l'utente ha lanciato la suite con pnpm. Erano
+   quattro punti: `scripts/misura.mjs`, `playwright.config.ts`
+   (`webServer.command`), `tests/e2e/global-setup.ts` e `lighthouserc.js`
+   (`startServerCommand`). Il primo era già stato chiuso; gli altri tre
+   sarebbero caduti al primo lancio — e `global-setup` avrebbe fatto cadere
+   **l'intera suite** per una ragione che non c'entra niente coi test.
+
+   Le due forme che reggono ovunque, e quando usarle:
+   - **`corepack pnpm …`** quando serve *il gestore* (uno script di
+     `package.json`, un `.bat`, un `webServer`): `corepack` arriva dentro Node
+     ed è sempre raggiungibile.
+   - **`process.execPath` + il modulo risolto**, con `shell: false`, quando
+     serve *un CLI di `node_modules`*: niente PATH, niente `.cmd`, niente
+     quoting — e chi misura non deve sapere quale gestore ha installato le
+     dipendenze.
+
+2. **`pnpm x -- --flag` passa il `--` ALLA LETTERA.** È l'idioma di npm, che il
+   `--` se lo mangia come separatore; pnpm no. Misurato:
+
+   ```
+   pnpm eco --tutte      → ARGV=["--tutte"]
+   pnpm eco -- --tutte   → ARGV=["--","--tutte"]
+   ```
+
+   Ogni `npm run X -- --opzione` convertito meccanicamente in `pnpm X --
+   --opzione` consegna quindi un argomento in più. Con pnpm le opzioni si
+   scrivono **di seguito**. (E per `shots` la regola resta più forte: le opzioni
+   si passano a `node`, §4.)
+
+3. **Con le dipendenze non allineate, pnpm richiama SÉ STESSO per nome.** Prima
+   di eseguire uno script fa un `runDepsStatusCheck`, e quel controllo spawna
+   `pnpm` dal PATH: su una macchina senza `corepack enable` esce con «"pnpm" non
+   è riconosciuto», da dentro uno stack di `execa`, **parlando di tutt'altro**.
+   Non si vede finché `node_modules` è in pari col lockfile — cioè il giorno in
+   cui si vedrà sarà quello in cui si è appena cambiato una dipendenza.
+
+4. 🔴 **Un glob su `.pnpm/*/node_modules/*` NON vede i pacchetti con scope.**
+   Stanno un livello più in basso (`.pnpm/@scope+nome@ver/node_modules/@scope/
+   nome/`). Il primo censimento degli script di build dentro l'immagine ha
+   quindi risposto **4** invece di **7**, omettendo proprio i tre con scope
+   (`@astryxdesign/cli`, `@astryxdesign/core`, `@prisma/engines`) — e il numero
+   sbagliato era **plausibile**, perché somigliava a una differenza vera fra
+   Windows e Linux. Letto col glob giusto: **7 su Linux esattamente come su
+   Windows**.
+
+5. **Cercare un pacchetto per SOTTOSTRINGA dentro un percorso trova hash.** La
+   sonda sulle tracce di Next cercava `c12` e ne ha trovate **56**: erano
+   filename esadecimali della cache di graphify (`…9c1290…` contiene `c12`). Si
+   cerca per **segmento di percorso**, e la sonda si prova anche al
+   contrario — deve trovare ciò che *deve* esserci (`@prisma/client`,
+   `better-sqlite3`, `@node-rs/argon2`), altrimenti «zero occorrenze» significa
+   solo che non sa guardare.
+
 ---
 
 ## 4. Comandi
 
 ```bash
-npm run dev            # sviluppo
-npm run typecheck      # tsc --noEmit — sempre prima di dire "fatto"
-npm run lint
-npm test               # vitest
-npm run test:e2e       # playwright (comprende il cancello di accessibilità)
-npm run a11y           # SOLO il cancello a11y: axe, 21 pagine × 2 temi, WCAG AA + 2.2
-npm run bersagli       # SOLO il cancello dei 44px: 21 pagine × 2 viewport (1280 e 360)
-npm run contenimento   # SOLO il cancello del ritaglio: nessun controllo esce dal proprio contenitore
-npm run lighthouse     # Lighthouse: costruisce da sé una build PULITA, poi GIUDICA (soglie bloccanti)
-npm run impronta       # cattura i 213 token come il browser li risolve, nei due temi
-npm run impronta:confronta   # esce 1 se un solo token si è mosso — il cancello del design
-npm run theme:build    # ricompila il tema dopo aver toccato pistoia.ts
-npm run shots          # schermate delle pagine chiave, temi chiaro e scuro
+corepack pnpm dev            # sviluppo
+corepack pnpm typecheck      # tsc --noEmit — sempre prima di dire "fatto"
+corepack pnpm lint
+corepack pnpm test           # vitest
+corepack pnpm test:e2e       # playwright (comprende il cancello di accessibilità)
+corepack pnpm a11y           # SOLO il cancello a11y: axe, 21 pagine × 2 temi, WCAG AA + 2.2
+corepack pnpm bersagli       # SOLO il cancello dei 44px: 21 pagine × 2 viewport (1280 e 360)
+corepack pnpm contenimento   # SOLO il cancello del ritaglio: nessun controllo esce dal proprio contenitore
+corepack pnpm lighthouse     # Lighthouse: costruisce da sé una build PULITA, poi GIUDICA (soglie bloccanti)
+corepack pnpm impronta       # cattura i 213 token come il browser li risolve, nei due temi
+corepack pnpm impronta:confronta   # esce 1 se un solo token si è mosso — il cancello del design
+corepack pnpm theme:build    # ricompila il tema dopo aver toccato pistoia.ts
+corepack pnpm shots          # schermate delle pagine chiave, temi chiaro e scuro
 node scripts/shots.mjs --simple --width=360   # modalità semplice, viewport minima
-npm run rotte          # tutte le rotte rispondono, rendono contenuto E non scrivono errori in console? (66 al 2026-08-09)
-npm run produzione     # il sito DEPLOYATO si monta davvero? — dopo ogni deploy, §8
-npm run db:reset       # ricrea il DB e ripopola i dati dimostrativi
+corepack pnpm rotte          # tutte le rotte rispondono, rendono contenuto E non scrivono errori in console? (66 al 2026-08-09)
+corepack pnpm produzione     # il sito DEPLOYATO si monta davvero? — dopo ogni deploy, §8
+corepack pnpm db:reset       # ricrea il DB e ripopola i dati dimostrativi
+
+corepack pnpm install --frozen-lockfile   # installa esattamente il lockfile
 
 python scripts/pdftext.py documento.pdf              # testo di un PDF
 python scripts/pdftext.py documento.pdf --griglia    # (x, y, testo), per le tabelle
@@ -1346,12 +1430,21 @@ fatto omettere l'intero elenco da `/trasparenza/costo-amministrazione` erano il
 portafoglio, non due versioni in disaccordo. Dettaglio in
 `docs/fonti-organigramma.md` §1.1.
 
-**Le opzioni dello script delle schermate vanno passate a `node`, non a `npm`.**
-In PowerShell `npm run shots -- --simple --width=360` non le fa arrivare (e
-`--only` viene proprio intercettato da npm come sua configurazione: `npm warn
-invalid config only=...`). Il sintomo è muto — lo script gira in modalità
-normale e scrive in `screenshots/wave` invece che in `screenshots/wave-semplice`
-— quindi si crede di aver verificato la viewport minima senza averla mai aperta.
+**Le opzioni dello script delle schermate vanno passate a `node`, non al gestore
+di pacchetti.** Si scrive `node scripts/shots.mjs --simple --width=360`, ed è la
+forma che sta in §4.
+
+Il difetto che l'ha imposta fu pagato **sotto npm**, e la sua cronaca resta
+perché la lezione non dipende dal gestore: in PowerShell
+`npm run shots -- --simple --width=360` non faceva arrivare le opzioni, e
+`--only` veniva proprio intercettato da npm come sua configurazione
+(`npm warn invalid config only=...`). **Il sintomo è muto** — lo script gira in
+modalità normale e scrive in `screenshots/wave` invece che in
+`screenshots/wave-semplice`, quindi si crede di aver verificato la viewport
+minima senza averla mai aperta.
+
+⚠️ Che pnpm inoltri gli argomenti meglio di npm **non è stato misurato**, e non
+serve saperlo: chiamare `node` direttamente toglie la domanda di mezzo.
 
 **`perl -0pi -e` con gli escape `\x{…}` DISTRUGGE la codifica di tutto il
 file.** Pagata il 2026-08-07 su `ROADMAP.md`: **1208 sequenze di caratteri
@@ -1374,15 +1467,16 @@ originali e quelli scritti bene passano intatti. Verificalo cercando `Ã` o `Â`
 seguiti da un byte di continuazione: devono uscire **zero**.
 
 **Gli E2E vogliono la directory libera.** Next rifiuta due dev server sullo
-stesso progetto, quindi con un `npm run dev` aperto l'avvio automatico di
-Playwright fallisce sempre. **Spegni il dev server** e lancia `npm run test:e2e`:
+stesso progetto, quindi con un `corepack pnpm dev` aperto l'avvio automatico di
+Playwright fallisce sempre. **Spegni il dev server** e lancia
+`corepack pnpm test:e2e`:
 Playwright avvia il proprio processo contro `prisma/e2e.db`, ricreato e
 riseminato da `tests/e2e/global-setup.ts`. Riferimento: 11/11 in ~50s.
 
 Lo script cancella `.next` prima di partire (`pretest:e2e`), per la ragione
 scritta in §3, trappola 4 della Fase A/B: la suite condivide quella cartella con
 il dev server e la ricostruzione incrementale rompe le rotte annidate. Il conto
-è ~40s di ricompilazione in più a esecuzione, e il primo `npm run dev`
+è ~40s di ricompilazione in più a esecuzione, e il primo `corepack pnpm dev`
 successivo riparte anch'esso da freddo.
 
 `E2E_BASE_URL` esiste ancora ma **non è la scorciatoia che sembra**: punta la
@@ -1393,7 +1487,7 @@ scenario, e i tentativi di login si sommano finché l'intera suite cade su
 «Troppi tentativi di accesso». Usarlo per "aggirare" il conflitto di porta
 significa riaprire esattamente il difetto che l'isolamento ha chiuso.
 
-`npm run shots` **misura anche il traboccamento orizzontale** e esce con codice
+`corepack pnpm shots` **misura anche il traboccamento orizzontale** e esce con codice
 1 se una pagina scorre di lato. È l'unico difetto di layout che una schermata a
 piena pagina non mostra: il viewport si allarga fino a contenerlo e lo fa
 sparire.
@@ -1418,7 +1512,7 @@ cancello possa fallire.
 **E se Chromium smette di partire del tutto** — «Invalid file descriptor to ICU
 data received», lancio fallito in un secondo su qualunque script — non è il
 codice e non è la memoria: è l'installazione. Si ripara con
-`npx playwright install chromium --force`, ~2 minuti, e blocca `shots`, gli E2E
+`corepack pnpm exec playwright install chromium --force`, ~2 minuti, e blocca `shots`, gli E2E
 e il cancello a11y insieme finché non lo fai. Il binario risponde a
 `--version` anche quando è in questo stato: non è una prova che sia sano.
 
@@ -1473,10 +1567,10 @@ riavvia**. Succede dopo un cambio di dipendenze ed è costato un'ora una volta.
 
 Una modifica è finita quando **tutte** queste sono vere:
 
-- [ ] `npm run typecheck` passa
-- [ ] `npm run lint` passa
+- [ ] `corepack pnpm typecheck` passa
+- [ ] `corepack pnpm lint` passa
 - [ ] I test esistenti passano
-- [ ] `npm run rotte` è verde — **0 con problemi**, qualunque sia il totale
+- [ ] `corepack pnpm rotte` è verde — **0 con problemi**, qualunque sia il totale
       (66 al 2026-08-09; il numero cresce a ogni rotta nuova, e va letto dallo
       script, non da qui). È l'unico cancello che risponde
       alla domanda «abbiamo perso una funzionalità?», e l'unico che apre le
@@ -1488,10 +1582,10 @@ Una modifica è finita quando **tutte** queste sono vere:
       `prefers-reduced-motion: reduce` emulata su tutte e tre le passate — è lo
       stato in cui i sei errori di idratazione di `/bilancio` sono vissuti mesi
       sotto E2E verdi. Un errore in console è una rotta rossa, col testo in riga
-- [ ] L'hai **guardata**: `npm run shots`, o il browser, in tema chiaro **e**
+- [ ] L'hai **guardata**: `corepack pnpm shots`, o il browser, in tema chiaro **e**
       scuro. Un typecheck verde non è una prova visiva.
 - [ ] Funziona da tastiera e il focus è visibile. **Il cancello axe non basta**:
-      da 2026-08-05 `npm run test:e2e` comprende `accessibilita.spec.ts` (WCAG
+      da 2026-08-05 `corepack pnpm test:e2e` comprende `accessibilita.spec.ts` (WCAG
       AA e 2.2, **21 pagine × 2 temi = 42 casi**, su **165** E2E totali — comprese le sette
       superfici di `/admin/*`, i quattro dettagli delle code e `/redazione` — nessuna regola esclusa), ma axe copre ~30–40% delle
       barriere reali — le meccaniche. Ordine di lettura, trappole di focus e
@@ -1499,13 +1593,13 @@ Una modifica è finita quando **tutte** queste sono vere:
       ⚠️ Se aggiungi un colore, **misura la coppia colore/`-soft`**: è lì che il
       contrasto è caduto, e non si vede guardando
 - [ ] I bersagli reggono i **44px** di `DESIGN.md` §11.6: dal 2026-08-07
-      `npm run test:e2e` comprende `bersagli.spec.ts` (**21 pagine × 2
+      `corepack pnpm test:e2e` comprende `bersagli.spec.ts` (**21 pagine × 2
       viewport = 42 casi**), che è un cancello **diverso** da `target-size` di
       axe — quello difende i 24. L'elenco delle esenzioni «essenziali» è
       **vuoto**, e un'aggiunta va scritta con la condizione che la chiude.
       ⚠️ Le tre liste di pagine sono una sola: `tests/e2e/pagine-cancello.ts`
 - [ ] **Nessun controllo esce dal proprio contenitore**: dal 2026-08-09
-      `npm run test:e2e` comprende `contenimento.spec.ts` (**21 pagine × 2
+      `corepack pnpm test:e2e` comprende `contenimento.spec.ts` (**21 pagine × 2
       viewport = 42 casi**). È un cancello **diverso** dagli altri tre, e la
       differenza è il punto: `shots` misura il traboccamento *della pagina* —
       che resta zero proprio perché la card ha `overflow` nascosto —,
@@ -1513,7 +1607,7 @@ Una modifica è finita quando **tutte** queste sono vere:
       alto 44), e axe non ha una regola per «tagliato».
       ⚠️ Un contenitore che **scorre** non è un difetto: il rosso è solo dove
       la parte fuori è **irraggiungibile** (`overflow: hidden`/`clip`)
-- [ ] Regge la **modalità semplice** — `npm run shots -- --simple --width=360`,
+- [ ] Regge la **modalità semplice** — `node scripts/shots.mjs --simple --width=360`,
       che è anche il controllo del traboccamento orizzontale alla viewport minima
 - [ ] `prefers-reduced-motion` non lascia contenuto invisibile o inaccessibile
 
@@ -1527,7 +1621,7 @@ gestisce già entrambe le cose.
 deploy esista. Il difetto del 2026-08-05 — la demo che nessun browser riusciva
 ad aprire — è vissuto per mesi sotto una fila di cancelli verdi proprio perché
 tutti guardavano `localhost`. Il sito deployato ha il proprio cancello,
-`npm run produzione`, e si lancia **dopo il deploy**: §8.
+`corepack pnpm produzione`, e si lancia **dopo il deploy**: §8.
 
 ---
 
@@ -1640,7 +1734,7 @@ lancia a mano, dall'interfaccia di Coolify o via API.
 > andato quello di prima.
 >
 > **La Dashboard però continua a girare**: il suo container non ha niente a che
-> vedere con la salute di Coolify, il sito serve, e `npm run produzione` passa.
+> vedere con la salute di Coolify, il sito serve, e `corepack pnpm produzione` passa.
 > Coolify malato è un problema di *deploy*, non di *servizio*.
 >
 > Il primo controllo, prima di qualunque diagnosi:
@@ -1666,7 +1760,7 @@ lancia a mano, dall'interfaccia di Coolify o via API.
 > ```
 >
 > Il tag di quell'immagine **è** lo SHA del commit. È lo stesso controllo che fa
-> `npm run produzione` come controllo 0, quindi in pratica basta lanciare il
+> `corepack pnpm produzione` come controllo 0, quindi in pratica basta lanciare il
 > cancello: se dice «è il commit che hai qui», il deploy è finito comunque
 > l'API abbia deciso di raccontarlo.
 >
@@ -1677,7 +1771,7 @@ lancia a mano, dall'interfaccia di Coolify o via API.
 > `ERR_CERT_AUTHORITY_INVALID`. Difetto **preesistente dalla Fase 0**, mai visto
 > da nessun cancello perché `rotte` e `shots` girano contro lo sviluppo.
 >
-> Dopo ogni deploy, quindi, **un cancello**: `npm run produzione`.
+> Dopo ogni deploy, quindi, **un cancello**: `corepack pnpm produzione`.
 >
 > Fino al 2026-08-07 erano tre controlli da fare a mano, e una voce a mano non è
 > una garanzia — nessuno la rispunta. Adesso `scripts/produzione.mjs` apre il
@@ -1699,7 +1793,7 @@ lancia a mano, dall'interfaccia di Coolify o via API.
 >
 > ⚠️ **Il cancello SCRIVE nel database dimostrativo, ed è dichiarato.** Accede
 > come `cittadino@` e atterra su `/la-mia-citta`, dove `CampagnaHome` registra
-> la sollecitazione al montaggio — e in produzione `npm run db:seed` **non si
+> la sollecitazione al montaggio — e in produzione `corepack pnpm db:seed` **non si
 > può rilanciare** (`docker-entrypoint.sh` lo traccia con `/data/.seeded`).
 > Misurato il 2026-08-07, ed è più piccolo di quanto sembri: la card **resta a
 > schermo** (conta una volta sola finché non rispondi), quindi la dimostrazione

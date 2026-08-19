@@ -29,7 +29,7 @@
  * è supportato da Safari 14.1). Chi non l'avesse vede la dissolvenza semplice,
  * che è il ripiego previsto in `transizione-tema.tsx`.
  *
- * Uso:  npm run dev   (in un altro terminale, serve il video sorgente)
+ * Uso:  corepack pnpm dev   (in un altro terminale, serve il video sorgente)
  *       node scripts/alba.mjs --da=<cartella-refs> --base=http://localhost:3000
  */
 import { chromium } from "@playwright/test";

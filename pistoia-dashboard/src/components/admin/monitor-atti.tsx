@@ -58,7 +58,7 @@ export function MonitorAttiCard({ dati }: { dati: MonitorAtti }) {
         <p className="mt-1 text-sm text-muted">
           Nessun atto in archivio: la lettura dal portale della trasparenza non
           è ancora stata lanciata su questa base dati. Si lancia con{" "}
-          <code className="font-mono text-xs">npm run atti -- --tutte</code>.
+          <code className="font-mono text-xs">pnpm atti --tutte</code>.
         </p>
       ) : (
         <>
