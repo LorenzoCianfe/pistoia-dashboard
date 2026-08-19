@@ -31,7 +31,16 @@
 > Il checkpoint temporaneo `docs/rework/SESSION_HANDOFF_PHASE_2B.md` è stato
 > cancellato: il suo contenuto vive qui, in §7b e §7c.
 >
-> ⚠️ **La FASE 3 NON è iniziata**, e non parte senza che Lorenzo la autorizzi.
+> 🟡 **FASE 3 — progettata e MISURATA il 2026-08-19, NON implementata.** La
+> ricognizione è chiusa, la composizione è scelta (**A**, ≈232,5 MB) e le
+> misure sono tutte in **§11**. Nel repository non entra ancora nessuna
+> soluzione: il branch `chore/docker-multistage-phase-3` porta **solo il
+> checkpoint documentale**, e le tre modifiche esplorative sono state
+> **ripristinate** di proposito (§11.7).
+>
+> 🔴 **Due perdite BLOCCANTI trovate misurando, da chiudere nella prossima
+> sessione:** `.env` e `graphify-out` finiscono dentro `.next/standalone`
+> (§11.5).
 >
 > ⚠️ **Il rollback non è «ripristinare `package-lock.json`».** Sarebbe
 > insufficiente: CI, `Dockerfile`, `docker-entrypoint.sh`, `start.bat`, gli
@@ -93,14 +102,18 @@ corregge subito, minima e senza riorganizzare. La Fase 13 non è l'alibi per
 lasciare in giro documentazione operativa che descrive uno stato che non
 esiste più.
 
-La prossima azione è la FASE 3: Docker multi-stage — togliere le
-devDependencies dall'immagine di esecuzione, che oggi pesa 2,82GB e costa
-quel disco a ogni deploy (AGENTS.md §8). È un'attività SEPARATA da pnpm:
-la 2b ha già portato il Dockerfile su pnpm e l'immagine è stata costruita,
-avviata e provata a runtime.
+La prossima azione è IMPLEMENTARE la FASE 3: Docker multi-stage. La
+ricognizione è già stata fatta e MISURATA il 2026-08-19: perimetro,
+numeri, composizione scelta e trappole stanno in §11 di questa consegna.
+NON rifarla a memoria e NON riaprire le decisioni già prese (§11.9).
 
-⚠️ La FASE 3 NON è iniziata, e non parte senza autorizzazione di Lorenzo.
-   Va aperta su un branch SUO, non su quello della 2b.
+Il branch `chore/docker-multistage-phase-3` ESISTE già e porta solo il
+checkpoint documentale: si riparte da lì, non da un branch nuovo.
+
+⚠️ Prima di scrivere una riga, leggi §11 per intero. In particolare:
+   §11.3 la lista letterale dei file da copiare · §11.5 le DUE PERDITE
+   bloccanti (`.env` e `graphify-out` dentro `.next/standalone`) ·
+   §11.8 la struttura approvata col secondo manifesto.
 
 ⚠️ Lo Scheduled Task di Coolify dice ancora `npm run atti`, e vive FUORI
    dal repository. Funziona (misurato), quindi non blocca niente — ma va
@@ -293,7 +306,7 @@ visualizzazioni), vietato per decorazioni ottenibili con CSS/Motion. `AGENTS.md`
 | **1** | **Potatura**: via l'import di `astryx.css` (−124.056 byte di CSS servito), via `theme-neutral`, `cli` → `devDependencies` | ✅ **CHIUSA** · `6621e07` · CI verde |
 | **2a** | Versione pnpm fissata (`pnpm@11.22.0`) · inventario e comportamento reale misurati · politica degli script determinata (**una voce a `true`**) · falso bloccante Vitest smontato fino alla causa | ✅ **CHIUSA** |
 | **2b** | **pnpm**, da sola. CI · `start.bat` · `docker-entrypoint.sh` · `Dockerfile` · `package.json` · `playwright.config.ts` · `global-setup.ts` · `misura.mjs` · `lighthouserc.js` + la documentazione operativa triata. `package-lock.json` rimosso | ✅ **CHIUSA E INTEGRATA** · PR #3 unita con merge commit `32364e1` il 2026-08-19 · tre CI verdi ([32138836321](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32138836321) · [32141282203](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32141282203) · [32255534703](https://github.com/LorenzoCianfe/pistoia-dashboard/actions/runs/32255534703) su `main`) · §7b e §7c |
-| **3** | Docker multi-stage (attività separata da pnpm) | ⛔ **NON INIZIATA** — è la prossima, su un branch suo e con autorizzazione |
+| **3** | Docker multi-stage (attività separata da pnpm) | 🟡 **PROGETTATA E MISURATA, NON IMPLEMENTATA** — branch `chore/docker-multistage-phase-3`, ricognizione chiusa e composizione **A** scelta. Perimetro, misure e decisioni in **§11** |
 | **4** | Prettier + `prettier-plugin-tailwindcss`, reformat meccanico isolato in un commit suo, `.prettierignore` + `.git-blame-ignore-revs`. **Commenti non toccati nel contenuto né nella struttura semantica** | |
 | **5** | Token propri: `styles/tokens/*.ts` + generatore · via `defineTheme` · reset proprio. ⚠️ il reset muove la tipografia: diff visivo obbligatorio | |
 | **6** | `globals.css`: **prima si classifica, poi si colloca**. Globale = reset/base, token, tipografia fondamentale, `@theme`, materiali e pattern davvero condivisi. Specifico = vicino a rotta/feature/componente (anche CSS Modules dove porta isolamento reale, **senza** migrazione obbligatoria). Qui si rimuovono anche gli orfani. Cancello: **peso del CSS globale misurato prima/dopo** | |
@@ -957,3 +970,308 @@ allowBuilds:
    **triati**.
 6. Eseguire i test del punto 10 — compresa l'immagine Docker costruita e avviata.
 7. **Solo a quel punto** rimuovere `package-lock.json`.
+
+---
+
+## 11. FASE 3 — Docker multi-stage: la ricognizione, le misure, la decisione
+
+> **Sessione del 2026-08-19.** La Fase 3 è stata **progettata e misurata, non
+> implementata**: nel repository non entra nessuna soluzione. Il branch
+> `chore/docker-multistage-phase-3` porta **solo questo checkpoint**.
+>
+> ⚠️ **Le tre modifiche tecniche preparatorie sono state RIPRISTINATE**, per
+> decisione di Lorenzo: erano esplorative e non rappresentano la soluzione
+> scelta. Il loro contenuto è registrato in §11.7, così la prossima sessione le
+> rifà sapendo perché — invece di ritrovarle a metà.
+
+### 11.1 · L'obiettivo, e il suo innesco che oggi non è verificabile
+
+Togliere dall'immagine di esecuzione tutto ciò che serve solo a costruire.
+AGENTS.md §8 registra **2,82GB a immagine**, Coolify **non cancella la
+precedente**, il disco è da 40GB, e il 2026-08-07 quella catena ha portato
+Postgres in `PANIC: No space left on device` e l'intera API di Coolify a
+`Server Error`.
+
+🔴 **Il disco NON è stato rimisurato in questa sessione.** `ssh homeserver` è
+andato in **timeout sulla porta 22** (`connect to host 192.168.50.173 port 22:
+Connection timed out`): il server non era raggiungibile. Quindi la condizione di
+uscita scritta in AGENTS.md §8 — «si valuta quando `df -h /` tornerà sopra
+l'80% nonostante la potatura» — **non è stata verificata**, e i 2,82GB restano
+un valore **registrato, non riconfermato**. La Fase 3 procede perché Lorenzo
+l'ha decisa, non perché la soglia sia stata misurata.
+
+### 11.2 · Le misure che decidono la composizione
+
+Prese su questa macchina, su una build pulita (`rm -rf .next` prima).
+
+**Artefatti della build standalone:**
+
+| Artefatto | Peso | File |
+|---|---|---|
+| `.next/standalone` | **35,2 MB** | 2.143 |
+| — di cui `.next/standalone/node_modules` | **23,5 MB** | 1.142 |
+| `.next/static` | 2,1 MB | 85 |
+| `public` | 14,3 MB | 14 |
+| `.next/cache` (**da NON imbarcare**) | 137,3 MB | 24 |
+| `.next` totale | 209,6 MB | 3.610 |
+
+**Alberi di dipendenze**, misurati in banchi separati costruiti dal lockfile
+vero, senza toccare il `node_modules` del progetto:
+
+| Albero | Peso | File |
+|---|---|---|
+| `node_modules` attuale (con le dev) | 872 MB | 43.590 |
+| `pnpm install --prod --frozen-lockfile` | **708,6 MB** | 30.588 |
+| tracciato da standalone | **23,5 MB** | 1.142 |
+| soli strumenti (`prisma` + `tsx` + `dotenv`) | **209,0 MB** | 10.096 |
+
+**Le tre composizioni valutate:**
+
+| | `node_modules` a runtime | Esito |
+|---|---|---|
+| **B** — albero `--prod` intero | 708,6 MB | ❌ scartata |
+| **A** — standalone + strumenti separati | **≈232,5 MB** | ✅ **SCELTA** |
+| **A′** — A più potatura del CLI Prisma | ≈110 MB | ❌ scartata |
+
+🔴 **Perché A′ è stata scartata, e non va riaperta.** L'albero degli strumenti
+pesa 209,0 MB e **circa 120 MB sono strumenti da sviluppatore** che in
+produzione non gireranno mai: `@prisma/studio-core` 42,0 MB ·
+`@electric-sql/pglite` 22,2 MB (un Postgres in WASM) · `@prisma/dev` 18,1 MB ·
+`elkjs` 7,7 MB · `react-dom` 7,0 MB. Potarli darebbe ~110 MB, ed è la
+metodologia che la 2b ha già usato con successo su `deepmerge-ts`.
+**Lorenzo l'ha scartata lo stesso, e la ragione batte il guadagno:** quella
+potatura dipenderebbe dall'implementazione interna di Prisma, e un
+aggiornamento che introducesse un caricamento **dinamico** romperebbe
+`migrate deploy` **senza che il lockfile lo rappresenti** — cioè un guasto che
+nessun cancello vedrebbe arrivare.
+
+⚠️ Il peso è tutto del CLI `prisma` (41,8 MB, più `effect` 25,8 MB e catena):
+**`tsx` e `dotenv` insieme costano 0,6 MB.**
+
+### 11.3 · La chiusura degli import di seed e atti — completa e riproducibile
+
+Costruita con un tracciatore ricorsivo che segue import relativi e alias `@/`,
+partendo da `prisma/seed.ts` e `scripts/atti.ts`. **Zero specifier non
+risolti.** Totale: **77 file di sorgente, 5,3 MB.**
+
+| Gruppo | N. |
+|---|---|
+| `src/generated/prisma` (client generato) | **67** |
+| `src/lib` (mirati) | **8** |
+| entrypoint | 2 |
+| componenti React | **0** |
+| import di Next | **0** |
+
+**Gli 8 file di `src/lib`, che sono la lista letterale della `COPY`:**
+
+```
+src/lib/atti.ts              src/lib/community.ts
+src/lib/civic-topics.ts      src/lib/costo-amministrazione.ts
+src/lib/colors.ts            src/lib/giunta.ts
+src/lib/redazione.ts         src/lib/valutazioni.ts
+```
+
+**I 67 del client generato** — l'intera cartella `src/generated/prisma`: i sei
+file di testa (`client.ts`, `commonInputTypes.ts`, `enums.ts`, `models.ts`,
+`internal/class.ts`, `internal/prismaNamespace.ts`) più i **61** sotto
+`models/`:
+
+```
+AdoptedPlace AnswerFeedback Assessore AssessoreFollow Atto BlockedWord
+BudgetCategory BudgetMonth BudgetYear CitizenBadge CityFaq CivicProject
+CodiceQr CommentReport Commitment CommunityPost Decision Event Follow
+Initiative InitiativeJoin LetturaAtti ModerationAction Neighborhood
+NeighborhoodPact Notice Notification NotificationPreference OfficialAnswer
+Opera OperaComment OperaFaq OperaPhoto OperaUpdate OrganizationProfile
+PactUpdate Poll PollOption PostComment PostLike PriorityItem PriorityRound
+PriorityVote ProfileVerification PromemoriaRinnovo Proposal ProposalSupport
+QtQuestion QtVote QuestionTime Report ReportConfirmation ReportPhoto
+ReportStatusHistory RispostaServizio Servizio Session Sollecitazione User
+Valutazione Vote
+```
+
+Copiare `src/generated/prisma/` per intero è quindi **esatto e non eccessivo**.
+Ciò che NON si fa è copiare tutto `src/`.
+
+**I 4 pacchetti npm veri** (esclusi i `node:` builtin): `@node-rs/argon2` ·
+`@prisma/adapter-better-sqlite3` · `@prisma/client` · **`dotenv`**.
+
+**Per rifare la misura**, il tracciatore va riscritto: segue `import … from`,
+`import "x"`, `export … from`, `import()` e `require()`; risolve `@/` su `src/`
+e i relativi con le estensioni `.ts .tsx .mts .js .mjs .json`, più `index.*` e
+il ripiego `.js → .ts`; i bare specifier li registra come pacchetti senza
+seguirli. **E spoglia i commenti prima di cercare** — vedi §11.4.
+
+### 11.4 · 🔴 Il falso positivo del tracciatore, e perché va ricordato
+
+Al **primo giro** il tracciatore ha dichiarato necessario
+**`@prisma/adapter-pg`** — un pacchetto che non è né in `package.json` né in
+`node_modules`. Compare **solo dentro un commento JSDoc** del client generato
+(`src/generated/prisma/internal/prismaNamespace.ts:6136`, l'esempio
+`import { PrismaPg } from '@prisma/adapter-pg'`).
+
+Lo strumento non spogliava i commenti prima di cercare gli import. È **§3, «un
+riconoscitore tarato sulla forma immaginata di una risposta certifica sé
+stesso»**, da una porta nuova: qui non sbagliava la *taglia* della risposta, ma
+scambiava **documentazione per codice**. Corretto togliendo i blocchi `/* */` e
+i commenti di riga prima del confronto, e rimisurato: il pacchetto sparisce, il
+resto della catena è **identico**.
+
+⚠️ **La regola operativa:** un risultato «sorprendente» di un tracciatore si
+apre e si guarda — un pacchetto che non sta nel manifesto **non può** essere
+una dipendenza. E un tracciatore si prova su un caso di cui si conosce già la
+risposta, prima di credergli.
+
+### 11.5 · 🔴 Due perdite trovate misurando, BLOCCANTI
+
+Trovate guardando dentro `.next/standalone` dopo la build. Nessuna delle due
+produce un errore.
+
+1. **`.env` finisce dentro `.next/standalone`.** Il file tracing di Next lo
+   copia: 348 byte, con le chiavi `DATABASE_URL` e `SESSION_SECRET`. In Docker
+   oggi non arriverebbe — ma **solo perché `.dockerignore` elenca `.env`**,
+   cioè per una coincidenza fortunata e non per una difesa progettata.
+2. **`graphify-out` finisce dentro `.next/standalone`** — 2,2 MB, 10 file — e
+   **NON è in `.dockerignore`**: entrerebbe nel contesto Docker e da lì
+   nell'immagine di produzione. (`.email` invece c'è già.)
+
+**Come vanno chiuse, e serve tutto e tre:** esclusioni esplicite dal file
+tracing dove supportate · `.dockerignore` coerente · **un controllo di CI che
+fallisce** se nell'immagine o nell'output standalone compare un `.env*`,
+`graphify-out` o altro materiale vietato.
+⚠️ **Il contenuto di `.env` non si stampa mai nei log**, nemmeno per diagnosi.
+
+### 11.6 · La deroga Prisma, riformulata sui fatti
+
+Due misure di questa sessione cambiano la **descrizione**, non l'esposizione:
+
+- **`@prisma/config@7.9.1` è dipendenza diretta del CLI `prisma@7.9.1`**
+  (`pnpm why`). Con `prisma` fra le dipendenze di esecuzione, `@prisma/config`,
+  `c12` e `deepmerge-ts` **sono fisicamente nell'immagine**.
+- **`prisma.config.ts` non è facoltativo:** `schema.prisma` dichiara
+  `datasource db { provider = "sqlite" }` **senza `url`**, quindi quel file è
+  l'unica sorgente dell'URL. `migrate deploy` lo carica, ed essendo TypeScript
+  passa per `loadConfigTsOrJs()` → c12 → deepmerge-ts, **a ogni avvio**.
+
+La formulazione da conservare distingue quattro cose prima collassate in una:
+
+| | |
+|---|---|
+| Presenza nell'immagine | **sì** |
+| Caricata dal CLI Prisma durante `migrate deploy` | **sì, a ogni avvio** |
+| Presente nei percorsi di richiesta di Next | **no** — 74 `*.nft.json`, 15.338 voci |
+| Natura dell'input | **configurazione controllata**, mai richieste HTTP |
+
+**L'esposizione non cambia** rispetto a oggi: il CLI è già nell'immagine e
+`migrate deploy` gira già a ogni avvio. ⚠️ **La GHSA ignorata non si tocca e la
+deroga non si amplia.**
+
+### 11.7 · Le tre modifiche preparatorie, RIPRISTINATE
+
+Fatte in questa sessione, misurate, poi **annullate** perché esplorative.
+Registrate qui perché la prossima sessione sappia cosa producevano.
+
+1. **`package.json`** — `prisma`, `tsx` e **`dotenv`** spostati da
+   `devDependencies` a `dependencies`, con una nota `//dependencies-runtime`.
+   ⚠️ **Strada SUPERATA dalla decisione:** nel manifesto principale i tre
+   **restano dov'erano**, e la loro presenza a runtime diventa responsabilità
+   esplicita del manifesto Docker dedicato (§11.8).
+2. **`pnpm-lock.yaml`** — 9 righe spostate nella sezione `importers`, **nessun
+   cambio di versione**. Conseguenza meccanica del punto 1.
+3. **`next.config.ts`** — `output: "standalone"`, più due avvertenze da
+   **riscrivere identiche** quando si rifà: standalone **non copia** `public/`
+   né `.next/static` (li serve, si aspetta di trovarli accanto — toglierli dà
+   un sito senza CSS e senza immagini, **senza un errore in build**); e traccia
+   ciò che l'**applicazione** importa, quindi **non sa nulla** di
+   `prisma/seed.ts` né di `scripts/atti.ts`.
+
+⚠️ **`dotenv` è la scoperta da non perdere:** non era fra i due pacchetti
+previsti, ma lo importano **tutti e tre** i punti che devono funzionare a
+runtime — `prisma/seed.ts`, `scripts/atti.ts` e `prisma.config.ts`. Senza, non
+parte né la migrazione né il seed né `atti`.
+
+### 11.8 · LA STRUTTURA APPROVATA — composizione A
+
+**Un secondo manifesto, dedicato agli strumenti di esecuzione:**
+
+```
+docker/runtime-tools/package.json
+docker/runtime-tools/pnpm-lock.yaml
+```
+
+Contiene **esclusivamente** `prisma`, `tsx`, `dotenv`, a **versioni esatte** e
+con **lockfile congelato**. Nel manifesto principale i tre restano nella loro
+classificazione originaria.
+
+**Cinque controlli di CI che lo rendono onesto invece che comodo:**
+
+1. le tre versioni **uguali** a quelle del manifesto principale;
+2. installazione con **lockfile congelato**;
+3. **audit anche** del lockfile degli strumenti;
+4. **zero** aggiornamenti o risoluzioni implicite durante il build;
+5. `migrate deploy`, seed e **caricamento di `atti`** funzionanti davvero.
+
+**Assemblaggio senza duplicazioni — non si sovrappongono due `node_modules`.**
+Serve uno **stage intermedio di assemblaggio** che: riceva `.next/standalone` ·
+unisca l'albero tracciato da Next con quello degli strumenti · **risolva
+collisioni e symlink di pnpm** · produca **un solo** filesystem finale · venga
+copiato **una volta sola** nello stage definitivo.
+
+Lo stage di esecuzione **non deve contenere**: due copie delle stesse
+dipendenze · lo store di pnpm · la cache di Next · le devDependencies dell'app ·
+sorgenti non necessari · test o strumenti di test.
+
+⚠️ **Va verificato espressamente che `npm run atti` — quello che Coolify usa
+OGGI — e il futuro `corepack pnpm atti` trovino entrambi `tsx`, `dotenv` e la
+catena applicativa.** È il legame che nessuno aveva ancora scritto: se `tsx`
+uscisse dall'immagine, lo Scheduled Task morirebbe dentro un log che nessuno
+guarda.
+
+**I file che devono stare nell'immagine, esplicitamente:** `package.json`
+principale (per gli script e il pin di Corepack) · `prisma.config.ts` ·
+`prisma/schema.prisma` · `prisma/migrations` · `prisma/seed.ts` ·
+`scripts/atti.ts` · `src/generated/prisma` · **gli otto** file di `src/lib` di
+§11.3 · `tsconfig.json` se gli alias lo richiedono · qualunque risorsa non
+TypeScript realmente importata. **Mai tutto `src/`.**
+
+### 11.9 · Le altre decisioni già prese, da non riaprire
+
+| Cosa | Deciso |
+|---|---|
+| Ambito | **standalone**, senza utente non-root |
+| Strumenti a runtime | **tenere `prisma` e `tsx`** (+ `dotenv`, trovato misurando) |
+| Cancello CI | **job Docker: build + avvio + prove** |
+| Health check | **direttiva `HEALTHCHECK`** su `/login` — pubblica, non reindirizza mai, `main` a 228 caratteri anche quando è sana. ⚠️ Dice che il server HTTP serve, **non** che il database risponda: la copertura del database è stata scartata e resta debito |
+| Utente non-root | **NON si introduce ora** |
+| Coolify | **non si tocca** |
+
+⚠️ **`scripts/atti.ts` non ha una modalità sicura utilizzabile in CI.** Ha
+`--prova` («legge e conta, senza scrivere»), ma **legge davvero il portale**, e
+`main()` è invocata **senza guardia** al caricamento del modulo: importarlo
+significa eseguirlo. In CI si verificano quindi **caricamento, risoluzione degli
+import e inizializzazione** senza farlo scattare — e **il limite si dichiara**,
+non si aggira con chiamate reali a servizi esterni.
+
+### 11.10 · Le dodici prove obbligatorie nel container finale
+
+1. `migrate deploy` eseguito **realmente**;
+2. seed eseguito **realmente** sul primo volume;
+3. seed **non** rieseguito sullo stesso volume;
+4. risoluzione ed esecuzione **reale** di `tsx`;
+5. `scripts/atti.ts` presente **con tutta la sua catena di import**;
+6. `corepack pnpm atti` almeno **avviabile**, senza effetti esterni;
+7. `package.json` e script di esecuzione presenti;
+8. moduli nativi verificati **con dati reali**;
+9. container nello stato **`healthy`**;
+10. **sweep delle rotte** contro il container standalone;
+11. login **e seconda rotta protetta**;
+12. **assenza** dall'immagine di test, Playwright, Lighthouse, cache di Next,
+    store di pnpm, `.env*`, `graphify-out` e sorgenti non necessari.
+
+### 11.11 · Condizioni di arresto
+
+Ci si ferma e si torna da Lorenzo se: seed o `atti` richiedono una parte
+**estesa e inattesa** del sorgente · non si riesce a evitare la duplicazione
+significativa di `node_modules` · la GHSA **cambia esposizione o
+raggiungibilità** · il guadagno finale dell'immagine è **trascurabile** · un
+cancello diventa **rosso** · servirebbe **abbassare una soglia**.
